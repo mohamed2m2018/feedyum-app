@@ -1,4 +1,4 @@
-package com.tikto;
+package com.foodtok;
 
 import android.app.Application;
 import com.facebook.react.PackageList;
