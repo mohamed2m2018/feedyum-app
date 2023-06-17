@@ -1,0 +1,343 @@
+// Library import
+import {
+  ActivityIndicator,
+  FlatList,
+  Image,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import React, {createRef, useState} from 'react';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
+
+// Local import
+import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
+import {useSelector} from 'react-redux';
+import {styles} from '../../../themes';
+import {
+  getHeight,
+  getVideoExtension,
+  moderateScale,
+} from '../../../common/constants';
+import ZText from '../../../components/common/ZText';
+import {StackNav} from '../../../navigation/NavigationKeys';
+import strings from '../../../i18n/strings';
+import images from '../../../assets/images';
+import ZButton from '../../../components/common/ZButton';
+import {Inbox_Dark} from '../../../assets/svgs';
+import ReelComponent from '../../../components/ReelComponent';
+import {useQuery} from 'react-query';
+import request from '../../../api/request';
+import {Toast, ALERT_TYPE} from 'react-native-alert-notification';
+
+const UserDetail = (postsNo, followersNo, followingNo, viewsNo) => [
+  {
+    title: strings.post,
+    value: postsNo,
+  },
+  {
+    title: strings.followers,
+    value: followersNo,
+  },
+  {
+    title: strings.following,
+    value: followingNo,
+  },
+  {
+    title: 'Views',
+    value: viewsNo || 0,
+  },
+];
+
+export default function Profile({navigation}) {
+  const colors = useSelector(state => state.theme.theme);
+  const switchAccountRef = createRef(null);
+  const [page, setpage] = useState(1);
+
+  const {data} = useQuery('user', () => request.get('/user'), {retry: 1});
+
+  const user = data?.data?.user;
+  const getUserViews = () => request.get(`/views/user/${user?._id}`);
+
+  const getFollowStatistics = () =>
+    request.get(`/follow/statistics/${user?._id}`);
+
+  const {data: followStatistics} = useQuery(
+    ['followStatistics', user?._id],
+    () => getFollowStatistics(user?._id),
+  );
+
+  const {data: views} = useQuery(['userViews', user?._id], getUserViews, {
+    refetchInterval: 30000,
+  });
+
+  const fetchPosts = () =>
+    request.get(`/story/author?id=${user?._id}`, {
+      params: {
+        limit: 10,
+        page,
+      },
+    });
+
+  const [storiesData, setstoriesData] = useState([]);
+  const {
+    data: queryData,
+    isLoading,
+    isFetching,
+  } = useQuery({
+    queryKey: ['profile-stories', page],
+    queryFn: () => fetchPosts(page),
+    enabled: !!data?.data?.user?._id,
+    onSuccess: res => {
+      if (res?.data?.currentPage === '1') {
+        setstoriesData(res?.data?.stories);
+        setpage(1);
+      } else {
+        setstoriesData([...storiesData, ...res?.data?.stories]);
+      }
+    },
+    onError: err => {
+      Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: 'Error',
+        textBody: err[Object.keys(err)?.[0]],
+      });
+    },
+  });
+
+  // const categoryData = [
+  //   {
+  //     id: 0,
+  //     icon: 'apps',
+  //     onPress: () => setIsSelect(0),
+  //   },
+  //   {
+  //     id: 1,
+  //     icon: 'lock-closed',
+  //     onPress: () => setIsSelect(1),
+  //   },
+  //   {
+  //     id: 2,
+  //     icon: 'bookmark',
+  //     onPress: () => setIsSelect(2),
+  //   },
+  //   {
+  //     id: 3,
+  //     icon: 'heart',
+  //     onPress: () => setIsSelect(3),
+  //   },
+  // ];
+
+  const onPressEditProfile = () =>
+    navigation.navigate(StackNav.EditProfile, {user});
+
+  const onPressSwitchAccount = () => switchAccountRef?.current?.show();
+
+  const onPressSetting = () => navigation.navigate(StackNav.Setting);
+
+  const onPressFindFriend = () => navigation.navigate(StackNav.FindFriends);
+
+  const RenderUserDetail = ({item}) => {
+    return (
+      <View style={styles.itemsCenter}>
+        <ZText type="b24" align={'center'}>
+          {item.value}
+        </ZText>
+        <ZText type="m16" align={'center'} style={styles.mt10}>
+          {item.title}
+        </ZText>
+      </View>
+    );
+  };
+
+  // const HeaderCategory = ({item}) => {
+  //   return (
+  //     <TouchableOpacity
+  //       onPress={item.onPress}
+  //       style={[
+  //         localStyles.tabItemStyle,
+  //         {
+  //           borderBottomColor:
+  //             isSelect === item.id ? colors.primary : colors.bColor,
+  //         },
+  //       ]}>
+  //       <Ionicons
+  //         name={item.icon}
+  //         size={moderateScale(30)}
+  //         color={isSelect === item.id ? colors.primary : colors.iconColor}
+  //       />
+  //     </TouchableOpacity>
+  //   );
+  // };
+
+  return (
+    <ZSafeAreaView>
+      <View style={{flex: 1, height: '100%', padding: 20}}>
+        <FlatList
+          data={storiesData}
+          renderItem={({item}) => (
+            <ReelComponent
+              data={item?.views}
+              reelUrl={item?.uri?.replace(getVideoExtension(item?.uri), 'jpg')}
+              id={item?._id}
+              isPlay={!item?.avatarUri}
+            />
+          )}
+          numColumns={3}
+          ListEmptyComponent={
+            isLoading && (
+              <ActivityIndicator style={{margin: 30}} size={'large'} />
+            )
+          }
+          onEndReachedThreshold={0.9}
+          onMomentumScrollBegin={() => {
+            if (queryData?.data?.totalPages > page) {
+              setpage(old => old + 1);
+            }
+          }}
+          ListFooterComponent={
+            isFetching && !isLoading ? (
+              <ActivityIndicator size={'large'} />
+            ) : null
+          }
+          keyExtractor={(item, index) => index.toString()}
+          ListHeaderComponent={
+            <>
+              <View style={localStyles.headerContainer}>
+                {/* <TouchableOpacity onPress={onPressFindFriend}>
+                  <Ionicons
+                    name="person-add-outline"
+                    size={moderateScale(26)}
+                    color={colors.dark ? colors.white : colors.darkColor}
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={onPressSwitchAccount}
+                  style={styles.rowCenter}>
+                  <ZText type="b24">{user?.fullName}</ZText>
+                  <Ionicons
+                    name="chevron-down-outline"
+                    size={moderateScale(24)}
+                    style={styles.ml5}
+                    color={colors.dark ? colors.white : colors.darkColor}
+                  />
+                </TouchableOpacity> */}
+                <TouchableOpacity onPress={onPressSetting}>
+                  <Ionicons
+                    name="settings-outline"
+                    size={moderateScale(30)}
+                    color={colors.dark ? colors.white : colors.darkColor}
+                  />
+                </TouchableOpacity>
+              </View>
+              <View style={styles.itemsCenter}>
+                <TouchableOpacity
+                  onPress={onPressEditProfile}
+                  style={styles.mt40}>
+                  <Image
+                    source={
+                      user?.avatar
+                        ? {uri: user?.avatar}
+                        : colors.dark
+                        ? images.userDark
+                        : images.userLight
+                    }
+                    style={localStyles.userImage}
+                  />
+                  <MaterialIcon
+                    name="pencil-box"
+                    size={moderateScale(30)}
+                    color={colors.primary}
+                    style={localStyles.editIcon}
+                  />
+                </TouchableOpacity>
+                <View style={styles.mv20}>
+                  <ZText type="b24" align={'center'}>
+                    {user?.fullName}
+                  </ZText>
+                  <ZText type="m14" align={'center'} style={styles.mt10}>
+                    {user?.email}
+                  </ZText>
+                </View>
+              </View>
+              <View style={[styles.flexRow, styles.justifyEvenly]}>
+                {UserDetail(
+                  user?.postsNo,
+                  followStatistics?.data?.followersCount,
+                  followStatistics?.data?.followingCount,
+                  views?.data?.totalViews || 0,
+                ).map((item, index) => (
+                  <RenderUserDetail item={item} key={index} />
+                ))}
+              </View>
+              <ZButton
+                title={strings.editProfile}
+                onPress={onPressEditProfile}
+                color={colors.primary}
+                textType="b18"
+                style={styles.ml10}
+                containerStyle={[
+                  localStyles.buttonContainer,
+                  {borderColor: colors.primary},
+                ]}
+                bgColor={colors.tranparent}
+                frontIcon={<Inbox_Dark />}
+              />
+              {/* <View style={localStyles.mainContainer}>
+                {categoryData.map((item, index) => (
+                  <HeaderCategory item={item} key={index} />
+                ))}
+              </View> */}
+            </>
+          }
+        />
+        {/* <SwitchAccont SheetRef={switchAccountRef} /> */}
+      </View>
+    </ZSafeAreaView>
+  );
+}
+
+const localStyles = StyleSheet.create({
+  root: {
+    ...styles.flex,
+    ...styles.ph20,
+    ...styles.mb20,
+    flex: 1,
+  },
+  headerContainer: {
+    ...styles.flex,
+    ...styles.flexRow,
+    ...styles.alignCenter,
+    ...styles.justifyBetween,
+    ...styles.mt20,
+  },
+  userImage: {
+    width: moderateScale(100),
+    height: moderateScale(100),
+    borderRadius: moderateScale(50),
+  },
+  editIcon: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+  },
+  buttonContainer: {
+    ...styles.mt15,
+    height: getHeight(45),
+    borderRadius: moderateScale(22),
+    borderWidth: moderateScale(1),
+    ...styles.mb15,
+  },
+  mainContainer: {
+    ...styles.flexRow,
+    width: '100%',
+    ...styles.mt15,
+  },
+  tabItemStyle: {
+    borderBottomWidth: moderateScale(2),
+    width: '25%',
+    ...styles.itemsCenter,
+    ...styles.pv15,
+  },
+});

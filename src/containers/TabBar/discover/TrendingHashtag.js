@@ -1,0 +1,163 @@
+// Library import
+import {
+  FlatList,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import React from 'react';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import {useSelector} from 'react-redux';
+
+// Local import
+import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
+import {getHeight, moderateScale} from '../../../common/constants';
+import ZText from '../../../components/common/ZText';
+import {styles} from '../../../themes';
+import strings from '../../../i18n/strings';
+import ReelComponent from '../../../components/ReelComponent';
+import ZHeader from '../../../components/common/ZHeader';
+import ZButton from '../../../components/common/ZButton';
+import {videoData} from '../../../api/constant';
+
+export default function TrendingHashtag({route}) {
+  const colors = useSelector(state => state.theme.theme);
+  const item = route?.params?.item;
+
+  const RightIcon = () => {
+    return (
+      <TouchableOpacity>
+        <Ionicons
+          name="arrow-redo"
+          size={moderateScale(26)}
+          color={colors.textColor}
+        />
+      </TouchableOpacity>
+    );
+  };
+
+  return (
+    <ZSafeAreaView>
+      <ZHeader title={'Order Details'} rightIcon={<RightIcon />} />
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+        style={localStyles.soundContainer}>
+        <View
+          style={[
+            localStyles.headerItemContainer,
+            {
+              borderBottomColor: colors.bColor,
+            },
+          ]}>
+          <View
+            style={[
+              localStyles.hashtagContainer,
+              {
+                backgroundColor: colors.primaryTransparent,
+              },
+            ]}>
+            <ZText type="s18" align={'center'} color={colors.primary} numberOfLines={2}>
+              {'Arrives Tomorrow'}
+            </ZText>
+          </View>
+          <View style={[styles.ml20, styles.flex]}>
+            <ZText type="b24" numberOfLines={1}>
+             Order no #13998293
+            </ZText>
+            <ZText
+              type="m14"
+              numberOfLines={2}
+              color={colors.dark ? colors.grayScale3 : colors.grayScale7}
+              style={styles.mt10}>
+              440EGP
+            </ZText>
+            <ZButton
+              title={strings.AddFavorites}
+              color={colors.primary}
+              textType="b14"
+              style={styles.ml5}
+              containerStyle={[
+                localStyles.buttonContainer,
+                {borderColor: colors.primary},
+              ]}
+              bgColor={colors.tranparent}
+              frontIcon={
+                <Ionicons
+                  name="bookmark"
+                  size={moderateScale(18)}
+                  color={colors.primary}
+                />
+              }
+            />
+          </View>
+        </View>
+
+        <ZText color={colors.redColor} type={"s18"}>Dishes Included:</ZText>
+        <ZText align={'right'} type={"m14"}> x2 طبق كباب مشكل</ZText>
+        <ZText align={'right'}> x2 طبق مكرونة بالباشميل </ZText>
+        <ZText align={'right'}> x1 طبق مكرونة بالباشميل </ZText>
+        <ZText align={'right'}> x1 طبق مكرونة بالباشميل </ZText>
+        <ZText align={'right'} style={{marginBottom: 20}}> x1 طبق مكرونة بالباشميل </ZText>
+
+
+        <FlatList
+          data={videoData}
+          renderItem={({item, index}) => (
+            <ReelComponent
+              data={item.views}
+              reelUrl={item.poster}
+              isPlay={true}
+            />
+          )}
+          numColumns={3}
+          keyExtractor={(item, index) => index.toString()}
+        />
+      </ScrollView>
+      <ZButton
+        title={'Cancel this Order'}
+        textType="b16"
+        style={styles.ml5}
+        color={colors.white}
+        containerStyle={localStyles.bottomBtnContainer}
+        bgColor={colors.primary}
+      />
+    </ZSafeAreaView>
+  );
+}
+
+const localStyles = StyleSheet.create({
+  soundContainer: {
+    ...styles.mv10,
+    ...styles.ph20,
+  },
+  hashtagContainer: {
+    width: moderateScale(110),
+    height: moderateScale(110),
+    borderRadius: moderateScale(55),
+    ...styles.rowCenter,
+  },
+  headerItemContainer: {
+    ...styles.rowCenter,
+    ...styles.pb20,
+    ...styles.mb15,
+    borderBottomWidth: moderateScale(1),
+  },
+  btnContainer: {
+    ...styles.flexRow,
+    ...styles.justifyEvenly,
+    ...styles.mv20,
+  },
+  buttonContainer: {
+    ...styles.ph15,
+    ...styles.mt10,
+    height: getHeight(40),
+    borderRadius: moderateScale(20),
+    borderWidth: moderateScale(1),
+    width: '75%',
+  },
+  bottomBtnContainer: {
+    ...styles.mh30,
+  },
+});

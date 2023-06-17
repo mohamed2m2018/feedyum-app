@@ -1,0 +1,8 @@
+{
+  "name": "FoodTok",
+  "displayName": "FoodTok",
+  "react-native-google-mobile-ads": {
+    "android_app_id": "ca-app-pub-2374540952576524~2932466582",
+    "ios_app_id": "cca-app-pub-2374540952576524~2932466582"
+  }
+}
