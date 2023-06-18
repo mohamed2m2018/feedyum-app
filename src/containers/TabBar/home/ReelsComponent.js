@@ -467,7 +467,7 @@ export default function ReelsComponent() {
               <VideoItem
                 icon="chatbubble-ellipses"
                 data={item?.comments}
-                onPress={() => {}}
+                onPress={() => onPressComment(item?._id)}
               />
               <VideoItem
                 icon={isBookmark ? 'bookmark-outline' : 'bookmark'}

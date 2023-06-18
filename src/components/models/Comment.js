@@ -85,7 +85,7 @@ export default function Comment({SheetRef, postId}) {
 
   const {mutate} = useMutation(content => addComment(content), {
     onSuccess: () => {
-      queryClient.invalidateQueries('comments');
+      queryClient.invalidateQueries({queryKey: 'comments'});
     },
   });
 
