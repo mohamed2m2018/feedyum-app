@@ -37,6 +37,7 @@ import request from '../../api/request';
 import {ALERT_TYPE, Toast} from 'react-native-alert-notification';
 import {QueryClient, useQuery, useQueryClient} from 'react-query';
 import axios from 'axios';
+import OneSignal from 'react-native-onesignal';
 
 const SetUpProfile = props => {
   const {navigation} = props;
@@ -113,6 +114,7 @@ const SetUpProfile = props => {
       })
       .then(async res => {
         await setAsyncStorageData(ACCESS_TOKEN, res?.data?.token);
+        OneSignal.setExternalUserId(res?.data?.user?._id);
         request.defaults.headers.common.Authorization = res?.data?.token;
         navigation.reset({
           index: 0,

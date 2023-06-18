@@ -23,6 +23,7 @@ import {
   statusCodes,
   User,
 } from '@react-native-google-signin/google-signin';
+import axios from 'axios';
 
 GoogleSignin.configure({
   // Add your web client ID here
@@ -50,15 +51,32 @@ const Register = ({navigation}) => {
   const BlurredIconStyle = colors.grayScale5;
   const FocusedIconStyle = colors.primary;
 
+  const getPhoneNumber = async accessToken => {
+    try {
+      const response = await axios.get(
+        'https://people.googleapis.com/v1/people/me?personFields=phoneNumbers',
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        },
+      );
+
+      const phoneNumber = response.data.phoneNumbers[0].value;
+      console.log(phoneNumber);
+    } catch (error) {
+      console.log('Error occurred:', error);
+    }
+  };
+
   const onPressSignUpWithGoogle = async () => {
     try {
       await GoogleSignin.hasPlayServices();
-      const userInfo: User = await GoogleSignin.signIn();
-      // Access the user information
-      const {name, email, photo} = userInfo.user;
-      const {idToken} = userInfo;
+      const userInfo = await GoogleSignin.signIn();
+      const {accessToken} = await GoogleSignin.getTokens();
+      const res = await getPhoneNumber(accessToken);
       // Use the information as needed
-      console.log(name, email, photo, idToken);
+      console.log(res);
     } catch (error) {
       if (error.code === statusCodes.SIGN_IN_CANCELLED) {
         // User cancelled the sign-in flow
@@ -76,10 +94,15 @@ const Register = ({navigation}) => {
     }
   };
 
+  const signOut = async () => {
+    await GoogleSignin.revokeAccess();
+    await GoogleSignin.signOut();
+  };
+
   const socialIcon = [
     {
       icon: <Google_Icon />,
-      onPress: () => onPressSignWithPassword(),
+      onPress: () => onPressSignUpWithGoogle(),
     },
   ];
 

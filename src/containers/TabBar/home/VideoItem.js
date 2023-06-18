@@ -1,5 +1,5 @@
 import {Pressable, StyleSheet} from 'react-native';
-import React, {useState, useEffect} from 'react';
+import React, {useState} from 'react';
 import {styles} from '../../../themes';
 import ZText from '../../../components/common/ZText';
 import {moderateScale} from '../../../common/constants';

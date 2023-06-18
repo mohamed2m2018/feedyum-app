@@ -26,6 +26,7 @@ import ZButton from '../../components/common/ZButton';
 import {useMutation} from 'react-query';
 import request from '../../api/request';
 import {ALERT_TYPE, Toast} from 'react-native-alert-notification';
+import OneSignal from 'react-native-onesignal';
 
 const Login = ({navigation}) => {
   const colors = useSelector(state => state.theme.theme);
@@ -86,6 +87,9 @@ const Login = ({navigation}) => {
         textBody: err[Object.keys(err)?.[0]],
       });
     },
+    onSuccess: data => {
+      OneSignal.setExternalUserId(data?.data?.user?._id);
+    },
   });
 
   useEffect(() => {
@@ -111,23 +115,6 @@ const Login = ({navigation}) => {
     setPassword(val.trim());
     setPasswordError(msg);
   };
-
-  const RenderSocialBtn = memo(({item, index}) => {
-    return (
-      <TouchableOpacity
-        key={index}
-        onPress={item.onPress}
-        style={[
-          localStyles.socialBtn,
-          {
-            backgroundColor: colors.inputBg,
-            borderColor: colors.bColor,
-          },
-        ]}>
-        {item.icon}
-      </TouchableOpacity>
-    );
-  });
 
   const EmailIcon = () => {
     return <Ionicons name="mail" size={moderateScale(20)} color={emailIcon} />;

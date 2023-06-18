@@ -13,6 +13,7 @@ import {
   Linking,
 } from 'react-native';
 import React, {useEffect, useRef, useState, useCallback} from 'react';
+import LinearGradient from 'react-native-linear-gradient';
 import Video from 'react-native-video';
 import {useSelector} from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -33,10 +34,17 @@ import ZText from '../../../components/common/ZText';
 import {StackNav} from '../../../navigation/NavigationKeys';
 import Comment from '../../../components/models/Comment';
 import ZButton from '../../../components/common/ZButton';
-import {useInfiniteQuery, useMutation, useQuery} from 'react-query';
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from 'react-query';
 import request from '../../../api/request';
 import images from '../../../assets/images';
 import {VideoItem} from './VideoItem';
+import OneSignal from 'react-native-onesignal';
+import {ALERT_TYPE, Toast} from 'react-native-alert-notification';
 
 const HeaderCategoryItem = React.memo(({title, onPress, category}) => {
   const colors = useSelector(state => state.theme.theme);
@@ -76,6 +84,54 @@ export default function ReelsComponent() {
   const filteredDataFollowing = useRef([]);
   const flatListRefFollowing = useRef(null);
   const flatListRef = useRef(null);
+  const [notificationReceived, setnotificationReceived] = useState(false);
+
+  const [storyId, setStoryId] = useState();
+
+  const queryClient = useQueryClient();
+
+  React.useEffect(() => {
+    setStoryId(route.params?.storyId);
+  }, [route.params]);
+
+  React.useEffect(() => {
+    // Initialize OneSignal
+    OneSignal.setAppId('8f642b9d-8d10-4b66-b43a-c1d0345ef13f');
+
+    // Optional: Configure OneSignal
+    OneSignal.setLogLevel(6, 0); // Enable verbose OneSignal logs for debugging
+
+    // Handle notifications received while the app is in the foreground
+    OneSignal.setNotificationWillShowInForegroundHandler(
+      async notifReceivedEvent => {
+        // Display or handle the notification as needed
+        const notification = await notifReceivedEvent.getNotification();
+        Toast.show({
+          type: ALERT_TYPE.SUCCESS,
+          title: 'Notification',
+          textBody: notification.body,
+        });
+
+        setStoryId(notification.additionalData?._id);
+
+        setTimeout(() => {
+          refetch();
+        }, 500);
+
+        queryClient.invalidateQueries({queryKey: 'user'});
+        queryClient.invalidateQueries({queryKey: 'profile-stories'});
+
+        setnotificationReceived(true);
+        notifReceivedEvent.complete(notifReceivedEvent.getNotification());
+      },
+    );
+
+    return () => {
+      // Clean up OneSignal event handlers when the component unmounts
+      OneSignal.clearHandlers();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const {data} = useQuery('user', () => request.get('/user'), {retry: 1});
 
@@ -150,11 +206,16 @@ export default function ReelsComponent() {
     },
   );
 
-  useQuery(
-    ['storyById', route.params?.storyId],
-    () => request.get(`/story/${route.params?.storyId}`),
+  const {refetch} = useQuery(
+    ['storyById', storyId],
+    () =>
+      request.get(`/story/${storyId}`, {
+        params: {
+          userId: data?.data?.user?._id,
+        },
+      }),
     {
-      enabled: !!route.params?.storyId,
+      enabled: !!storyId,
       onSuccess: res => {
         setCategory('For You');
         const filtered = filteredData?.current?.filter(item => {
@@ -194,7 +255,16 @@ export default function ReelsComponent() {
 
   useEffect(() => {
     setExtraData(!extraData);
-  }, [isMute, isLike, activeVideoIndex, isFocused, category]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    isMute,
+    isLike,
+    activeVideoIndex,
+    isFocused,
+    category,
+    notificationReceived,
+    filteredData.current,
+  ]);
 
   const addLikeMutation = useMutation(postId =>
     request.post(`/like/${postId}`),
@@ -226,13 +296,19 @@ export default function ReelsComponent() {
 
   const onPressBookmark = () => setIsBookmark(!isBookmark);
 
+  const [selectedPostId, setSelectedPostId] = useState();
+
   const onPressShare = () => {
     Share.share({
-      message: 'Tikto App | Entertainment, Social, Music, Video, Live, Chat...',
+      message:
+        'FoodTok App | Entertainment, Social, Music, Video, Live, Chat...',
     });
   };
 
-  // const onPressComment = () => commentSheetRef.current?.show();
+  const onPressComment = postId => {
+    setSelectedPostId(postId);
+    commentSheetRef.current?.show();
+  };
 
   const onPressSearch = () => navigation.navigate(StackNav.Search);
 
@@ -241,6 +317,7 @@ export default function ReelsComponent() {
   const renderReelComponent = ({item, index}) => {
     return (
       <View
+        key={`item-${item?._id}`}
         style={{
           height: layoutHeight,
           backgroundColor: colors.darkBg,
@@ -283,8 +360,9 @@ export default function ReelsComponent() {
                 />
               )
             ))}
-
-          <View style={localStyles.bottomContainer}>
+          <LinearGradient
+            colors={['transparent', 'rgba(0, 0, 0, 1)']}
+            style={localStyles.bottomContainer}>
             <View style={styles.flex}>
               <View style={styles.rowCenter}>
                 <TouchableOpacity
@@ -337,9 +415,9 @@ export default function ReelsComponent() {
               </ZText> */}
 
               <ZText type="m14" color={colors.white} style={styles.mb20}>
-                {item?.title.lenth < 100
+                {item?.title?.length < 100
                   ? item?.title
-                  : item?.title.slice(0, 300) + '...'}
+                  : item?.title?.slice(0, 150) + '...'}
               </ZText>
 
               {data?.data?.user?._id !== item?.author?._id && (
@@ -372,7 +450,6 @@ export default function ReelsComponent() {
                 />
               )}
             </View>
-
             <View style={localStyles.verticalContainer}>
               <VideoItem
                 icon="flag"
@@ -403,7 +480,7 @@ export default function ReelsComponent() {
                 onPress={onPressShare}
               />
             </View>
-          </View>
+          </LinearGradient>
 
           <View style={[localStyles.muteIcon, isMute && styles.p15]}>
             {isMute && (
@@ -540,7 +617,7 @@ export default function ReelsComponent() {
           }
         />
       )}
-      {/* <Comment SheetRef={commentSheetRef} /> */}
+      <Comment SheetRef={commentSheetRef} postId={selectedPostId} />
     </View>
   );
 }
@@ -587,6 +664,7 @@ const localStyles = StyleSheet.create({
   bottomContainer: {
     position: 'absolute',
     bottom: 10,
+    paddingVertical: 5,
     ...styles.ph20,
     ...styles.flexRow,
     ...styles.itemsEnd,

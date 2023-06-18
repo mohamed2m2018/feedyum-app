@@ -132,11 +132,11 @@ export default function Profile({navigation}) {
   const onPressEditProfile = () =>
     navigation.navigate(StackNav.EditProfile, {user});
 
-  const onPressSwitchAccount = () => switchAccountRef?.current?.show();
+  // const onPressSwitchAccount = () => switchAccountRef?.current?.show();
 
   const onPressSetting = () => navigation.navigate(StackNav.Setting);
 
-  const onPressFindFriend = () => navigation.navigate(StackNav.FindFriends);
+  // const onPressFindFriend = () => navigation.navigate(StackNav.FindFriends);
 
   const RenderUserDetail = ({item}) => {
     return (
@@ -181,7 +181,9 @@ export default function Profile({navigation}) {
               data={item?.views}
               reelUrl={item?.uri?.replace(getVideoExtension(item?.uri), 'jpg')}
               id={item?._id}
+              item={item}
               isPlay={!item?.avatarUri}
+              isDeleteAllowed={true}
             />
           )}
           numColumns={3}

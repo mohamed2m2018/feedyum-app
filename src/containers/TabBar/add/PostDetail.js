@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {useSelector} from 'react-redux';
 import Feather from 'react-native-vector-icons/Feather';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -32,7 +32,7 @@ import {
 import typography from '../../../themes/typography';
 import ZText from '../../../components/common/ZText';
 import ZButton from '../../../components/common/ZButton';
-import {useNavigation} from '@react-navigation/native';
+import {useNavigation, useRoute} from '@react-navigation/native';
 import {TabNav} from '../../../navigation/NavigationKeys';
 import {useQueryClient, useMutation, useQuery} from 'react-query';
 import request from '../../../api/request';
@@ -44,6 +44,14 @@ export default function PostDetail() {
   const navigation = useNavigation();
   const [postedData, setpostedData] = useState({});
   const queryClient = useQueryClient();
+  const route = useRoute();
+  const postDataToBeEdited = route?.params?.postDataToBeEdited;
+  useEffect(() => {
+    if (postDataToBeEdited) {
+      setpostedData(postDataToBeEdited);
+      setlocalUri(postDataToBeEdited?.uri || '');
+    }
+  }, [postDataToBeEdited]);
   const {data: queryResult} = useQuery('user', () => request.get('/user'), {
     retry: 1,
   });
@@ -53,68 +61,86 @@ export default function PostDetail() {
   const addNewPost = data => {
     return request.post('/story/add_story', data);
   };
-  const {isLoading, mutate} = useMutation(addNewPost);
+
+  const editPost = data => {
+    const {_id, ...dataToBeSent} = data;
+    return request.patch('/story/update_story', {
+      id: _id,
+      ...dataToBeSent,
+    });
+  };
+  const {isLoading, mutate} = useMutation(
+    postDataToBeEdited ? editPost : addNewPost,
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries('stories'); // Invalidate the 'stories' query to trigger a refetch
+        queryClient.invalidateQueries('user');
+        queryClient.invalidateQueries({queryKey: 'profile-stories'});
+        queryClient.invalidateQueries({queryKey: 'stories_following'});
+      },
+    },
+  );
   const [isPhotoUploading, setisPhotoUploading] = useState(false);
   const [localUri, setlocalUri] = useState('');
   const [isClearingCache, setIsclearingCache] = useState(false);
 
-  const [isEnabled, setIsEnabled] = useState({
-    allowComments: false,
-    allowDuet: false,
-    allowStitch: false,
-  });
+  // const [isEnabled, setIsEnabled] = useState({
+  //   allowComments: false,
+  //   allowDuet: false,
+  //   allowStitch: false,
+  // });
 
-  const postUploadData = [
-    {
-      title: strings.tagPeople,
-      icon: 'person-outline',
-    },
-    {
-      title: strings.location,
-      icon: 'location-outline',
-    },
-    {
-      title: strings.visibleEveryone,
-      icon: 'lock-closed-outline',
-    },
-    {
-      title: strings.allowComments,
-      icon: 'chatbubble-ellipses-outline',
-      rightIcon: true,
-      value: isEnabled.allowComments,
-      toggleSwitch: () =>
-        setIsEnabled({
-          ...isEnabled,
-          allowComments: isEnabled.allowComments ? false : true,
-        }),
-    },
-    {
-      title: strings.allowDuet,
-      icon: 'people-outline',
-      rightIcon: true,
-      value: isEnabled.allowDuet,
-      toggleSwitch: () =>
-        setIsEnabled({
-          ...isEnabled,
-          allowDuet: isEnabled.allowDuet ? false : true,
-        }),
-    },
-    {
-      title: strings.allowStitch,
-      icon: 'newspaper-outline',
-      rightIcon: true,
-      value: isEnabled.allowStitch,
-      toggleSwitch: () =>
-        setIsEnabled({
-          ...isEnabled,
-          allowStitch: isEnabled.allowStitch ? false : true,
-        }),
-    },
-    {
-      title: strings.moreOption,
-      icon: 'ellipsis-horizontal-circle',
-    },
-  ];
+  // const postUploadData = [
+  //   {
+  //     title: strings.tagPeople,
+  //     icon: 'person-outline',
+  //   },
+  //   {
+  //     title: strings.location,
+  //     icon: 'location-outline',
+  //   },
+  //   {
+  //     title: strings.visibleEveryone,
+  //     icon: 'lock-closed-outline',
+  //   },
+  //   {
+  //     title: strings.allowComments,
+  //     icon: 'chatbubble-ellipses-outline',
+  //     rightIcon: true,
+  //     value: isEnabled.allowComments,
+  //     toggleSwitch: () =>
+  //       setIsEnabled({
+  //         ...isEnabled,
+  //         allowComments: isEnabled.allowComments ? false : true,
+  //       }),
+  //   },
+  //   {
+  //     title: strings.allowDuet,
+  //     icon: 'people-outline',
+  //     rightIcon: true,
+  //     value: isEnabled.allowDuet,
+  //     toggleSwitch: () =>
+  //       setIsEnabled({
+  //         ...isEnabled,
+  //         allowDuet: isEnabled.allowDuet ? false : true,
+  //       }),
+  //   },
+  //   {
+  //     title: strings.allowStitch,
+  //     icon: 'newspaper-outline',
+  //     rightIcon: true,
+  //     value: isEnabled.allowStitch,
+  //     toggleSwitch: () =>
+  //       setIsEnabled({
+  //         ...isEnabled,
+  //         allowStitch: isEnabled.allowStitch ? false : true,
+  //       }),
+  //   },
+  //   {
+  //     title: strings.moreOption,
+  //     icon: 'ellipsis-horizontal-circle',
+  //   },
+  // ];
 
   const handleUpload = async (response, isImage) => {
     setisPhotoUploading(true);
@@ -350,6 +376,7 @@ export default function PostDetail() {
             <TextInput
               placeholder={'Brief description of the meal'}
               multiline={true}
+              value={postedData?.caption}
               onChangeText={input => {
                 setpostedData(currentState => ({
                   ...currentState,
@@ -373,6 +400,7 @@ export default function PostDetail() {
             />
             <TextInput
               placeholder={'Meal Name'}
+              value={postedData?.title}
               onChangeText={input =>
                 setpostedData(currentState => ({
                   ...currentState,
@@ -392,6 +420,7 @@ export default function PostDetail() {
             />
             <TextInput
               placeholder={'price'}
+              value={`${postedData?.price}`}
               onChangeText={input =>
                 setpostedData(currentState => ({
                   ...currentState,
@@ -414,6 +443,7 @@ export default function PostDetail() {
                 'link (optional), if not provided user will contact you through whatsapp'
               }
               multiline={true}
+              value={postedData?.linkToGo}
               onChangeText={input =>
                 setpostedData(currentState => ({
                   ...currentState,
@@ -465,7 +495,13 @@ export default function PostDetail() {
         <View style={localStyles.btnContainer}>
           {localUri !== '' ? (
             <ZButton
-              title={isPhotoUploading ? 'Upload..' : strings.post}
+              title={
+                isPhotoUploading
+                  ? 'Upload..'
+                  : postDataToBeEdited
+                  ? 'Edit'
+                  : strings.post
+              }
               textType={'b18'}
               disabled={isLoading || isPhotoUploading || isClearingCache}
               isLoading={isLoading || isPhotoUploading || isClearingCache}

@@ -1,11 +1,11 @@
 // Library import
 import {Image, StyleSheet, TouchableOpacity, View} from 'react-native';
-import React, {memo, useState} from 'react';
-import {FlatList} from 'react-native-gesture-handler';
+import React, {useState} from 'react';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import ActionSheet from 'react-native-actions-sheet';
 import {useSelector} from 'react-redux';
 import Feather from 'react-native-vector-icons/Feather';
+import request from '../../api/request';
 
 // Local import
 import {styles} from '../../themes';
@@ -14,8 +14,42 @@ import ZText from '../common/ZText';
 import images from '../../assets/images';
 import ZInput from '../common/ZInput';
 import strings from '../../i18n/strings';
+import {KeyboardAwareFlatList as FlatList} from 'react-native-keyboard-aware-scroll-view';
+import {useMutation, useQuery, useQueryClient} from 'react-query';
 
-export default function Comment({SheetRef}) {
+const CommentRender = ({item}, colors) => {
+  return (
+    <View>
+      <View style={localStyles.profileContainer}>
+        <View style={styles.rowCenter}>
+          <Image source={images.post} style={localStyles.userImage} />
+          <ZText type="b16" numberOfLines={1} align={'center'}>
+            {item?.user_id?.fullName}
+          </ZText>
+        </View>
+        <TouchableOpacity>
+          <Ionicons
+            name="ellipsis-horizontal-circle-outline"
+            size={moderateScale(30)}
+            color={colors.textColor}
+          />
+        </TouchableOpacity>
+      </View>
+      <ZText type="r14" style={styles.mv10} numberOfLines={2}>
+        {item?.content}
+      </ZText>
+      <View style={localStyles.likeContainer}>
+        <ZText type="r14">{item?.created_at.slice(0, 10)}</ZText>
+      </View>
+    </View>
+  );
+};
+
+const renderItem = ({item}, colors) => (
+  <CommentRender item={item} colors={colors} />
+);
+
+export default function Comment({SheetRef, postId}) {
   const colors = useSelector(state => state.theme.theme);
   const BlurredStyle = {
     backgroundColor: colors.inputBg,
@@ -26,6 +60,35 @@ export default function Comment({SheetRef}) {
     borderColor: colors.primary,
   };
 
+  const fetchCommentsByPostId = async () => {
+    const response = await request.get(`/comment?post_id=${postId}`);
+    return response.data;
+  };
+
+  const {data} = useQuery(
+    ['comments', postId],
+    () => fetchCommentsByPostId(postId),
+    {
+      skip: !postId,
+    },
+  );
+
+  const queryClient = useQueryClient();
+
+  const addComment = async commentText => {
+    const response = await request.post('/comment', {
+      postId,
+      content: commentText,
+    });
+    return response.data;
+  };
+
+  const {mutate} = useMutation(content => addComment(content), {
+    onSuccess: () => {
+      queryClient.invalidateQueries('comments');
+    },
+  });
+
   const [addChat, setAddChat] = useState('');
   const [chatStyle, setChatStyle] = useState(BlurredStyle);
 
@@ -34,49 +97,6 @@ export default function Comment({SheetRef}) {
   const onBlurInput = () => setChatStyle(BlurredStyle);
 
   const onchangeComment = text => setAddChat(text);
-
-  const CommentRender = memo(() => {
-    return (
-      <View>
-        <View style={localStyles.profileContainer}>
-          <View style={styles.rowCenter}>
-            <Image source={images.post} style={localStyles.userImage} />
-            <ZText type="b16" numberOfLines={1} align={'center'}>
-              {'Kristin Watson'}
-            </ZText>
-          </View>
-          <TouchableOpacity>
-            <Ionicons
-              name="ellipsis-horizontal-circle-outline"
-              size={moderateScale(30)}
-              color={colors.textColor}
-            />
-          </TouchableOpacity>
-        </View>
-        <ZText type="r14" style={styles.mv10} numberOfLines={2}>
-          {
-            'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna.'
-          }
-        </ZText>
-        <View style={localStyles.likeContainer}>
-          <TouchableOpacity style={styles.rowCenter}>
-            <Ionicons
-              name="heart-outline"
-              size={moderateScale(20)}
-              color={colors.textColor}
-            />
-            <ZText type="r14" style={styles.ml10}>
-              {strings.like}
-            </ZText>
-          </TouchableOpacity>
-
-          <ZText type="r14" style={styles.ml10}>
-            {'3 days ago'}
-          </ZText>
-        </View>
-      </View>
-    );
-  });
 
   return (
     <ActionSheet
@@ -97,9 +117,9 @@ export default function Comment({SheetRef}) {
         </ZText>
       </View>
       <FlatList
-        data={[1, 2, 3, 4]}
-        renderItem={() => <CommentRender />}
-        keyExtractor={item => item}
+        data={data?.comments}
+        renderItem={renderItem}
+        keyExtractor={item => item?._id}
         contentContainerStyle={localStyles.flatListContainer}
         showsVerticalScrollIndicator={false}
         bounces={false}
@@ -120,6 +140,7 @@ export default function Comment({SheetRef}) {
           onBlur={onBlurInput}
         />
         <TouchableOpacity
+          onPress={() => mutate(addChat)}
           style={[
             localStyles.sendBtn,
             {
