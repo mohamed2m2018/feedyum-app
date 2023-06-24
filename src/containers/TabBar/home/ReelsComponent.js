@@ -17,10 +17,9 @@ import LinearGradient from 'react-native-linear-gradient';
 import Video from 'react-native-video';
 import {useSelector} from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import Entypo from 'react-native-vector-icons/Entypo';
 import {useIsFocused, useNavigation, useRoute} from '@react-navigation/native';
 import {FlashList} from '@shopify/flash-list';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-
 // Local import
 import {styles} from '../../../themes';
 import {
@@ -45,6 +44,12 @@ import images from '../../../assets/images';
 import {VideoItem} from './VideoItem';
 import OneSignal from 'react-native-onesignal';
 import {ALERT_TYPE, Toast} from 'react-native-alert-notification';
+import Description from '../../../components/models/Descriptions';
+import {
+  GestureDetector,
+  Gesture,
+  GestureHandlerRootView,
+} from 'react-native-gesture-handler';
 
 const HeaderCategoryItem = React.memo(({title, onPress, category}) => {
   const colors = useSelector(state => state.theme.theme);
@@ -70,11 +75,14 @@ const HeaderCategoryItem = React.memo(({title, onPress, category}) => {
 export default function ReelsComponent() {
   const colors = useSelector(state => state.theme.theme);
   const commentSheetRef = useRef('');
+  const descriptionSheetRef = useRef('');
+
   const isFocused = useIsFocused();
   const navigation = useNavigation();
   const route = useRoute();
-  const [isMute, setIsMute] = useState(false);
+  const likeRef = useRef([]);
   const [isLike, setIsLike] = useState(false);
+  const [selectedDescription, setselectedDescription] = useState('');
   const [isBookmark, setIsBookmark] = useState(false);
   const [activeVideoIndex, setActiveVideoIndex] = useState(0);
   const [category, setCategory] = useState('For You');
@@ -102,6 +110,17 @@ export default function ReelsComponent() {
     OneSignal.setLogLevel(6, 0); // Enable verbose OneSignal logs for debugging
 
     // Handle notifications received while the app is in the foreground
+
+    OneSignal.setNotificationOpenedHandler(async notifReceivedEvent => {
+      // Display or handle the notification as needed
+
+      setStoryId(notifReceivedEvent?.notification?.additionalData?._id);
+
+      queryClient.invalidateQueries({queryKey: 'user'});
+      queryClient.invalidateQueries({queryKey: 'profile-stories'});
+
+      setnotificationReceived(true);
+    });
     OneSignal.setNotificationWillShowInForegroundHandler(
       async notifReceivedEvent => {
         // Display or handle the notification as needed
@@ -122,6 +141,17 @@ export default function ReelsComponent() {
         queryClient.invalidateQueries({queryKey: 'profile-stories'});
 
         setnotificationReceived(true);
+        Toast.show({
+          type: ALERT_TYPE.SUCCESS,
+          title: 'Notification',
+          textBody: notification.body,
+        });
+
+        setStoryId(notification.additionalData?._id);
+
+        setTimeout(() => {
+          refetch();
+        }, 500);
         notifReceivedEvent.complete(notifReceivedEvent.getNotification());
       },
     );
@@ -215,7 +245,7 @@ export default function ReelsComponent() {
         },
       }),
     {
-      enabled: !!storyId,
+      enabled: !!storyId && !!filteredData?.current?.length,
       onSuccess: res => {
         setCategory('For You');
         const filtered = filteredData?.current?.filter(item => {
@@ -228,6 +258,8 @@ export default function ReelsComponent() {
       },
     },
   );
+
+  const [pausedVideos, setPausedVideos] = useState([]);
 
   const musicToneAnimated = useRef(new Animated.Value(0)).current;
   const musicToneAnimated1 = useRef(new Animated.Value(0)).current;
@@ -257,11 +289,11 @@ export default function ReelsComponent() {
     setExtraData(!extraData);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    isMute,
     isLike,
     activeVideoIndex,
     isFocused,
     category,
+    pausedVideos,
     notificationReceived,
     filteredData.current,
   ]);
@@ -284,10 +316,12 @@ export default function ReelsComponent() {
 
   const videoError = error => console.log('videoError', error);
 
-  const onPressMute = () => setIsMute(!isMute);
-
   const onPressLike = (id, isLiked) => {
     if (!isLiked) {
+      setIsLike(true);
+      setTimeout(() => {
+        setIsLike(false);
+      }, 1000);
       addLikeMutation.mutate(id);
     } else {
       removeLikeMutation.mutate(id);
@@ -310,84 +344,84 @@ export default function ReelsComponent() {
     commentSheetRef.current?.show();
   };
 
+  const onPressMore = description => {
+    setselectedDescription(description);
+    descriptionSheetRef.current?.show();
+  };
+
   const onPressSearch = () => navigation.navigate(StackNav.Search);
-
-  const onPressLive = () => navigation.navigate(StackNav.Live);
-
+  const togglePause = index => {
+    if (pausedVideos.includes(index)) {
+      setPausedVideos(
+        pausedVideos.filter(pausedIndex => pausedIndex !== index),
+      );
+    } else {
+      setPausedVideos([...pausedVideos, index]);
+    }
+  };
   const renderReelComponent = ({item, index}) => {
+    const keyPrefix = `item-${item?._id}-index`;
+
     return (
-      <View
-        key={`item-${item?._id}`}
+      <GestureHandlerRootView
+        key={keyPrefix}
         style={{
           height: layoutHeight,
           backgroundColor: colors.darkBg,
         }}>
-        <Pressable onPress={onPressMute}>
-          {isFocused &&
-            (item?.avatarUri ? (
-              <Image
-                source={{uri: item?.avatarUri}}
-                resizeMode="contain"
-                style={[
-                  localStyles.imageContainer,
-                  {backgroundColor: colors.darkBg},
-                ]}
-              />
-            ) : (
-              isFocused && (
-                <Video
-                  source={{
-                    uri: item?.uri?.replace(
-                      getVideoExtension(item?.uri),
-                      'mp4',
-                    ),
-                  }}
+        <GestureDetector
+          gesture={Gesture.Tap()
+            .numberOfTaps(2)
+            .onStart(() => {
+              likeRef?.current?.[index]?.(item?._id);
+            })}>
+          <Pressable onPress={() => togglePause(index)}>
+            {isFocused &&
+              (item?.avatarUri ? (
+                <Image
+                  source={{uri: item?.avatarUri}}
+                  resizeMode="contain"
                   style={[
                     localStyles.imageContainer,
                     {backgroundColor: colors.darkBg},
                   ]}
-                  poster={item?.uri?.replace(
-                    getVideoExtension(item?.uri),
-                    'jpg',
-                  )}
-                  posterResizeMode="contain"
-                  resizeMode="contain"
-                  repeat={true}
-                  muted={isMute}
-                  onError={videoError}
-                  seekColor={colors.primary}
-                  paused={activeVideoIndex !== index}
                 />
-              )
-            ))}
-          <LinearGradient
-            colors={['transparent', 'rgba(0, 0, 0, 1)']}
-            style={localStyles.bottomContainer}>
-            <View style={styles.flex}>
-              <View style={styles.rowCenter}>
-                <TouchableOpacity
-                  onPress={() =>
-                    onPressProfile(
-                      item?.channelName,
-                      item?.avatarUri,
-                      item?.author?._id,
-                    )
-                  }
-                  style={styles.mb10}>
-                  <Image
-                    resizeMode="cover"
-                    source={
-                      item?.author?.avatar
-                        ? {uri: item?.author?.avatar}
-                        : colors.dark
-                        ? images.userDark
-                        : images.userLight
+              ) : (
+                isFocused && (
+                  <Video
+                    source={{
+                      uri: item?.uri?.replace(
+                        getVideoExtension(item?.uri),
+                        'mp4',
+                      ),
+                    }}
+                    style={[
+                      localStyles.imageContainer,
+                      {backgroundColor: colors.darkBg},
+                    ]}
+                    poster={item?.uri?.replace(
+                      getVideoExtension(item?.uri),
+                      'jpg',
+                    )}
+                    posterResizeMode="contain"
+                    resizeMode="contain"
+                    repeat={true}
+                    onError={videoError}
+                    seekColor={colors.primary}
+                    paused={
+                      activeVideoIndex !== index || pausedVideos.includes(index)
                     }
-                    style={localStyles.userImage}
                   />
-                </TouchableOpacity>
-                <View style={[styles.mh20, styles.flex]}>
-                  <ZText
+                )
+              ))}
+
+            <LinearGradient
+              key={`item-${item?._id}`}
+              colors={['transparent', 'rgba(0, 0, 0, 1)']}
+              style={localStyles.bottomContainer}>
+              <View style={styles.flex}>
+                <View style={styles.rowCenter}>
+                  <TouchableOpacity
                     onPress={() =>
                       onPressProfile(
                         item?.channelName,
@@ -395,104 +429,158 @@ export default function ReelsComponent() {
                         item?.author?._id,
                       )
                     }
-                    type="b18"
-                    numberOfLines={1}
-                    color={colors.white}>
-                    {item?.author?.fullName}
-                  </ZText>
-                  <ZText
-                    type="m14"
-                    style={styles.mt5}
-                    numberOfLines={1}
-                    color={colors.white}>
-                    {item?.category}
-                  </ZText>
+                    style={styles.mb10}>
+                    <Image
+                      resizeMode="cover"
+                      source={
+                        item?.author?.avatar
+                          ? {uri: item?.author?.avatar}
+                          : colors.dark
+                          ? images.userDark
+                          : images.userLight
+                      }
+                      style={localStyles.userImage}
+                    />
+                  </TouchableOpacity>
+                  <View style={[styles.mh20, styles.flex]}>
+                    <ZText
+                      onPress={() =>
+                        onPressProfile(
+                          item?.channelName,
+                          item?.avatarUri,
+                          item?.author?._id,
+                        )
+                      }
+                      type="b18"
+                      numberOfLines={1}
+                      color={colors.white}>
+                      {item?.author?.fullName}
+                    </ZText>
+                    <ZText
+                      type="m14"
+                      style={styles.mt5}
+                      numberOfLines={1}
+                      color={colors.white}>
+                      {item?.category}
+                    </ZText>
+                  </View>
                 </View>
+
+                {/* <ZText type="m14" color={colors.white} style={styles.mb10}>
+                  {item?.title}
+                </ZText> */}
+
+                <ZText type="m14" color={colors.white} style={styles.mb20}>
+                  {item?.title?.length < 100
+                    ? item?.title
+                    : item?.title?.slice(0, 150) + '...'}
+                </ZText>
+
+                <TouchableOpacity
+                  onPress={() => onPressMore(item?.title)}
+                  style={styles.button}>
+                  <ZText type="m14" color={colors.primary} style={styles.mb20}>
+                    {item?.title?.length < 100 ? '' : 'See More'}
+                  </ZText>
+                </TouchableOpacity>
+                {data?.data?.user?._id !== item?.author?._id && (
+                  <ZButton
+                    title={`Buy this for ${item?.price} EGP`}
+                    textType={'b18'}
+                    color={colors.white}
+                    containerStyle={{
+                      height: getHeight(50),
+                      borderRadius: moderateScale(20),
+                      borderWidth: moderateScale(1),
+                      width: '100%',
+                      alignSelf: 'center',
+                    }}
+                    onPress={() =>
+                      item?.linkToGo
+                        ? Linking.openURL(
+                            item?.linkToGo?.includes('http')
+                              ? item?.linkToGo
+                              : 'https://' + item?.linkToGo,
+                          )
+                        : Linking.openURL(
+                            'whatsapp://send?text=' +
+                              'Hi, I came from cookbook app, and I want to buy this dish: ' +
+                              item.caption +
+                              '&phone=2' +
+                              item?.author?.phone,
+                          )
+                    }
+                  />
+                )}
               </View>
+              <View style={localStyles.verticalContainer}>
+                <VideoItem
+                  icon="flag"
+                  size={moderateScale(24)}
+                  onPress={onPressReport}
+                />
+                <VideoItem
+                  icon="heart"
+                  data={item?.likesNo}
+                  initialIsLiked={item?.currentUserLiked}
+                  color={colors.primary}
+                  onPress={onPressLike}
+                  index={index}
+                  setIsLike={setIsLike}
+                  setExtraData={setExtraData}
+                  extraData={extraData}
+                  likeRef={likeRef}
+                  id={item?._id}
+                />
+                <VideoItem
+                  icon="chatbubble-ellipses"
+                  data={item?.comments}
+                  onPress={() => onPressComment(item?._id)}
+                />
+                <VideoItem
+                  icon={isBookmark ? 'bookmark-outline' : 'bookmark'}
+                  data={item?.bookmark}
+                  onPress={onPressBookmark}
+                />
+                <VideoItem
+                  icon="share"
+                  data={item?.share}
+                  onPress={onPressShare}
+                />
+              </View>
+            </LinearGradient>
+            {pausedVideos.includes(index) && !item?.avatarUri && (
+              <View
+                style={[
+                  localStyles.pauseIconContainer,
+                  pausedVideos.includes(index) && styles.p15,
+                ]}>
+                {pausedVideos.includes(index) && !item?.avatarUri && (
+                  <Entypo
+                    name="triangle-right"
+                    size={
+                      pausedVideos.includes(index) && !item?.avatarUri
+                        ? moderateScale(60)
+                        : 0
+                    }
+                    color={'white'}
+                  />
+                )}
+              </View>
+            )}
 
-              {/* <ZText type="m14" color={colors.white} style={styles.mb10}>
-                {item?.title}
-              </ZText> */}
-
-              <ZText type="m14" color={colors.white} style={styles.mb20}>
-                {item?.title?.length < 100
-                  ? item?.title
-                  : item?.title?.slice(0, 150) + '...'}
-              </ZText>
-
-              {data?.data?.user?._id !== item?.author?._id && (
-                <ZButton
-                  title={`Buy this for ${item?.price} EGP`}
-                  textType={'b18'}
-                  color={colors.white}
-                  containerStyle={{
-                    height: getHeight(50),
-                    borderRadius: moderateScale(20),
-                    borderWidth: moderateScale(1),
-                    width: '100%',
-                    alignSelf: 'center',
-                  }}
-                  onPress={() =>
-                    item?.linkToGo
-                      ? Linking.openURL(
-                          item?.linkToGo?.includes('http')
-                            ? item?.linkToGo
-                            : 'https://' + item?.linkToGo,
-                        )
-                      : Linking.openURL(
-                          'whatsapp://send?text=' +
-                            'Hi, I came from cookbook app, and I want to buy this dish: ' +
-                            item.caption +
-                            '&phone=2' +
-                            item?.author?.phone,
-                        )
-                  }
+            <View style={[localStyles.likeIcon, isLike && styles.p15]}>
+              {isLike && (
+                <Ionicons
+                  name="heart"
+                  size={isLike ? moderateScale(120) : 0}
+                  color={'red'}
                 />
               )}
             </View>
-            <View style={localStyles.verticalContainer}>
-              <VideoItem
-                icon="flag"
-                size={moderateScale(24)}
-                onPress={onPressReport}
-              />
-              <VideoItem
-                icon="heart"
-                data={item?.likesNo}
-                initialIsLiked={item?.currentUserLiked}
-                color={colors.primary}
-                onPress={onPressLike}
-                id={item?._id}
-              />
-              <VideoItem
-                icon="chatbubble-ellipses"
-                data={item?.comments}
-                onPress={() => onPressComment(item?._id)}
-              />
-              <VideoItem
-                icon={isBookmark ? 'bookmark-outline' : 'bookmark'}
-                data={item?.bookmark}
-                onPress={onPressBookmark}
-              />
-              <VideoItem
-                icon="share"
-                data={item?.share}
-                onPress={onPressShare}
-              />
-            </View>
-          </LinearGradient>
-
-          <View style={[localStyles.muteIcon, isMute && styles.p15]}>
-            {isMute && (
-              <Ionicons
-                name="volume-mute"
-                size={isMute ? moderateScale(36) : 0}
-                color={colors.white}
-              />
-            )}
-          </View>
-        </Pressable>
-      </View>
+          </Pressable>
+        </GestureDetector>
+      </GestureHandlerRootView>
     );
   };
 
@@ -521,13 +609,6 @@ export default function ReelsComponent() {
   return (
     <View style={{flex: 1, backgroundColor: colors.backgroundColor}}>
       <View style={localStyles.headerContainer}>
-        <TouchableOpacity onPress={onPressLive}>
-          <MaterialIcons
-            name="live-tv"
-            size={moderateScale(30)}
-            color={colors.white}
-          />
-        </TouchableOpacity>
         <View style={localStyles.headerInnerContainer}>
           <HeaderCategoryItem
             title={'Following'}
@@ -618,6 +699,10 @@ export default function ReelsComponent() {
         />
       )}
       <Comment SheetRef={commentSheetRef} postId={selectedPostId} />
+      <Description
+        SheetRef={descriptionSheetRef}
+        description={selectedDescription}
+      />
     </View>
   );
 }
@@ -633,6 +718,11 @@ const localStyles = StyleSheet.create({
     ...styles.selfCenter,
     borderRadius: moderateScale(100),
     backgroundColor: 'rgba(52, 52, 52, 0.4)',
+  },
+  likeIcon: {
+    position: 'absolute',
+    top: screenFullHeight / 2 - moderateScale(30),
+    ...styles.selfCenter,
   },
   topHeader: {
     position: 'absolute',
@@ -660,6 +750,13 @@ const localStyles = StyleSheet.create({
     ...styles.mh10,
     ...styles.pb15,
     borderBottomWidth: moderateScale(1),
+  },
+  button: {
+    backgroundColor: 'blue',
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   bottomContainer: {
     position: 'absolute',
@@ -691,6 +788,13 @@ const localStyles = StyleSheet.create({
     height: moderateScale(16),
     left: moderateScale(25),
     bottom: moderateScale(35),
+  },
+  pauseIconContainer: {
+    position: 'absolute',
+    top: screenFullHeight / 2 - moderateScale(30),
+    ...styles.selfCenter,
+    borderRadius: moderateScale(100),
+    backgroundColor: 'rgba(52, 52, 52, 0.4)',
   },
   musicContainer: {
     ...styles.rowCenter,

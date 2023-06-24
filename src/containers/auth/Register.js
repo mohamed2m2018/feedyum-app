@@ -8,7 +8,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import strings from '../../i18n/strings';
 import {styles} from '../../themes';
 import ZText from '../../components/common/ZText';
-import {getHeight, moderateScale} from '../../common/constants';
+import {ACCESS_TOKEN, getHeight, moderateScale} from '../../common/constants';
 import ZHeader from '../../components/common/ZHeader';
 import ZSafeAreaView from '../../components/common/ZSafeAreaView';
 import {Google_Icon} from '../../assets/svgs';
@@ -21,9 +21,12 @@ import ZButton from '../../components/common/ZButton';
 import {
   GoogleSignin,
   statusCodes,
-  User,
 } from '@react-native-google-signin/google-signin';
 import axios from 'axios';
+import request from '../../api/request';
+import {setAsyncStorageData} from '../../utils/helpers';
+import OneSignal from 'react-native-onesignal';
+import {ALERT_TYPE, Toast} from 'react-native-alert-notification';
 
 GoogleSignin.configure({
   // Add your web client ID here
@@ -63,20 +66,68 @@ const Register = ({navigation}) => {
       );
 
       const phoneNumber = response.data.phoneNumbers[0].value;
-      console.log(phoneNumber);
+      return phoneNumber;
     } catch (error) {
       console.log('Error occurred:', error);
     }
   };
 
+  const handleSubmit = (
+    fullName,
+    phoneNo,
+    nickname,
+    gender,
+    email,
+    type,
+    selectImage,
+  ) => {
+    request
+      .post('/user', {
+        fullName,
+        phone: phoneNo,
+        userName: nickname,
+        gender,
+        email,
+        password,
+        type,
+        avatar: selectImage,
+        isGoogleSignIn: true,
+        // categories,
+      })
+      .then(async res => {
+        await setAsyncStorageData(ACCESS_TOKEN, res?.data?.token);
+        OneSignal.setExternalUserId(res?.data?.user?._id);
+        request.defaults.headers.common.Authorization = res?.data?.token;
+        navigation.reset({
+          index: 0,
+          routes: [{name: StackNav.TabBar}],
+        });
+      })
+      .catch(err => {
+        Toast.show({
+          type: ALERT_TYPE.DANGER,
+          title: 'Error',
+          textBody: err[Object.keys(err)?.[0]],
+        });
+      });
+  };
+
   const onPressSignUpWithGoogle = async () => {
     try {
       await GoogleSignin.hasPlayServices();
-      const userInfo = await GoogleSignin.signIn();
+      const {user} = await GoogleSignin.signIn();
       const {accessToken} = await GoogleSignin.getTokens();
-      const res = await getPhoneNumber(accessToken);
+      const phone = await getPhoneNumber(accessToken);
       // Use the information as needed
-      console.log(res);
+      handleSubmit(
+        user.name,
+        phone,
+        '',
+        '',
+        user.email,
+        isChef ? 'chef' : 'user',
+        user.photo,
+      );
     } catch (error) {
       if (error.code === statusCodes.SIGN_IN_CANCELLED) {
         // User cancelled the sign-in flow
@@ -92,11 +143,6 @@ const Register = ({navigation}) => {
         console.log('Sign in error', error);
       }
     }
-  };
-
-  const signOut = async () => {
-    await GoogleSignin.revokeAccess();
-    await GoogleSignin.signOut();
   };
 
   const socialIcon = [

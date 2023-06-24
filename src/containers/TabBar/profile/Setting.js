@@ -25,6 +25,7 @@ import {StackNav} from '../../../navigation/NavigationKeys';
 import LogOut from '../../../components/models/LogOut';
 import {useQueryClient} from 'react-query';
 import request from '../../../api/request';
+import {GoogleSignin} from '@react-native-google-signin/google-signin';
 
 export default Setting = ({navigation}) => {
   const color = useSelector(state => state.theme.theme);
@@ -60,12 +61,18 @@ export default Setting = ({navigation}) => {
 
   const onPressLogOutBtn = () => LogOutSheetRef?.current?.show();
 
+  const googleSignOut = async () => {
+    await GoogleSignin.revokeAccess();
+    await GoogleSignin.signOut();
+  };
+
   const onPressYesLogOut = async () => {
     try {
       await AsyncStorage.removeItem(ACCESS_TOKEN);
       LogOutSheetRef?.current?.hide();
       await queryClient.resetQueries();
       delete request.defaults.headers.common.Authorization;
+      googleSignOut();
       setTimeout(() => {
         navigation.reset({
           index: 0,

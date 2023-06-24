@@ -104,7 +104,6 @@ export default function ReelComponent({
 
       <TouchableOpacity
         onPress={() => {
-          console.log('ddd ', item);
           navigation.navigate(StackNav.PostDetail, {
             postDataToBeEdited: item,
           });

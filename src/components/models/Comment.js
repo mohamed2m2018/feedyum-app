@@ -11,29 +11,31 @@ import request from '../../api/request';
 import {styles} from '../../themes';
 import {moderateScale} from '../../common/constants';
 import ZText from '../common/ZText';
-import images from '../../assets/images';
 import ZInput from '../common/ZInput';
 import strings from '../../i18n/strings';
 import {KeyboardAwareFlatList as FlatList} from 'react-native-keyboard-aware-scroll-view';
 import {useMutation, useQuery, useQueryClient} from 'react-query';
+import images from '../../assets/images';
 
 const CommentRender = ({item}, colors) => {
   return (
     <View>
       <View style={localStyles.profileContainer}>
         <View style={styles.rowCenter}>
-          <Image source={images.post} style={localStyles.userImage} />
+          <Image
+            source={
+              item?.user_id?.avatar
+                ? {uri: item?.user_id?.avatar}
+                : colors.dark
+                ? images.userDark
+                : images.userLight
+            }
+            style={localStyles.userImage}
+          />
           <ZText type="b16" numberOfLines={1} align={'center'}>
             {item?.user_id?.fullName}
           </ZText>
         </View>
-        <TouchableOpacity>
-          <Ionicons
-            name="ellipsis-horizontal-circle-outline"
-            size={moderateScale(30)}
-            color={colors.textColor}
-          />
-        </TouchableOpacity>
       </View>
       <ZText type="r14" style={styles.mv10} numberOfLines={2}>
         {item?.content}

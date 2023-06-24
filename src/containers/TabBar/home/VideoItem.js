@@ -14,6 +14,8 @@ export const VideoItem = ({
   color,
   icon,
   id,
+  likeRef,
+  index,
 }) => {
   const [isLiked, setisLiked] = useState(initialIsLiked);
   const colors = useSelector(state => state.theme.theme);
@@ -29,6 +31,12 @@ export const VideoItem = ({
     }
     onPress(id, isLiked);
   };
+  React.useEffect(() => {
+    if (likeRef?.current) {
+      likeRef.current[index] = handlePress;
+    }
+  }, [index, isLiked]);
+
   if (icon === 'heart') {
     return (
       <Pressable onPress={handlePress} style={localStyles.renderIconContainer}>
