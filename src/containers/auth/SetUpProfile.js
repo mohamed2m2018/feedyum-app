@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
-import React, {createRef, useState, useEffect} from 'react';
+import React, {createRef, useState} from 'react';
 import {useSelector} from 'react-redux';
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Ionicons from 'react-native-vector-icons/Ionicons';

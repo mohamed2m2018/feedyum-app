@@ -1,5 +1,7 @@
 // Library import
-import {Image, StyleSheet, TouchableOpacity, View} from 'react-native';
+import  {StyleSheet, TouchableOpacity, View} from 'react-native';
+import Image from 'react-native-fast-image';
+
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useSelector} from 'react-redux';
 import React from 'react';

@@ -1,5 +1,6 @@
 // Library Imports
-import {Image, StyleSheet, View} from 'react-native';
+import { StyleSheet, View} from 'react-native';
+import Image from 'react-native-fast-image';
 import React from 'react';
 import Swiper from 'react-native-swiper';
 import {useSelector} from 'react-redux';

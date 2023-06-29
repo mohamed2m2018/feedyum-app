@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {createRef, useState} from 'react';
+import React, {useState} from 'react';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 
@@ -27,9 +27,10 @@ import images from '../../../assets/images';
 import ZButton from '../../../components/common/ZButton';
 import {Inbox_Dark} from '../../../assets/svgs';
 import ReelComponent from '../../../components/ReelComponent';
-import {useQuery} from 'react-query';
+import {useQuery, useQueryClient} from 'react-query';
 import request from '../../../api/request';
 import {Toast, ALERT_TYPE} from 'react-native-alert-notification';
+import {useFocusEffect} from '@react-navigation/native';
 
 const UserDetail = (postsNo, followersNo, followingNo, viewsNo) => [
   {
@@ -52,7 +53,12 @@ const UserDetail = (postsNo, followersNo, followingNo, viewsNo) => [
 
 export default function Profile({navigation}) {
   const colors = useSelector(state => state.theme.theme);
-  const switchAccountRef = createRef(null);
+  const queryClient = useQueryClient();
+  useFocusEffect(
+    React.useCallback(() => {
+      queryClient.invalidateQueries('stories'); // Invalidate the 'stories' query to trigger a refetch
+    }, []),
+  );
   const [page, setpage] = useState(1);
 
   const {data} = useQuery('user', () => request.get('/user'), {retry: 1});
@@ -151,25 +157,6 @@ export default function Profile({navigation}) {
     );
   };
 
-  // const HeaderCategory = ({item}) => {
-  //   return (
-  //     <TouchableOpacity
-  //       onPress={item.onPress}
-  //       style={[
-  //         localStyles.tabItemStyle,
-  //         {
-  //           borderBottomColor:
-  //             isSelect === item.id ? colors.primary : colors.bColor,
-  //         },
-  //       ]}>
-  //       <Ionicons
-  //         name={item.icon}
-  //         size={moderateScale(30)}
-  //         color={isSelect === item.id ? colors.primary : colors.iconColor}
-  //       />
-  //     </TouchableOpacity>
-  //   );
-  // };
 
   return (
     <ZSafeAreaView>

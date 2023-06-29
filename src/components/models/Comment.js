@@ -1,7 +1,7 @@
 // Library import
-import {Image, StyleSheet, TouchableOpacity, View} from 'react-native';
+import { StyleSheet, TouchableOpacity, View} from 'react-native';
 import React, {useState} from 'react';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import Image from 'react-native-fast-image';
 import ActionSheet from 'react-native-actions-sheet';
 import {useSelector} from 'react-redux';
 import Feather from 'react-native-vector-icons/Feather';
@@ -119,6 +119,7 @@ export default function Comment({SheetRef, postId}) {
         </ZText>
       </View>
       <FlatList
+        enableOnAndroid={true}
         data={data?.comments}
         renderItem={renderItem}
         keyExtractor={item => item?._id}

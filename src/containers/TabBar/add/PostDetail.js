@@ -2,7 +2,6 @@
 import {
   ActivityIndicator,
   Image,
-  ScrollView,
   StyleSheet,
   Switch,
   TextInput,
@@ -11,7 +10,6 @@ import {
 } from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {useSelector} from 'react-redux';
-import Feather from 'react-native-vector-icons/Feather';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import ImagePicker from 'react-native-image-crop-picker';
 import axios from 'axios';
@@ -32,12 +30,18 @@ import {
 import typography from '../../../themes/typography';
 import ZText from '../../../components/common/ZText';
 import ZButton from '../../../components/common/ZButton';
-import {useNavigation, useRoute} from '@react-navigation/native';
+import {
+  useFocusEffect,
+  useNavigation,
+  useRoute,
+} from '@react-navigation/native';
 import {TabNav} from '../../../navigation/NavigationKeys';
 import {useQueryClient, useMutation, useQuery} from 'react-query';
 import request from '../../../api/request';
 import {ALERT_TYPE, Toast} from 'react-native-alert-notification';
 import images from '../../../assets/images';
+import DropdownGovr from '../home/DropDownGovr';
+import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 
 export default function PostDetail() {
   const colors = useSelector(state => state.theme.theme);
@@ -45,6 +49,11 @@ export default function PostDetail() {
   const [postedData, setpostedData] = useState({});
   const queryClient = useQueryClient();
   const route = useRoute();
+  useFocusEffect(
+    React.useCallback(() => {
+      queryClient.invalidateQueries('stories'); // Invalidate the 'stories' query to trigger a refetch
+    }, []),
+  );
   const postDataToBeEdited = route?.params?.postDataToBeEdited;
   useEffect(() => {
     if (postDataToBeEdited) {
@@ -83,64 +92,24 @@ export default function PostDetail() {
   const [isPhotoUploading, setisPhotoUploading] = useState(false);
   const [localUri, setlocalUri] = useState('');
   const [isClearingCache, setIsclearingCache] = useState(false);
+  const [phone, setPhone] = useState();
 
-  // const [isEnabled, setIsEnabled] = useState({
-  //   allowComments: false,
-  //   allowDuet: false,
-  //   allowStitch: false,
-  // });
-
-  // const postUploadData = [
-  //   {
-  //     title: strings.tagPeople,
-  //     icon: 'person-outline',
-  //   },
-  //   {
-  //     title: strings.location,
-  //     icon: 'location-outline',
-  //   },
-  //   {
-  //     title: strings.visibleEveryone,
-  //     icon: 'lock-closed-outline',
-  //   },
-  //   {
-  //     title: strings.allowComments,
-  //     icon: 'chatbubble-ellipses-outline',
-  //     rightIcon: true,
-  //     value: isEnabled.allowComments,
-  //     toggleSwitch: () =>
-  //       setIsEnabled({
-  //         ...isEnabled,
-  //         allowComments: isEnabled.allowComments ? false : true,
-  //       }),
-  //   },
-  //   {
-  //     title: strings.allowDuet,
-  //     icon: 'people-outline',
-  //     rightIcon: true,
-  //     value: isEnabled.allowDuet,
-  //     toggleSwitch: () =>
-  //       setIsEnabled({
-  //         ...isEnabled,
-  //         allowDuet: isEnabled.allowDuet ? false : true,
-  //       }),
-  //   },
-  //   {
-  //     title: strings.allowStitch,
-  //     icon: 'newspaper-outline',
-  //     rightIcon: true,
-  //     value: isEnabled.allowStitch,
-  //     toggleSwitch: () =>
-  //       setIsEnabled({
-  //         ...isEnabled,
-  //         allowStitch: isEnabled.allowStitch ? false : true,
-  //       }),
-  //   },
-  //   {
-  //     title: strings.moreOption,
-  //     icon: 'ellipsis-horizontal-circle',
-  //   },
-  // ];
+  const editUser = () => {
+    request
+      .patch('/user', {
+        phone,
+      })
+      .then(async () => {
+        await queryClient.invalidateQueries({queryKey: 'user'});
+      })
+      .catch(err =>
+        Toast.show({
+          type: ALERT_TYPE.DANGER,
+          title: 'Error',
+          textBody: err[Object.keys(err)?.[0]],
+        }),
+      );
+  };
 
   const handleUpload = async (response, isImage) => {
     setisPhotoUploading(true);
@@ -230,55 +199,16 @@ export default function PostDetail() {
     );
   };
 
-  // eslint-disable-next-line react/no-unstable-nested-components
-  const RenderShare = ({icon}) => {
-    return (
-      <TouchableOpacity
-        style={[
-          localStyles.shareIcon,
-          {
-            backgroundColor: colors.primaryTransparent,
-          },
-        ]}>
-        <Ionicons
-          name={icon}
-          size={moderateScale(26)}
-          color={colors.primary}
-          style={localStyles.instagramIcon}
-        />
-      </TouchableOpacity>
-    );
-  };
-
-  // eslint-disable-next-line react/no-unstable-nested-components
-  const RenderCategory = ({icon, title}) => {
-    return (
-      <TouchableOpacity
-        style={[
-          localStyles.hashtagContainer,
-          {
-            borderColor: colors.primary,
-          },
-        ]}>
-        <Feather
-          name={icon}
-          size={moderateScale(20)}
-          style={styles.mr5}
-          color={colors.primary}
-        />
-        <ZText type={'b14'} color={colors.primary}>
-          {title}
-        </ZText>
-      </TouchableOpacity>
-    );
-  };
-
   const onPressHome = async () => {
     if (
       !postedData?.title ||
       !postedData?.price ||
       !postedData?.caption ||
-      !postedData?.uri
+      !postedData?.uri ||
+      !postedData.governorate ||
+      !postedData.areas.length ||
+      !postedData.duration ||
+      (!user?.phone && !phone)
     ) {
       Toast.show({
         type: ALERT_TYPE.DANGER,
@@ -290,7 +220,8 @@ export default function PostDetail() {
 
     const dataToBeSent = postedData?.linkToGo
       ? postedData
-      : {...postedData, phone: user?.phone};
+      : {...postedData, phone: user?.phone || phone};
+    editUser();
 
     await mutate(dataToBeSent, {
       onSuccess: async () => {
@@ -334,7 +265,8 @@ export default function PostDetail() {
   return (
     <ZSafeAreaView>
       <ZHeader title={strings.post} />
-      <ScrollView
+      <KeyboardAwareScrollView
+        enableOnAndroid={true}
         bounces={false}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.mh20}>
@@ -374,6 +306,26 @@ export default function PostDetail() {
         {localUri && (
           <>
             <TextInput
+              placeholder={'Meal Name'}
+              value={postedData?.title}
+              onChangeText={input =>
+                setpostedData(currentState => ({
+                  ...currentState,
+                  title: input,
+                }))
+              }
+              placeholderTextColor={colors.placeHolderColor}
+              style={[
+                {
+                  backgroundColor: colors.inputBg,
+                  borderColor: colors.bColor,
+                  color: colors.textColor,
+                },
+                localStyles.smallInputContainerStyle,
+              ]}
+              inputBoxStyle={localStyles.inputBoxStyle}
+            />
+            <TextInput
               placeholder={'Brief description of the meal'}
               multiline={true}
               value={postedData?.caption}
@@ -398,29 +350,11 @@ export default function PostDetail() {
               ]}
               inputBoxStyle={localStyles.inputBoxStyle}
             />
-            <TextInput
-              placeholder={'Meal Name'}
-              value={postedData?.title}
-              onChangeText={input =>
-                setpostedData(currentState => ({
-                  ...currentState,
-                  title: input,
-                }))
-              }
-              placeholderTextColor={colors.placeHolderColor}
-              style={[
-                {
-                  backgroundColor: colors.inputBg,
-                  borderColor: colors.bColor,
-                  color: colors.textColor,
-                },
-                localStyles.smallInputContainerStyle,
-              ]}
-              inputBoxStyle={localStyles.inputBoxStyle}
-            />
+
             <TextInput
               placeholder={'price'}
-              value={`${postedData?.price}`}
+              keyboardType="number-pad"
+              value={`${postedData?.price || ''}`}
               onChangeText={input =>
                 setpostedData(currentState => ({
                   ...currentState,
@@ -438,6 +372,45 @@ export default function PostDetail() {
               ]}
               inputBoxStyle={localStyles.inputBoxStyle}
             />
+            <TextInput
+              placeholder={'No of days to deliver this order'}
+              value={`${postedData?.duration || ''}`}
+              keyboardType="number-pad"
+              onChangeText={input =>
+                setpostedData(currentState => ({
+                  ...currentState,
+                  duration: input,
+                }))
+              }
+              placeholderTextColor={colors.placeHolderColor}
+              style={[
+                {
+                  backgroundColor: colors.inputBg,
+                  borderColor: colors.bColor,
+                  color: colors.textColor,
+                },
+                localStyles.smallInputContainerStyle,
+              ]}
+              inputBoxStyle={localStyles.inputBoxStyle}
+            />
+            {!!user?.phone && (
+              <TextInput
+                placeholder={'Please add your phone number'}
+                multiline={false}
+                value={phone}
+                onChangeText={input => setPhone(input)}
+                placeholderTextColor={colors.placeHolderColor}
+                style={[
+                  {
+                    backgroundColor: colors.inputBg,
+                    borderColor: colors.bColor,
+                    color: colors.textColor,
+                  },
+                  localStyles.smallInputContainerStyle,
+                ]}
+                inputBoxStyle={localStyles.inputBoxStyle}
+              />
+            )}
             <TextInput
               placeholder={
                 'link (optional), if not provided user will contact you through whatsapp'
@@ -458,38 +431,14 @@ export default function PostDetail() {
                   color: colors.textColor,
                 },
                 localStyles.smallInputContainerStyle,
-                {height: 100},
+                {height: 70},
               ]}
               inputBoxStyle={localStyles.inputBoxStyle}
             />
-
-            {/* <View
-          style={[
-            localStyles.categoryContainer,
-            {
-              borderBottomColor: colors.bColor,
-            },
-          ]}>
-          <RenderCategory icon={'hash'} title={strings.hashtag} />
-          <RenderCategory icon={'at-sign'} title={strings.mention} />
-          <RenderCategory icon={'video'} title={strings.videos} />
-        </View>
-        <FlatList
-          data={postUploadData}
-          keyExtractor={(item, index) => item + index}
-          renderItem={({item}) => <RenderData item={item} />}
-          bounces={false}
-          showsVerticalScrollIndicator={false}
-        />
-        <ZText type={'b16'} color={colors.textColor} style={styles.mt10}>
-          {strings.shareDesc}
-        </ZText>
-        <View style={localStyles.shareContainer}>
-          <RenderShare icon={'logo-instagram'} />
-          <RenderShare icon={'logo-facebook'} />
-          <RenderShare icon={'logo-twitter'} />
-          <RenderShare icon={'logo-whatsapp'} />
-        </View> */}
+            <DropdownGovr
+              setpostedData={setpostedData}
+              postedData={postedData}
+            />
           </>
         )}
         <View style={localStyles.btnContainer}>
@@ -519,7 +468,7 @@ export default function PostDetail() {
             />
           )}
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </ZSafeAreaView>
   );
 }

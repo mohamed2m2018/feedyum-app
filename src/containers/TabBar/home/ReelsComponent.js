@@ -2,7 +2,6 @@
 import {
   Animated,
   Easing,
-  Image,
   Pressable,
   StyleSheet,
   TouchableOpacity,
@@ -11,10 +10,13 @@ import {
   Platform,
   ActivityIndicator,
   Linking,
+  RefreshControl,
+  SafeAreaView,
 } from 'react-native';
+import Image from 'react-native-fast-image';
 import React, {useEffect, useRef, useState, useCallback} from 'react';
 import LinearGradient from 'react-native-linear-gradient';
-import Video from 'react-native-video';
+import Video from 'react-native-fast-video';
 import {useSelector} from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Entypo from 'react-native-vector-icons/Entypo';
@@ -50,6 +52,7 @@ import {
   Gesture,
   GestureHandlerRootView,
 } from 'react-native-gesture-handler';
+import Locations from '../../../components/models/Locations';
 
 const HeaderCategoryItem = React.memo(({title, onPress, category}) => {
   const colors = useSelector(state => state.theme.theme);
@@ -76,14 +79,19 @@ export default function ReelsComponent() {
   const colors = useSelector(state => state.theme.theme);
   const commentSheetRef = useRef('');
   const descriptionSheetRef = useRef('');
+  const locationSheetRef = useRef('');
 
   const isFocused = useIsFocused();
   const navigation = useNavigation();
   const route = useRoute();
+
   const likeRef = useRef([]);
   const [isLike, setIsLike] = useState(false);
   const [selectedDescription, setselectedDescription] = useState('');
   const [isBookmark, setIsBookmark] = useState(false);
+  const [selectedAreas, setSelectedAreas] = useState([]);
+  const [selectedGov, setselectedGov] = useState('');
+
   const [activeVideoIndex, setActiveVideoIndex] = useState(0);
   const [category, setCategory] = useState('For You');
   const [layoutHeight, setLayoutHeight] = useState(0);
@@ -169,42 +177,47 @@ export default function ReelsComponent() {
     request.get(
       `/story/stories?limit=10&page=${page}&userId=${data?.data?.user?._id}`,
     );
-  const {hasNextPage, fetchNextPage, isFetchingNextPage, isLoading} =
-    useInfiniteQuery(
-      ['stories', data?.data?.user?._id],
-      ({pageParam = 1}) => fetchReels(pageParam),
-      {
-        getNextPageParam: (lastPage, allPages) => {
-          const nextPage =
-            lastPage?.data?.currentPage < lastPage?.data?.totalPages
-              ? allPages.length + 1
-              : undefined;
-          return nextPage;
-        },
-        onSuccess: res => {
-          if (res?.pageParams?.length === 1) {
-            flatListRef.current?.scrollToOffset({offset: 0});
-          }
-          const result = res?.pages.flatMap(page => page.data?.stories || []);
-          if (result.length) {
-            filteredData.current = result;
-          }
-        },
-        refetchOnWindowFocus: false,
-        refetchOnMount: true,
-        enabled: !!data?.data?.user?._id,
-        refetchOnReconnect: false,
+  const {
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+    isLoading,
+    isFetching,
+    refetch: refetchStories,
+  } = useInfiniteQuery(
+    ['stories', data?.data?.user?._id],
+    ({pageParam = 1}) => fetchReels(pageParam),
+    {
+      getNextPageParam: (lastPage, allPages) => {
+        const nextPage =
+          lastPage?.data?.currentPage < lastPage?.data?.totalPages
+            ? allPages.length + 1
+            : undefined;
+        return nextPage;
       },
-    );
+      onSuccess: res => {
+        if (res?.pageParams?.length === 1) {
+          flatListRef.current?.scrollToOffset({offset: 0});
+        }
+        const result = res?.pages.flatMap(page => page.data?.stories || []);
+        if (result.length) {
+          filteredData.current = result;
+        }
+      },
+      refetchOnMount: true,
+      enabled: !!data?.data?.user?._id,
+      refetchOnReconnect: false,
+    },
+  );
 
   const fetchReelsFollowing = page =>
     request.get(
       `/story/following?limit=10&page=${page}&userId=${data?.data?.user?._id}`,
     );
   const {
-    hasNextPageFollowin,
-    fetchNextPageFollowing,
-    isFetchingNextPageFollowing,
+    hasNextPage: hasNextPageFollowin,
+    fetchNextPage: fetchNextPageFollowing,
+    isFetchingNextPage: isFetchingNextPageFollowing,
     isLoadingFollowing,
   } = useInfiniteQuery(
     ['stories_following', data?.data?.user?._id],
@@ -305,7 +318,10 @@ export default function ReelsComponent() {
     request.delete(`/like/${postId}`),
   );
 
-  const onPressReport = () => navigation.navigate(StackNav.Report);
+  const onPressReport = item =>
+    navigation.navigate(StackNav.Report, {
+      storyId: item?._id,
+    });
 
   const onPressProfile = (userName, userImage, id) =>
     navigation.navigate(StackNav.ProfileDetail, {
@@ -347,6 +363,11 @@ export default function ReelsComponent() {
   const onPressMore = description => {
     setselectedDescription(description);
     descriptionSheetRef.current?.show();
+  };
+  const onPressAvailableLocation = (gov, areas) => {
+    setSelectedAreas(areas);
+    setselectedGov(gov);
+    locationSheetRef.current?.show();
   };
 
   const onPressSearch = () => navigation.navigate(StackNav.Search);
@@ -457,30 +478,47 @@ export default function ReelsComponent() {
                       {item?.author?.fullName}
                     </ZText>
                     <ZText
-                      type="m14"
-                      style={styles.mt5}
+                      type="m12"
+                      style={styles.mb5}
                       numberOfLines={1}
                       color={colors.white}>
-                      {item?.category}
+                      {item?.created_at.slice(0, 10)}
                     </ZText>
                   </View>
                 </View>
 
-                {/* <ZText type="m14" color={colors.white} style={styles.mb10}>
-                  {item?.title}
-                </ZText> */}
-
-                <ZText type="m14" color={colors.white} style={styles.mb20}>
-                  {item?.title?.length < 100
-                    ? item?.title
-                    : item?.title?.slice(0, 150) + '...'}
+                {true && (
+                  <ZText type="m12" color={colors.white}>
+                    {`Can be received in ${item?.duration} days`}
+                  </ZText>
+                )}
+                <ZText type="m14" color={colors.white}>
+                  {item.title}
+                </ZText>
+                <ZText type="m14" color={colors.white} style={styles.mv10}>
+                  {item?.caption?.length < 100
+                    ? item?.caption
+                    : item?.caption?.slice(0, 150) + '...'}
                 </ZText>
 
+                {item?.caption?.length > 100 && (
+                  <TouchableOpacity
+                    onPress={() => onPressMore(item?.caption)}
+                    style={styles.button}>
+                    <ZText type="m14" color={colors.primary}>
+                      {item?.caption?.length < 100
+                        ? ''
+                        : 'See More Description'}
+                    </ZText>
+                  </TouchableOpacity>
+                )}
                 <TouchableOpacity
-                  onPress={() => onPressMore(item?.title)}
+                  onPress={() =>
+                    onPressAvailableLocation(item?.governorate, item?.areas)
+                  }
                   style={styles.button}>
                   <ZText type="m14" color={colors.primary} style={styles.mb20}>
-                    {item?.title?.length < 100 ? '' : 'See More'}
+                    Click to check Delivery Locations
                   </ZText>
                 </TouchableOpacity>
                 {data?.data?.user?._id !== item?.author?._id && (
@@ -517,7 +555,7 @@ export default function ReelsComponent() {
                 <VideoItem
                   icon="flag"
                   size={moderateScale(24)}
-                  onPress={onPressReport}
+                  onPress={() => onPressReport(item)}
                 />
                 <VideoItem
                   icon="heart"
@@ -589,6 +627,7 @@ export default function ReelsComponent() {
   const updateViews = async storyId =>
     request.post('/views', {
       storyId,
+      userId: data?.data?.user?._id,
     });
 
   const updateViewsMutation = useMutation(updateViews);
@@ -607,103 +646,135 @@ export default function ReelsComponent() {
   const onSetLayout = e => setLayoutHeight(e.nativeEvent.layout.height);
 
   return (
-    <View style={{flex: 1, backgroundColor: colors.backgroundColor}}>
-      <View style={localStyles.headerContainer}>
-        <View style={localStyles.headerInnerContainer}>
-          <HeaderCategoryItem
-            title={'Following'}
-            onPress={() => setCategory('Following')}
-            category={category}
-          />
+    <SafeAreaView style={{flex: 1, backgroundColor: colors.backgroundColor}}>
+      <View style={{flex: 1, backgroundColor: colors.backgroundColor}}>
+        <View style={localStyles.headerContainer}>
+          <View style={localStyles.headerInnerContainer}>
+            <HeaderCategoryItem
+              title={'Following'}
+              onPress={() => {
+                refetchStories();
+                setCategory('Following');
+              }}
+              category={category}
+            />
 
-          <HeaderCategoryItem
-            title={'For You'}
-            onPress={() => setCategory('For You')}
-            category={category}
-          />
+            <HeaderCategoryItem
+              title={'For You'}
+              onPress={() => {
+                queryClient.invalidateQueries({queryKey: 'stories_following'});
+                setCategory('For You');
+              }}
+              category={category}
+            />
+          </View>
+
+          <TouchableOpacity onPress={onPressSearch}>
+            <Ionicons
+              name="search-outline"
+              size={moderateScale(30)}
+              color={colors.white}
+            />
+          </TouchableOpacity>
         </View>
-
-        <TouchableOpacity onPress={onPressSearch}>
-          <Ionicons
-            name="search-outline"
-            size={moderateScale(30)}
-            color={colors.white}
+        {category === 'For You' && (
+          <FlashList
+            data={filteredData.current}
+            refreshControl={
+              <RefreshControl
+                refreshing={isLoading || isFetching}
+                tintColor={'red'}
+                onRefresh={() => {
+                  queryClient.invalidateQueries({queryKey: 'stories'});
+                }}
+              />
+            }
+            extraData={extraData}
+            keyExtractor={keyExtractor}
+            showsVerticalScrollIndicator={false}
+            renderItem={renderReelComponent}
+            pagingEnabled={Platform.OS === 'ios'}
+            viewabilityConfig={viewConfig}
+            onViewableItemsChanged={viewableItemsChanged}
+            onLayout={onSetLayout}
+            snapToInterval={
+              Platform.OS === 'android' ? layoutHeight : undefined
+            }
+            drawDistance={layoutHeight}
+            decelerationRate={'fast'}
+            disableIntervalMomentum
+            ListEmptyComponent={
+              isLoading && (
+                <ActivityIndicator
+                  style={{alignSelf: 'center', marginTop: 400}}
+                  size={'large'}
+                />
+              )
+            }
+            estimatedItemSize={11}
+            ref={flatListRef}
+            onEndReachedThreshold={0.4}
+            onEndReached={hasNextPage ? fetchNextPage : null}
+            ListFooterComponent={
+              isFetchingNextPage && <ActivityIndicator size={'large'} />
+            }
           />
-        </TouchableOpacity>
+        )}
+
+        {category !== 'For You' && (
+          <FlashList
+            data={filteredDataFollowing.current}
+            extraData={extraData}
+            keyExtractor={keyExtractor}
+            showsVerticalScrollIndicator={false}
+            renderItem={renderReelComponent}
+            pagingEnabled={Platform.OS === 'ios'}
+            viewabilityConfig={viewConfig}
+            onViewableItemsChanged={viewableItemsChanged}
+            onLayout={onSetLayout}
+            snapToInterval={
+              Platform.OS === 'android' ? layoutHeight : undefined
+            }
+            drawDistance={layoutHeight}
+            decelerationRate={'fast'}
+            disableIntervalMomentum
+            ListEmptyComponent={
+              isLoadingFollowing ? (
+                <ActivityIndicator
+                  style={{alignSelf: 'center', marginTop: 400}}
+                  size={'large'}
+                />
+              ) : (
+                <ZText
+                  style={{textAlign: 'center', marginTop: 350}}
+                  type={'B30'}>
+                  No Dishes yet! Follow Someone first..
+                </ZText>
+              )
+            }
+            estimatedItemSize={11}
+            ref={flatListRefFollowing}
+            onEndReachedThreshold={0.4}
+            onEndReached={hasNextPageFollowin ? fetchNextPageFollowing : null}
+            ListFooterComponent={
+              isFetchingNextPageFollowing && (
+                <ActivityIndicator size={'large'} />
+              )
+            }
+          />
+        )}
+        <Comment SheetRef={commentSheetRef} postId={selectedPostId} />
+        <Description
+          SheetRef={descriptionSheetRef}
+          description={selectedDescription}
+        />
+        <Locations
+          SheetRef={locationSheetRef}
+          selectedAreas={selectedAreas}
+          selectedGov={selectedGov}
+        />
       </View>
-      {category === 'For You' ? (
-        <FlashList
-          data={filteredData.current}
-          extraData={extraData}
-          keyExtractor={keyExtractor}
-          showsVerticalScrollIndicator={false}
-          renderItem={renderReelComponent}
-          pagingEnabled={Platform.OS === 'ios'}
-          viewabilityConfig={viewConfig}
-          onViewableItemsChanged={viewableItemsChanged}
-          onLayout={onSetLayout}
-          snapToInterval={Platform.OS === 'android' ? layoutHeight : undefined}
-          drawDistance={layoutHeight}
-          decelerationRate={'fast'}
-          disableIntervalMomentum
-          ListEmptyComponent={
-            isLoading && (
-              <ActivityIndicator
-                style={{alignSelf: 'center', marginTop: 400}}
-                size={'large'}
-              />
-            )
-          }
-          estimatedItemSize={11}
-          ref={flatListRef}
-          onEndReachedThreshold={0.4}
-          onEndReached={hasNextPage ? fetchNextPage : null}
-          ListFooterComponent={
-            isFetchingNextPage && <ActivityIndicator size={'large'} />
-          }
-        />
-      ) : (
-        <FlashList
-          data={filteredDataFollowing.current}
-          extraData={extraData}
-          keyExtractor={keyExtractor}
-          showsVerticalScrollIndicator={false}
-          renderItem={renderReelComponent}
-          pagingEnabled={Platform.OS === 'ios'}
-          viewabilityConfig={viewConfig}
-          onViewableItemsChanged={viewableItemsChanged}
-          onLayout={onSetLayout}
-          snapToInterval={Platform.OS === 'android' ? layoutHeight : undefined}
-          drawDistance={layoutHeight}
-          decelerationRate={'fast'}
-          disableIntervalMomentum
-          ListEmptyComponent={
-            isLoadingFollowing ? (
-              <ActivityIndicator
-                style={{alignSelf: 'center', marginTop: 400}}
-                size={'large'}
-              />
-            ) : (
-              <ZText style={{textAlign: 'center', marginTop: 350}} type={'B30'}>
-                No Dishes yet! Follow Someone first..
-              </ZText>
-            )
-          }
-          estimatedItemSize={11}
-          ref={flatListRefFollowing}
-          onEndReachedThreshold={0.4}
-          onEndReached={hasNextPageFollowin ? fetchNextPageFollowing : null}
-          ListFooterComponent={
-            isFetchingNextPageFollowing && <ActivityIndicator size={'large'} />
-          }
-        />
-      )}
-      <Comment SheetRef={commentSheetRef} postId={selectedPostId} />
-      <Description
-        SheetRef={descriptionSheetRef}
-        description={selectedDescription}
-      />
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -788,6 +859,15 @@ const localStyles = StyleSheet.create({
     height: moderateScale(16),
     left: moderateScale(25),
     bottom: moderateScale(35),
+  },
+  durationContainer: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 4,
+    paddingVertical: 2,
+    paddingHorizontal: 4,
   },
   pauseIconContainer: {
     position: 'absolute',

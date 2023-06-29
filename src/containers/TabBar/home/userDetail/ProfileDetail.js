@@ -35,11 +35,13 @@ import {
   useQueryClient,
 } from 'react-query';
 import request from '../../../../api/request';
+import {useFocusEffect} from '@react-navigation/native';
 
 export default function ProfileDetail({navigation, route}) {
   const {id} = route.params;
   const colors = useSelector(state => state.theme.theme);
   const [isSelect, setIsSelect] = useState(0);
+  const queryClient = useQueryClient();
   const [modalVisible, setModalVisible] = useState(false);
   const {data: currentUserQuery} = useQuery(
     'user',
@@ -47,12 +49,16 @@ export default function ProfileDetail({navigation, route}) {
     {retry: 1},
   );
 
+  useFocusEffect(
+    React.useCallback(() => {
+      queryClient.invalidateQueries('stories'); // Invalidate the 'stories' query to trigger a refetch
+    }, []),
+  );
   const getFollowStatistics = () =>
     request.get(`/follow/statistics/${user?._id}`);
 
   const currentUser = currentUserQuery?.data?.user;
   const [isFollow, setIsFollow] = useState(false);
-  const queryClient = useQueryClient();
 
   const {data} = useQuery(
     ['user', id],

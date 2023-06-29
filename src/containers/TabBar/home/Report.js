@@ -13,8 +13,11 @@ import {styles} from '../../../themes';
 import {reportData} from '../../../api/constant';
 import {moderateScale} from '../../../common/constants';
 import ZButton from '../../../components/common/ZButton';
+import {useMutation} from 'react-query';
+import request from '../../../api/request';
+import {ALERT_TYPE, Toast} from 'react-native-alert-notification';
 
-export default function Report({navigation}) {
+export default function Report({navigation, route}) {
   const colors = useSelector(state => state.theme.theme);
   const [isSelected, setIsSelected] = useState('');
 
@@ -23,9 +26,35 @@ export default function Report({navigation}) {
   };
 
   const onPressSkip = () => navigation.goBack();
+  const {storyId} = route.params;
+
+  const reportPost = async ({reportReason}) =>
+    request.post('/story/report_story', {storyId, reportReason});
+
+  const reportPostMutation = useMutation(reportPost, {
+    onSuccess: () => {
+      Toast.show({
+        type: ALERT_TYPE.SUCCESS,
+        title: 'Reported',
+        textBody: 'Thank you, We will review this post',
+      });
+      onPressSkip();
+    },
+    onError: () => {
+      Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: 'Sorry',
+        textBody: 'Sorry, an error has happened',
+      });
+      onPressSkip();
+    },
+  });
+
+  const handleReportPost = () => {
+    reportPostMutation.mutate({reportReason: isSelected});
+  };
 
   const RenderData = ({item}) => {
-    console.log('item', item);
     return (
       <TouchableOpacity
         onPress={() => onPressItem(item.lnName)}
@@ -69,7 +98,7 @@ export default function Report({navigation}) {
           textType={'b18'}
           color={colors.white}
           containerStyle={localStyles.skipBtnContainer}
-          onPress={onPressSkip}
+          onPress={handleReportPost}
         />
       </View>
     </ZSafeAreaView>

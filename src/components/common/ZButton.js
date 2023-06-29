@@ -43,7 +43,12 @@ export default function ZButton({
       {/* If Icon Added In Button Front Side */}
       {frontIcon}
       {/* Text In Button */}
-      <ZText type={textType} style={style} color={color}>
+      <ZText
+        align={'center'}
+        type={textType}
+        textAlign={'center'}
+        style={style}
+        color={color}>
         {title}
       </ZText>
       {/* If Icon Added In Button Back Side */}
