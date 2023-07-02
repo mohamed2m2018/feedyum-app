@@ -58,6 +58,7 @@ import {
   BannerAdSize,
   TestIds,
   InterstitialAd,
+  AdEventType,
 } from 'react-native-google-mobile-ads';
 
 const HeaderCategoryItem = React.memo(({title, onPress, category}) => {
@@ -90,24 +91,32 @@ export default function ReelsComponent() {
 
   const interstitialAd = InterstitialAd.createForAdRequest(
     TestIds.INTERSTITIAL,
-    {
-      requestNonPersonalizedAdsOnly: true,
-    },
   );
+
+  const [loaded, setLoaded] = useState(false);
+
   useEffect(() => {
-    // Load interstitial ad
-    if (videoCount === 0) {
-      interstitialAd.load();
-    }
-  }, [videoCount]);
+    const unsubscribe = interstitialAd.addAdEventListener(
+      AdEventType.LOADED,
+      () => {
+        setLoaded(true);
+      },
+    );
+
+    // Start loading the interstitial straight away
+    interstitialAd.load();
+
+    // Unsubscribe from events on unmount
+    return unsubscribe;
+  }, []);
 
   useEffect(() => {
     // Check if the user has navigated for 20 videos or images
-    if (videoCount >= 20 && interstitialAd.loaded) {
+    if (videoCount >= 20 && loaded) {
       interstitialAd?.show();
       setVideoCount(0);
     }
-  }, [videoCount]);
+  }, [loaded, videoCount]);
 
   const isFocused = useIsFocused();
   const navigation = useNavigation();
@@ -116,7 +125,6 @@ export default function ReelsComponent() {
   const likeRef = useRef([]);
   const [isLike, setIsLike] = useState(false);
   const [selectedDescription, setselectedDescription] = useState('');
-  const [isBookmark, setIsBookmark] = useState(false);
   const [selectedAreas, setSelectedAreas] = useState([]);
   const [selectedGov, setselectedGov] = useState('');
 
@@ -687,10 +695,10 @@ export default function ReelsComponent() {
   };
   const onTouchStart = e => (this.touchx = e.nativeEvent.pageX);
   const onTouchEnd = e => {
-    if (this.touchx - e.nativeEvent.pageX > 20) {
+    if (this.touchx - e.nativeEvent.pageX > 40) {
       onClickForYou();
     }
-    if (e.nativeEvent.pageX - this.touchx > 20) {
+    if (e.nativeEvent.pageX - this.touchx > 40) {
       onClickFollowing();
     }
   };

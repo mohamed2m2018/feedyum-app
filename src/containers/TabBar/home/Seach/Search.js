@@ -59,6 +59,7 @@ export default function Search() {
     data: stories,
     fetchNextPage,
     isFetching: isFetchingsStories,
+    isFetchingNextPage,
   } = useInfiniteQuery(['search_story', search], searchStory, {
     keepPreviousData: true,
     enabled: isSelect === 1,
@@ -85,6 +86,7 @@ export default function Search() {
     data: users,
     fetchNextPage: fetchNextPageUsers,
     isFetching: isFetchingUser,
+    isFetchingNextPage: isFetchingNextPageUsers,
   } = useInfiniteQuery(['search_user', search], searchUser, {
     keepPreviousData: true,
     enabled: isSelect === 0,
@@ -176,26 +178,28 @@ export default function Search() {
         {isSelect === 0 && (
           <>
             <SearchUser
-              users={isFetchingUser ? [] : users}
+              users={isFetchingUser && !isFetchingNextPageUsers ? [] : users}
               onEndReachedThreshold={0.9}
               onMomentumScrollBegin={fetchNextPageUsers}
+              isFetchingNextPage={isFetchingNextPageUsers}
             />
-            {isFetchingUser && (
+            {isFetchingUser && !isFetchingNextPageUsers && (
               <ActivityIndicator style={localStyles.loading} size={'large'} />
             )}
           </>
         )}
         {isSelect === 1 && (
-          <>
+          <View style={{flex: 1}}>
             <SearchVideo
-              stories={isFetchingsStories ? [] : stories}
+              stories={isFetchingsStories && !isFetchingNextPage ? [] : stories}
               onEndReachedThreshold={0.9}
+              isFetchingNextPage={isFetchingNextPage}
               onMomentumScrollBegin={fetchNextPage}
             />
-            {isFetchingsStories && (
+            {isFetchingsStories && !isFetchingNextPage && (
               <ActivityIndicator style={localStyles.loading} size={'large'} />
             )}
-          </>
+          </View>
         )}
       </View>
     </ZSafeAreaView>
