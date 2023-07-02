@@ -18,12 +18,43 @@ import {useMutation, useQuery, useQueryClient} from 'react-query';
 import images from '../../assets/images';
 import Spinner from 'react-native-loading-spinner-overlay';
 import {ALERT_TYPE, Toast} from 'react-native-alert-notification';
+import {StackNav, TabNav} from '../../navigation/NavigationKeys';
+import {useNavigation} from '@react-navigation/native';
 
-const CommentRender = ({item}, colors) => {
+const navigateToProfile = (
+  currentUserId,
+  avatar,
+  fullName,
+  navigation,
+  authorId,
+) => {
+  if (authorId !== currentUserId) {
+    navigation.navigate(StackNav.ProfileDetail, {
+      userName: fullName,
+      userImage: avatar,
+      id: authorId,
+    });
+  } else {
+    navigation.navigate(TabNav.Profile);
+  }
+};
+
+const CommentRender = ({item, colors, currentUserId, navigation, SheetRef}) => {
   return (
     <View>
       <View style={localStyles.profileContainer}>
-        <View style={styles.rowCenter}>
+        <TouchableOpacity
+          style={styles.rowCenter}
+          onPress={() => {
+            SheetRef.current?.hide();
+            navigateToProfile(
+              currentUserId,
+              item?.user_id?.avatar,
+              item?.user_id?.fullName,
+              navigation,
+              item?.user_id?._id,
+            );
+          }}>
           <Image
             source={
               item?.user_id?.avatar
@@ -37,7 +68,7 @@ const CommentRender = ({item}, colors) => {
           <ZText type="b16" numberOfLines={1} align={'center'}>
             {item?.user_id?.fullName}
           </ZText>
-        </View>
+        </TouchableOpacity>
       </View>
       <ZText type="r14" style={styles.mv10} numberOfLines={2}>
         {item?.content}
@@ -49,12 +80,18 @@ const CommentRender = ({item}, colors) => {
   );
 };
 
-const renderItem = ({item}, colors) => (
-  <CommentRender item={item} colors={colors} />
-);
-
-export default function Comment({SheetRef, postId}) {
+export default function Comment({SheetRef, postId, currentUserId}) {
   const colors = useSelector(state => state.theme.theme);
+  const navigation = useNavigation();
+  const renderItem = ({item}) => (
+    <CommentRender
+      item={item}
+      colors={colors}
+      currentUserId={currentUserId}
+      navigation={navigation}
+      SheetRef={SheetRef}
+    />
+  );
   const BlurredStyle = {
     backgroundColor: colors.inputBg,
     borderColor: colors.btnColor1,
@@ -80,7 +117,7 @@ export default function Comment({SheetRef, postId}) {
         ) {
           Toast.show({
             type: ALERT_TYPE.DANGER,
-            title: 'Error',
+            title: '',
             textBody:
               err[Object.keys(err)?.[0]] || 'Sorry, an error has occured',
           });

@@ -6,7 +6,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   View,
-  Share,
   Platform,
   ActivityIndicator,
   Linking,
@@ -51,6 +50,8 @@ import {
   GestureDetector,
   Gesture,
   GestureHandlerRootView,
+  PanGestureHandler,
+  State,
 } from 'react-native-gesture-handler';
 import Locations from '../../../components/models/Locations';
 import Spinner from 'react-native-loading-spinner-overlay';
@@ -88,22 +89,24 @@ export default function ReelsComponent() {
   const descriptionSheetRef = useRef('');
   const locationSheetRef = useRef('');
   const [videoCount, setVideoCount] = useState(0);
+
   const interstitialAd = InterstitialAd.createForAdRequest(
     TestIds.INTERSTITIAL,
     {
       requestNonPersonalizedAdsOnly: true,
-      keywords: ['fashion', 'clothing'],
     },
   );
   useEffect(() => {
     // Load interstitial ad
-    interstitialAd.load();
-  }, []);
+    if (videoCount === 0) {
+      interstitialAd.load();
+    }
+  }, [videoCount]);
 
   useEffect(() => {
     // Check if the user has navigated for 20 videos or images
-    if (videoCount >= 20) {
-      interstitialAd.current?.show?.();
+    if (videoCount >= 20 && interstitialAd.loaded) {
+      interstitialAd?.show();
       setVideoCount(0);
     }
   }, [videoCount]);
@@ -381,16 +384,7 @@ export default function ReelsComponent() {
     }
   };
 
-  const onPressBookmark = () => setIsBookmark(!isBookmark);
-
   const [selectedPostId, setSelectedPostId] = useState();
-
-  const onPressShare = () => {
-    Share.share({
-      message:
-        'FoodTok App | Entertainment, Social, Music, Video, Live, Chat...',
-    });
-  };
 
   const onPressComment = postId => {
     setSelectedPostId(postId);
@@ -684,26 +678,42 @@ export default function ReelsComponent() {
 
   const onSetLayout = e => setLayoutHeight(e.nativeEvent.layout.height);
 
+  const onClickFollowing = () => {
+    refetchStories();
+    setCategory('Following');
+  };
+
+  const onClickForYou = () => {
+    refetchStoriesFollowing();
+    setCategory('For You');
+  };
+  const onTouchStart = e => (this.touchx = e.nativeEvent.pageX);
+  const onTouchEnd = e => {
+    if (this.touchx - e.nativeEvent.pageX > 20) {
+      onClickForYou();
+    }
+    if (e.nativeEvent.pageX - this.touchx > 20) {
+      onClickFollowing();
+    }
+  };
+
   return (
     <SafeAreaView style={{flex: 1, backgroundColor: colors.backgroundColor}}>
-      <View style={{flex: 1, backgroundColor: colors.backgroundColor}}>
+      <View
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+        style={{flex: 1, backgroundColor: colors.backgroundColor}}>
         <View style={localStyles.headerContainer}>
           <View style={localStyles.headerInnerContainer}>
             <HeaderCategoryItem
               title={'Following'}
-              onPress={() => {
-                refetchStories();
-                setCategory('Following');
-              }}
+              onPress={onClickFollowing}
               category={category}
             />
 
             <HeaderCategoryItem
               title={'For You'}
-              onPress={() => {
-                refetchStoriesFollowing();
-                setCategory('For You');
-              }}
+              onPress={onClickForYou}
               category={category}
             />
           </View>
@@ -819,7 +829,11 @@ export default function ReelsComponent() {
             }
           />
         )}
-        <Comment SheetRef={commentSheetRef} postId={selectedPostId} />
+        <Comment
+          SheetRef={commentSheetRef}
+          postId={selectedPostId}
+          currentUserId={data?.data?.user?._id}
+        />
         <Description
           SheetRef={descriptionSheetRef}
           description={selectedDescription}
