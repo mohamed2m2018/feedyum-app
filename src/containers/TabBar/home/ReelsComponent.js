@@ -20,12 +20,7 @@ import Video from 'react-native-fast-video';
 import {useSelector} from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Entypo from 'react-native-vector-icons/Entypo';
-import {
-  useFocusEffect,
-  useIsFocused,
-  useNavigation,
-  useRoute,
-} from '@react-navigation/native';
+import {useIsFocused, useNavigation, useRoute} from '@react-navigation/native';
 import {FlashList} from '@shopify/flash-list';
 // Local import
 import {styles} from '../../../themes';
@@ -127,7 +122,7 @@ export default function ReelsComponent() {
 
     OneSignal.setNotificationOpenedHandler(async notifReceivedEvent => {
       // Display or handle the notification as needed
-
+      navigation.navigate(TabNav.Home);
       setStoryId(notifReceivedEvent?.notification?.additionalData?._id);
 
       queryClient.invalidateQueries({queryKey: 'user'});
@@ -144,6 +139,7 @@ export default function ReelsComponent() {
           title: 'Notification',
           textBody: notification.body,
         });
+        navigation.navigate(TabNav.Home);
 
         setStoryId(notification.additionalData?._id);
 
@@ -160,6 +156,7 @@ export default function ReelsComponent() {
           title: 'Notification',
           textBody: notification.body,
         });
+        navigation.navigate(TabNav.Home);
 
         setStoryId(notification.additionalData?._id);
 
@@ -533,36 +530,36 @@ export default function ReelsComponent() {
                     Click to check Delivery Locations
                   </ZText>
                 </TouchableOpacity>
-                {(data?.data?.user?._id !== item?.author?._id ||
-                  item?.author?.type === 'user') && (
-                  <ZButton
-                    title={`Buy this for ${item?.price} EGP`}
-                    textType={'b18'}
-                    color={colors.white}
-                    containerStyle={{
-                      height: getHeight(50),
-                      borderRadius: moderateScale(20),
-                      borderWidth: moderateScale(1),
-                      width: '100%',
-                      alignSelf: 'center',
-                    }}
-                    onPress={() =>
-                      item?.linkToGo
-                        ? Linking.openURL(
-                            item?.linkToGo?.includes('http')
-                              ? item?.linkToGo
-                              : 'https://' + item?.linkToGo,
-                          )
-                        : Linking.openURL(
-                            'whatsapp://send?text=' +
-                              'Hi, I came from cookbook app, and I want to buy this dish: ' +
-                              item.caption +
-                              '&phone=2' +
-                              item?.author?.phone,
-                          )
-                    }
-                  />
-                )}
+                {data?.data?.user?._id !== item?.author?._id &&
+                  item?.author?.type !== 'user' && (
+                    <ZButton
+                      title={`Buy this for ${item?.price} EGP`}
+                      textType={'b18'}
+                      color={colors.white}
+                      containerStyle={{
+                        height: getHeight(50),
+                        borderRadius: moderateScale(20),
+                        borderWidth: moderateScale(1),
+                        width: '100%',
+                        alignSelf: 'center',
+                      }}
+                      onPress={() =>
+                        item?.linkToGo
+                          ? Linking.openURL(
+                              item?.linkToGo?.includes('http')
+                                ? item?.linkToGo
+                                : 'https://' + item?.linkToGo,
+                            )
+                          : Linking.openURL(
+                              'whatsapp://send?text=' +
+                                'Hi, I came from FoodTok app, and I want to buy this dish: ' +
+                                item.caption +
+                                '&phone=2' +
+                                item?.author?.phone,
+                            )
+                      }
+                    />
+                  )}
               </View>
               <View style={localStyles.verticalContainer}>
                 <VideoItem
