@@ -6,7 +6,6 @@ import ActionSheet, {useScrollHandlers} from 'react-native-actions-sheet';
 import {useSelector} from 'react-redux';
 import Feather from 'react-native-vector-icons/Feather';
 import request from '../../api/request';
-
 // Local import
 import {styles} from '../../themes';
 import {moderateScale} from '../../common/constants';
@@ -39,7 +38,26 @@ const navigateToProfile = (
   }
 };
 
-const CommentRender = ({item, colors, currentUserId, navigation, SheetRef}) => {
+const CommentRender = ({
+  item,
+  colors,
+  currentUserId,
+  navigation,
+  SheetRef,
+  postId,
+}) => {
+  const queryClient = useQueryClient();
+
+  const deleteComment = async () => {
+    await request.delete(`/comment/${postId}/${item._id}`);
+  };
+
+  const mutation = useMutation(() => deleteComment(item._id), {
+    onSuccess: () => {
+      queryClient.invalidateQueries('comments');
+    },
+  });
+
   return (
     <View>
       <View style={localStyles.profileContainer}>
@@ -69,6 +87,17 @@ const CommentRender = ({item, colors, currentUserId, navigation, SheetRef}) => {
             {item?.user_id?.fullName}
           </ZText>
         </TouchableOpacity>
+        {item?.user_id?._id === currentUserId && (
+          <TouchableOpacity
+            style={localStyles.deleteButton}
+            onPress={() => mutation.mutate(item)}>
+            <Feather
+              name="trash-2"
+              size={moderateScale(20)}
+              color={colors.primary}
+            />
+          </TouchableOpacity>
+        )}
       </View>
       <ZText type="r14" style={styles.mv10} numberOfLines={2}>
         {item?.content}
@@ -90,6 +119,7 @@ export default function Comment({SheetRef, postId, currentUserId}) {
       currentUserId={currentUserId}
       navigation={navigation}
       SheetRef={SheetRef}
+      postId={postId}
     />
   );
   const BlurredStyle = {
@@ -196,7 +226,7 @@ export default function Comment({SheetRef, postId, currentUserId}) {
         showsVerticalScrollIndicator={false}
         bounces={false}
       />
-      <View style={[styles.rowCenter, styles.mb20]}>
+      <View style={[styles.rowCenter, {marginBottom: 30}]}>
         <ZInput
           placeHolder={strings.message + '...'}
           keyBoardType={'default'}

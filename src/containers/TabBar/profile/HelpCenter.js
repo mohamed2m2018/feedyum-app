@@ -1,11 +1,5 @@
 // Library import
-import {
-  ScrollView,
-  StyleSheet,
-  View,
-  TouchableOpacity,
-  FlatList,
-} from 'react-native';
+import {ScrollView, StyleSheet, View, TouchableOpacity} from 'react-native';
 import React, {memo, useEffect, useState} from 'react';
 import {useSelector} from 'react-redux';
 import Feather from 'react-native-vector-icons/Feather';
@@ -71,7 +65,7 @@ const HelpCenter = () => {
   }, [search]);
 
   const filterData = () => {
-    if (!!search) {
+    if (search) {
       const filteredData = helperData.filter(item =>
         item.title.toLowerCase().includes(search.toLowerCase()),
       );
@@ -161,10 +155,13 @@ const HelpCenter = () => {
     });
   });
 
+  // eslint-disable-next-line react/no-unstable-nested-components
   const ContactUsRender = memo(() => {
-    return contactUsData.map((item, index) => {
+    return contactUsData.map(item => {
       return (
-        <View
+        <TouchableOpacity
+          onPress={item?.onPress}
+          key={item?.title}
           style={[
             localStyles.contactUsContainer,
             {
@@ -178,7 +175,7 @@ const HelpCenter = () => {
             style={styles.ph20}
           />
           <ZText type={'b18'}>{item.title}</ZText>
-        </View>
+        </TouchableOpacity>
       );
     });
   });
@@ -199,14 +196,14 @@ const HelpCenter = () => {
         </View>
         {isSelect === 0 ? (
           <View>
-            <FlatList
+            {/* <FlatList
               data={helperCategoryData}
               renderItem={renderChips}
               keyExtractor={(item, index) => index.toString()}
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.mv10}
-            />
+            /> */}
             <ZInput
               placeHolder={strings.search}
               _value={search}
@@ -224,7 +221,7 @@ const HelpCenter = () => {
               onBlur={onUnHighlightInput}
               rightAccessory={() => <Control />}
             />
-            {!!faqData.length ? (
+            {faqData.length ? (
               <RenderHelper helperData={faqData} />
             ) : (
               <View>

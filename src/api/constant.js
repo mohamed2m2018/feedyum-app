@@ -1,3 +1,4 @@
+import {Linking} from 'react-native';
 import images from '../assets/images';
 import strings from '../i18n/strings';
 import {StackNav} from '../navigation/NavigationKeys';
@@ -241,11 +242,11 @@ const ProfileSetting = [
     icon: 'contrast-outline',
     rightIcon: 'rightIcon',
   },
-  {
-    id: 3,
-    title: strings.reportProblem,
-    icon: 'cloud-download-outline',
-  },
+  // {
+  //   id: 3,
+  //   title: strings.reportProblem,
+  //   icon: 'cloud-download-outline',
+  // },
   {
     id: 7,
     title: strings.helpCenter,
@@ -272,65 +273,56 @@ const helperData = [
   {
     title: 'What is FoodTok?',
     description:
-      'FoodTok is a streaming service that offers a wide variety of anime titles.',
+      'FoodTok is an app designed for chefs, restaurants, and food enthusiasts to share their passion for food through videos and photos. It provides a platform for users to showcase their culinary creations, discover new recipes, and connect with others in the food community.',
   },
   {
-    title: 'How do I sign up for FoodTok?',
+    title: 'How can I sign up for FoodTok?',
     description:
-      'You can sign up for FoodTok by downloading the app from the App Store or Google Play Store.',
+      'To sign up for FoodTok, simply download the app from the Google Play Store. The app is currently available exclusively for Android users. Once downloaded, you can create an account by providing your basic information and setting up a profile. Stay tuned for updates on availability for other platforms.',
   },
   {
-    title: 'How to remove anime on wishlist?',
+    title: 'How can I submit videos and photos about food on FoodTok?',
     description:
-      'You can remove anime on your wishlist by clicking the heart icon on the anime details page.',
+      "Submitting videos and photos on FoodTok is easy. After signing up and logging into your account, you can navigate to the 'Submit' section within the app. From there, you can choose to upload your own videos and photos showcasing your culinary creations. Please ensure that your submissions adhere to any content guidelines and quality standards set by FoodTok.",
   },
   {
-    title: 'How do I subscribe to premium?',
+    title: 'Can I contact chefs and restaurants through FoodTok?',
     description:
-      'You can subscribe to premium by clicking the premium button on the home page.',
+      "Absolutely! FoodTok provides a convenient way to connect with chefs and restaurants. You can explore profiles of chefs and restaurants on the app and engage with them through comments, direct messages, or even collaborations. It's a great opportunity to learn from industry professionals and foster meaningful connections within the culinary community.",
   },
   {
-    title: 'How do I can download anime?',
+    title: 'How do I remove videos and photos from FoodTok?',
     description:
-      'You can download anime by clicking the download icon on the anime details page.',
+      "If you want to remove any of your submitted videos or photos from FoodTok, you can easily do so by accessing your profile and selecting the specific content you wish to delete. Keep in mind that once deleted, the content will no longer be visible to other users. However, it's important to note that removing content may also impact its availability for others to discover and engage with.",
   },
   {
-    title: 'How to unsubscribe from premium?',
+    title: 'How can I download the FoodTok app?',
     description:
-      'You can unsubscribe from premium by clicking the premium button on the home page.',
+      "Currently, the FoodTok app is available exclusively on the Google Play Store for Android devices. You can search for 'FoodTok' in the Play Store and download it for free. Stay tuned for future announcements regarding availability on other platforms, such as iOS.",
+  },
+  {
+    title: 'How do I unsubscribe from premium on FoodTok?',
+    description:
+      'While there is no premium subscription available at the moment, we are actively working on introducing premium features in the near future. Once the premium subscription becomes available, you will be able to manage your subscription through the app settings. We will provide clear instructions on how to unsubscribe if you wish to do so.',
   },
 ];
 
 const contactUsData = [
   {
-    id: 1,
-    title: 'Contact Us',
-    icon: 'headset',
-  },
-  {
-    id: 2,
-    title: 'WhatsApp',
-    icon: 'whatsapp',
-  },
-  {
-    id: 3,
-    title: 'Website',
-    icon: 'google-earth',
-  },
-  {
     id: 4,
     title: 'Facebook',
     icon: 'facebook',
+    onPress: () => {
+      Linking.openURL('https://www.facebook.com/thefoodtok');
+    },
   },
   {
     id: 5,
     title: 'Instagram',
     icon: 'instagram',
-  },
-  {
-    id: 6,
-    title: 'Twitter',
-    icon: 'twitter',
+    onPress: () => {
+      Linking.openURL('https://www.instagram.com/the.foodtok/');
+    },
   },
 ];
 
@@ -438,32 +430,39 @@ const reportData = [
 
 const privacyPolicyData = [
   {
-    title: strings.privacyPolicy1,
-    description: strings.privacyPolicyDesc,
+    title: '1. Collection of Personal Information',
+    description:
+      'FoodTok collects personal information that you voluntarily provide when using the app. This may include your name, email address, profile picture, and any additional information you choose to share in your user profile. We only collect personal information that is necessary for the functioning of the app and to provide you with a personalized experience.',
   },
   {
-    title: strings.privacyPolicy2,
-    description: strings.privacyPolicyDesc,
+    title: '2. Use of Information',
+    description:
+      "FoodTok uses the collected information to enhance your experience on the app. We may use your personal information to create and maintain your user account, provide customer support, send you relevant updates and notifications, and personalize the content and recommendations you see on the app. Additionally, we may analyze user behavior and interactions to improve the app's features and functionality.",
   },
   {
-    title: strings.privacyPolicy3,
-    description: strings.privacyPolicyDesc,
+    title: '3. Sharing of Information',
+    description:
+      "FoodTok may share your personal information with trusted third-party service providers to assist us in delivering and improving the app's features. These service providers are contractually obligated to maintain the confidentiality and security of your information and are prohibited from using it for any other purpose. We may also share your information in response to legal obligations, such as complying with applicable laws, regulations, or court orders.",
   },
   {
-    title: strings.privacyPolicy2,
-    description: strings.privacyPolicyDesc,
+    title: '4. Data Security',
+    description:
+      'FoodTok takes data security seriously and implements industry-standard measures to protect your personal information from unauthorized access, disclosure, alteration, or destruction. We use encryption and secure data storage practices to safeguard your data. However, please be aware that no data transmission or storage system can guarantee 100% security, and we cannot guarantee the absolute security of your personal information.',
   },
   {
-    title: strings.privacyPolicy3,
-    description: strings.privacyPolicyDesc,
+    title: '5. Third-Party Links',
+    description:
+      'The FoodTok app may contain links to third-party websites or services, such as recipes, restaurants, or cooking-related resources. Please note that we are not responsible for the privacy practices or the content of these third-party websites or services. We encourage you to review the privacy policies and terms of service of these third parties before interacting with them or providing any personal information.',
   },
   {
-    title: strings.privacyPolicy2,
-    description: strings.privacyPolicyDesc,
+    title: "6. Children's Privacy",
+    description:
+      'FoodTok is intended for users who are 13 years of age or older. We do not knowingly collect personal information from children under the age of 13. If we become aware that we have inadvertently collected personal information from a child under 13 without parental consent, we will promptly delete the information from our records. If you believe that your child has provided personal information without your consent, please contact us to request its removal.',
   },
   {
-    title: strings.privacyPolicy3,
-    description: strings.privacyPolicyDesc,
+    title: '7. Changes to this Privacy Policy',
+    description:
+      'FoodTok reserves the right to update or modify this Privacy Policy from time to time. When we make changes, we will notify you through the app or by other means of communication. It is recommended to review this Privacy Policy periodically for any updates. Your continued use of the FoodTok app after the changes are implemented will signify your acceptance of the updated Privacy Policy.',
   },
 ];
 

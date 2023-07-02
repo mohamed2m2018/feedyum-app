@@ -264,7 +264,6 @@ const DropdownGovr = ({postedData, setpostedData}) => {
     }));
   };
 
-  console.log(postedData)
   return (
     <View>
       <SelectList
