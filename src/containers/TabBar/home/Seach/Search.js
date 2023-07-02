@@ -58,7 +58,7 @@ export default function Search() {
   const {
     data: stories,
     fetchNextPage,
-    isFetching: isFechingStories,
+    isFetching: isFetchingsStories,
   } = useInfiniteQuery(['search_story', search], searchStory, {
     keepPreviousData: true,
     enabled: isSelect === 1,
@@ -175,26 +175,24 @@ export default function Search() {
 
         {isSelect === 0 && (
           <>
-            {!isFetchingUser ? (
-              <SearchUser
-                users={users}
-                onEndReachedThreshold={0.9}
-                onMomentumScrollBegin={fetchNextPageUsers}
-              />
-            ) : (
+            <SearchUser
+              users={isFetchingUser ? [] : users}
+              onEndReachedThreshold={0.9}
+              onMomentumScrollBegin={fetchNextPageUsers}
+            />
+            {isFetchingUser && (
               <ActivityIndicator style={localStyles.loading} size={'large'} />
             )}
           </>
         )}
         {isSelect === 1 && (
           <>
-            {!isFechingStories ? (
-              <SearchVideo
-                stories={stories}
-                onEndReachedThreshold={0.9}
-                onMomentumScrollBegin={fetchNextPage}
-              />
-            ) : (
+            <SearchVideo
+              stories={isFetchingsStories ? [] : stories}
+              onEndReachedThreshold={0.9}
+              onMomentumScrollBegin={fetchNextPage}
+            />
+            {isFetchingsStories && (
               <ActivityIndicator style={localStyles.loading} size={'large'} />
             )}
           </>

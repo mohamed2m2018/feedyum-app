@@ -54,6 +54,12 @@ import {
 } from 'react-native-gesture-handler';
 import Locations from '../../../components/models/Locations';
 import Spinner from 'react-native-loading-spinner-overlay';
+import {
+  BannerAd,
+  BannerAdSize,
+  TestIds,
+  InterstitialAd,
+} from 'react-native-google-mobile-ads';
 
 const HeaderCategoryItem = React.memo(({title, onPress, category}) => {
   const colors = useSelector(state => state.theme.theme);
@@ -81,6 +87,26 @@ export default function ReelsComponent() {
   const commentSheetRef = useRef('');
   const descriptionSheetRef = useRef('');
   const locationSheetRef = useRef('');
+  const [videoCount, setVideoCount] = useState(0);
+  const interstitialAd = InterstitialAd.createForAdRequest(
+    TestIds.INTERSTITIAL,
+    {
+      requestNonPersonalizedAdsOnly: true,
+      keywords: ['fashion', 'clothing'],
+    },
+  );
+  useEffect(() => {
+    // Load interstitial ad
+    interstitialAd.load();
+  }, []);
+
+  useEffect(() => {
+    // Check if the user has navigated for 20 videos or images
+    if (videoCount >= 20) {
+      interstitialAd.current?.show?.();
+      setVideoCount(0);
+    }
+  }, [videoCount]);
 
   const isFocused = useIsFocused();
   const navigation = useNavigation();
@@ -219,7 +245,9 @@ export default function ReelsComponent() {
     hasNextPage: hasNextPageFollowin,
     fetchNextPage: fetchNextPageFollowing,
     isFetchingNextPage: isFetchingNextPageFollowing,
-    isLoadingFollowing,
+    isLoading: isLoadingFollowing,
+    isFetching: isFetchingFollowing,
+    refetch: refetchStoriesFollowing,
   } = useInfiniteQuery(
     ['stories_following', data?.data?.user?._id],
     ({pageParam = 1}) => fetchReelsFollowing(pageParam),
@@ -649,6 +677,7 @@ export default function ReelsComponent() {
   const viewableItemsChanged = useRef(({viewableItems}) => {
     if (viewableItems?.length) {
       setActiveVideoIndex(viewableItems[0].index);
+      setVideoCount(prevCount => prevCount + 1);
       updateViewsMutation.mutate(viewableItems[0]?.item?._id);
     }
   }).current;
@@ -672,7 +701,7 @@ export default function ReelsComponent() {
             <HeaderCategoryItem
               title={'For You'}
               onPress={() => {
-                queryClient.invalidateQueries({queryKey: 'stories_following'});
+                refetchStoriesFollowing();
                 setCategory('For You');
               }}
               category={category}
@@ -698,7 +727,7 @@ export default function ReelsComponent() {
               refreshControl={
                 <RefreshControl
                   refreshing={isLoading || isFetching}
-                  tintColor={'red'}
+                  tintColor={colors.primary}
                   onRefresh={() => {
                     queryClient.invalidateQueries({queryKey: 'stories'});
                   }}
@@ -754,6 +783,17 @@ export default function ReelsComponent() {
             drawDistance={layoutHeight}
             decelerationRate={'fast'}
             disableIntervalMomentum
+            refreshControl={
+              <RefreshControl
+                refreshing={isLoadingFollowing || isFetchingFollowing}
+                tintColor={colors.primary}
+                onRefresh={() => {
+                  queryClient.invalidateQueries({
+                    queryKey: 'stories_following',
+                  });
+                }}
+              />
+            }
             ListEmptyComponent={
               isLoadingFollowing ? (
                 <ActivityIndicator
@@ -789,6 +829,15 @@ export default function ReelsComponent() {
           selectedAreas={selectedAreas}
           selectedGov={selectedGov}
         />
+        <View style={{alignItems: 'center'}}>
+          <BannerAd
+            unitId={TestIds.BANNER}
+            size={BannerAdSize.BANNER}
+            requestOptions={{
+              requestNonPersonalizedAdsOnly: true,
+            }}
+          />
+        </View>
       </View>
     </SafeAreaView>
   );
