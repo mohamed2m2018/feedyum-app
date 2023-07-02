@@ -1,5 +1,11 @@
 // Library import
-import {FlatList, StyleSheet, TouchableOpacity, View} from 'react-native';
+import {
+  ActivityIndicator,
+  FlatList,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import React, {memo, useState} from 'react';
 import {useSelector} from 'react-redux';
 import Feather from 'react-native-vector-icons/Feather';
@@ -8,7 +14,6 @@ import Feather from 'react-native-vector-icons/Feather';
 import ZSafeAreaView from '../../../../components/common/ZSafeAreaView';
 import ZInput from '../../../../components/common/ZInput';
 import strings from '../../../../i18n/strings';
-import {Control} from '../../../../assets/svgs';
 import {moderateScale} from '../../../../common/constants';
 import {styles} from '../../../../themes';
 import ZText from '../../../../components/common/ZText';
@@ -50,23 +55,23 @@ export default function Search() {
       },
     });
 
-  const {data: stories, fetchNextPage} = useInfiniteQuery(
-    ['search_story', search],
-    searchStory,
-    {
-      keepPreviousData: true,
-      enabled: isSelect === 1,
-      getNextPageParam: (lastPage, allPages) => {
-        const nextPage =
-          lastPage?.data?.currentPage < lastPage?.data?.totalPages
-            ? allPages.length + 1
-            : undefined;
-        return nextPage;
-      },
-
-      select: res => res?.pages.flatMap(page => page.data?.stories || []),
+  const {
+    data: stories,
+    fetchNextPage,
+    isFetching: isFechingStories,
+  } = useInfiniteQuery(['search_story', search], searchStory, {
+    keepPreviousData: true,
+    enabled: isSelect === 1,
+    getNextPageParam: (lastPage, allPages) => {
+      const nextPage =
+        lastPage?.data?.currentPage < lastPage?.data?.totalPages
+          ? allPages.length + 1
+          : undefined;
+      return nextPage;
     },
-  );
+
+    select: res => res?.pages.flatMap(page => page.data?.stories || []),
+  });
 
   const searchUser = ({pageParam = 1}) =>
     request.get(`/user/search?page=${pageParam}`, {
@@ -76,23 +81,23 @@ export default function Search() {
       },
     });
 
-  const {data: users, fetchNextPage: fetchNextPageUsers} = useInfiniteQuery(
-    ['search_user', search],
-    searchUser,
-    {
-      keepPreviousData: true,
-      enabled: isSelect === 0,
-      getNextPageParam: (lastPage, allPages) => {
-        const nextPage =
-          lastPage?.data?.currentPage < lastPage?.data?.totalPages
-            ? allPages.length + 1
-            : undefined;
-        return nextPage;
-      },
-
-      select: res => res?.pages.flatMap(page => page.data?.users || []),
+  const {
+    data: users,
+    fetchNextPage: fetchNextPageUsers,
+    isFetching: isFetchingUser,
+  } = useInfiniteQuery(['search_user', search], searchUser, {
+    keepPreviousData: true,
+    enabled: isSelect === 0,
+    getNextPageParam: (lastPage, allPages) => {
+      const nextPage =
+        lastPage?.data?.currentPage < lastPage?.data?.totalPages
+          ? allPages.length + 1
+          : undefined;
+      return nextPage;
     },
-  );
+
+    select: res => res?.pages.flatMap(page => page.data?.users || []),
+  });
 
   const SearchIcon = () => {
     return (
@@ -114,7 +119,10 @@ export default function Search() {
     return (
       <TouchableOpacity
         key={index}
-        onPress={() => setIsSelect(index)}
+        onPress={() => {
+          setSearch('');
+          setIsSelect(index);
+        }}
         style={[
           localStyles.root,
           {
@@ -151,7 +159,6 @@ export default function Search() {
           inputBoxStyle={localStyles.inputBoxStyle}
           _onFocus={onHighlightInput}
           onBlur={onUnHighlightInput}
-          rightAccessory={() => <Control />}
         />
         <View style={{height: moderateScale(50)}}>
           <FlatList
@@ -167,18 +174,30 @@ export default function Search() {
         </View>
 
         {isSelect === 0 && (
-          <SearchUser
-            users={users}
-            onEndReachedThreshold={0.9}
-            onMomentumScrollBegin={fetchNextPageUsers}
-          />
+          <>
+            {!isFetchingUser ? (
+              <SearchUser
+                users={users}
+                onEndReachedThreshold={0.9}
+                onMomentumScrollBegin={fetchNextPageUsers}
+              />
+            ) : (
+              <ActivityIndicator style={localStyles.loading} size={'large'} />
+            )}
+          </>
         )}
         {isSelect === 1 && (
-          <SearchVideo
-            stories={stories}
-            onEndReachedThreshold={0.9}
-            onMomentumScrollBegin={fetchNextPage}
-          />
+          <>
+            {!isFechingStories ? (
+              <SearchVideo
+                stories={stories}
+                onEndReachedThreshold={0.9}
+                onMomentumScrollBegin={fetchNextPage}
+              />
+            ) : (
+              <ActivityIndicator style={localStyles.loading} size={'large'} />
+            )}
+          </>
         )}
       </View>
     </ZSafeAreaView>
@@ -204,5 +223,14 @@ const localStyles = StyleSheet.create({
   root: {
     borderBottomWidth: moderateScale(2),
     ...styles.ph25,
+  },
+  loading: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

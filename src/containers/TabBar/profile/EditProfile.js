@@ -33,9 +33,12 @@ export default function EditProfile({navigation}) {
   const onPressEditProfile = () =>
     navigation.navigate(StackNav.SetUpProfile, {title: strings.editProfile});
 
+  // eslint-disable-next-line react/no-unstable-nested-components
   const RenderInfoItem = memo(({item}) => {
     return (
-      <View style={localStyles.infoContainer}>
+      <TouchableOpacity
+        style={localStyles.infoContainer}
+        onPress={onPressEditProfile}>
         <View style={styles.rowCenter}>
           <Ionicons
             name={item.icon}
@@ -59,7 +62,7 @@ export default function EditProfile({navigation}) {
             color={colors.textColor}
           />
         </View>
-      </View>
+      </TouchableOpacity>
     );
   });
 

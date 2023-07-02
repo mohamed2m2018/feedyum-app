@@ -44,6 +44,7 @@ export default function SearchTop() {
           <ReelComponent
             key={item?._id}
             data={item?.views}
+            isPlay={!item?.avatarUri}
             reelUrl={item?.uri?.replace(getVideoExtension(item?.uri), 'jpg')}
             style={styles.mt10}
           />

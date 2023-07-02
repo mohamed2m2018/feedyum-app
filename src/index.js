@@ -4,6 +4,7 @@ import {useSelector} from 'react-redux';
 import AppNavigator from './navigation';
 import {styles} from './themes';
 import {AlertNotificationRoot} from 'react-native-alert-notification';
+import {SheetProvider} from 'react-native-actions-sheet';
 
 import {TestIds, InterstitialAd} from 'react-native-google-mobile-ads';
 
@@ -28,7 +29,9 @@ const App = () => {
         barStyle={colors.dark === 'dark' ? 'light-content' : 'dark-content'}
       />
       <AlertNotificationRoot>
-        <AppNavigator />
+        <SheetProvider>
+          <AppNavigator />
+        </SheetProvider>
       </AlertNotificationRoot>
     </View>
   );

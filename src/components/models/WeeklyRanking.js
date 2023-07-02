@@ -71,6 +71,7 @@ export default function WeeklyRanking(props) {
 
   return (
     <ActionSheet
+      gestureEnabled
       ref={SheetRef}
       containerStyle={[
         localStyles.actionSheetContainer,

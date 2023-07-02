@@ -1,8 +1,8 @@
 // Library import
-import { StyleSheet, TouchableOpacity, View} from 'react-native';
-import React, {useState} from 'react';
+import {Keyboard, Pressable, StyleSheet, TouchableOpacity, View} from 'react-native';
+import React, {useRef, useState} from 'react';
 import Image from 'react-native-fast-image';
-import ActionSheet from 'react-native-actions-sheet';
+import ActionSheet, {useScrollHandlers} from 'react-native-actions-sheet';
 import {useSelector} from 'react-redux';
 import Feather from 'react-native-vector-icons/Feather';
 import request from '../../api/request';
@@ -16,6 +16,7 @@ import strings from '../../i18n/strings';
 import {KeyboardAwareFlatList as FlatList} from 'react-native-keyboard-aware-scroll-view';
 import {useMutation, useQuery, useQueryClient} from 'react-query';
 import images from '../../assets/images';
+import Spinner from 'react-native-loading-spinner-overlay';
 
 const CommentRender = ({item}, colors) => {
   return (
@@ -67,7 +68,7 @@ export default function Comment({SheetRef, postId}) {
     return response.data;
   };
 
-  const {data} = useQuery(
+  const {data, isFetching} = useQuery(
     ['comments', postId],
     () => fetchCommentsByPostId(postId),
     {
@@ -85,13 +86,22 @@ export default function Comment({SheetRef, postId}) {
     return response.data;
   };
 
-  const {mutate} = useMutation(content => addComment(content), {
-    onSuccess: () => {
-      queryClient.invalidateQueries({queryKey: 'comments'});
+  const {mutate, isLoading: isLoadingAddComments} = useMutation(
+    content => addComment(content),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({queryKey: 'comments'});
+        setAddChat('');
+      },
     },
-  });
+  );
 
   const [addChat, setAddChat] = useState('');
+
+  const onPressSend = () => {
+    Keyboard.dismiss();
+    mutate(addChat);
+  };
   const [chatStyle, setChatStyle] = useState(BlurredStyle);
 
   const onFocusInput = () => setChatStyle(FocusedStyle);
@@ -100,13 +110,18 @@ export default function Comment({SheetRef, postId}) {
 
   const onchangeComment = text => setAddChat(text);
 
+  const scrollHandlers =
+    useScrollHandlers < FlatList > ('scrollview-1', SheetRef);
+
   return (
     <ActionSheet
+      // gestureEnabled
       ref={SheetRef}
       containerStyle={[
         localStyles.actionSheetContainer,
         {backgroundColor: colors.backgroundColor},
       ]}>
+      <Spinner visible={isLoadingAddComments || isFetching} />
       <View
         style={[
           localStyles.headerContainer,
@@ -120,6 +135,10 @@ export default function Comment({SheetRef, postId}) {
       </View>
       <FlatList
         enableOnAndroid={true}
+        nestedScrollingEnabled
+        {...scrollHandlers}
+        scrollEnabled
+        keyboardDismissMode={'interactive'}
         data={data?.comments}
         renderItem={renderItem}
         keyExtractor={item => item?._id}
@@ -143,7 +162,8 @@ export default function Comment({SheetRef, postId}) {
           onBlur={onBlurInput}
         />
         <TouchableOpacity
-          onPress={() => mutate(addChat)}
+          onPress={onPressSend}
+          disabled={isLoadingAddComments || isFetching}
           style={[
             localStyles.sendBtn,
             {

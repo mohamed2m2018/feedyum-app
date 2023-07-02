@@ -43,29 +43,6 @@ const editProfileData = (name, email) => [
       },
     ],
   },
-  {
-    title: 'Social',
-    data: [
-      {
-        id: 1,
-        icon: 'logo-facebook',
-        type: 'Facebook',
-        value: 'facebook.com',
-      },
-      {
-        id: 2,
-        icon: 'logo-twitter',
-        type: 'Twitter',
-        value: 'w.twitter.com',
-      },
-      {
-        id: 3,
-        icon: 'logo-instagram',
-        type: 'Instagram',
-        value: 'htinstagram.com',
-      },
-    ],
-  },
 ];
 
 const manageAccData = [

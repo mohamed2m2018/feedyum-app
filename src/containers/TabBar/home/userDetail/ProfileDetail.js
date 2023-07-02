@@ -35,7 +35,7 @@ import {
   useQueryClient,
 } from 'react-query';
 import request from '../../../../api/request';
-import {useFocusEffect} from '@react-navigation/native';
+import strings from '../../../../i18n/strings';
 
 export default function ProfileDetail({navigation, route}) {
   const {id} = route.params;
@@ -49,11 +49,6 @@ export default function ProfileDetail({navigation, route}) {
     {retry: 1},
   );
 
-  useFocusEffect(
-    React.useCallback(() => {
-      queryClient.invalidateQueries('stories'); // Invalidate the 'stories' query to trigger a refetch
-    }, []),
-  );
   const getFollowStatistics = () =>
     request.get(`/follow/statistics/${user?._id}`);
 
@@ -279,42 +274,15 @@ export default function ProfileDetail({navigation, route}) {
             ]}
             bgColor={colors.primary}
           />
-          {/* <ZButton
-            title={strings.message}
-            color={colors.primary}
-            onPress={onPressMessage}
-            textType="b14"
-            style={styles.ml5}
-            containerStyle={[
-              localStyles.buttonContainer,
-              {borderColor: colors.primary},
-            ]}
-            bgColor={colors.tranparent}
-            frontIcon={
-              <Ionicons
-                name="chatbubble-ellipses-outline"
-                size={moderateScale(18)}
-                color={colors.primary}
-              />
-            }
-          />
-          <InstagramBg /> */}
-          {/* <TouchableOpacity onPress={onPressLike}>
-            <LikeBg />
-          </TouchableOpacity> */}
         </View>
-        {/* <View style={localStyles.mainContainer}>
-          {categoryData.map((item, index) => (
-            <HeaderCategory item={item} key={index} />
-          ))}
-        </View> */}
+
         <FlatList
           data={stories}
           renderItem={({item, index}) => (
             <ReelComponent
               data={item?.views}
               reelUrl={item?.uri?.replace(getVideoExtension(item?.uri), 'jpg')}
-              isPlay={true}
+              isPlay={!item?.avatarUri}
               id={item?._id}
             />
           )}

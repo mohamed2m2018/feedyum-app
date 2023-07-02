@@ -12,6 +12,7 @@ export default function Description({SheetRef, selectedAreas, selectedGov}) {
 
   return (
     <ActionSheet
+      gestureEnabled
       ref={SheetRef}
       containerStyle={[
         localStyles.actionSheetContainer,

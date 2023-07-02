@@ -8,16 +8,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // Local Imports
 import {colors, styles} from '../../themes';
 import {StackNav} from '../../navigation/NavigationKeys';
-import {
-  ACCESS_TOKEN,
-  APP_OPEN_FIRST_TIME,
-  REGISTRATION_COMPLETED,
-  THEME,
-} from '../../common/constants';
+import {ACCESS_TOKEN, APP_OPEN_FIRST_TIME, THEME} from '../../common/constants';
 import {changeThemeAction} from '../../redux/action/themeAction';
 import request from '../../api/request';
-import strings from '../../i18n/strings';
-import {useQuery} from 'react-query';
 
 const Splash = ({navigation}) => {
   const color = useSelector(state => state.theme.theme);

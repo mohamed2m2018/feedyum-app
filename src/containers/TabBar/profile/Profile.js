@@ -53,12 +53,7 @@ const UserDetail = (postsNo, followersNo, followingNo, viewsNo) => [
 
 export default function Profile({navigation}) {
   const colors = useSelector(state => state.theme.theme);
-  const queryClient = useQueryClient();
-  useFocusEffect(
-    React.useCallback(() => {
-      queryClient.invalidateQueries('stories'); // Invalidate the 'stories' query to trigger a refetch
-    }, []),
-  );
+
   const [page, setpage] = useState(1);
 
   const {data} = useQuery('user', () => request.get('/user'), {retry: 1});
@@ -138,8 +133,6 @@ export default function Profile({navigation}) {
   const onPressEditProfile = () =>
     navigation.navigate(StackNav.EditProfile, {user});
 
-  // const onPressSwitchAccount = () => switchAccountRef?.current?.show();
-
   const onPressSetting = () => navigation.navigate(StackNav.Setting);
 
   // const onPressFindFriend = () => navigation.navigate(StackNav.FindFriends);
@@ -156,7 +149,6 @@ export default function Profile({navigation}) {
       </View>
     );
   };
-
 
   return (
     <ZSafeAreaView>
@@ -194,24 +186,6 @@ export default function Profile({navigation}) {
           ListHeaderComponent={
             <>
               <View style={localStyles.headerContainer}>
-                {/* <TouchableOpacity onPress={onPressFindFriend}>
-                  <Ionicons
-                    name="person-add-outline"
-                    size={moderateScale(26)}
-                    color={colors.dark ? colors.white : colors.darkColor}
-                  />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={onPressSwitchAccount}
-                  style={styles.rowCenter}>
-                  <ZText type="b24">{user?.fullName}</ZText>
-                  <Ionicons
-                    name="chevron-down-outline"
-                    size={moderateScale(24)}
-                    style={styles.ml5}
-                    color={colors.dark ? colors.white : colors.darkColor}
-                  />
-                </TouchableOpacity> */}
                 <TouchableOpacity onPress={onPressSetting}>
                   <Ionicons
                     name="settings-outline"

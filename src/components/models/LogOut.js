@@ -18,7 +18,7 @@ const LogOut = props => {
   return (
     <ActionSheet
       ref={SheetRef}
-      isGestureEnabled={true}
+      gestureEnabled={true}
       indicatorStyle={{width: moderateScale(100)}}
       containerStyle={[
         localStyles.actionSheetContainer,

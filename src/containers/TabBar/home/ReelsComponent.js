@@ -20,7 +20,12 @@ import Video from 'react-native-fast-video';
 import {useSelector} from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Entypo from 'react-native-vector-icons/Entypo';
-import {useIsFocused, useNavigation, useRoute} from '@react-navigation/native';
+import {
+  useFocusEffect,
+  useIsFocused,
+  useNavigation,
+  useRoute,
+} from '@react-navigation/native';
 import {FlashList} from '@shopify/flash-list';
 // Local import
 import {styles} from '../../../themes';
@@ -53,6 +58,7 @@ import {
   GestureHandlerRootView,
 } from 'react-native-gesture-handler';
 import Locations from '../../../components/models/Locations';
+import Spinner from 'react-native-loading-spinner-overlay';
 
 const HeaderCategoryItem = React.memo(({title, onPress, category}) => {
   const colors = useSelector(state => state.theme.theme);
@@ -204,9 +210,7 @@ export default function ReelsComponent() {
           filteredData.current = result;
         }
       },
-      refetchOnMount: true,
       enabled: !!data?.data?.user?._id,
-      refetchOnReconnect: false,
     },
   );
 
@@ -242,14 +246,16 @@ export default function ReelsComponent() {
       },
       onError: error =>
         error?.nostories ? (filteredDataFollowing.current = []) : null,
-      refetchOnWindowFocus: false,
-      refetchOnMount: true,
       enabled: !!data?.data?.user?._id,
-      refetchOnReconnect: true,
     },
   );
 
-  const {refetch} = useQuery(
+  const {
+    refetch,
+    isLoading: isLoadingStory,
+    isFetching: isFetchingStory,
+    isRefetching: isRefetchingStory,
+  } = useQuery(
     ['storyById', storyId],
     () =>
       request.get(`/story/${storyId}`, {
@@ -268,6 +274,7 @@ export default function ReelsComponent() {
           filteredData.current = [res?.data?.story, ...filtered];
         }
         flatListRef.current?.scrollToOffset({offset: 0});
+        setStoryId(null);
       },
     },
   );
@@ -489,7 +496,7 @@ export default function ReelsComponent() {
 
                 {true && (
                   <ZText type="m12" color={colors.white}>
-                    {`Can be received in ${item?.duration} days`}
+                    {`Can be received in ${item?.duration} day`}
                   </ZText>
                 )}
                 <ZText type="m14" color={colors.white}>
@@ -678,47 +685,53 @@ export default function ReelsComponent() {
           </TouchableOpacity>
         </View>
         {category === 'For You' && (
-          <FlashList
-            data={filteredData.current}
-            refreshControl={
-              <RefreshControl
-                refreshing={isLoading || isFetching}
-                tintColor={'red'}
-                onRefresh={() => {
-                  queryClient.invalidateQueries({queryKey: 'stories'});
-                }}
-              />
-            }
-            extraData={extraData}
-            keyExtractor={keyExtractor}
-            showsVerticalScrollIndicator={false}
-            renderItem={renderReelComponent}
-            pagingEnabled={Platform.OS === 'ios'}
-            viewabilityConfig={viewConfig}
-            onViewableItemsChanged={viewableItemsChanged}
-            onLayout={onSetLayout}
-            snapToInterval={
-              Platform.OS === 'android' ? layoutHeight : undefined
-            }
-            drawDistance={layoutHeight}
-            decelerationRate={'fast'}
-            disableIntervalMomentum
-            ListEmptyComponent={
-              isLoading && (
-                <ActivityIndicator
-                  style={{alignSelf: 'center', marginTop: 400}}
-                  size={'large'}
+          <>
+            <Spinner
+              //visibility of Overlay Loading Spinner
+              visible={isLoadingStory || isFetchingStory || isRefetchingStory}
+            />
+            <FlashList
+              data={filteredData.current}
+              refreshControl={
+                <RefreshControl
+                  refreshing={isLoading || isFetching}
+                  tintColor={'red'}
+                  onRefresh={() => {
+                    queryClient.invalidateQueries({queryKey: 'stories'});
+                  }}
                 />
-              )
-            }
-            estimatedItemSize={11}
-            ref={flatListRef}
-            onEndReachedThreshold={0.4}
-            onEndReached={hasNextPage ? fetchNextPage : null}
-            ListFooterComponent={
-              isFetchingNextPage && <ActivityIndicator size={'large'} />
-            }
-          />
+              }
+              extraData={extraData}
+              keyExtractor={keyExtractor}
+              showsVerticalScrollIndicator={false}
+              renderItem={renderReelComponent}
+              pagingEnabled={Platform.OS === 'ios'}
+              viewabilityConfig={viewConfig}
+              onViewableItemsChanged={viewableItemsChanged}
+              onLayout={onSetLayout}
+              snapToInterval={
+                Platform.OS === 'android' ? layoutHeight : undefined
+              }
+              drawDistance={layoutHeight}
+              decelerationRate={'fast'}
+              disableIntervalMomentum
+              ListEmptyComponent={
+                isLoading && (
+                  <ActivityIndicator
+                    style={{alignSelf: 'center', marginTop: 400}}
+                    size={'large'}
+                  />
+                )
+              }
+              estimatedItemSize={11}
+              ref={flatListRef}
+              onEndReachedThreshold={0.9}
+              onEndReached={hasNextPage ? fetchNextPage : null}
+              ListFooterComponent={
+                isFetchingNextPage && <ActivityIndicator size={'large'} />
+              }
+            />
+          </>
         )}
 
         {category !== 'For You' && (
@@ -754,7 +767,7 @@ export default function ReelsComponent() {
             }
             estimatedItemSize={11}
             ref={flatListRefFollowing}
-            onEndReachedThreshold={0.4}
+            onEndReachedThreshold={0.9}
             onEndReached={hasNextPageFollowin ? fetchNextPageFollowing : null}
             ListFooterComponent={
               isFetchingNextPageFollowing && (
@@ -782,6 +795,15 @@ const localStyles = StyleSheet.create({
   imageContainer: {
     height: '100%',
     width: '100%',
+  },
+  loading: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   muteIcon: {
     position: 'absolute',

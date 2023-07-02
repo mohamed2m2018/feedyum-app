@@ -102,16 +102,22 @@ export default function ReelComponent({
         </TouchableOpacity>
       )}
 
-      <TouchableOpacity
-        onPress={() => {
-          navigation.navigate(StackNav.PostDetail, {
-            postDataToBeEdited: item,
-          });
-        }}
-        style={localStyles.editIconStyle}
-        activeOpacity={0.7}>
-        <Ionicons name="pencil" size={moderateScale(24)} color={colors.white} />
-      </TouchableOpacity>
+      {isDeleteAllowed && (
+        <TouchableOpacity
+          onPress={() => {
+            navigation.navigate(StackNav.PostDetail, {
+              postDataToBeEdited: item,
+            });
+          }}
+          style={localStyles.editIconStyle}
+          activeOpacity={0.7}>
+          <Ionicons
+            name="pencil"
+            size={moderateScale(24)}
+            color={colors.white}
+          />
+        </TouchableOpacity>
+      )}
     </TouchableOpacity>
   );
 }

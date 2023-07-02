@@ -120,7 +120,9 @@ export default function Sound() {
 
         <FlatList
           data={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]}
-          renderItem={({item, index}) => <ReelComponent isPlay={true} />}
+          renderItem={({item, index}) => (
+            <ReelComponent isPlay={!item?.avatarUri} />
+          )}
           numColumns={3}
           keyExtractor={(item, index) => index.toString()}
           contentContainerStyle={styles.mt15}

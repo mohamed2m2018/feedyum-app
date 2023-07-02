@@ -51,6 +51,7 @@ export default function UserProfile(props) {
   return (
     <ActionSheet
       ref={SheetRef}
+      gestureEnabled
       containerStyle={[
         localStyles.actionSheetContainer,
         {backgroundColor: colors.backgroundColor},

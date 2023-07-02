@@ -22,6 +22,7 @@ export default function Description({SheetRef, description}) {
 
   return (
     <ActionSheet
+      gestureEnabled
       ref={SheetRef}
       containerStyle={[
         localStyles.actionSheetContainer,
