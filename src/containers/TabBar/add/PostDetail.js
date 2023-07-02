@@ -63,6 +63,13 @@ export default function PostDetail() {
   }, [postDataToBeEdited]);
   const {data: queryResult} = useQuery('user', () => request.get('/user'), {
     retry: 1,
+    onError: err => {
+      Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: 'Error',
+        textBody: err[Object.keys(err)?.[0]] || 'Sorry, an error has occured',
+      });
+    },
   });
 
   const user = queryResult?.data?.user;
@@ -163,53 +170,20 @@ export default function PostDetail() {
         console.log(err);
       });
   };
-  // eslint-disable-next-line react/no-unstable-nested-components
-  const RenderData = ({item}) => {
-    return (
-      <TouchableOpacity style={localStyles.settingsContainer}>
-        <View style={styles.rowCenter}>
-          <Ionicons
-            name={item.icon}
-            size={moderateScale(28)}
-            color={colors.textColor}
-            style={styles.mr10}
-          />
-          <ZText type="s18">{item.title}</ZText>
-        </View>
-        <View style={localStyles.rightContainer}>
-          {item?.rightIcon ? (
-            <Switch
-              trackColor={{
-                false: colors.grayScale3,
-                true: colors.primary,
-              }}
-              thumbColor={colors.white}
-              onValueChange={item?.toggleSwitch}
-              value={item?.value}
-            />
-          ) : (
-            <Ionicons
-              name="chevron-forward-outline"
-              size={moderateScale(20)}
-              color={colors.dark ? colors.white : colors.grayScale9}
-            />
-          )}
-        </View>
-      </TouchableOpacity>
-    );
-  };
 
   const onPressHome = async () => {
-    if (
+    const validationChef =
       !postedData?.title ||
       !postedData?.price ||
       !postedData?.caption ||
       !postedData?.uri ||
       !postedData.governorate ||
-      !postedData.areas.length ||
+      // || !postedData.areas.length
       !postedData.duration ||
-      (!user?.phone && !phone)
-    ) {
+      (!user?.phone && !phone);
+    const validationUser = !postedData?.title || !postedData?.caption;
+    const validation = user?.type === 'chef' ? validationChef : validationUser;
+    if (validation) {
       Toast.show({
         type: ALERT_TYPE.DANGER,
         title: 'Error',
@@ -351,94 +325,98 @@ export default function PostDetail() {
               inputBoxStyle={localStyles.inputBoxStyle}
             />
 
-            <TextInput
-              placeholder={'price'}
-              keyboardType="number-pad"
-              value={`${postedData?.price || ''}`}
-              onChangeText={input =>
-                setpostedData(currentState => ({
-                  ...currentState,
-                  price: input,
-                }))
-              }
-              placeholderTextColor={colors.placeHolderColor}
-              style={[
-                {
-                  backgroundColor: colors.inputBg,
-                  borderColor: colors.bColor,
-                  color: colors.textColor,
-                },
-                localStyles.smallInputContainerStyle,
-              ]}
-              inputBoxStyle={localStyles.inputBoxStyle}
-            />
-            <TextInput
-              placeholder={'No of days to deliver this order'}
-              value={`${postedData?.duration || ''}`}
-              keyboardType="number-pad"
-              onChangeText={input =>
-                setpostedData(currentState => ({
-                  ...currentState,
-                  duration: input,
-                }))
-              }
-              placeholderTextColor={colors.placeHolderColor}
-              style={[
-                {
-                  backgroundColor: colors.inputBg,
-                  borderColor: colors.bColor,
-                  color: colors.textColor,
-                },
-                localStyles.smallInputContainerStyle,
-              ]}
-              inputBoxStyle={localStyles.inputBoxStyle}
-            />
-            {!!user?.phone && (
-              <TextInput
-                placeholder={'Please add your phone number'}
-                multiline={false}
-                value={phone}
-                onChangeText={input => setPhone(input)}
-                placeholderTextColor={colors.placeHolderColor}
-                style={[
-                  {
-                    backgroundColor: colors.inputBg,
-                    borderColor: colors.bColor,
-                    color: colors.textColor,
-                  },
-                  localStyles.smallInputContainerStyle,
-                ]}
-                inputBoxStyle={localStyles.inputBoxStyle}
-              />
+            {user?.type === 'chef' && (
+              <>
+                <TextInput
+                  placeholder={'price'}
+                  keyboardType="number-pad"
+                  value={`${postedData?.price || ''}`}
+                  onChangeText={input =>
+                    setpostedData(currentState => ({
+                      ...currentState,
+                      price: input,
+                    }))
+                  }
+                  placeholderTextColor={colors.placeHolderColor}
+                  style={[
+                    {
+                      backgroundColor: colors.inputBg,
+                      borderColor: colors.bColor,
+                      color: colors.textColor,
+                    },
+                    localStyles.smallInputContainerStyle,
+                  ]}
+                  inputBoxStyle={localStyles.inputBoxStyle}
+                />
+                <TextInput
+                  placeholder={'No of days to deliver this order'}
+                  value={`${postedData?.duration || ''}`}
+                  keyboardType="number-pad"
+                  onChangeText={input =>
+                    setpostedData(currentState => ({
+                      ...currentState,
+                      duration: input,
+                    }))
+                  }
+                  placeholderTextColor={colors.placeHolderColor}
+                  style={[
+                    {
+                      backgroundColor: colors.inputBg,
+                      borderColor: colors.bColor,
+                      color: colors.textColor,
+                    },
+                    localStyles.smallInputContainerStyle,
+                  ]}
+                  inputBoxStyle={localStyles.inputBoxStyle}
+                />
+                {!!user?.phone && (
+                  <TextInput
+                    placeholder={'Please add your phone number'}
+                    multiline={false}
+                    value={phone}
+                    onChangeText={input => setPhone(input)}
+                    placeholderTextColor={colors.placeHolderColor}
+                    style={[
+                      {
+                        backgroundColor: colors.inputBg,
+                        borderColor: colors.bColor,
+                        color: colors.textColor,
+                      },
+                      localStyles.smallInputContainerStyle,
+                    ]}
+                    inputBoxStyle={localStyles.inputBoxStyle}
+                  />
+                )}
+                <TextInput
+                  placeholder={
+                    'link (optional), if not provided user will contact you through whatsapp'
+                  }
+                  multiline={true}
+                  value={postedData?.linkToGo}
+                  onChangeText={input =>
+                    setpostedData(currentState => ({
+                      ...currentState,
+                      linkToGo: input,
+                    }))
+                  }
+                  placeholderTextColor={colors.placeHolderColor}
+                  style={[
+                    {
+                      backgroundColor: colors.inputBg,
+                      borderColor: colors.bColor,
+                      color: colors.textColor,
+                    },
+                    localStyles.smallInputContainerStyle,
+                    {height: 70},
+                  ]}
+                  inputBoxStyle={localStyles.inputBoxStyle}
+                />
+                <DropdownGovr
+                  setpostedData={setpostedData}
+                  postedData={postedData}
+                />
+              </>
             )}
-            <TextInput
-              placeholder={
-                'link (optional), if not provided user will contact you through whatsapp'
-              }
-              multiline={true}
-              value={postedData?.linkToGo}
-              onChangeText={input =>
-                setpostedData(currentState => ({
-                  ...currentState,
-                  linkToGo: input,
-                }))
-              }
-              placeholderTextColor={colors.placeHolderColor}
-              style={[
-                {
-                  backgroundColor: colors.inputBg,
-                  borderColor: colors.bColor,
-                  color: colors.textColor,
-                },
-                localStyles.smallInputContainerStyle,
-                {height: 70},
-              ]}
-              inputBoxStyle={localStyles.inputBoxStyle}
-            />
-            <DropdownGovr
-              setpostedData={setpostedData}
-              postedData={postedData}
-            />
           </>
         )}
         <View style={localStyles.btnContainer}>

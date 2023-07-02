@@ -80,7 +80,7 @@ export default function ReelComponent({
           <View style={localStyles.playStyle}>
             <Ionicons
               name="play-circle"
-              size={moderateScale(18)}
+              size={moderateScale(16)}
               color={colors.primary}
             />
             <ZText type="s16" style={styles.ml5} color={colors.white}>
@@ -94,8 +94,8 @@ export default function ReelComponent({
           onPress={onDeleteStory}
           style={localStyles.deleteIconStyle}
           activeOpacity={0.7}>
-          <FontAwesome
-            name="trash-o"
+          <Ionicons
+            name="trash"
             size={moderateScale(24)}
             color={colors.white}
           />

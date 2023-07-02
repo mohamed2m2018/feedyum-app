@@ -23,13 +23,14 @@ import {changeThemeAction} from '../../../redux/action/themeAction';
 import {setAsyncStorageData} from '../../../utils/helpers';
 import {StackNav} from '../../../navigation/NavigationKeys';
 import LogOut from '../../../components/models/LogOut';
-import {useQueryClient} from 'react-query';
+import {useQuery, useQueryClient} from 'react-query';
 import request from '../../../api/request';
 import {GoogleSignin} from '@react-native-google-signin/google-signin';
 
 export default Setting = ({navigation}) => {
   const color = useSelector(state => state.theme.theme);
   const language = useSelector(state => state.profile.language);
+  const {data: user} = useQuery('user', () => request.get('/user'));
   const LogOutSheetRef = createRef();
   const dispatch = useDispatch();
   const queryClient = useQueryClient();
@@ -56,7 +57,12 @@ export default Setting = ({navigation}) => {
   };
 
   const onPressItem = item => {
-    if (item.route) navigation.navigate(item.route, {title: item.header});
+    if (item.route) {
+      navigation.navigate(item.route, {
+        title: item.header,
+        user: user?.data?.user,
+      });
+    }
   };
 
   const onPressLogOutBtn = () => LogOutSheetRef?.current?.show();
@@ -70,7 +76,7 @@ export default Setting = ({navigation}) => {
     try {
       await AsyncStorage.removeItem(ACCESS_TOKEN);
       LogOutSheetRef?.current?.hide();
-      await queryClient.resetQueries();
+      await queryClient.removeQueries();
       delete request.defaults.headers.common.Authorization;
       googleSignOut();
       setTimeout(() => {

@@ -45,22 +45,6 @@ const ProfilePicture = props => {
             {post ? "Let's Go" : strings.chooseFromGallery}
           </ZText>
         </TouchableOpacity>
-        {/* <TouchableOpacity
-          style={[
-            localStyles.contextContainer,
-            {borderColor: colors.textColor},
-          ]}
-          onPress={onPressGallery}>
-          <Ionicons
-            name={live ? 'videocam-outline' : 'ios-images'}
-            size={moderateScale(26)}
-            color={colors.textColor}
-            style={styles.mr5}
-          />
-          <ZText type={'s18'} style={styles.ml10}>
-            {live ? strings.live : strings.chooseFromGallery}
-          </ZText>
-        </TouchableOpacity> */}
       </View>
     </ActionSheet>
   );
@@ -69,7 +53,7 @@ const ProfilePicture = props => {
 const localStyles = StyleSheet.create({
   actionSheetContainer: {
     ...styles.p25,
-    height: 190,
+    height: 220,
   },
   contextContainer: {
     ...styles.flexRow,

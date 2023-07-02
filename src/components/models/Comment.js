@@ -1,6 +1,6 @@
 // Library import
-import {Keyboard, Pressable, StyleSheet, TouchableOpacity, View} from 'react-native';
-import React, {useRef, useState} from 'react';
+import {Keyboard, StyleSheet, TouchableOpacity, View} from 'react-native';
+import React, {useState} from 'react';
 import Image from 'react-native-fast-image';
 import ActionSheet, {useScrollHandlers} from 'react-native-actions-sheet';
 import {useSelector} from 'react-redux';
@@ -17,6 +17,7 @@ import {KeyboardAwareFlatList as FlatList} from 'react-native-keyboard-aware-scr
 import {useMutation, useQuery, useQueryClient} from 'react-query';
 import images from '../../assets/images';
 import Spinner from 'react-native-loading-spinner-overlay';
+import {ALERT_TYPE, Toast} from 'react-native-alert-notification';
 
 const CommentRender = ({item}, colors) => {
   return (
@@ -72,7 +73,19 @@ export default function Comment({SheetRef, postId}) {
     ['comments', postId],
     () => fetchCommentsByPostId(postId),
     {
-      skip: !postId,
+      skip: postId === undefined,
+      onError: err => {
+        if (
+          err[Object.keys(err)?.[0]] !== 'Error fetching comments from database'
+        ) {
+          Toast.show({
+            type: ALERT_TYPE.DANGER,
+            title: 'Error',
+            textBody:
+              err[Object.keys(err)?.[0]] || 'Sorry, an error has occured',
+          });
+        }
+      },
     },
   );
 

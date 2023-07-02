@@ -37,7 +37,7 @@ import {
   screenFullHeight,
 } from '../../../common/constants';
 import ZText from '../../../components/common/ZText';
-import {StackNav} from '../../../navigation/NavigationKeys';
+import {StackNav, TabNav} from '../../../navigation/NavigationKeys';
 import Comment from '../../../components/models/Comment';
 import ZButton from '../../../components/common/ZButton';
 import {
@@ -330,12 +330,17 @@ export default function ReelsComponent() {
       storyId: item?._id,
     });
 
-  const onPressProfile = (userName, userImage, id) =>
-    navigation.navigate(StackNav.ProfileDetail, {
-      userName: userName,
-      userImage: userImage,
-      id: id,
-    });
+  const onPressProfile = (userName, userImage, id) => {
+    if (id !== data?.data?.user?._id) {
+      navigation.navigate(StackNav.ProfileDetail, {
+        userName: userName,
+        userImage: userImage,
+        id,
+      });
+    } else {
+      navigation.navigate(TabNav.Profile);
+    }
+  };
 
   const videoError = error => console.log('videoError', error);
 
@@ -528,7 +533,8 @@ export default function ReelsComponent() {
                     Click to check Delivery Locations
                   </ZText>
                 </TouchableOpacity>
-                {data?.data?.user?._id !== item?.author?._id && (
+                {(data?.data?.user?._id !== item?.author?._id ||
+                  item?.author?.type === 'user') && (
                   <ZButton
                     title={`Buy this for ${item?.price} EGP`}
                     textType={'b18'}
@@ -582,7 +588,7 @@ export default function ReelsComponent() {
                   data={item?.comments}
                   onPress={() => onPressComment(item?._id)}
                 />
-                <VideoItem
+                {/* <VideoItem
                   icon={isBookmark ? 'bookmark-outline' : 'bookmark'}
                   data={item?.bookmark}
                   onPress={onPressBookmark}
@@ -591,7 +597,7 @@ export default function ReelsComponent() {
                   icon="share"
                   data={item?.share}
                   onPress={onPressShare}
-                />
+                /> */}
               </View>
             </LinearGradient>
             {pausedVideos.includes(index) && !item?.avatarUri && (

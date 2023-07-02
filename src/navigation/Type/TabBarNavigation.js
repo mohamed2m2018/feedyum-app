@@ -13,23 +13,22 @@ import ZText from '../../components/common/ZText';
 import strings from '../../i18n/strings';
 import {
   Add_Icon,
-  Discover_Dark,
-  Discover_Light,
   Home_Dark,
   Home_Light,
-  Inbox_Dark,
-  Inbox_Light,
   Profile_Dark,
   Profile_Light,
 } from '../../assets/svgs';
 import {styles} from '../../themes';
 import ProfilePicture from '../../components/models/ProfilePicture';
+import request from '../../api/request';
+import {useQuery} from 'react-query';
 
 export default function TabBarNavigation({navigation}) {
   const colors = useSelector(state => state.theme.theme);
   const Tab = createBottomTabNavigator();
   const ProfilePictureSheetRef = React.createRef();
   const [index, setIndex] = React.useState(0);
+  const {data} = useQuery('user', () => request.get('/user'), {retry: 1});
 
   const TabText = ({text, focused, icon}) => (
     <View style={localStyles.tabViewContainer}>
@@ -51,11 +50,6 @@ export default function TabBarNavigation({navigation}) {
   const onPressPost = () => {
     ProfilePictureSheetRef?.current?.hide();
     navigation.navigate(StackNav.PostDetail);
-  };
-
-  const onPressLive = () => {
-    ProfilePictureSheetRef?.current?.hide();
-    navigation.navigate(StackNav.Live);
   };
 
   return (
@@ -92,6 +86,7 @@ export default function TabBarNavigation({navigation}) {
         component={StackRoute.Search}
         listeners={{tabPress: e => e.preventDefault()}}
         options={{
+          // eslint-disable-next-line react/no-unstable-nested-components
           tabBarIcon: ({focused}) => (
             <TouchableOpacity
               onPress={onPressAdd}
@@ -101,7 +96,11 @@ export default function TabBarNavigation({navigation}) {
                 SheetRef={ProfilePictureSheetRef}
                 post={true}
                 live={false}
-                title={strings.choose}
+                title={
+                  data?.data?.user?.type === 'user'
+                    ? strings.chooseUser
+                    : strings.choose
+                }
                 onPressCamera={onPressPost}
               />
             </TouchableOpacity>

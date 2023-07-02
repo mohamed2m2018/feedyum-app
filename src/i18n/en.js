@@ -166,6 +166,7 @@ export default {
   videos: 'Videos',
   live: 'Live',
   choose: 'Add New Dish',
+  chooseUser: 'Add New Dish Review',
   post: 'Post',
   selectCover: 'Select Cover',
   mention: 'Mention',

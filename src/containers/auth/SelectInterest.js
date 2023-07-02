@@ -14,17 +14,23 @@ import {StackNav} from '../../navigation/NavigationKeys';
 import ZButton from '../../components/common/ZButton';
 import {useRoute} from '@react-navigation/native';
 import request from '../../api/request';
+import {useQuery} from 'react-query';
+import Spinner from 'react-native-loading-spinner-overlay/lib';
 
 const SelectInterest = ({navigation}) => {
   const colors = useSelector(state => state.theme.theme);
   const [selectedChips, setSelectedChips] = useState([]);
   const [chips, setchips] = useState([]);
   const route = useRoute();
-  const {email, password, type, categories} = route.params;
+  const {email, password, type} = route.params;
 
-  useEffect(() => {
-    request.get('/categories').then(res => setchips(res.data));
-  }, []);
+  const {isLoading} = useQuery(
+    'user',
+    () => request.get('/categories').then(res => setchips(res.data)),
+    {
+      retry: 0,
+    },
+  );
 
   const RenderChips = ({item}) => {
     return (
@@ -61,14 +67,9 @@ const SelectInterest = ({navigation}) => {
       categories: selectedChips,
     });
   };
-  // const onPressSkip = () => {
-  //   navigation.navigate(StackNav.Gender, {
-  //     title: strings.fillYourProfile,
-  //   });
-  // };
 
   const InterestChips = () => {
-    return chips.map((item, index) => {
+    return chips.map(item => {
       return <RenderChips item={item?.name} key={item?._id} />;
     });
   };
@@ -84,15 +85,9 @@ const SelectInterest = ({navigation}) => {
           <InterestChips />
         </View>
       </View>
+      <Spinner visible={isLoading} />
+
       <View style={localStyles.btnContainer}>
-        {/* <ZButton
-          title={strings.skip}
-          textType={'b18'}
-          color={!!colors.dark ? colors.white : colors.primary}
-          containerStyle={[localStyles.skipBtnContainer]}
-          bgColor={colors.dark3}
-          onPress={onPressSkip}
-        /> */}
         <ZButton
           title={strings.continue}
           textType={'b18'}

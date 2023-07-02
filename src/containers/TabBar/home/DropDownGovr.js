@@ -304,7 +304,7 @@ const DropdownGovr = ({postedData, setpostedData}) => {
           />
         }
       />
-      <MultipleSelectList
+      {/* <MultipleSelectList
         setSelected={handleAreasSelection}
         data={areas[postedData.governorate] || []}
         save="value"
@@ -342,7 +342,7 @@ const DropdownGovr = ({postedData, setpostedData}) => {
         dropdownTextStyles={styles.dropdownText}
         disabledItemStyles={styles.disabledItem}
         disabledTextStyles={styles.disabledText}
-      />
+      /> */}
     </View>
   );
 };

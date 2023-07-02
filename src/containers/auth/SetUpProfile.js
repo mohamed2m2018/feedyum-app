@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
-import React, {createRef, useState} from 'react';
+import React, {createRef, useEffect, useState} from 'react';
 import {useSelector} from 'react-redux';
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -35,7 +35,7 @@ import ZButton from '../../components/common/ZButton';
 import {setAsyncStorageData} from '../../utils/helpers';
 import request from '../../api/request';
 import {ALERT_TYPE, Toast} from 'react-native-alert-notification';
-import {QueryClient, useQuery, useQueryClient} from 'react-query';
+import {useQuery, useQueryClient} from 'react-query';
 import axios from 'axios';
 import OneSignal from 'react-native-onesignal';
 
@@ -62,8 +62,25 @@ const SetUpProfile = props => {
 
   const {data: editUser} = useQuery('user', () => request.get('/user'), {
     retry: 0,
+    refetchOnMount: true,
     enabled: isEdit,
+    onError: err => {
+      Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: 'Error',
+        textBody: err[Object.keys(err)?.[0]] || 'Sorry, an error has occured',
+      });
+    },
   });
+
+  useEffect(() => {
+    if (!isEdit) {
+      setFullName(undefined);
+      setGender(undefined);
+      setPhoneNo(undefined);
+      setNickname(undefined);
+    }
+  }, [isEdit]);
 
   const [fullName, setFullName] = useState(
     editUser?.data?.user?.fullName || '',

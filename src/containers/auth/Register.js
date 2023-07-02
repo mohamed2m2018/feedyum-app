@@ -154,7 +154,7 @@ const Register = ({navigation}) => {
 
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
-  const [isChef, setIsChef] = React.useState(false);
+  const [isChef, setIsChef] = React.useState(true);
   const [emailError, setEmailError] = React.useState('');
   const [passwordError, setPasswordError] = React.useState('');
   const [emailIcon, setEmailIcon] = React.useState(BlurredIconStyle);
@@ -319,7 +319,7 @@ const Register = ({navigation}) => {
             onPress={() => setIsChef(!isChef)}
             style={localStyles.checkboxContainer}>
             <Ionicons
-              name={isChef ? 'square-outline' : 'checkbox'}
+              name={!isChef ? 'square-outline' : 'checkbox'}
               size={moderateScale(26)}
               color={colors.primary}
             />

@@ -24,7 +24,7 @@ const OnBoarding = ({navigation}) => {
   const OnBoardingData = {
     tutorialText1: {
       id: 1,
-      title: 'Follow the best Egyptian cookers in the homemade food market',
+      title: 'Follow the best Egyptian cookers in the food market',
       image: images.onBoardingLight1,
       desc: 'The best collection of food makers, and dishes',
       btnTitle: 'Next',
@@ -32,7 +32,7 @@ const OnBoarding = ({navigation}) => {
     },
     tutorialText2: {
       id: 2,
-      title: 'Follow the best Egyptian cookers in the homemade food market',
+      title: 'Follow the best Egyptian cookers in the food market',
       desc: 'With the best prices ever!',
       image: images.onBoardingLight2,
       btnTitle: 'Next',
@@ -55,7 +55,7 @@ const OnBoarding = ({navigation}) => {
           localStyles.tutorialContainer,
           {backgroundColor: colors.backgroundColor},
         ]}>
-        <Image source={bgImage.image} style={localStyles.tutorialImage} />
+        <Image resizeMode='contain' source={bgImage.image} style={localStyles.tutorialImage} />
         <View style={localStyles.headerContainer}>
           <ZText type={'b36'} align={'center'}>
             {header.title}
@@ -125,7 +125,7 @@ const localStyles = StyleSheet.create({
   },
   tutorialImage: {
     resizeMode: 'contain',
-    height: getHeight(350),
+    height: 150,
     width: '75%',
     ...styles.mt50,
     ...styles.selfCenter,
