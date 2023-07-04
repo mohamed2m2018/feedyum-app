@@ -6,9 +6,12 @@ import AppNavigator from './navigation';
 import {styles} from './themes';
 import {AlertNotificationRoot, Toast} from 'react-native-alert-notification';
 import {SheetProvider} from 'react-native-actions-sheet';
+import TimeAgo from 'javascript-time-ago';
+import en from 'javascript-time-ago/locale/en';
 
 const App = () => {
   const colors = useSelector(state => state.theme.theme);
+  TimeAgo.addDefaultLocale(en);
 
   useEffect(() => {
     handleRequestPermission();

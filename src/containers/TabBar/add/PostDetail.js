@@ -369,7 +369,7 @@ export default function PostDetail() {
                   ]}
                   inputBoxStyle={localStyles.inputBoxStyle}
                 />
-                {!!user?.phone && (
+                {!user?.phone && (
                   <TextInput
                     placeholder={'Please add your phone number'}
                     multiline={false}
@@ -407,7 +407,7 @@ export default function PostDetail() {
                       color: colors.textColor,
                     },
                     localStyles.smallInputContainerStyle,
-                    {height: 70},
+                    {height: 80},
                   ]}
                   inputBoxStyle={localStyles.inputBoxStyle}
                 />

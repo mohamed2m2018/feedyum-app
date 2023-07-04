@@ -250,11 +250,14 @@ const DropdownGovr = ({postedData, setpostedData}) => {
   };
 
   const handleGovernoratesSelection = values => {
-    setpostedData(currentState => ({
-      ...currentState,
-      governorate: values,
-      areas: [],
-    }));
+    if (isNaN(values)) {
+      console.log('inside setposted data ', values);
+      setpostedData(currentState => ({
+        ...currentState,
+        governorate: values,
+        areas: [],
+      }));
+    }
   };
 
   const handleAreasSelection = values => {
@@ -278,6 +281,9 @@ const DropdownGovr = ({postedData, setpostedData}) => {
         dropdownTextStyles={styles.dropdownText}
         disabledItemStyles={styles.disabledItem}
         disabledTextStyles={styles.disabledText}
+        defaultOption={governorates?.find(
+          data => data?.value === postedData?.governorate,
+        )}
         arrowicon={
           <FontAwesome
             style={{paddingRight: 10}}

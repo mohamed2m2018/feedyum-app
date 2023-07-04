@@ -91,6 +91,8 @@ export default function ProfileDetail({navigation, route}) {
         queryClient.invalidateQueries({queryKey: 'stories_following'});
         queryClient.invalidateQueries({queryKey: 'search_user'});
         queryClient.invalidateQueries({queryKey: 'followStatistics'});
+        queryClient.invalidateQueries('IamFollowing');
+        queryClient.invalidateQueries('IamFollowed');
       },
     },
   );
@@ -102,6 +104,8 @@ export default function ProfileDetail({navigation, route}) {
         queryClient.invalidateQueries({queryKey: 'stories_following'});
         queryClient.invalidateQueries({queryKey: 'search_user'});
         queryClient.invalidateQueries({queryKey: 'followStatistics'});
+        queryClient.invalidateQueries('IamFollowing');
+        queryClient.invalidateQueries('IamFollowed');
       },
     },
   );
@@ -157,19 +161,23 @@ export default function ProfileDetail({navigation, route}) {
   //   },
   // ];
 
-  const onPressEditProfile = () => navigation.navigate(StackNav.UserNetwork);
+  const onPressEditProfile = () =>
+    navigation.navigate(StackNav.UserNetwork, {
+      userId: user?._id,
+    });
   const onPressModalClose = () => setModalVisible(false);
 
+  // eslint-disable-next-line react/no-unstable-nested-components
   const RenderUserDetail = ({item}) => {
     return (
-      <View style={styles.itemsCenter}>
+      <TouchableOpacity onPress={item?.onPress} style={styles.itemsCenter}>
         <ZText type="b24" align={'center'}>
           {item.value}
         </ZText>
         <ZText type="m16" align={'center'} style={styles.mt10}>
           {item.title}
         </ZText>
-      </View>
+      </TouchableOpacity>
     );
   };
 
@@ -224,7 +232,7 @@ export default function ProfileDetail({navigation, route}) {
   const user = data?.data?.user;
   return (
     <ZSafeAreaView>
-      <ZHeader rightIcon={<RightIcon />} />
+      <ZHeader />
       <ScrollView
         bounces={false}
         showsVerticalScrollIndicator={false}
@@ -257,6 +265,7 @@ export default function ProfileDetail({navigation, route}) {
             followStatistics?.data?.followersCount || 0,
             followStatistics?.data?.followingCount || 0,
             views?.data?.totalViews || 0,
+            onPressEditProfile,
           ).map((item, index) => (
             <RenderUserDetail item={item} key={index} />
           ))}

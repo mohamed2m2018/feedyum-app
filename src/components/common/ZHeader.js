@@ -29,7 +29,11 @@ export default function ZHeader(props) {
 
         <ZText
           numberOfLines={1}
-          style={[styles.pr10, styles.mr10, localStyles.titleText]}
+          style={[
+            styles.pr10,
+            styles.mr10,
+            !!rightIcon && localStyles.titleText,
+          ]}
           type={'B24'}>
           {title}
         </ZText>

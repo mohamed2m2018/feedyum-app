@@ -1158,7 +1158,13 @@ const findFriendsData = [
   },
 ];
 
-const UserDetailCategory = (postsNo, followersNo, followingNo, viewsNo) => [
+const UserDetailCategory = (
+  postsNo,
+  followersNo,
+  followingNo,
+  viewsNo,
+  onPress,
+) => [
   {
     title: strings.post,
     value: postsNo,
@@ -1166,10 +1172,12 @@ const UserDetailCategory = (postsNo, followersNo, followingNo, viewsNo) => [
   {
     title: strings.followers,
     value: followersNo,
+    onPress,
   },
   {
     title: strings.following,
     value: followingNo,
+    onPress,
   },
   {
     title: 'Views',

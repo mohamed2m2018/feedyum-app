@@ -19,7 +19,7 @@ export default function SearchVideo({
             {isFetchingNextPage && <ActivityIndicator size={'small'} />}
           </View>
         }
-        renderItem={({item, index}) => {
+        renderItem={({item}) => {
           return (
             <LiveComponent
               id={item._id}

@@ -1,0 +1,9 @@
+{
+  "reactNativePermissionsIOS": ["Notifications"],
+  "devDependencies": {
+    "pod-install": "0.1.38"
+  },
+  "scripts": {
+    "postinstall": "react-native setup-ios-permissions && pod-install"
+  }
+}

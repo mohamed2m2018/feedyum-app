@@ -14,6 +14,7 @@ import {useNavigation} from '@react-navigation/native';
 import images from '../assets/images';
 import request from '../api/request';
 import {useMutation, useQueryClient} from 'react-query';
+import strings from '../i18n/strings';
 
 export default function UserDetailComponent({
   id,
@@ -22,6 +23,7 @@ export default function UserDetailComponent({
   isFollowed,
   userDescription,
   isSuggested = false,
+  currentUserId,
 }) {
   const navigation = useNavigation();
   const colors = useSelector(state => state.theme.theme);
@@ -38,6 +40,8 @@ export default function UserDetailComponent({
         queryClient.invalidateQueries({queryKey: 'stories_following'});
         queryClient.invalidateQueries({queryKey: 'search_user'});
         queryClient.invalidateQueries({queryKey: 'followStatistics'});
+        queryClient.invalidateQueries('IamFollowing');
+        queryClient.invalidateQueries('IamFollowed');
       },
     },
   );
@@ -49,6 +53,8 @@ export default function UserDetailComponent({
         queryClient.invalidateQueries({queryKey: 'stories_following'});
         queryClient.invalidateQueries({queryKey: 'search_user'});
         queryClient.invalidateQueries({queryKey: 'followStatistics'});
+        queryClient.invalidateQueries('IamFollowing');
+        queryClient.invalidateQueries('IamFollowed');
       },
     },
   );
@@ -95,17 +101,19 @@ export default function UserDetailComponent({
           )}
         </View>
       </TouchableOpacity>
-      <ZButton
-        title={!isFollow ? strings.follow : strings.following}
-        color={!isFollow ? colors.white : colors.primary}
-        textType="b14"
-        containerStyle={[
-          localStyles.buttonContainer,
-          {borderColor: colors.primary},
-        ]}
-        bgColor={!isFollow ? colors.primary : colors.tranparent}
-        onPress={onPressFollow}
-      />
+      {id !== currentUserId && (
+        <ZButton
+          title={!isFollow ? strings.follow : strings.following}
+          color={!isFollow ? colors.white : colors.primary}
+          textType="b14"
+          containerStyle={[
+            localStyles.buttonContainer,
+            {borderColor: colors.primary},
+          ]}
+          bgColor={!isFollow ? colors.primary : colors.tranparent}
+          onPress={onPressFollow}
+        />
+      )}
       {isSuggested && (
         <TouchableOpacity style={styles.ml5}>
           <Ionicons

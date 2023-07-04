@@ -30,28 +30,35 @@ import ReelComponent from '../../../components/ReelComponent';
 import {useQuery, useQueryClient} from 'react-query';
 import request from '../../../api/request';
 import {Toast, ALERT_TYPE} from 'react-native-alert-notification';
-import {useFocusEffect} from '@react-navigation/native';
-
-const UserDetail = (postsNo, followersNo, followingNo, viewsNo) => [
-  {
-    title: strings.post,
-    value: postsNo,
-  },
-  {
-    title: strings.followers,
-    value: followersNo,
-  },
-  {
-    title: strings.following,
-    value: followingNo,
-  },
-  {
-    title: 'Views',
-    value: viewsNo || 0,
-  },
-];
 
 export default function Profile({navigation}) {
+  const UserDetail = (postsNo, followersNo, followingNo, viewsNo) => [
+    {
+      title: strings.post,
+      value: postsNo,
+    },
+    {
+      title: strings.followers,
+      value: followersNo,
+      onPress: () => {
+        navigation.navigate(StackNav.UserNetwork, {
+          userId: user?._id,
+        });
+      },
+    },
+    {
+      title: strings.following,
+      value: followingNo,
+      onPress: () =>
+        navigation.navigate(StackNav.UserNetwork, {
+          userId: user?._id,
+        }),
+    },
+    {
+      title: 'Views',
+      value: viewsNo || 0,
+    },
+  ];
   const colors = useSelector(state => state.theme.theme);
 
   const [page, setpage] = useState(1);
@@ -137,16 +144,17 @@ export default function Profile({navigation}) {
 
   // const onPressFindFriend = () => navigation.navigate(StackNav.FindFriends);
 
+  // eslint-disable-next-line react/no-unstable-nested-components
   const RenderUserDetail = ({item}) => {
     return (
-      <View style={styles.itemsCenter}>
+      <TouchableOpacity onPress={item.onPress} style={styles.itemsCenter}>
         <ZText type="b24" align={'center'}>
           {item.value}
         </ZText>
         <ZText type="m16" align={'center'} style={styles.mt10}>
           {item.title}
         </ZText>
-      </View>
+      </TouchableOpacity>
     );
   };
 

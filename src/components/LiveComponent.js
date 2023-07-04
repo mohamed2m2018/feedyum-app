@@ -1,5 +1,5 @@
 // Library import
-import {Image, StyleSheet, TouchableOpacity, View} from 'react-native';
+import {StyleSheet, TouchableOpacity, View} from 'react-native';
 import React from 'react';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useSelector} from 'react-redux';
@@ -44,7 +44,7 @@ export default function LiveComponent({
                     backgroundColor: colors.primary,
                   },
                 ]}>
-                <ZText type="s12" color={colors.white}>
+                <ZText type="s12" color={colors.textColor}>
                   {'LIVE'}
                 </ZText>
               </View>
@@ -61,29 +61,17 @@ export default function LiveComponent({
                   color={colors.white}
                   style={styles.mr5}
                 />
-                <ZText type="s12" color={colors.white}>
+                <ZText type="s12" color={colors.textColor}>
                   {user}
                 </ZText>
               </View>
             </View>
           )}
-          {/* {!!data && (
-            <View style={localStyles.playStyle}>
-              <Ionicons
-                name="play-circle"
-                size={moderateScale(18)}
-                color={colors.primary}
-              />
-              <ZText type="s16" style={styles.ml5} color={colors.white}>
-                {data}
-              </ZText>
-            </View>
-          )} */}
         </ImageBackground>
       </TouchableOpacity>
 
       <TouchableOpacity style={localStyles.userDetailContainer}>
-        <ZText type="s14" style={styles.ml5} color={colors.white}>
+        <ZText type="s14" style={styles.ml5} color={colors.textColor}>
           {userName}
         </ZText>
       </TouchableOpacity>

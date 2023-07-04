@@ -3,6 +3,7 @@ import {StyleSheet, TouchableOpacity, View} from 'react-native';
 import React, {useState} from 'react';
 import {useSelector} from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import {useInfiniteQuery} from 'react-query';
 
 // Local import
 import ZSafeAreaView from '../../../../components/common/ZSafeAreaView';
@@ -14,16 +15,15 @@ import ZHeader from '../../../../components/common/ZHeader';
 import {TabView} from 'react-native-tab-view';
 import Following from './Following';
 import Follower from './Follower';
-import Suggested from './Suggested';
+import request from '../../../../api/request';
 
-export default function UserNetwork({navigation}) {
+export default function UserNetwork({navigation, route}) {
   const colors = useSelector(state => state.theme.theme);
   const [isSelect, setIsSelect] = useState({
     index: 0,
     routes: [
       {key: 'first', title: strings.following},
       {key: 'second', title: strings.followers},
-      {key: 'third', title: strings.suggested},
     ],
   });
 
@@ -31,6 +31,7 @@ export default function UserNetwork({navigation}) {
     setIsSelect({...isSelect, index: index});
   };
 
+  // eslint-disable-next-line react/no-unstable-nested-components
   const HeaderCetegoryItem = ({title, index}) => {
     return (
       <TouchableOpacity
@@ -63,15 +64,81 @@ export default function UserNetwork({navigation}) {
     );
   };
 
+
+  const fetchFollowingData = async ({pageParam = 1}) => {
+    // Implement logic to fetch following data for the current user
+    const response = await request.get(
+      `/follow/following?page=${pageParam}&userId=${route.params?.userId}`,
+    );
+    return response.data;
+  };
+
+  const fetchFollowerData = async ({pageParam = 1}) => {
+    // Implement logic to fetch follower data for the current user
+    const response = await request.get(
+      `/follow/followers?page=${pageParam}&userId=${route.params?.userId}`,
+    );
+    return response.data;
+  };
+
+  const followingQuery = useInfiniteQuery(
+    ['IamFollowing', route.params?.userId],
+    fetchFollowingData,
+    {
+      getNextPageParam: (lastPage, allPages) => {
+        const nextPage =
+          lastPage?.currentPage < lastPage?.totalPages
+            ? allPages.length + 1
+            : undefined;
+        return nextPage;
+      },
+      cacheTime: 0,
+      select: res => res?.pages.flatMap(page => page.following),
+    },
+  );
+
+  const followerQuery = useInfiniteQuery(
+    ['IamFollowed', route.params?.userId],
+    fetchFollowerData,
+    {
+      getNextPageParam: (lastPage, allPages) => {
+        const nextPage =
+          lastPage?.currentPage < lastPage?.totalPages
+            ? allPages.length + 1
+            : undefined;
+        return nextPage;
+      },
+      cacheTime: 0,
+      select: res => res?.pages.flatMap(page => page.followers),
+    },
+  );
+
   const _renderScene = ({route}) => {
-    if (route.key == 'first' && isSelect.index == 0) {
-      return <Following />;
+    if (route.key === 'first' && isSelect.index === 0) {
+      return (
+        <Following
+          fetchNextPage={followingQuery.fetchNextPage}
+          hasNextPage={followingQuery.hasNextPage}
+          followingData={followingQuery.data}
+          loading={
+            followingQuery.isLoading ||
+            (followingQuery.isFetching && !followingQuery.isFetchingNextPage)
+          }
+        />
+      );
     }
-    if (route.key == 'second' && isSelect.index == 1) {
-      return <Follower />;
-    }
-    if (route.key == 'third' && isSelect.index == 2) {
-      return <Suggested />;
+    if (route.key === 'second' && isSelect.index === 1) {
+      return (
+        <Follower
+          fetchNextPage={followerQuery.fetchNextPage}
+          hasNextPage={followerQuery.hasNextPage}
+          followingData={followerQuery.data}
+          loading={
+            followerQuery.isLoading ||
+            (followerQuery.isFetching && !followerQuery.isFetchingNextPage)
+          }
+        />
+      );
     }
   };
 
@@ -89,7 +156,7 @@ export default function UserNetwork({navigation}) {
 
   return (
     <ZSafeAreaView>
-      <ZHeader title={'Jenny Wilson'} rightIcon={<RightIcon />} />
+      <ZHeader title={'Follow List'} />
       <TabView
         navigationState={isSelect}
         renderScene={_renderScene}
@@ -108,7 +175,8 @@ const localStyles = StyleSheet.create({
     width: '33.33%',
   },
   mainContainer: {
-    ...styles.rowSpaceBetween,
+    ...styles.rowStart,
+    alignSelf: 'center',
     ...styles.ph20,
     ...styles.pt20,
     width: '100%',

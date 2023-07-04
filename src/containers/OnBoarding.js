@@ -32,7 +32,7 @@ const OnBoarding = ({navigation}) => {
     },
     tutorialText2: {
       id: 2,
-      title: 'Follow the best Egyptian cookers in the food market',
+      title: 'Wide Variety of Dishes, which you will be able to buy',
       desc: 'With the best prices ever!',
       image: images.onBoardingLight2,
       btnTitle: 'Next',

@@ -59,8 +59,7 @@ export default function TabBarNavigation({navigation}) {
         tabBarStyle: [
           localStyles.tabBarStyle,
           {
-            backgroundColor:
-              index === 0 ? colors.darkBg : colors.backgroundColor,
+            backgroundColor: colors.backgroundColor,
           },
         ],
         tabBarShowLabel: false,

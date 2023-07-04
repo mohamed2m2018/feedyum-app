@@ -185,7 +185,7 @@ const HelpCenter = () => {
       style={{
         backgroundColor: colors.dark ? colors.backgroundColor : colors.white,
       }}>
-      <ZHeader title={strings.helpCenter} rightIcon={<RightIcon />} />
+      <ZHeader title={strings.helpCenter} />
       <ScrollView
         bounces={false}
         nestedScrollEnabled={true}
@@ -219,7 +219,6 @@ const HelpCenter = () => {
               inputBoxStyle={[localStyles.inputBoxStyle]}
               _onFocus={onHighlightInput}
               onBlur={onUnHighlightInput}
-              rightAccessory={() => <Control />}
             />
             {faqData.length ? (
               <RenderHelper helperData={faqData} />
