@@ -1,16 +1,15 @@
+/* eslint-disable react-native/no-inline-styles */
 // Library import
 import {
   ActivityIndicator,
   Image,
   StyleSheet,
-  Switch,
   TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {useSelector} from 'react-redux';
-import Ionicons from 'react-native-vector-icons/Ionicons';
 import ImagePicker from 'react-native-image-crop-picker';
 import axios from 'axios';
 // Local import
@@ -42,13 +41,20 @@ import {ALERT_TYPE, Toast} from 'react-native-alert-notification';
 import images from '../../../assets/images';
 import DropdownGovr from '../home/DropDownGovr';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
+import {Dropdown} from 'react-native-element-dropdown';
+
+const Duration = [
+  {label: 'Hours', value: 'Hours'},
+  {label: 'Days', value: 'Days'},
+];
 
 export default function PostDetail() {
   const colors = useSelector(state => state.theme.theme);
   const navigation = useNavigation();
   const [postedData, setpostedData] = useState({});
   const queryClient = useQueryClient();
-  const [toggleStatus, setToggleStatus] = useState('hours');
+
+  const [toggleStatus, setToggleStatus] = useState('Hours');
   const route = useRoute();
   useFocusEffect(
     React.useCallback(() => {
@@ -225,6 +231,7 @@ export default function PostDetail() {
   const handlepickImage = () =>
     ImagePicker.openPicker({
       mediaType: 'any',
+      cropping: true,
     }).then(value => {
       if (value.duration && value.duration > 60000) {
         Toast.show({
@@ -323,7 +330,7 @@ export default function PostDetail() {
                   color: colors.textColor,
                 },
                 localStyles.inputContainerStyle,
-                // eslint-disable-next-line react-native/no-inline-styles
+
                 {
                   paddingTop: 20,
                 },
@@ -375,14 +382,43 @@ export default function PostDetail() {
                       },
                       localStyles.smallInputContainerStyle,
                       {
-                        maxWidth: '77%',
-                        paddingTop: 12,
+                        maxWidth: '58%',
+                        paddingTop: 20,
                       },
                     ]}
                     inputBoxStyle={localStyles.inputBoxStyle}
                   />
                   <View>
-                    <Switch
+                    <Dropdown
+                      style={[
+                        localStyles.dropdownStyle,
+                        {
+                          backgroundColor: colors.inputBg,
+                          borderColor: colors.inputBg,
+                          color: colors.white,
+                        },
+                      ]}
+                      placeholderStyle={{color: colors.grayScale5}}
+                      data={Duration}
+                      maxHeight={moderateScale(180)}
+                      labelField="label"
+                      valueField="value"
+                      placeholder={'Duration'}
+                      value={toggleStatus}
+                      itemTextStyle={{
+                        color: colors.textColor,
+                        fontSize: moderateScale(16),
+                      }}
+                      onChange={text => setToggleStatus(text.value)}
+                      selectedTextStyle={{
+                        color: colors.textColor,
+                      }}
+                      itemContainerStyle={{
+                        backgroundColor: colors.inputBg,
+                      }}
+                      activeColor={colors.inputBg}
+                    />
+                    {/* <Switch
                       trackColor={{
                         false: colors.grayScale3,
                         true: colors.primary,
@@ -403,15 +439,7 @@ export default function PostDetail() {
                           ? true
                           : false
                       }
-                    />
-                    <ZText
-                      style={{
-                        marginTop: 5,
-                        alignSelf: 'center',
-                        textAlign: 'center',
-                      }}>
-                      {toggleStatus}
-                    </ZText>
+                    /> */}
                   </View>
                 </View>
                 {!user?.phone && (
@@ -502,6 +530,14 @@ const localStyles = StyleSheet.create({
     alignSelf: 'center',
     ...styles.mt20,
   },
+  dropdownStyle: {
+    height: getHeight(60),
+    borderRadius: moderateScale(12),
+    borderWidth: moderateScale(1),
+    width: moderateScale(120),
+    ...styles.ph15,
+    ...styles.mt15,
+  },
   inputContainerStyle: {
     ...styles.flex,
     height: getHeight(132),
@@ -515,7 +551,6 @@ const localStyles = StyleSheet.create({
   },
   smallInputContainerStyle: {
     ...styles.flex,
-    height: getHeight(80),
     borderRadius: moderateScale(20),
     borderWidth: moderateScale(1),
     ...styles.p20,

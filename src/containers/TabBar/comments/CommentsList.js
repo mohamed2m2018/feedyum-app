@@ -120,6 +120,7 @@ const CommentsList = props => {
       <FlatList
         style={{marginTop: topMargin}}
         extraData={props}
+        showsVerticalScrollIndicator={false}
         onEndReachedThreshold={0.9}
         onEndReached={handleLoadMore}
         ListFooterComponent={

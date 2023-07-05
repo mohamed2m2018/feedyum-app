@@ -160,6 +160,7 @@ const SetUpProfile = props => {
   const onPressGallery = async () => {
     ImagePicker.openPicker({
       mediaType: 'photo',
+      cropping: true,
       includeBase64: true,
     }).then(async response => {
       ProfilePictureSheetRef?.current?.hide();

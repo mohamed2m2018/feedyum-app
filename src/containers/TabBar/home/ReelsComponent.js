@@ -2,39 +2,29 @@
 import {
   Animated,
   Easing,
-  Pressable,
   StyleSheet,
   TouchableOpacity,
   View,
   Platform,
   ActivityIndicator,
-  Linking,
   RefreshControl,
   SafeAreaView,
 } from 'react-native';
-import Image from 'react-native-fast-image';
 import React, {useEffect, useRef, useState, useCallback} from 'react';
-import LinearGradient from 'react-native-linear-gradient';
-import Video from 'react-native-fast-video';
 import {useSelector} from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import Entypo from 'react-native-vector-icons/Entypo';
 import {useIsFocused, useNavigation, useRoute} from '@react-navigation/native';
 import {FlashList} from '@shopify/flash-list';
 // Local import
 import {styles} from '../../../themes';
 import {
-  getHeight,
-  getVideoExtension,
   isAndroid,
   moderateScale,
   screenFullHeight,
-  screenWidth,
 } from '../../../common/constants';
 import ZText from '../../../components/common/ZText';
 import {StackNav, TabNav} from '../../../navigation/NavigationKeys';
 import Comment from '../../../components/models/Comment';
-import ZButton from '../../../components/common/ZButton';
 import {
   useInfiniteQuery,
   useMutation,
@@ -64,13 +54,13 @@ const HeaderCategoryItem = React.memo(({title, onPress, category}) => {
       style={[
         localStyles.headerCetegoryItemContainer,
         {
-          borderBottomColor: title === category ? colors.primary : colors.white,
+          borderBottomColor: title === category ? colors.primary : colors.grayScale5,
         },
       ]}>
       <ZText
         type="b18"
         numberOfLines={1}
-        color={title === category ? colors.primary : colors.white}>
+        color={title === category ? colors.primary : colors.grayScale5}>
         {title}
       </ZText>
     </TouchableOpacity>

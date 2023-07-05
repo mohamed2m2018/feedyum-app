@@ -289,7 +289,7 @@ const DropdownGovr = ({postedData, setpostedData}) => {
             style={{paddingRight: 10}}
             name="chevron-down"
             size={12}
-            color={'white'}
+            color={colors.textColor}
           />
         }
         searchicon={
@@ -297,7 +297,7 @@ const DropdownGovr = ({postedData, setpostedData}) => {
             style={{paddingRight: 10}}
             name="search"
             size={12}
-            color={'white'}
+            color={colors.textColor}
           />
         }
         closeicon={
@@ -305,7 +305,7 @@ const DropdownGovr = ({postedData, setpostedData}) => {
             style={{paddingRight: 10}}
             name="close"
             size={12}
-            color={'white'}
+            color={colors.textColor}
           />
         }
       />
