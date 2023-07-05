@@ -264,7 +264,7 @@ export default function ProfileDetail({navigation, route}) {
             user?.postsNo || 0,
             followStatistics?.data?.followersCount || 0,
             followStatistics?.data?.followingCount || 0,
-            views?.data?.totalViews || 0,
+            views?.data?.viewsCount || 0,
             onPressEditProfile,
           ).map((item, index) => (
             <RenderUserDetail item={item} key={index} />

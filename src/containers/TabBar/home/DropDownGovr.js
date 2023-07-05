@@ -21,7 +21,7 @@ const DropdownGovr = ({postedData, setpostedData}) => {
       borderColor: colors.bColor,
       paddingVertical: 10,
       paddingHorizontal: 12,
-      width: 335,
+      width: '95%',
       marginTop: 14,
     },
     selectTextGover: {

@@ -14,7 +14,7 @@ export default function SearchSound() {
           imgUrl={item?.imgUrl}
           artist={item?.artist}
           time={item?.time}
-          totalViews={item?.totalViews}
+          totalViews={item?.viewsCount}
         />
       )}
       keyExtractor={(item, index) => index.toString()}

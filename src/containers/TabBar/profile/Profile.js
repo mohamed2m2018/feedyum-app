@@ -237,7 +237,7 @@ export default function Profile({navigation}) {
                   user?.postsNo,
                   followStatistics?.data?.followersCount,
                   followStatistics?.data?.followingCount,
-                  views?.data?.totalViews || 0,
+                  views?.data?.viewsCount || 0,
                 ).map((item, index) => (
                   <RenderUserDetail item={item} key={index} />
                 ))}

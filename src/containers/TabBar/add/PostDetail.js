@@ -48,6 +48,7 @@ export default function PostDetail() {
   const navigation = useNavigation();
   const [postedData, setpostedData] = useState({});
   const queryClient = useQueryClient();
+  const [toggleStatus, setToggleStatus] = useState('days');
   const route = useRoute();
   useFocusEffect(
     React.useCallback(() => {
@@ -193,8 +194,12 @@ export default function PostDetail() {
     }
 
     const dataToBeSent = postedData?.linkToGo
-      ? postedData
-      : {...postedData, phone: user?.phone || phone};
+      ? {...postedData, duration: postedData.duration + ' ' + toggleStatus}
+      : {
+          ...postedData,
+          duration: postedData.duration + ' ' + toggleStatus,
+          phone: user?.phone || phone,
+        };
     editUser();
 
     await mutate(dataToBeSent, {
@@ -348,27 +353,61 @@ export default function PostDetail() {
                   ]}
                   inputBoxStyle={localStyles.inputBoxStyle}
                 />
-                <TextInput
-                  placeholder={'No of days to deliver this order'}
-                  value={`${postedData?.duration || ''}`}
-                  keyboardType="number-pad"
-                  onChangeText={input =>
-                    setpostedData(currentState => ({
-                      ...currentState,
-                      duration: input,
-                    }))
-                  }
-                  placeholderTextColor={colors.placeHolderColor}
-                  style={[
-                    {
-                      backgroundColor: colors.inputBg,
-                      borderColor: colors.bColor,
-                      color: colors.textColor,
-                    },
-                    localStyles.smallInputContainerStyle,
-                  ]}
-                  inputBoxStyle={localStyles.inputBoxStyle}
-                />
+                <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                  <TextInput
+                    placeholder={`No of ${toggleStatus} to deliver this order`}
+                    value={`${postedData?.duration || ''}`}
+                    multiline={true}
+                    keyboardType="number-pad"
+                    onChangeText={input =>
+                      setpostedData(currentState => ({
+                        ...currentState,
+                        duration: input,
+                      }))
+                    }
+                    placeholderTextColor={colors.placeHolderColor}
+                    style={[
+                      {
+                        backgroundColor: colors.inputBg,
+                        borderColor: colors.bColor,
+                        color: colors.textColor,
+                      },
+                      localStyles.smallInputContainerStyle,
+                      {
+                        maxWidth: '77%',
+                        paddingTop: 12,
+                      },
+                    ]}
+                    inputBoxStyle={localStyles.inputBoxStyle}
+                  />
+                  <View>
+                    <Switch
+                      trackColor={{
+                        false: colors.grayScale3,
+                        true: colors.primary,
+                      }}
+                      style={{
+                        transform: [{scaleX: 0.8}, {scaleY: 0.8}],
+                        marginTop: 10,
+                      }}
+                      thumbColor={colors.white}
+                      onValueChange={() =>
+                        setToggleStatus(prev =>
+                          prev === 'days' ? 'hours' : 'days',
+                        )
+                      }
+                      value={toggleStatus === 'days' ? true : false}
+                    />
+                    <ZText
+                      style={{
+                        marginTop: 5,
+                        alignSelf: 'center',
+                        textAlign: 'center',
+                      }}>
+                      {toggleStatus}
+                    </ZText>
+                  </View>
+                </View>
                 {!user?.phone && (
                   <TextInput
                     placeholder={'Please add your phone number'}

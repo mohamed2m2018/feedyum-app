@@ -176,7 +176,7 @@ const ReelComponent = ({
 
               {true && (
                 <ZText type="m12" color={colors.white}>
-                  {`Can be received in ${item?.duration} day`}
+                  {`Can be received in ${item?.duration}`}
                 </ZText>
               )}
               <ZText type="m14" color={colors.white}>

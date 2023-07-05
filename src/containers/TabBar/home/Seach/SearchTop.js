@@ -43,7 +43,7 @@ export default function SearchTop() {
         renderItem={({item, index}) => (
           <ReelComponent
             key={item?._id}
-            data={item?.views}
+            data={item?.viewsCount}
             isPlay={!item?.avatarUri}
             reelUrl={item?.uri?.replace(getVideoExtension(item?.uri), 'jpg')}
             style={styles.mt10}
@@ -62,7 +62,7 @@ export default function SearchTop() {
             imgUrl={item?.imgUrl}
             artist={item?.artist}
             time={item?.time}
-            totalViews={item?.totalViews}
+            totalViews={item?.viewsCount}
           />
         )}
         keyExtractor={(item, index) => index.toString()}
