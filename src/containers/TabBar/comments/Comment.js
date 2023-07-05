@@ -8,12 +8,13 @@ import commentStyling from './CommentStyling';
 
 import TimeAgo from 'javascript-time-ago';
 
-// English.
-import en from 'javascript-time-ago/locale/en';
-
 import Reply from './Reply';
+import {connect} from 'react-redux';
 
-export default class Comment extends Component {
+const mapStateToProps = state => ({
+  theme: state.theme.theme,
+});
+class Comment extends Component {
   state = {
     liked: false,
   };
@@ -40,13 +41,14 @@ export default class Comment extends Component {
   renderReplies = replies => {
     return replies.map((reply, index) => (
       <View key={index}>
-        <Reply reply={reply} />
+        <Reply theme={this.props.theme} reply={reply} />
       </View>
     ));
   };
 
   render() {
     const {commentData} = this.props;
+
     const {
       content,
       user_id: {fullName, avatar},
@@ -66,37 +68,79 @@ export default class Comment extends Component {
         <View style={commentStyling.mainWrapper}>
           <Image style={commentStyling.image} source={{uri: avatar}} />
           <View style={commentStyling.wrapper}>
-            <Text style={commentStyling.commentOwner}>{fullName}</Text>
-            <Text style={commentStyling.content}>{content}</Text>
+            <Text
+              style={[
+                commentStyling.commentOwner,
+                {
+                  color: this.props.theme.textColor,
+                },
+              ]}>
+              {fullName}
+            </Text>
+            <Text
+              style={[
+                commentStyling.content,
+                {
+                  color: this.props.theme.textColor,
+                },
+              ]}>
+              {content}
+            </Text>
           </View>
         </View>
         <View style={commentStyling.commentFooter}>
-          <Text style={commentStyling.footerElement}>{time}</Text>
+          <Text
+            style={[
+              commentStyling.footerElement,
+              {color: this.props.theme.textColor},
+            ]}>
+            {time}
+          </Text>
 
           {/* {liked ? (
             <TouchableOpacity onPress={this.onPressLike}>
               <View style={{paddingRight: 5, paddingLeft: 5}}>
-                <Text style={commentStyling.footerElementLiked}>Like</Text>
+                  <Text
+            style={[
+              commentStyling.footerElement,
+              {color: this.props.theme.textColor},
+            ]}>Like</Text>
               </View>
             </TouchableOpacity>
           ) : (
             <TouchableOpacity onPress={this.onPressLike}>
               <View style={{paddingRight: 4, paddingLeft: 4}}>
-                <Text style={commentStyling.footerElement}>Like</Text>
+                 <Text
+            style={[
+              commentStyling.footerElement,
+              {color: this.props.theme.textColor},
+            ]}>Like</Text>
               </View>
             </TouchableOpacity>
           )} */}
 
           <TouchableOpacity onPress={() => this.onPress(_id, this.props.index)}>
-            <Text style={commentStyling.footerElement}>Reply</Text>
+            <Text
+              style={[
+                commentStyling.footerElement,
+                {color: this.props.theme.textColor},
+              ]}>
+              Reply
+            </Text>
           </TouchableOpacity>
-          {/* <Text style={commentStyling.footerElement}>12 likes</Text> */}
+          {/*   <Text
+            style={[
+              commentStyling.footerElement,
+              {color: this.props.theme.textColor},
+            ]}>12 likes</Text> */}
         </View>
         {replies ? this.renderReplies(replies) : null}
       </View>
     );
   }
 }
+
+export default connect(mapStateToProps, null)(Comment);
 
 Comment.propTypes = {
   commentData: PropTypes.shape({

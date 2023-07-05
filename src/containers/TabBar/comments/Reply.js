@@ -18,19 +18,53 @@ export default class Reply extends Component {
             source={{uri: reply?.user_id?.avatar}}
           />
           <View style={commentStyling.wrapper}>
-            <Text style={commentStyling.commentOwner}>
+            <Text
+              style={[
+                commentStyling.commentOwner,
+                {
+                  color: this.props.theme.textColor,
+                },
+              ]}>
               {reply.user_id?.fullName}
             </Text>
-            <Text style={commentStyling.content}>{reply.content}</Text>
+            <Text
+              style={[
+                commentStyling.content,
+                {
+                  color: this.props.theme.textColor,
+                },
+              ]}>
+              {reply.content}
+            </Text>
           </View>
         </View>
         <View style={commentStyling.replyFooter}>
-          <Text style={commentStyling.footerElement}>{time}</Text>
-          <Text style={commentStyling.footerElement}>{reply.date}</Text>
+          <Text
+            style={[
+              commentStyling.footerElement,
+              {color: this.props.theme.textColor},
+            ]}>
+            {time}
+          </Text>
+          <Text
+            style={[
+              commentStyling.footerElement,
+              {color: this.props.theme.textColor},
+            ]}>
+            {reply.date}
+          </Text>
           {/* <TouchableHighlight onPress={this.onPress}>
-            <Text style={commentStyling.footerElement}>Like</Text>
+               <Text
+            style={[
+              commentStyling.footerElement,
+              {color: this.props.theme.textColor},
+            ]}>Like</Text>
           </TouchableHighlight>
-          <Text style={commentStyling.footerElement}>12 likes</Text> */}
+             <Text
+            style={[
+              commentStyling.footerElement,
+              {color: this.props.theme.textColor},
+            ]}>12 likes</Text> */}
         </View>
       </View>
     );

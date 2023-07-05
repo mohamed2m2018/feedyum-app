@@ -24,7 +24,6 @@ export default styles = StyleSheet.create({
   wrapper: {
     flex: -1,
     height: 'auto',
-    // backgroundColor: '#F2F3F5',
     borderRadius: 15,
     alignSelf: 'flex-start',
   },
@@ -32,13 +31,13 @@ export default styles = StyleSheet.create({
   content: {
     padding: 6,
     paddingTop: 1,
-    color: 'white',
+    // color: 'white',
   },
   commentOwner: {
     padding: 6,
     paddingBottom: 0,
     fontWeight: 'bold',
-    color: 'white',
+    // color: 'white',
   },
   commentFooter: {
     flexDirection: 'row',
@@ -52,7 +51,7 @@ export default styles = StyleSheet.create({
   },
   footerElement: {
     marginRight: 14,
-    color: 'white',
+    // color: 'white',
   },
   footerElementLiked: {
     marginRight: 10,

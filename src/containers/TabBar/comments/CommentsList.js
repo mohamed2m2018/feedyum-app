@@ -7,14 +7,16 @@ import {
   Keyboard,
   Platform,
   ActivityIndicator,
+  StyleSheet,
 } from 'react-native';
 import Comment from './Comment';
-import commentListStyling from './commentListStyling';
+import {useSelector} from 'react-redux';
 
 const CommentsList = props => {
   const [itemHeights, setItemHeights] = useState([]);
   const [initialScrollIndex, setInitialScrollIndex] = useState(0);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const colors = useSelector(state => state.theme.theme);
 
   const flatlistRef = useRef();
   const itemRefs = useRef([]);
@@ -137,5 +139,13 @@ const CommentsList = props => {
     </View>
   );
 };
+
+const commentListStyling = StyleSheet.create({
+  icon: {marginTop: 14, marginLeft: 5, marginRight: 7},
+  mainContainer: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+});
 
 export default CommentsList;
