@@ -48,7 +48,7 @@ export default function PostDetail() {
   const navigation = useNavigation();
   const [postedData, setpostedData] = useState({});
   const queryClient = useQueryClient();
-  const [toggleStatus, setToggleStatus] = useState('days');
+  const [toggleStatus, setToggleStatus] = useState('hours');
   const route = useRoute();
   useFocusEffect(
     React.useCallback(() => {
@@ -59,6 +59,7 @@ export default function PostDetail() {
   useEffect(() => {
     if (postDataToBeEdited) {
       setpostedData(postDataToBeEdited);
+      setToggleStatus(postDataToBeEdited.duration?.split(' ')?.[1] || 'hours');
       setlocalUri(postDataToBeEdited?.uri || '');
     }
   }, [postDataToBeEdited]);
@@ -356,7 +357,7 @@ export default function PostDetail() {
                 <View style={{flexDirection: 'row', alignItems: 'center'}}>
                   <TextInput
                     placeholder={`No of ${toggleStatus} to deliver this order`}
-                    value={`${postedData?.duration || ''}`}
+                    value={`${postedData?.duration?.split?.(' ')?.[0] || ''}`}
                     multiline={true}
                     keyboardType="number-pad"
                     onChangeText={input =>
@@ -396,7 +397,12 @@ export default function PostDetail() {
                           prev === 'days' ? 'hours' : 'days',
                         )
                       }
-                      value={toggleStatus === 'days' ? true : false}
+                      value={
+                        postedData?.duration?.split?.(' ')?.[1] === 'hours' ||
+                        toggleStatus === 'hours'
+                          ? true
+                          : false
+                      }
                     />
                     <ZText
                       style={{
