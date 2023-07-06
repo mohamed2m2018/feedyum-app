@@ -1,164 +1,148 @@
-import React, {Component} from 'react';
+import React from 'react';
 
 import {View, Text, Image, TouchableOpacity} from 'react-native';
-
-import PropTypes from 'prop-types';
 
 import commentStyling from './CommentStyling';
 
 import TimeAgo from 'javascript-time-ago';
 
 import Reply from './Reply';
-import {connect} from 'react-redux';
+import {useMutation, useQuery, useQueryClient} from 'react-query';
+import {StackNav, TabNav} from '../../../navigation/NavigationKeys';
+import request from '../../../api/request';
+import {moderateScale} from '../../../common/constants';
+import Feather from 'react-native-vector-icons/Feather';
+import {useNavigation} from '@react-navigation/native';
 
-const mapStateToProps = state => ({
-  theme: state.theme.theme,
-});
-class Comment extends Component {
-  state = {
-    liked: false,
+const Comment = props => {
+  const queryClient = useQueryClient();
+
+  const navigation = useNavigation();
+
+  const deleteComment = async () => {
+    await request.delete(`/comment/${props.postId}/${_id}`);
+    queryClient.invalidateQueries({queryKey: 'commentsCount' + props.postId});
   };
 
-  componentWillMount = () => {
-    const {displayLike} = this.props;
-    this.setState({
-      liked: displayLike,
-    });
+  const mutation = useMutation(() => deleteComment(_id), {
+    onSuccess: () => {
+      queryClient.invalidateQueries('comments');
+    },
+  });
+
+  const onPress = (_id, index) => {
+    props.inputRef.current.focus();
+    props.scrollToComment(index);
+    props.onAddComment(_id);
   };
 
-  onPress = (_id, index) => {
-    this.props.inputRef.current.focus();
-    this.props.scrollToComment(index);
-    this.props.onAddComment(_id);
-  };
-
-  onPressLike = () => {
-    this.setState({
-      liked: !this.state.liked,
-    });
-  };
-
-  renderReplies = replies => {
+  const renderReplies = replies => {
     return replies.map((reply, index) => (
       <View key={index}>
-        <Reply theme={this.props.theme} reply={reply} />
+        <Reply
+          commentId={props.commentData._id}
+          theme={props.theme}
+          SheetRef={props.SheetRef}
+          reply={reply}
+        />
       </View>
     ));
   };
 
-  render() {
-    const {commentData} = this.props;
+  const {commentData} = props;
 
-    const {
-      content,
-      user_id: {fullName, avatar},
-      replies,
-      created_at,
-      _id,
-    } = commentData;
-    const {liked} = this.state;
+  const {
+    content,
+    user_id: {fullName, avatar},
+    replies,
+    created_at,
+    _id,
+  } = commentData;
 
-    // Create formatter (English).
-    const timeAgo = new TimeAgo('en-US');
-    const date = new Date(created_at);
-    const time = timeAgo.format(date);
+  // Create formatter (English).
+  const timeAgo = new TimeAgo('en-US');
+  const date = new Date(created_at);
+  const time = timeAgo.format(date);
 
-    return (
-      <View>
-        <View style={commentStyling.mainWrapper}>
+  const {data} = useQuery('user', () => request.get('/user'), {retry: 1});
+
+  const user = data?.data?.user;
+
+  const navigateToProfile = () => {
+    if (commentData.user_id._id !== user?._id) {
+      navigation.navigate(StackNav.ProfileDetail, {
+        userName: commentData.user_id.fullName,
+        userImage: commentData.user_id.avatar,
+        id: commentData.user_id._id,
+      });
+      props.SheetRef?.current?.hide?.();
+    } else {
+      navigation.navigate(TabNav.Profile);
+      props.SheetRef?.current?.hide?.();
+    }
+  };
+
+  return (
+    <View>
+      <View style={commentStyling.mainWrapper}>
+        <TouchableOpacity onPress={navigateToProfile}>
           <Image style={commentStyling.image} source={{uri: avatar}} />
-          <View style={commentStyling.wrapper}>
-            <Text
-              style={[
-                commentStyling.commentOwner,
-                {
-                  color: this.props.theme.textColor,
-                },
-              ]}>
-              {fullName}
-            </Text>
-            <Text
-              style={[
-                commentStyling.content,
-                {
-                  color: this.props.theme.textColor,
-                },
-              ]}>
-              {content}
-            </Text>
-          </View>
+        </TouchableOpacity>
+        <View style={commentStyling.wrapper}>
+          <Text
+            onPress={navigateToProfile}
+            style={[
+              commentStyling.commentOwner,
+              {
+                color: props.theme.textColor,
+              },
+            ]}>
+            {fullName}
+          </Text>
+          <Text
+            style={[
+              commentStyling.content,
+              {
+                color: props.theme.textColor,
+              },
+            ]}>
+            {content}
+          </Text>
         </View>
-        <View style={commentStyling.commentFooter}>
+      </View>
+      <View style={commentStyling.commentFooter}>
+        <Text
+          style={[
+            commentStyling.footerElement,
+            {color: props.theme.textColor},
+          ]}>
+          {time}
+        </Text>
+
+        <TouchableOpacity onPress={() => onPress(_id, props.index)}>
           <Text
             style={[
               commentStyling.footerElement,
-              {color: this.props.theme.textColor},
+              {color: props.theme.textColor},
             ]}>
-            {time}
+            Reply
           </Text>
-
-          {/* {liked ? (
-            <TouchableOpacity onPress={this.onPressLike}>
-              <View style={{paddingRight: 5, paddingLeft: 5}}>
-                  <Text
-            style={[
-              commentStyling.footerElement,
-              {color: this.props.theme.textColor},
-            ]}>Like</Text>
-              </View>
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity onPress={this.onPressLike}>
-              <View style={{paddingRight: 4, paddingLeft: 4}}>
-                 <Text
-            style={[
-              commentStyling.footerElement,
-              {color: this.props.theme.textColor},
-            ]}>Like</Text>
-              </View>
-            </TouchableOpacity>
-          )} */}
-
-          <TouchableOpacity onPress={() => this.onPress(_id, this.props.index)}>
-            <Text
-              style={[
-                commentStyling.footerElement,
-                {color: this.props.theme.textColor},
-              ]}>
-              Reply
-            </Text>
+        </TouchableOpacity>
+        {commentData?.user_id?._id === user?._id && (
+          <TouchableOpacity
+            style={{}}
+            onPress={() => mutation.mutate(commentData)}>
+            <Feather
+              name="trash-2"
+              size={moderateScale(20)}
+              color={props.theme.primary}
+            />
           </TouchableOpacity>
-          {/*   <Text
-            style={[
-              commentStyling.footerElement,
-              {color: this.props.theme.textColor},
-            ]}>12 likes</Text> */}
-        </View>
-        {replies ? this.renderReplies(replies) : null}
+        )}
       </View>
-    );
-  }
-}
-
-export default connect(mapStateToProps, null)(Comment);
-
-Comment.propTypes = {
-  commentData: PropTypes.shape({
-    ownerName: PropTypes.string.isRequired,
-    ownerAvatar: PropTypes.string,
-    content: PropTypes.string.isRequired,
-    date: PropTypes.string,
-    liked: PropTypes.bool,
-    replies: PropTypes.arrayOf(
-      PropTypes.shape({
-        ownerName: PropTypes.string,
-        ownerAvatar: PropTypes.string,
-        content: PropTypes.string.isRequired,
-        date: PropTypes.string,
-      }),
-    ),
-  }),
-  backgroundColor: PropTypes.string,
-  textColor: PropTypes.string,
-  displayLike: PropTypes.bool,
+      {replies ? renderReplies(replies) : null}
+    </View>
+  );
 };
+
+export default Comment;

@@ -1,6 +1,6 @@
 // Library import
 import {Keyboard, StyleSheet, TouchableOpacity, View} from 'react-native';
-import React, {useRef, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import Image from 'react-native-fast-image';
 import ActionSheet from 'react-native-actions-sheet';
 import {useSelector} from 'react-redux';
@@ -17,113 +17,74 @@ import images from '../../assets/images';
 import Spinner from 'react-native-loading-spinner-overlay';
 import {ALERT_TYPE, Toast} from 'react-native-alert-notification';
 import {StackNav, TabNav} from '../../navigation/NavigationKeys';
-import {useNavigation} from '@react-navigation/native';
+import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import CommentsList from '../../containers/TabBar/comments/CommentsList';
 
-const navigateToProfile = (
-  currentUserId,
-  avatar,
-  fullName,
-  navigation,
-  authorId,
-) => {
-  if (authorId !== currentUserId) {
-    navigation.navigate(StackNav.ProfileDetail, {
-      userName: fullName,
-      userImage: avatar,
-      id: authorId,
-    });
-  } else {
-    navigation.navigate(TabNav.Profile);
-  }
-};
+// const CommentRender = ({
+//   item,
+//   colors,
+//   currentUserId,
+//   navigation,
+//   SheetRef,
+//   postId,
+// }) => {
+//   const queryClient = useQueryClient();
 
-const CommentRender = ({
-  item,
-  colors,
-  currentUserId,
-  navigation,
-  SheetRef,
-  postId,
-}) => {
-  const queryClient = useQueryClient();
+//   return (
+//     <View>
+//       <View style={localStyles.profileContainer}>
+//         <TouchableOpacity
+//           style={styles.rowCenter}
+//           onPress={() => {
+//             SheetRef.current?.hide();
+//             navigateToProfile(
+//               currentUserId,
+//               item?.user_id?.avatar,
+//               item?.user_id?.fullName,
+//               navigation,
+//               item?.user_id?._id,
+//             );
+//           }}>
+//           <Image
+//             source={
+//               item?.user_id?.avatar
+//                 ? {uri: item?.user_id?.avatar}
+//                 : colors.dark
+//                 ? images.userDark
+//                 : images.userLight
+//             }
+//             style={localStyles.userImage}
+//           />
+//           <ZText type="b16" numberOfLines={1} align={'center'}>
+//             {item?.user_id?.fullName}
+//           </ZText>
+//         </TouchableOpacity>
+//         {item?.user_id?._id === currentUserId && (
+//           <TouchableOpacity
+//             style={localStyles.deleteButton}
+//             onPress={() => mutation.mutate(item)}>
+//             <Feather
+//               name="trash-2"
+//               size={moderateScale(20)}
+//               color={colors.primary}
+//             />
+//           </TouchableOpacity>
+//         )}
+//       </View>
+//       <ZText type="r14" style={styles.mv10} numberOfLines={2}>
+//         {item?.content}
+//       </ZText>
+//       <View style={localStyles.likeContainer}>
+//         <ZText type="r14">{item?.created_at.slice(0, 10)}</ZText>
+//       </View>
+//     </View>
+//   );
+// };
 
-  const deleteComment = async () => {
-    await request.delete(`/comment/${postId}/${item._id}`);
-    queryClient.invalidateQueries({queryKey: 'commentsCount' + postId});
-  };
-
-  const mutation = useMutation(() => deleteComment(item._id), {
-    onSuccess: () => {
-      queryClient.invalidateQueries('comments');
-    },
-  });
-
-  return (
-    <View>
-      <View style={localStyles.profileContainer}>
-        <TouchableOpacity
-          style={styles.rowCenter}
-          onPress={() => {
-            SheetRef.current?.hide();
-            navigateToProfile(
-              currentUserId,
-              item?.user_id?.avatar,
-              item?.user_id?.fullName,
-              navigation,
-              item?.user_id?._id,
-            );
-          }}>
-          <Image
-            source={
-              item?.user_id?.avatar
-                ? {uri: item?.user_id?.avatar}
-                : colors.dark
-                ? images.userDark
-                : images.userLight
-            }
-            style={localStyles.userImage}
-          />
-          <ZText type="b16" numberOfLines={1} align={'center'}>
-            {item?.user_id?.fullName}
-          </ZText>
-        </TouchableOpacity>
-        {item?.user_id?._id === currentUserId && (
-          <TouchableOpacity
-            style={localStyles.deleteButton}
-            onPress={() => mutation.mutate(item)}>
-            <Feather
-              name="trash-2"
-              size={moderateScale(20)}
-              color={colors.primary}
-            />
-          </TouchableOpacity>
-        )}
-      </View>
-      <ZText type="r14" style={styles.mv10} numberOfLines={2}>
-        {item?.content}
-      </ZText>
-      <View style={localStyles.likeContainer}>
-        <ZText type="r14">{item?.created_at.slice(0, 10)}</ZText>
-      </View>
-    </View>
-  );
-};
-
-export default function Comment({SheetRef, postId, currentUserId}) {
+export default function Comment({SheetRef, postId}) {
   const colors = useSelector(state => state.theme.theme);
-  const navigation = useNavigation();
   const inputRef = useRef();
-  const renderItem = ({item}) => (
-    <CommentRender
-      item={item}
-      colors={colors}
-      currentUserId={currentUserId}
-      navigation={navigation}
-      SheetRef={SheetRef}
-      postId={postId}
-    />
-  );
+
   const BlurredStyle = {
     backgroundColor: colors.inputBg,
     borderColor: colors.btnColor1,
@@ -140,36 +101,41 @@ export default function Comment({SheetRef, postId, currentUserId}) {
     return response.data;
   };
 
-  const {data, isFetching, hasNextPage, isFetchingNextPage, fetchNextPage} =
-    useInfiniteQuery(
-      ['comments', postId],
-      ({pageParam = 1}) => fetchCommentsByPostId(pageParam),
-      {
-        skip: postId === undefined,
-        retry: false,
-        getNextPageParam: (lastPage, allPages) => {
-          const nextPage =
-            lastPage?.currentPage < lastPage?.totalPages
-              ? allPages.length + 1
-              : undefined;
-          return nextPage;
-        },
-        select: res => res?.pages.flatMap(page => page.comments),
-        onError: err => {
-          if (
-            err[Object.keys(err)?.[0]] !==
-            'Error fetching comments from database'
-          ) {
-            Toast.show({
-              type: ALERT_TYPE.DANGER,
-              title: '',
-              textBody:
-                err[Object.keys(err)?.[0]] || 'Sorry, an error has occured',
-            });
-          }
-        },
+  const {
+    data,
+    isFetching,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+    isLoading,
+  } = useInfiniteQuery(
+    ['comments', postId],
+    ({pageParam = 1}) => fetchCommentsByPostId(pageParam),
+    {
+      skip: postId === undefined,
+      retry: false,
+      getNextPageParam: (lastPage, allPages) => {
+        const nextPage =
+          lastPage?.currentPage < lastPage?.totalPages
+            ? allPages.length + 1
+            : undefined;
+        return nextPage;
       },
-    );
+      select: res => res?.pages.flatMap(page => page.comments),
+      onError: err => {
+        if (
+          err[Object.keys(err)?.[0]] !== 'Error fetching comments from database'
+        ) {
+          Toast.show({
+            type: ALERT_TYPE.DANGER,
+            title: '',
+            textBody:
+              err[Object.keys(err)?.[0]] || 'Sorry, an error has occured',
+          });
+        }
+      },
+    },
+  );
 
   const queryClient = useQueryClient();
 
@@ -196,7 +162,7 @@ export default function Comment({SheetRef, postId, currentUserId}) {
 
   const addReply = async replyData => {
     try {
-      const response = await request.post(`/comment/reply`, replyData);
+      const response = await request.post('/comment/reply', replyData);
       return response.data;
     } catch (error) {
       throw new Error('Failed to add reply');
@@ -247,21 +213,23 @@ export default function Comment({SheetRef, postId, currentUserId}) {
   };
 
   const onchangeComment = text => setAddChat(text);
+  const [internalKey, setinternalKey] = useState(false);
 
   return (
     <ActionSheet
       // gestureEnabled
       ref={SheetRef}
-      onClose={() => {
-        if (keyboardVisible) {
-          Keyboard.dismiss();
-        }
+      key={internalKey}
+      onBeforeClose={async () => {
+        await Keyboard.dismiss();
+        onBlurInput();
+        setinternalKey(!internalKey);
       }}
       containerStyle={[
         localStyles.actionSheetContainer,
         {backgroundColor: colors.backgroundColor},
       ]}>
-      <Spinner visible={isLoadingAddComments} />
+      <Spinner visible={isLoadingAddComments || isLoading} />
       <View
         style={[
           localStyles.headerContainer,
@@ -276,14 +244,11 @@ export default function Comment({SheetRef, postId, currentUserId}) {
       <CommentsList
         onAddComment={setCommentId}
         inputRef={inputRef}
+        postId={postId}
+        SheetRef={SheetRef}
         hasNextPage={hasNextPage}
         fetchNextPage={fetchNextPage}
         isFetchingNextPage={isFetchingNextPage}
-        currentUser={{
-          id: 'user',
-          name: 'Hamada',
-          avatar: 'https://i.imgur.com/2FXmVPb.jpg',
-        }}
         data={data || []}
       />
       <View style={[styles.rowCenter, {marginBottom: 30}]}>

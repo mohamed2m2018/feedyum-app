@@ -50,7 +50,7 @@ export default function ReelComponent({
   };
 
   const confirmDeleteStory = () => {
-    Alert.alert('Delete Story', 'Are you sure you want to delete this story?', [
+    Alert.alert('Delete Post', 'Are you sure you want to delete this Post?', [
       {
         text: 'Cancel',
         style: 'cancel',

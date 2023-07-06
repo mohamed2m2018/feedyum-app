@@ -54,7 +54,8 @@ const HeaderCategoryItem = React.memo(({title, onPress, category}) => {
       style={[
         localStyles.headerCetegoryItemContainer,
         {
-          borderBottomColor: title === category ? colors.primary : colors.grayScale5,
+          borderBottomColor:
+            title === category ? colors.primary : colors.grayScale5,
         },
       ]}>
       <ZText
@@ -151,6 +152,12 @@ export default function ReelsComponent() {
       queryClient.invalidateQueries({queryKey: 'profile-stories'});
 
       setnotificationReceived(true);
+      if (notifReceivedEvent?.notification?.body?.includes('comment')) {
+        setSelectedPostId(
+          notifReceivedEvent?.notification?.additionalData?._id,
+        );
+        commentSheetRef.current?.show();
+      }
     });
     OneSignal.setNotificationWillShowInForegroundHandler(
       async notifReceivedEvent => {
@@ -160,31 +167,45 @@ export default function ReelsComponent() {
           type: ALERT_TYPE.SUCCESS,
           title: 'Notification',
           textBody: notification.body,
+          onPress: () => {
+            navigation.navigate(TabNav.Home);
+
+            setStoryId(notification.additionalData?._id);
+
+            setTimeout(() => {
+              refetch();
+            }, 500);
+            queryClient.invalidateQueries({queryKey: 'user'});
+            queryClient.invalidateQueries({queryKey: 'profile-stories'});
+            if (notification?.body?.includes('comment')) {
+              setSelectedPostId(notification.additionalData?._id);
+              commentSheetRef.current?.show();
+            }
+            setnotificationReceived(true);
+          },
         });
-        navigation.navigate(TabNav.Home);
 
-        setStoryId(notification.additionalData?._id);
-
-        setTimeout(() => {
-          refetch();
-        }, 500);
-
-        queryClient.invalidateQueries({queryKey: 'user'});
-        queryClient.invalidateQueries({queryKey: 'profile-stories'});
-
-        setnotificationReceived(true);
         Toast.show({
           type: ALERT_TYPE.SUCCESS,
           title: 'Notification',
           textBody: notification.body,
+          onPress: () => {
+            navigation.navigate(TabNav.Home);
+
+            setStoryId(notification.additionalData?._id);
+
+            setTimeout(() => {
+              refetch();
+            }, 500);
+            queryClient.invalidateQueries({queryKey: 'user'});
+            queryClient.invalidateQueries({queryKey: 'profile-stories'});
+            if (notification?.body?.includes('comment')) {
+              setSelectedPostId(notification.additionalData?._id);
+              commentSheetRef.current?.show();
+            }
+            setnotificationReceived(true);
+          },
         });
-        navigation.navigate(TabNav.Home);
-
-        setStoryId(notification.additionalData?._id);
-
-        setTimeout(() => {
-          refetch();
-        }, 500);
         notifReceivedEvent.complete(notifReceivedEvent.getNotification());
       },
     );
@@ -194,7 +215,7 @@ export default function ReelsComponent() {
       OneSignal.clearHandlers();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [commentSheetRef]);
 
   const {data} = useQuery('user', () => request.get('/user'), {retry: 1});
 

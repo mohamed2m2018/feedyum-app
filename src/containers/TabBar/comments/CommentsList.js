@@ -10,18 +10,16 @@ import {
   StyleSheet,
 } from 'react-native';
 import Comment from './Comment';
+import {useSelector} from 'react-redux';
 
 const CommentsList = props => {
   const [itemHeights, setItemHeights] = useState([]);
+  const colors = useSelector(state => state.theme.theme);
   const [initialScrollIndex, setInitialScrollIndex] = useState(0);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
 
   const flatlistRef = useRef();
   const itemRefs = useRef([]);
-
-  const displayLikeCondition = commentId => {
-    // ...existing code...
-  };
 
   const scrollToComment = commentIndex => {
     if (commentIndex !== -1) {
@@ -34,17 +32,18 @@ const CommentsList = props => {
   useEffect(() => {
     const calculateHeights = () => {
       const heights = [];
-      itemRefs.current.forEach((itemRef, index) => {
-        const itemNode = findNodeHandle(itemRef.current);
-
-        if (Platform.OS === 'android') {
-          UIManager.measureInWindow(itemNode, (x, y, width, height) => {
-            heights[index] = height;
-          });
-        } else {
-          UIManager.measure(itemNode, (x, y, width, height) => {
-            heights[index] = height;
-          });
+      itemRefs?.current?.forEach?.((itemRef, index) => {
+        const itemNode = findNodeHandle?.(itemRef.current);
+        if (itemNode) {
+          if (Platform.OS === 'android') {
+            UIManager.measureInWindow(itemNode, (x, y, width, height) => {
+              heights[index] = height;
+            });
+          } else {
+            UIManager.measure(itemNode, (x, y, width, height) => {
+              heights[index] = height;
+            });
+          }
         }
       });
       setItemHeights(heights);
@@ -62,7 +61,7 @@ const CommentsList = props => {
         offset += itemHeights[i] || 100;
       }
 
-      flatlistRef.current?.scrollToOffset({offset, animated: true});
+      flatlistRef.current?.scrollToOffset?.({offset, animated: true});
     };
 
     const timeoutId = setTimeout(scrollToOffset, 0);
@@ -96,13 +95,15 @@ const CommentsList = props => {
     return (
       <Comment
         commentData={item}
+        SheetRef={props.SheetRef}
+        postId={props.postId}
         inputRef={inputRef}
         onAddComment={props.onAddComment}
         index={index}
         flatlistRef={flatlistRef}
-        displayLike={displayLikeCondition(item.id)}
         scrollToComment={scrollToComment}
         ref={itemRefs.current[index]}
+        theme={colors}
       />
     );
   };

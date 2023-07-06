@@ -14,7 +14,7 @@ export default function Description({SheetRef, description}) {
   const copyToClipboard = () => {
     Clipboard.setString(description);
     Toast.show({
-      type: ALERT_TYPE.DANGER,
+      type: ALERT_TYPE.SUCCESS,
       title: 'Copied',
       textBody: 'Text is Copied successfully',
     });
