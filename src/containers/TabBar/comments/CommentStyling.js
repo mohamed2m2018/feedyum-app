@@ -17,6 +17,7 @@ export default styles = StyleSheet.create({
   replyImage: {
     width: 20,
     height: 20,
+    borderRadius: 10,
     marginRight: 10,
     marginLeft: 70, //10 3alshmal+50 elsora 2lly 3alshmal+10
   },
