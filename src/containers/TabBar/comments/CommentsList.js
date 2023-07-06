@@ -10,13 +10,11 @@ import {
   StyleSheet,
 } from 'react-native';
 import Comment from './Comment';
-import {useSelector} from 'react-redux';
 
 const CommentsList = props => {
   const [itemHeights, setItemHeights] = useState([]);
   const [initialScrollIndex, setInitialScrollIndex] = useState(0);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
-  const colors = useSelector(state => state.theme.theme);
 
   const flatlistRef = useRef();
   const itemRefs = useRef([]);

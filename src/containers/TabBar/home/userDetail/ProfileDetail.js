@@ -290,6 +290,7 @@ export default function ProfileDetail({navigation, route}) {
           renderItem={({item, index}) => (
             <ReelComponent
               data={item?.views}
+              item={item}
               reelUrl={item?.uri?.replace(getVideoExtension(item?.uri), 'jpg')}
               isPlay={!item?.avatarUri}
               id={item?._id}

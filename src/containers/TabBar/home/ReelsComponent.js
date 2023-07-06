@@ -295,6 +295,7 @@ export default function ReelsComponent() {
           filteredData.current = [res?.data?.story, ...filtered];
         }
         flatListRef.current?.scrollToOffset({offset: 0});
+        updateViewsMutation.mutate(res?.data?.story?._id);
         setStoryId(null);
       },
     },

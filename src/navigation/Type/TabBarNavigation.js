@@ -47,9 +47,9 @@ export default function TabBarNavigation({navigation}) {
 
   const onPressAdd = () => ProfilePictureSheetRef?.current?.show();
 
-  const onPressPost = () => {
+  const onPressPost = isImage => {
     ProfilePictureSheetRef?.current?.hide();
-    navigation.navigate(StackNav.PostDetail);
+    navigation.navigate(StackNav.PostDetail, {isImage});
   };
 
   return (

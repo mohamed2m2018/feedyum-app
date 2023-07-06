@@ -4,12 +4,13 @@ import {
   StyleSheet,
   TouchableOpacity,
   View,
+  Alert,
 } from 'react-native';
 import React from 'react';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {useSelector} from 'react-redux';
 import {useNavigation} from '@react-navigation/native';
+import millify from 'millify';
 
 // Local import
 import images from '../assets/images';
@@ -21,7 +22,7 @@ import request from '../api/request';
 import {useQueryClient} from 'react-query';
 
 export default function ReelComponent({
-  data = {},
+  data = 0,
   isPlay = false,
   reelUrl = '',
   style,
@@ -36,7 +37,7 @@ export default function ReelComponent({
   const onDeleteStory = async () => {
     try {
       await request.delete(`story/deleteById/${id}`);
-      queryClient.invalidateQueries('stories'); // Invalidate the 'stories' query to trigger a refetch
+      queryClient.invalidateQueries('stories');
       queryClient.invalidateQueries('user');
       queryClient.invalidateQueries({queryKey: 'profile-stories'});
       queryClient.invalidateQueries({queryKey: 'stories_following'});
@@ -48,10 +49,25 @@ export default function ReelComponent({
     }
   };
 
-  const onPressReel = () =>
+  const confirmDeleteStory = () => {
+    Alert.alert('Delete Story', 'Are you sure you want to delete this story?', [
+      {
+        text: 'Cancel',
+        style: 'cancel',
+      },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: onDeleteStory,
+      },
+    ]);
+  };
+
+  const onPressReel = () => {
     navigation.navigate(TabNav.Home, {
       storyId: id,
     });
+  };
 
   return (
     <TouchableOpacity
@@ -76,22 +92,22 @@ export default function ReelComponent({
             />
           </View>
         )}
-        {data.length > 0 && (
+        {!!data && (
           <View style={localStyles.playStyle}>
             <Ionicons
-              name="play-circle"
+              name="eye"
               size={moderateScale(16)}
               color={colors.primary}
             />
-            <ZText type="s16" style={styles.ml5} color={colors.white}>
-              {data}
+            <ZText type="s14" style={styles.ml5} color={colors.white}>
+              {millify(data) || 0} views
             </ZText>
           </View>
         )}
       </ImageBackground>
       {isDeleteAllowed && (
         <TouchableOpacity
-          onPress={onDeleteStory}
+          onPress={confirmDeleteStory}
           style={localStyles.deleteIconStyle}
           activeOpacity={0.7}>
           <Ionicons
@@ -118,6 +134,21 @@ export default function ReelComponent({
           />
         </TouchableOpacity>
       )}
+      <View
+        style={{
+          justifyContent: 'center',
+          alignItems: 'center',
+          marginVertical: 7,
+        }}>
+        <ZText style={[localStyles.titleText, {color: colors.textColor}]}>
+          {item?.title}
+        </ZText>
+        {item?.price && (
+          <ZText style={[localStyles.priceText, {color: colors.textColor}]}>
+            {item?.price} LE
+          </ZText>
+        )}
+      </View>
     </TouchableOpacity>
   );
 }
@@ -153,7 +184,17 @@ const localStyles = StyleSheet.create({
   },
   editIconStyle: {
     position: 'absolute',
-    bottom: moderateScale(100),
+    top: moderateScale(50),
     right: moderateScale(10),
+  },
+  titleText: {
+    fontSize: moderateScale(16),
+    fontWeight: 'bold',
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  priceText: {
+    fontSize: moderateScale(14),
+    textAlign: 'center',
   },
 });

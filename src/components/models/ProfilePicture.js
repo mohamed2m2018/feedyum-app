@@ -23,6 +23,7 @@ const ProfilePicture = props => {
       containerStyle={[
         localStyles.actionSheetContainer,
         {backgroundColor: colors.backgroundColor},
+        {...(post && {height: 300})},
       ]}>
       <View style={localStyles.bottomContainer}>
         <ZText type={'M24'} color={colors.primary}>
@@ -34,7 +35,7 @@ const ProfilePicture = props => {
             localStyles.contextContainer,
             {borderColor: colors.textColor},
           ]}
-          onPress={onPressGallery || onPressCamera}>
+          onPress={onPressGallery ? onPressGallery : () => onPressCamera(true)}>
           <Ionicons
             name={post ? 'add-circle-outline' : 'ios-camera'}
             size={moderateScale(26)}
@@ -42,9 +43,27 @@ const ProfilePicture = props => {
             style={styles.mr5}
           />
           <ZText type={'s18'} style={styles.ml10}>
-            {post ? "Let's Go" : strings.chooseFromGallery}
+            {post ? 'Post a dish image' : strings.chooseFromGallery}
           </ZText>
         </TouchableOpacity>
+        {post && (
+          <TouchableOpacity
+            style={[
+              localStyles.contextContainer,
+              {borderColor: colors.textColor},
+            ]}
+            onPress={() => onPressCamera(false)}>
+            <Ionicons
+              name={'add-circle-outline'}
+              size={moderateScale(26)}
+              color={colors.textColor}
+              style={styles.mr5}
+            />
+            <ZText type={'s18'} style={styles.ml10}>
+              {'Post a dish video'}
+            </ZText>
+          </TouchableOpacity>
+        )}
       </View>
     </ActionSheet>
   );

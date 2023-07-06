@@ -62,6 +62,7 @@ export default function PostDetail() {
     }, []),
   );
   const postDataToBeEdited = route?.params?.postDataToBeEdited;
+  const isImage = route.params?.isImage;
   useEffect(() => {
     if (postDataToBeEdited) {
       setpostedData(postDataToBeEdited);
@@ -228,26 +229,47 @@ export default function PostDetail() {
     });
   };
 
+  const handleMedia = value => {
+    if (value.duration && value.duration > 60000) {
+      Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: 'Error',
+        textBody: 'Video Duration must be less than 1 minute',
+      });
+      return;
+    }
+    setlocalUri(value);
+    if (value.duration) {
+      handleUpload(value, false);
+    } else {
+      handleUpload(value, true);
+    }
+  };
+
+  const handleCaptureVideo = () =>
+    ImagePicker.openCamera({
+      mediaType: 'video',
+      cropping: false,
+      maximumVideoDuration: 60,
+    })
+      .then(handleMedia)
+      .catch(err => console.log('err ', err));
+
+  const handleCaptureImage = () =>
+    ImagePicker.openCamera({
+      cropping: true,
+    }).then(handleMedia);
+
   const handlepickImage = () =>
     ImagePicker.openPicker({
-      mediaType: 'any',
+      mediaType: 'image',
       cropping: true,
-    }).then(value => {
-      if (value.duration && value.duration > 60000) {
-        Toast.show({
-          type: ALERT_TYPE.DANGER,
-          title: 'Error',
-          textBody: 'Video Duration must be less than 1 minute',
-        });
-        return;
-      }
-      setlocalUri(value);
-      if (value.duration) {
-        handleUpload(value, false);
-      } else {
-        handleUpload(value, true);
-      }
-    });
+    }).then(handleMedia);
+
+  const handlePickVideo = () =>
+    ImagePicker.openPicker({
+      mediaType: 'video',
+    }).then(handleMedia);
 
   return (
     <ZSafeAreaView>
@@ -258,13 +280,17 @@ export default function PostDetail() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.mh20}>
         <View style={localStyles.container}>
-          <TouchableOpacity onPress={handlepickImage}>
+          <TouchableOpacity
+            onPress={() => {
+              setlocalUri('');
+              postedData.uri = '';
+            }}>
             {isPhotoUploading ? (
               <ActivityIndicator style={{marginBottom: 15}} size={'large'} />
             ) : (
               <Image
                 source={
-                  postedData?.uri
+                  postedData?.uri && localUri
                     ? {
                         uri: postedData?.uri?.replace(
                           getVideoExtension(postedData?.uri),
@@ -286,7 +312,7 @@ export default function PostDetail() {
               color={colors.white}
               align={'center'}
               style={localStyles.coverPhotoStyle}>
-              {'Upload dish video or photo'}
+              {'Upload dish media'}
             </ZText>
           </TouchableOpacity>
         </View>
@@ -294,6 +320,7 @@ export default function PostDetail() {
           <>
             <TextInput
               placeholder={'Meal Name'}
+              multiline={false}
               value={postedData?.title}
               onChangeText={input =>
                 setpostedData(currentState => ({
@@ -418,28 +445,6 @@ export default function PostDetail() {
                       }}
                       activeColor={colors.inputBg}
                     />
-                    {/* <Switch
-                      trackColor={{
-                        false: colors.grayScale3,
-                        true: colors.primary,
-                      }}
-                      style={{
-                        transform: [{scaleX: 0.8}, {scaleY: 0.8}],
-                        marginTop: 10,
-                      }}
-                      thumbColor={colors.white}
-                      onValueChange={() =>
-                        setToggleStatus(prev =>
-                          prev === 'days' ? 'hours' : 'days',
-                        )
-                      }
-                      value={
-                        postedData?.duration?.split?.(' ')?.[1] === 'hours' ||
-                        toggleStatus === 'hours'
-                          ? true
-                          : false
-                      }
-                    /> */}
                   </View>
                 </View>
                 {!user?.phone && (
@@ -455,7 +460,7 @@ export default function PostDetail() {
                         borderColor: colors.bColor,
                         color: colors.textColor,
                       },
-                      localStyles.smallInputContainerStyle,
+                      // localStyles.smallInputContainerStyle,
                     ]}
                     inputBoxStyle={localStyles.inputBoxStyle}
                   />
@@ -480,7 +485,6 @@ export default function PostDetail() {
                       color: colors.textColor,
                     },
                     localStyles.smallInputContainerStyle,
-                    {height: 80},
                   ]}
                   inputBoxStyle={localStyles.inputBoxStyle}
                 />
@@ -510,13 +514,48 @@ export default function PostDetail() {
               onPress={onPressHome}
             />
           ) : (
-            <ZButton
-              title={'Upload dish video or photo'}
-              textType={'b18'}
-              color={colors.white}
-              containerStyle={{paddingHorizontal: 20}}
-              onPress={handlepickImage}
-            />
+            <View>
+              {isImage && (
+                <>
+                  <ZButton
+                    title={'Upload dish photo'}
+                    textType={'b18'}
+                    color={colors.white}
+                    containerStyle={{paddingHorizontal: 20}}
+                    onPress={handlepickImage}
+                  />
+                  <View style={{height: 10}} />
+                  <ZButton
+                    title={'Capture dish photo'}
+                    textType={'b18'}
+                    color={colors.white}
+                    containerStyle={{paddingHorizontal: 20}}
+                    onPress={handleCaptureImage}
+                  />
+                </>
+              )}
+              <View style={{height: 10}} />
+              {!isImage && (
+                <>
+                  <ZButton
+                    title={'Upload dish video'}
+                    textType={'b18'}
+                    color={colors.white}
+                    containerStyle={{paddingHorizontal: 20}}
+                    onPress={handlePickVideo}
+                  />
+                  <View style={{height: 10}} />
+                  <ZButton
+                    title={'Capture dish video'}
+                    textType={'b18'}
+                    color={colors.white}
+                    containerStyle={{paddingHorizontal: 20}}
+                    onPress={handleCaptureVideo}
+                  />
+                  <View style={{height: 10}} />
+                </>
+              )}
+            </View>
           )}
         </View>
       </KeyboardAwareScrollView>
@@ -531,7 +570,6 @@ const localStyles = StyleSheet.create({
     ...styles.mt20,
   },
   dropdownStyle: {
-    height: getHeight(60),
     borderRadius: moderateScale(12),
     borderWidth: moderateScale(1),
     width: moderateScale(120),
@@ -540,9 +578,9 @@ const localStyles = StyleSheet.create({
   },
   inputContainerStyle: {
     ...styles.flex,
-    height: getHeight(132),
     borderRadius: moderateScale(20),
     borderWidth: moderateScale(1),
+    height: getHeight(150),
     ...styles.p20,
     ...typography.fontSizes.f16,
     ...typography.fontWeights.Regular,
@@ -553,6 +591,7 @@ const localStyles = StyleSheet.create({
     ...styles.flex,
     borderRadius: moderateScale(20),
     borderWidth: moderateScale(1),
+    height: getHeight(100),
     ...styles.p20,
     ...typography.fontSizes.f16,
     ...typography.fontWeights.Regular,
@@ -566,8 +605,8 @@ const localStyles = StyleSheet.create({
     marginBottom: 10,
   },
   imageContainernoPhoto: {
-    width: moderateScale(400),
-    height: moderateScale(400),
+    width: moderateScale(350),
+    height: moderateScale(350),
     borderRadius: moderateScale(20),
   },
   coverPhotoStyle: {

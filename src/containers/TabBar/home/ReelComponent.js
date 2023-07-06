@@ -31,6 +31,7 @@ import Entypo from 'react-native-vector-icons/Entypo';
 import Video from 'react-native-fast-video';
 import request from '../../../api/request';
 import {useQuery} from 'react-query';
+import millify from 'millify';
 
 const ReelComponent = ({
   item,
@@ -174,7 +175,7 @@ const ReelComponent = ({
                 </View>
               </View>
 
-              {true && (
+              {item?.duration && (
                 <ZText type="m12" color={colors.white}>
                   {`Can be received in ${item?.duration}`}
                 </ZText>
@@ -261,6 +262,7 @@ const ReelComponent = ({
                 data={commentsCount?.count}
                 onPress={() => onPressComment(item?._id)}
               />
+              <VideoItem icon="eye" data={item?.views} />
             </View>
           </LinearGradient>
           {pausedVideos.includes(index) && !item?.avatarUri && (
@@ -304,6 +306,12 @@ const localStyles = StyleSheet.create({
   imageContainer: {
     height: '100%',
     width: '100%',
+  },
+  playStyle: {
+    ...styles.rowCenter,
+    position: 'absolute',
+    bottom: getHeight(10),
+    left: moderateScale(10),
   },
   loading: {
     position: 'absolute',
