@@ -1,7 +1,6 @@
 // Library import
 import {Keyboard, StyleSheet, TouchableOpacity, View} from 'react-native';
-import React, {useEffect, useRef, useState} from 'react';
-import Image from 'react-native-fast-image';
+import React, { useRef, useState} from 'react';
 import ActionSheet from 'react-native-actions-sheet';
 import {useSelector} from 'react-redux';
 import Feather from 'react-native-vector-icons/Feather';
@@ -13,11 +12,8 @@ import ZText from '../common/ZText';
 import ZInput from '../common/ZInput';
 import strings from '../../i18n/strings';
 import {useInfiniteQuery, useMutation, useQueryClient} from 'react-query';
-import images from '../../assets/images';
 import Spinner from 'react-native-loading-spinner-overlay';
 import {ALERT_TYPE, Toast} from 'react-native-alert-notification';
-import {StackNav, TabNav} from '../../navigation/NavigationKeys';
-import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import CommentsList from '../../containers/TabBar/comments/CommentsList';
 
 // const CommentRender = ({

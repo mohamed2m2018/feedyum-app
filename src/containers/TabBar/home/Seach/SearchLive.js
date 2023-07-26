@@ -9,7 +9,7 @@ export default function SearchLive() {
       data={videoData}
       renderItem={({item, index}) => (
         <LiveComponent
-          reelUrl={item?.uri?.replace('mp4', 'jpg')}
+          reelUrl={item?.avatarUri || item?.poster}
           userName={item?.channelName}
           user={item?.views}
         />

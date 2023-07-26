@@ -26,22 +26,25 @@ import {
   GoogleSignin,
   statusCodes,
 } from '@react-native-google-signin/google-signin';
-import axios from 'axios';
 
 const RenderSocialBtn = memo(({item, index}) => {
   return (
-    <TouchableOpacity
-      key={index}
-      onPress={item.onPress}
-      style={[
-        localStyles.socialBtn,
-        {
-          backgroundColor: colors.inputBg,
-          borderColor: colors.bColor,
-        },
-      ]}>
-      {item.icon}
-    </TouchableOpacity>
+    <>
+      <TouchableOpacity
+        key={index}
+        onPress={item.onPress}
+        style={[
+          localStyles.socialBtn,
+          {
+            backgroundColor: colors.inputBg,
+          },
+        ]}>
+        {item.icon}
+      </TouchableOpacity>
+      <ZText type={'r20'} onPress={item.onPress}>
+        Login with Google
+      </ZText>
+    </>
   );
 });
 
@@ -391,13 +394,16 @@ const localStyles = StyleSheet.create({
   socialBtnContainer: {
     ...styles.rowCenter,
     ...styles.mv20,
+    alignSelf: 'center',
   },
   socialBtn: {
-    ...styles.center,
-    height: getHeight(60),
-    width: moderateScale(90),
+    ...styles.rowCenter,
+    alignSelf: 'center',
+    height: getHeight(55),
+    width: moderateScale(80),
     borderRadius: moderateScale(15),
     borderWidth: moderateScale(1),
+    borderColor: 'grey',
     ...styles.mh10,
   },
 });

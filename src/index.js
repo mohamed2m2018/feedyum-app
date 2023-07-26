@@ -1,5 +1,5 @@
 import React, {useEffect} from 'react';
-import {Linking, Platform, StatusBar, View} from 'react-native';
+import {Linking, Platform, StatusBar, View, LogBox} from 'react-native';
 import {useSelector} from 'react-redux';
 import {requestNotifications} from 'react-native-permissions';
 import AppNavigator from './navigation';
@@ -8,10 +8,13 @@ import {AlertNotificationRoot, Toast} from 'react-native-alert-notification';
 import {SheetProvider} from 'react-native-actions-sheet';
 import TimeAgo from 'javascript-time-ago';
 import en from 'javascript-time-ago/locale/en';
+import {BackgroundUploadProvider} from './providers/BackgroundUploadProvider';
 
 const App = () => {
   const colors = useSelector(state => state.theme.theme);
   TimeAgo.addDefaultLocale(en);
+
+  LogBox.ignoreAllLogs(true);
 
   useEffect(() => {
     handleRequestPermission();
@@ -19,7 +22,7 @@ const App = () => {
 
   const handleRequestPermission = () => {
     if (Platform.OS === 'android') {
-      requestNotifications(['alert', 'sound']).then(({status, settings}) => {
+      requestNotifications(['alert', 'sound']).then(({status}) => {
         if (status === 'blocked' || status === 'denied') {
           setTimeout(() => {
             Toast.show({
@@ -32,22 +35,22 @@ const App = () => {
             }, 2000);
           }, 5000);
         }
-        // …
       });
     }
   };
-
   return (
-    <View style={styles.flex}>
-      <StatusBar
-        barStyle={colors.dark === 'dark' ? 'light-content' : 'dark-content'}
-      />
-      <AlertNotificationRoot>
-        <SheetProvider>
-          <AppNavigator />
-        </SheetProvider>
-      </AlertNotificationRoot>
-    </View>
+    <BackgroundUploadProvider>
+      <View style={styles.flex}>
+        <StatusBar
+          barStyle={colors.dark === 'dark' ? 'light-content' : 'dark-content'}
+        />
+        <AlertNotificationRoot>
+          <SheetProvider>
+            <AppNavigator />
+          </SheetProvider>
+        </AlertNotificationRoot>
+      </View>
+    </BackgroundUploadProvider>
   );
 };
 

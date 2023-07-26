@@ -15,11 +15,7 @@ import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
 import {useSelector} from 'react-redux';
 import {styles} from '../../../themes';
-import {
-  getHeight,
-  getVideoExtension,
-  moderateScale,
-} from '../../../common/constants';
+import {getHeight, moderateScale} from '../../../common/constants';
 import ZText from '../../../components/common/ZText';
 import {StackNav} from '../../../navigation/NavigationKeys';
 import strings from '../../../i18n/strings';
@@ -27,9 +23,10 @@ import images from '../../../assets/images';
 import ZButton from '../../../components/common/ZButton';
 import {Inbox_Dark} from '../../../assets/svgs';
 import ReelComponent from '../../../components/ReelComponent';
-import {useQuery, useQueryClient} from 'react-query';
+import {useQuery} from 'react-query';
 import request from '../../../api/request';
 import {Toast, ALERT_TYPE} from 'react-native-alert-notification';
+import Spinner from 'react-native-loading-spinner-overlay/lib';
 
 export default function Profile({navigation}) {
   const UserDetail = (postsNo, followersNo, followingNo, viewsNo) => [
@@ -62,6 +59,8 @@ export default function Profile({navigation}) {
   const colors = useSelector(state => state.theme.theme);
 
   const [page, setpage] = useState(1);
+
+  const [isLoadingSomething, setisLoadingSomething] = useState();
 
   const {data} = useQuery('user', () => request.get('/user'), {retry: 1});
 
@@ -161,12 +160,14 @@ export default function Profile({navigation}) {
   return (
     <ZSafeAreaView>
       <View style={{flex: 1, height: '100%', padding: 20}}>
+        <Spinner visible={isLoadingSomething} />
         <FlatList
           data={storiesData}
           renderItem={({item}) => (
             <ReelComponent
               data={item?.views}
-              reelUrl={item?.uri?.replace(getVideoExtension(item?.uri), 'jpg')}
+              setisLoadingSomething={setisLoadingSomething}
+              reelUrl={item?.avatarUri || item?.poster}
               id={item?._id}
               item={item}
               isPlay={!item?.avatarUri}
@@ -175,8 +176,12 @@ export default function Profile({navigation}) {
           )}
           numColumns={3}
           ListEmptyComponent={
-            isLoading && (
-              <ActivityIndicator style={{margin: 30}} size={'large'} />
+            isLoading ? (
+              <Spinner size={'large'} visible={isLoading} />
+            ) : (
+              <ZText style={{textAlign: 'center', marginTop: 45}} type={'B20'}>
+                No Dishes yet! Post Something first..
+              </ZText>
             )
           }
           onEndReachedThreshold={0.9}

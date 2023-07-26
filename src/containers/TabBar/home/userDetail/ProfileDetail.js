@@ -8,17 +8,13 @@ import {
   View,
 } from 'react-native';
 import React, {useState} from 'react';
-import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useSelector} from 'react-redux';
+import Spinner from 'react-native-loading-spinner-overlay/lib';
 
 // Local import
 import ZSafeAreaView from '../../../../components/common/ZSafeAreaView';
 import ZHeader from '../../../../components/common/ZHeader';
-import {
-  getHeight,
-  getVideoExtension,
-  moderateScale,
-} from '../../../../common/constants';
+import {getHeight, moderateScale} from '../../../../common/constants';
 import {styles} from '../../../../themes';
 import ZText from '../../../../components/common/ZText';
 import images from '../../../../assets/images';
@@ -40,7 +36,6 @@ import strings from '../../../../i18n/strings';
 export default function ProfileDetail({navigation, route}) {
   const {id} = route.params;
   const colors = useSelector(state => state.theme.theme);
-  const [isSelect, setIsSelect] = useState(0);
   const queryClient = useQueryClient();
   const [modalVisible, setModalVisible] = useState(false);
   const {data: currentUserQuery} = useQuery(
@@ -125,23 +120,23 @@ export default function ProfileDetail({navigation, route}) {
       },
     });
 
-  const {data: stories, fetchNextPage} = useInfiniteQuery(
-    ['user_stories', id],
-    fetchPosts,
-    {
-      keepPreviousData: true,
-      enabled: !!id,
-      getNextPageParam: (lastPage, allPages) => {
-        const nextPage =
-          lastPage?.data?.currentPage < lastPage?.data?.totalPages
-            ? allPages.length + 1
-            : undefined;
-        return nextPage;
-      },
-
-      select: res => res?.pages.flatMap(page => page.data?.stories || []),
+  const {
+    data: stories,
+    fetchNextPage,
+    isLoading,
+  } = useInfiniteQuery(['user_stories', id], fetchPosts, {
+    keepPreviousData: true,
+    enabled: !!id,
+    getNextPageParam: (lastPage, allPages) => {
+      const nextPage =
+        lastPage?.data?.currentPage < lastPage?.data?.totalPages
+          ? allPages.length + 1
+          : undefined;
+      return nextPage;
     },
-  );
+
+    select: res => res?.pages.flatMap(page => page.data?.stories || []),
+  });
 
   // const categoryData = [
   //   {
@@ -180,54 +175,6 @@ export default function ProfileDetail({navigation, route}) {
       </TouchableOpacity>
     );
   };
-
-  const HeaderCategory = ({item}) => {
-    return (
-      <TouchableOpacity
-        onPress={item.onPress}
-        style={[
-          localStyles.tabItemStyle,
-          {
-            borderBottomColor:
-              isSelect === item.id ? colors.primary : colors.bColor,
-          },
-        ]}>
-        <Ionicons
-          name={item.icon}
-          size={moderateScale(30)}
-          color={isSelect === item.id ? colors.primary : colors.iconColor}
-        />
-      </TouchableOpacity>
-    );
-  };
-
-  const RightIcon = () => {
-    return (
-      <View style={styles.rowCenter}>
-        <TouchableOpacity>
-          <Ionicons
-            name="notifications-outline"
-            size={moderateScale(26)}
-            color={colors.textColor}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Ionicons
-            name="ellipsis-horizontal-circle-outline"
-            size={moderateScale(26)}
-            color={colors.textColor}
-            style={styles.ml10}
-          />
-        </TouchableOpacity>
-      </View>
-    );
-  };
-
-  // const onPressMessage = () =>
-  //   navigation.navigate(StackNav.Chat, {
-  //     userName: userName,
-  //     userImage: userImage,
-  //   });
 
   const user = data?.data?.user;
   return (
@@ -287,11 +234,20 @@ export default function ProfileDetail({navigation, route}) {
 
         <FlatList
           data={stories}
+          ListEmptyComponent={
+            isLoading ? (
+              <Spinner size={'large'} visible={isLoading} />
+            ) : (
+              <ZText style={{textAlign: 'center', marginTop: 45}} type={'B20'}>
+                No Dishes yet! Post Something first..
+              </ZText>
+            )
+          }
           renderItem={({item, index}) => (
             <ReelComponent
               data={item?.views}
               item={item}
-              reelUrl={item?.uri?.replace(getVideoExtension(item?.uri), 'jpg')}
+              reelUrl={item?.avatarUri || item?.poster}
               isPlay={!item?.avatarUri}
               id={item?._id}
             />

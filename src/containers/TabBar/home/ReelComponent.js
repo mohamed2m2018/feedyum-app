@@ -1,11 +1,12 @@
 import {
+  ActivityIndicator,
   Linking,
   Pressable,
   StyleSheet,
   TouchableOpacity,
   View,
 } from 'react-native';
-import React from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
   GestureDetector,
   GestureHandlerRootView,
@@ -14,7 +15,6 @@ import {
 import Image from 'react-native-fast-image';
 import {
   getHeight,
-  getVideoExtension,
   isAndroid,
   moderateScale,
   screenFullHeight,
@@ -28,17 +28,19 @@ import LinearGradient from 'react-native-linear-gradient';
 import images from '../../../assets/images';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Entypo from 'react-native-vector-icons/Entypo';
-import Video from 'react-native-fast-video';
 import request from '../../../api/request';
 import {useQuery} from 'react-query';
 import millify from 'millify';
+import pluralize from 'pluralize';
+import {useNavigation} from '@react-navigation/native';
+import Video from 'react-native-fast-video';
+import Slider from '@react-native-community/slider';
 
 const ReelComponent = ({
   item,
   layoutHeight,
   keyPrefix,
   index,
-  isFocused,
   data,
   onPressProfile,
   activeVideoIndex,
@@ -52,11 +54,36 @@ const ReelComponent = ({
   onPressLike,
   setIsLike,
   extraData,
+  flatListRef,
   setExtraData,
   videoError,
+  tabIndex,
+  tabIndexDefault,
   onPressReport,
 }) => {
   const colors = useSelector(state => state.theme.theme);
+  const isFocused = tabIndex === tabIndexDefault;
+
+  const [isBuffering, setIsBuffering] = useState(false);
+  const [seekValue, setSeekValue] = useState(0);
+  const videoRef = useRef();
+  const navigation = useNavigation();
+
+  const [isEnd, setisEnd] = useState(false);
+  const [durationInSeconds, setDurationInSeconds] = useState(0); // Added state for durationInSeconds
+
+  const [paused, setpaused] = useState(false);
+  const onBuffer = ({isBuffering: Buffering}) => {
+    if (Buffering) {
+      // Show buffering indicator or perform other actions
+      setIsBuffering(true);
+    } else {
+      // Buffering completed or resumed
+      setIsBuffering(false);
+    }
+  };
+
+  const tapRef = useRef();
 
   const fetchCommentsCount = async () => {
     const response = await request.get(`/comment/count?post_id=${item?._id}`);
@@ -70,6 +97,43 @@ const ReelComponent = ({
       skip: item?._id === undefined,
     },
   );
+
+  const duration = item?.duration?.split(' ');
+
+  const debouncedOnProgress = ({currentTime}) => {
+    if (!paused) {
+      setSeekValue(currentTime);
+    } else {
+      setSeekValue(seekValue);
+    }
+  };
+
+  useEffect(() => {
+    let timeout;
+
+    if (isFocused && index === activeVideoIndex && !!item.avatarUri) {
+      timeout = setTimeout(() => {
+        flatListRef.current.scrollToIndex({
+          animated: true,
+          index: index + 1,
+        });
+      }, 60000); // 1 minute
+
+      return () => clearTimeout(timeout);
+    }
+  }, [isFocused, index, activeVideoIndex, flatListRef]);
+
+  useEffect(() => {
+    if (isEnd) {
+      flatListRef.current.scrollToIndex({
+        animated: true,
+        index: index + 1,
+      });
+    }
+  }, [isEnd]);
+
+  const handlePressProfile = () =>
+    onPressProfile(item?.channelName, item?.avatarUri, item?.author?._id);
 
   return (
     <GestureHandlerRootView
@@ -85,44 +149,52 @@ const ReelComponent = ({
             likeRef?.current?.[index]?.(item?._id);
           })}>
         <Pressable onPress={() => togglePause(index)}>
-          {isFocused &&
-            (item?.avatarUri ? (
-              <Image
-                source={{uri: item?.avatarUri}}
-                resizeMode="cover"
-                style={[
-                  localStyles.imageContainer,
-                  {backgroundColor: colors.backgroundColor},
-                ]}
-              />
-            ) : (
-              isFocused && (
-                <Video
-                  source={{
-                    uri: item?.uri?.replace(
-                      getVideoExtension(item?.uri),
-                      'mp4',
-                    ),
-                  }}
-                  style={[
-                    localStyles.imageContainer,
-                    {backgroundColor: colors.backgroundColor, maxHeight: '98%'},
-                  ]}
-                  poster={item?.uri?.replace(
-                    getVideoExtension(item?.uri),
-                    'jpg',
-                  )}
-                  posterResizeMode="cover"
-                  resizeMode="cover"
-                  repeat={true}
-                  onError={videoError}
-                  seekColor={colors.primary}
-                  paused={
-                    activeVideoIndex !== index || pausedVideos.includes(index)
-                  }
-                />
-              )
-            ))}
+          {item?.avatarUri && (
+            <Image
+              source={{uri: item?.avatarUri}}
+              resizeMode="cover"
+              style={[
+                localStyles.imageContainer,
+                {backgroundColor: colors.backgroundColor},
+              ]}
+            />
+          )}
+          {!item.avatarUri && (
+            <Video
+              source={{
+                uri: item?.uri,
+              }}
+              ref={videoRef}
+              onLoad={({duration}) => setDurationInSeconds(duration)}
+              onEnd={() => {
+                if (!isEnd) {
+                  setisEnd(true);
+                }
+              }}
+              style={[
+                localStyles.imageContainer,
+                {
+                  backgroundColor: colors.backgroundColor,
+                  maxHeight: '98%',
+                },
+              ]}
+              onProgress={debouncedOnProgress}
+              onBuffer={onBuffer}
+              poster={item?.avatarUri || item?.poster}
+              posterResizeMode="cover"
+              resizeMode="cover"
+              repeat={true}
+              navigstor={navigation}
+              onError={videoError}
+              seekColor={colors.primary}
+              paused={
+                activeVideoIndex !== index ||
+                !isFocused ||
+                pausedVideos.includes(index) ||
+                paused
+              }
+            />
+          )}
 
           <LinearGradient
             key={`item-${item?._id}`}
@@ -131,13 +203,7 @@ const ReelComponent = ({
             <View style={styles.flex}>
               <View style={styles.rowCenter}>
                 <TouchableOpacity
-                  onPress={() =>
-                    onPressProfile(
-                      item?.channelName,
-                      item?.avatarUri,
-                      item?.author?._id,
-                    )
-                  }
+                  onPress={handlePressProfile}
                   style={styles.mb10}>
                   <Image
                     resizeMode="cover"
@@ -174,10 +240,13 @@ const ReelComponent = ({
                   </ZText>
                 </View>
               </View>
-
               {item?.duration && (
                 <ZText type="m12" color={colors.white}>
-                  {`Can be received in ${item?.duration}`}
+                  {`Can be received in ${
+                    duration[0] +
+                    ' ' +
+                    pluralize(duration[1] || '', duration[0])
+                  }`}
                 </ZText>
               )}
               <ZText type="m14" color={colors.white}>
@@ -188,7 +257,6 @@ const ReelComponent = ({
                   ? item?.caption
                   : item?.caption?.slice(0, 100) + '...'}
               </ZText>
-
               {item?.caption?.length > 100 && (
                 <TouchableOpacity
                   onPress={() => onPressMore(item?.caption)}
@@ -207,19 +275,37 @@ const ReelComponent = ({
                   Click to check Delivery Locations
                 </ZText>
               </TouchableOpacity>
+              {!item.avatarUri && (
+                <View>
+                  <Slider
+                    style={localStyles.seekBar}
+                    minimumValue={0}
+                    tapToSeek
+                    maximumValue={durationInSeconds}
+                    value={seekValue}
+                    minimumTrackTintColor={colors.primary}
+                    maximumTrackTintColor={colors.grey}
+                    thumbTintColor={colors.primary}
+                    onSlidingStart={() => {
+                      setpaused(true);
+                    }}
+                    onSlidingComplete={value => {
+                      videoRef.current.seek(value);
+                      setSeekValue(value);
+                      setTimeout(() => {
+                        setpaused(false);
+                      }, 400);
+                    }}
+                  />
+                </View>
+              )}
               {data?.data?.user?._id !== item?.author?._id &&
                 item?.author?.type !== 'user' && (
                   <ZButton
                     title={`Buy this for ${item?.price} EGP`}
                     textType={'b18'}
                     color={colors.white}
-                    containerStyle={{
-                      height: getHeight(50),
-                      borderRadius: moderateScale(20),
-                      borderWidth: moderateScale(1),
-                      width: '100%',
-                      alignSelf: 'center',
-                    }}
+                    containerStyle={localStyles.buttonContainer}
                     onPress={() =>
                       item?.linkToGo
                         ? Linking.openURL(
@@ -246,7 +332,7 @@ const ReelComponent = ({
               />
               <VideoItem
                 icon="heart"
-                data={item?.likesNo}
+                data={millify(item?.likesNo || 0)}
                 initialIsLiked={item?.currentUserLiked}
                 color={colors.primary}
                 onPress={onPressLike}
@@ -259,10 +345,10 @@ const ReelComponent = ({
               />
               <VideoItem
                 icon="chatbubble-ellipses"
-                data={commentsCount?.count}
+                data={millify(commentsCount?.count || 0)}
                 onPress={() => onPressComment(item?._id)}
               />
-              <VideoItem icon="eye" data={item?.views} />
+              <VideoItem icon="eye" data={millify(item?.views || 0)} />
             </View>
           </LinearGradient>
           {pausedVideos.includes(index) && !item?.avatarUri && (
@@ -284,7 +370,6 @@ const ReelComponent = ({
               )}
             </View>
           )}
-
           <View style={[localStyles.likeIcon, isLike && styles.p15]}>
             {isLike && (
               <Ionicons
@@ -294,6 +379,11 @@ const ReelComponent = ({
               />
             )}
           </View>
+          {isBuffering && (
+            <View style={localStyles.bufferingIndicator}>
+              <ActivityIndicator size="large" color="gray" />
+            </View>
+          )}
         </Pressable>
       </GestureDetector>
     </GestureHandlerRootView>
@@ -313,6 +403,12 @@ const localStyles = StyleSheet.create({
     bottom: getHeight(10),
     left: moderateScale(10),
   },
+  bufferingIndicator: {
+    position: 'absolute',
+    top: screenFullHeight / 2 - moderateScale(160),
+    ...styles.selfCenter,
+    borderRadius: moderateScale(100),
+  },
   loading: {
     position: 'absolute',
     left: 0,
@@ -324,14 +420,14 @@ const localStyles = StyleSheet.create({
   },
   muteIcon: {
     position: 'absolute',
-    top: screenFullHeight / 2 - moderateScale(30),
+    top: screenFullHeight / 2 - moderateScale(160),
     ...styles.selfCenter,
     borderRadius: moderateScale(100),
     backgroundColor: 'rgba(52, 52, 52, 0.4)',
   },
   likeIcon: {
     position: 'absolute',
-    top: screenFullHeight / 2 - moderateScale(80),
+    top: screenFullHeight / 2 - moderateScale(160),
     ...styles.selfCenter,
   },
   topHeader: {
@@ -358,6 +454,13 @@ const localStyles = StyleSheet.create({
     ...styles.mh10,
     ...styles.pb15,
     borderBottomWidth: moderateScale(1),
+  },
+  buttonContainer: {
+    height: getHeight(50),
+    borderRadius: moderateScale(20),
+    borderWidth: moderateScale(1),
+    width: '100%',
+    alignSelf: 'center',
   },
   button: {
     backgroundColor: 'blue',
@@ -408,7 +511,7 @@ const localStyles = StyleSheet.create({
   },
   pauseIconContainer: {
     position: 'absolute',
-    top: screenFullHeight / 2 - moderateScale(80),
+    top: screenFullHeight / 2 - moderateScale(160),
     ...styles.selfCenter,
     borderRadius: moderateScale(100),
     backgroundColor: 'rgba(52, 52, 52, 0.4)',
@@ -424,5 +527,15 @@ const localStyles = StyleSheet.create({
   renderIconContainer: {
     ...styles.itemsCenter,
     ...styles.mt20,
+  },
+  seekBarContainer: {
+    position: 'absolute',
+    bottom: 10,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 20,
+  },
+  seekBar: {
+    height: 40,
   },
 });

@@ -11,21 +11,11 @@ import {
 import React, {useEffect, useState} from 'react';
 import {useSelector} from 'react-redux';
 import ImagePicker from 'react-native-image-crop-picker';
-import axios from 'axios';
-// Local import
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
-import {
-  Image as ImageCompressor,
-  Video as VideoCompressor,
-} from 'react-native-compressor';
 import ZHeader from '../../../components/common/ZHeader';
 import strings from '../../../i18n/strings';
 import {styles} from '../../../themes';
-import {
-  getHeight,
-  getVideoExtension,
-  moderateScale,
-} from '../../../common/constants';
+import {getHeight, moderateScale} from '../../../common/constants';
 import typography from '../../../themes/typography';
 import ZText from '../../../components/common/ZText';
 import ZButton from '../../../components/common/ZButton';
@@ -35,13 +25,14 @@ import {
   useRoute,
 } from '@react-navigation/native';
 import {TabNav} from '../../../navigation/NavigationKeys';
-import {useQueryClient, useMutation, useQuery} from 'react-query';
+import {useQueryClient, useQuery} from 'react-query';
 import request from '../../../api/request';
 import {ALERT_TYPE, Toast} from 'react-native-alert-notification';
 import images from '../../../assets/images';
 import DropdownGovr from '../home/DropDownGovr';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import {Dropdown} from 'react-native-element-dropdown';
+import {useBackgroundUpload} from '../../../providers/BackgroundUploadProvider';
 
 const Duration = [
   {label: 'Hours', value: 'Hours'},
@@ -63,13 +54,29 @@ export default function PostDetail() {
   );
   const postDataToBeEdited = route?.params?.postDataToBeEdited;
   const isImage = route.params?.isImage;
+  const [mediaIsEdited, setmediaIsEdited] = useState(false);
+  const {
+    handleDataToBeSent,
+    handleEditUser,
+    uploadData,
+    setisFormFilled,
+    handleEditedData,
+  } = useBackgroundUpload();
   useEffect(() => {
     if (postDataToBeEdited) {
       setpostedData(postDataToBeEdited);
+      handleEditedData({
+        ...postDataToBeEdited,
+        isImage: isImage || postDataToBeEdited.avatarUri,
+        isEdit: true,
+        mediaIsEdited,
+      });
       setToggleStatus(postDataToBeEdited.duration?.split(' ')?.[1] || 'hours');
-      setlocalUri(postDataToBeEdited?.uri || '');
+      setlocalUri(
+        postDataToBeEdited?.poster || postDataToBeEdited?.avatarUri || '',
+      );
     }
-  }, [postDataToBeEdited]);
+  }, [postDataToBeEdited, mediaIsEdited]);
   const {data: queryResult} = useQuery('user', () => request.get('/user'), {
     retry: 1,
     onError: err => {
@@ -83,101 +90,18 @@ export default function PostDetail() {
 
   const user = queryResult?.data?.user;
 
-  const addNewPost = data => {
-    return request.post('/story/add_story', data);
-  };
-
-  const editPost = data => {
-    const {_id, ...dataToBeSent} = data;
-    return request.patch('/story/update_story', {
-      id: _id,
-      ...dataToBeSent,
-    });
-  };
-  const {isLoading, mutate} = useMutation(
-    postDataToBeEdited ? editPost : addNewPost,
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries('stories'); // Invalidate the 'stories' query to trigger a refetch
-        queryClient.invalidateQueries('user');
-        queryClient.invalidateQueries({queryKey: 'profile-stories'});
-        queryClient.invalidateQueries({queryKey: 'stories_following'});
-      },
-    },
-  );
   const [isPhotoUploading, setisPhotoUploading] = useState(false);
   const [localUri, setlocalUri] = useState('');
-  const [isClearingCache, setIsclearingCache] = useState(false);
   const [phone, setPhone] = useState();
 
-  const editUser = () => {
-    request
-      .patch('/user', {
-        phone,
-      })
-      .then(async () => {
-        await queryClient.invalidateQueries({queryKey: 'user'});
-      })
-      .catch(err =>
-        Toast.show({
-          type: ALERT_TYPE.DANGER,
-          title: 'Error',
-          textBody: err[Object.keys(err)?.[0]],
-        }),
-      );
-  };
-
   const handleUpload = async (response, isImage) => {
-    setisPhotoUploading(true);
-    const formData = new FormData();
-    const result = response?.duration
-      ? await VideoCompressor.compress(response.path, {
-          compressionMethod: 'auto',
-        })
-      : await ImageCompressor.compress(response.path, {
-          compressionMethod: 'auto',
-        });
-
-    formData.append('file', {
-      uri: result,
-      type: response.mime,
-      name: response?.fileName + response.path,
-    });
-    formData.append('upload_preset', 'cookbook'); // Replace with your Cloudinary upload preset
-
-    const axiosInstance = axios.create();
-    delete axiosInstance.defaults.headers.common.Authorization;
-    axiosInstance
-      .post(
-        `https://api.cloudinary.com/v1_1/givantk/${
-          isImage ? 'image' : 'video'
-        }/upload`,
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        },
-      )
-      .then(res => {
-        setisPhotoUploading(false);
-        let imagePoster = {
-          avatarUri: res?.data?.secure_url,
-          poster: res?.data?.secure_url,
-        };
-        setpostedData(currentState => ({
-          ...currentState,
-          isImage,
-          uri: res?.data?.secure_url,
-          category: 'Fast Food',
-          ...(isImage && imagePoster),
-        }));
-      })
-      .catch(err => {
-        setisPhotoUploading(false);
-        console.log('Upload failed!');
-        console.log(err);
-      });
+    uploadData(
+      response,
+      setisPhotoUploading,
+      setlocalUri,
+      isImage,
+      isPhotoUploading,
+    );
   };
 
   const onPressHome = async () => {
@@ -185,7 +109,7 @@ export default function PostDetail() {
       !postedData?.title ||
       !postedData?.price ||
       !postedData?.caption ||
-      !postedData?.uri ||
+      // !postedData?.uri ||
       !postedData.governorate ||
       // || !postedData.areas.length
       !postedData.duration ||
@@ -200,36 +124,38 @@ export default function PostDetail() {
       });
       return;
     }
+    if (postedData.caption?.length < 10) {
+      Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: 'Error',
+        textBody: 'Description is too short!',
+      });
+      return;
+    }
 
     const dataToBeSent = postedData?.linkToGo
-      ? {...postedData, duration: postedData.duration + ' ' + toggleStatus}
+      ? {
+          ...postedData,
+          duration: postedData.duration + ' ' + toggleStatus,
+          mediaIsEdited: postDataToBeEdited?.title && mediaIsEdited,
+        }
       : {
           ...postedData,
           duration: postedData.duration + ' ' + toggleStatus,
           phone: user?.phone || phone,
+          mediaIsEdited: postDataToBeEdited?.title && mediaIsEdited,
         };
-    editUser();
+    handleDataToBeSent(dataToBeSent);
+    handleEditUser(phone);
+    setisFormFilled(true);
 
-    await mutate(dataToBeSent, {
-      onSuccess: async () => {
-        setIsclearingCache(true);
-        await queryClient.invalidateQueries({queryKey: 'stories'});
-        await queryClient.invalidateQueries({queryKey: 'profile-stories'});
-        await queryClient.invalidateQueries({queryKey: 'user'});
-        setIsclearingCache(false);
-        navigation.navigate(TabNav.Home);
-      },
-      onError: err => {
-        Toast.show({
-          type: ALERT_TYPE.DANGER,
-          title: 'Error',
-          textBody: err[Object.keys(err)?.[0]],
-        });
-      },
-    });
+    setTimeout(() => {
+      navigation.navigate(TabNav.Home);
+    }, 100);
   };
 
   const handleMedia = value => {
+    setmediaIsEdited(true);
     if (value.duration && value.duration > 60000) {
       Toast.show({
         type: ALERT_TYPE.DANGER,
@@ -238,7 +164,7 @@ export default function PostDetail() {
       });
       return;
     }
-    setlocalUri(value);
+    setlocalUri(value.path);
     if (value.duration) {
       handleUpload(value, false);
     } else {
@@ -269,6 +195,7 @@ export default function PostDetail() {
   const handlePickVideo = () =>
     ImagePicker.openPicker({
       mediaType: 'video',
+      compressVideoPreset: 'HighestQuality',
     }).then(handleMedia);
 
   return (
@@ -290,12 +217,9 @@ export default function PostDetail() {
             ) : (
               <Image
                 source={
-                  postedData?.uri && localUri
+                  localUri
                     ? {
-                        uri: postedData?.uri?.replace(
-                          getVideoExtension(postedData?.uri),
-                          'jpg',
-                        ),
+                        uri: localUri || postDataToBeEdited.poster,
                       }
                     : images.dishPlaceholder
                 }
@@ -423,6 +347,7 @@ export default function PostDetail() {
                           backgroundColor: colors.inputBg,
                           borderColor: colors.inputBg,
                           color: colors.white,
+                          zIndex: 10000,
                         },
                       ]}
                       placeholderStyle={{color: colors.grayScale5}}
@@ -499,23 +424,19 @@ export default function PostDetail() {
         <View style={localStyles.btnContainer}>
           {localUri !== '' ? (
             <ZButton
-              title={
-                isPhotoUploading
-                  ? 'Upload..'
-                  : postDataToBeEdited
-                  ? 'Edit'
-                  : strings.post
-              }
+              title={postDataToBeEdited ? 'Edit' : strings.post}
               textType={'b18'}
-              disabled={isLoading || isPhotoUploading || isClearingCache}
-              isLoading={isLoading || isPhotoUploading || isClearingCache}
+              disabled={isPhotoUploading}
+              isLoading={isPhotoUploading}
               color={colors.white}
               containerStyle={localStyles.skipBtnContainer}
               onPress={onPressHome}
             />
           ) : (
             <View>
-              {isImage && (
+              {(postDataToBeEdited
+                ? postDataToBeEdited.title && postDataToBeEdited.avatarUri
+                : isImage) && (
                 <>
                   <ZButton
                     title={'Upload dish photo'}
@@ -535,7 +456,10 @@ export default function PostDetail() {
                 </>
               )}
               <View style={{height: 10}} />
-              {!isImage && (
+
+              {(postDataToBeEdited
+                ? postDataToBeEdited.title && !postDataToBeEdited.avatarUri
+                : !isImage) && (
                 <>
                   <ZButton
                     title={'Upload dish video'}
@@ -553,6 +477,7 @@ export default function PostDetail() {
                     onPress={handleCaptureVideo}
                   />
                   <View style={{height: 10}} />
+                  <ZText>Maximum video duration is 1 minute</ZText>
                 </>
               )}
             </View>

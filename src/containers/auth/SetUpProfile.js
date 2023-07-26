@@ -36,13 +36,13 @@ import {setAsyncStorageData} from '../../utils/helpers';
 import request from '../../api/request';
 import {ALERT_TYPE, Toast} from 'react-native-alert-notification';
 import {useQuery, useQueryClient} from 'react-query';
-import axios from 'axios';
 import OneSignal from 'react-native-onesignal';
+import {RNS3} from 'react-native-aws3';
 
 const SetUpProfile = props => {
   const {navigation} = props;
   const headerTitle = props.route.params.title;
-  const {email, password, type, categories} = props.route.params;
+  const {email, password, type} = props.route.params;
 
   const colors = useSelector(state => state.theme.theme);
   const ProfilePictureSheetRef = createRef();
@@ -169,33 +169,33 @@ const SetUpProfile = props => {
       const result = await ImageCompressor.compress(response.path, {
         compressionMethod: 'auto',
       });
-
-      formData.append('file', {
+      const file = {
         uri: result,
         type: response.mime,
         name: response?.fileName + response.path,
-      });
-      formData.append('upload_preset', 'cookbook'); // Replace with your Cloudinary upload preset
-      const axiosInstance = axios.create();
-      delete axiosInstance.defaults.headers.common.Authorization;
-      axiosInstance
-        .post(
-          'https://api.cloudinary.com/v1_1/givantk/image/upload',
-          formData,
-          {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-          },
-        )
+      };
+      const options = {
+        keyPrefix: 'uploads/', // optional (default: "uploads/")
+        bucket: 'foodtokforever', // required
+        region: 'eu-central-1', // required
+        accessKey: '***REMOVED***', // required
+        secretKey: '***REMOVED***', // required
+        successActionStatus: 201,
+      };
+      RNS3.put(file, options)
         .then(res => {
-          setSelectImage(res?.data?.secure_url);
+          if (res.status !== 201) {
+            throw new Error('Failed to upload image to S3');
+          }
+
+          const secureUrl = res.body.postResponse.location;
+          setSelectImage(secureUrl);
           setisPhotoUploading(false);
         })
-        .catch(err => {
+        .catch(error => {
           setisPhotoUploading(false);
           console.log('Upload failed!');
-          console.log(err);
+          console.log(error);
         });
     });
   };

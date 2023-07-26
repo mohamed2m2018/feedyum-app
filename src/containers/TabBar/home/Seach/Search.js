@@ -6,10 +6,11 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import Spinner from 'react-native-loading-spinner-overlay';
 import React, {memo, useState} from 'react';
 import {useSelector} from 'react-redux';
 import Feather from 'react-native-vector-icons/Feather';
-
+import debounce from 'lodash.debounce';
 // Local import
 import ZSafeAreaView from '../../../../components/common/ZSafeAreaView';
 import ZInput from '../../../../components/common/ZInput';
@@ -38,11 +39,18 @@ export default function Search() {
   const BlurredIconStyle = colors.grayScale5;
   const FocusedIconStyle = colors.primary;
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
   const [searchInputStyle, setSearchInputStyle] = useState(BlurredStyle);
   const [searchIconStyle, setSearchIconStyle] = useState(BlurredIconStyle);
   const [isSelect, setIsSelect] = useState(0);
 
-  const onSearchInput = text => setSearch(text);
+  const onSearchInput = text => {
+    setSearch(text);
+    debounce(() => {
+      setDebouncedSearch(text);
+    }, 300)();
+  };
 
   const {data} = useQuery('user', () => request.get('/user'), {retry: 1});
 
@@ -60,7 +68,7 @@ export default function Search() {
     fetchNextPage,
     isFetching: isFetchingsStories,
     isFetchingNextPage,
-  } = useInfiniteQuery(['search_story', search], searchStory, {
+  } = useInfiniteQuery(['search_story', debouncedSearch], searchStory, {
     keepPreviousData: true,
     enabled: isSelect === 1,
     getNextPageParam: (lastPage, allPages) => {
@@ -87,7 +95,7 @@ export default function Search() {
     fetchNextPage: fetchNextPageUsers,
     isFetching: isFetchingUser,
     isFetchingNextPage: isFetchingNextPageUsers,
-  } = useInfiniteQuery(['search_user', search], searchUser, {
+  } = useInfiniteQuery(['search_user', debouncedSearch], searchUser, {
     keepPreviousData: true,
     enabled: isSelect === 0,
     getNextPageParam: (lastPage, allPages) => {
@@ -122,7 +130,6 @@ export default function Search() {
       <TouchableOpacity
         key={index}
         onPress={() => {
-          setSearch('');
           setIsSelect(index);
         }}
         style={[
@@ -165,6 +172,7 @@ export default function Search() {
         <View style={{height: moderateScale(50)}}>
           <FlatList
             data={searchCategoryData}
+            keyboardShouldPersistTaps={'always'}
             renderItem={({item, index}) => (
               <HeaderCategory item={item} index={index} />
             )}
@@ -180,12 +188,15 @@ export default function Search() {
             <SearchUser
               users={isFetchingUser && !isFetchingNextPageUsers ? [] : users}
               onEndReachedThreshold={0.9}
+              isFetching={isFetchingUser}
               onMomentumScrollBegin={fetchNextPageUsers}
               isFetchingNextPage={isFetchingNextPageUsers}
             />
-            {isFetchingUser && !isFetchingNextPageUsers && (
-              <ActivityIndicator style={localStyles.loading} size={'large'} />
-            )}
+            <Spinner
+              visible={isFetchingUser && !isFetchingNextPageUsers}
+              style={localStyles.loading}
+              size={'large'}
+            />
           </>
         )}
         {isSelect === 1 && (
@@ -193,6 +204,7 @@ export default function Search() {
             <SearchVideo
               stories={isFetchingsStories && !isFetchingNextPage ? [] : stories}
               onEndReachedThreshold={0.9}
+              isFetching={isFetchingsStories}
               isFetchingNextPage={isFetchingNextPage}
               onMomentumScrollBegin={fetchNextPage}
             />

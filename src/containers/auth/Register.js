@@ -6,7 +6,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 
 // Local Imports
 import strings from '../../i18n/strings';
-import {styles} from '../../themes';
+import {styles, colors} from '../../themes';
 import ZText from '../../components/common/ZText';
 import {ACCESS_TOKEN, getHeight, moderateScale} from '../../common/constants';
 import ZHeader from '../../components/common/ZHeader';
@@ -40,6 +40,26 @@ GoogleSignin.configure({
   ],
 });
 
+const RenderSocialBtn = memo(({item, index}) => {
+  return (
+    <>
+      <TouchableOpacity
+        key={index}
+        onPress={item.onPress}
+        style={[
+          localStyles.socialBtn,
+          {
+            backgroundColor: colors.inputBg,
+          },
+        ]}>
+        {item.icon}
+      </TouchableOpacity>
+      <ZText type={'r20'} onPress={item.onPress}>
+        Sign up with Google
+      </ZText>
+    </>
+  );
+});
 const Register = ({navigation}) => {
   const colors = useSelector(state => state.theme.theme);
 
@@ -196,22 +216,6 @@ const Register = ({navigation}) => {
     setPasswordError(msg);
   };
 
-  const RenderSocialBtn = memo(({item, index}) => {
-    return (
-      <TouchableOpacity
-        key={index}
-        onPress={item.onPress}
-        style={[
-          localStyles.socialBtn,
-          {
-            backgroundColor: colors.inputBg,
-            borderColor: colors.bColor,
-          },
-        ]}>
-        {item.icon}
-      </TouchableOpacity>
-    );
-  });
   const onPressSignWithPassword = () => {
     navigation.navigate(StackNav.SelectInterest, {
       email,
@@ -419,11 +423,13 @@ const localStyles = StyleSheet.create({
     ...styles.mv20,
   },
   socialBtn: {
-    ...styles.center,
-    height: getHeight(60),
-    width: moderateScale(90),
-    borderRadius: moderateScale(12),
+    ...styles.rowCenter,
+    alignSelf: 'center',
+    height: getHeight(55),
+    width: moderateScale(80),
+    borderRadius: moderateScale(15),
     borderWidth: moderateScale(1),
+    borderColor: 'grey',
     ...styles.mh10,
   },
 });

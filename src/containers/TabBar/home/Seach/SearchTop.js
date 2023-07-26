@@ -45,7 +45,7 @@ export default function SearchTop() {
             key={item?._id}
             data={item?.viewsCount}
             isPlay={!item?.avatarUri}
-            reelUrl={item?.uri?.replace(getVideoExtension(item?.uri), 'jpg')}
+            reelUrl={item?.avatarUri}
             style={styles.mt10}
           />
         )}

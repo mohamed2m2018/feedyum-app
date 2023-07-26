@@ -1,20 +1,20 @@
+/* eslint-disable react/no-unstable-nested-components */
 // Libraries import
 import {
-  Animated,
-  Easing,
   StyleSheet,
   TouchableOpacity,
   View,
-  Platform,
-  ActivityIndicator,
-  RefreshControl,
   SafeAreaView,
+  Dimensions,
 } from 'react-native';
 import React, {useEffect, useRef, useState, useCallback} from 'react';
 import {useSelector} from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {useIsFocused, useNavigation, useRoute} from '@react-navigation/native';
-import {FlashList} from '@shopify/flash-list';
+import {
+  useFocusEffect,
+  useNavigation,
+  useRoute,
+} from '@react-navigation/native';
 // Local import
 import {styles} from '../../../themes';
 import {
@@ -36,7 +36,6 @@ import OneSignal from 'react-native-onesignal';
 import {ALERT_TYPE, Toast} from 'react-native-alert-notification';
 import Description from '../../../components/models/Descriptions';
 import Locations from '../../../components/models/Locations';
-import Spinner from 'react-native-loading-spinner-overlay';
 import {
   BannerAd,
   BannerAdSize,
@@ -45,6 +44,9 @@ import {
   AdEventType,
 } from 'react-native-google-mobile-ads';
 import ReelComponent from './ReelComponent';
+import {TabBar, TabView} from 'react-native-tab-view';
+import FollowingList from './FollowingList';
+import ForYouList from './ForYouList';
 
 const HeaderCategoryItem = React.memo(({title, onPress, category}) => {
   const colors = useSelector(state => state.theme.theme);
@@ -70,6 +72,7 @@ const HeaderCategoryItem = React.memo(({title, onPress, category}) => {
 
 export default function ReelsComponent() {
   const colors = useSelector(state => state.theme.theme);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const commentSheetRef = useRef('');
   const descriptionSheetRef = useRef('');
   const locationSheetRef = useRef('');
@@ -106,7 +109,6 @@ export default function ReelsComponent() {
     }
   }, [loaded, videoCount]);
 
-  const isFocused = useIsFocused();
   const navigation = useNavigation();
   const route = useRoute();
 
@@ -116,15 +118,34 @@ export default function ReelsComponent() {
   const [selectedAreas, setSelectedAreas] = useState([]);
   const [selectedGov, setselectedGov] = useState('');
 
-  const [activeVideoIndex, setActiveVideoIndex] = useState(0);
-  const [category, setCategory] = useState('For You');
-  const [layoutHeight, setLayoutHeight] = useState(0);
+  const [activeVideoIndexForYou, setActiveVideoIndexForYou] = useState(0);
+  const [activeVideoIndexFollowing, setActiveVideoIndexFollwing] = useState(0);
+
+  const [layoutHeight, setLayoutHeight] = useState(
+    Dimensions.get('window').height,
+  );
   const [extraData, setExtraData] = useState(true);
   const filteredData = useRef([]);
   const filteredDataFollowing = useRef([]);
   const flatListRefFollowing = useRef(null);
   const flatListRef = useRef(null);
   const [notificationReceived, setnotificationReceived] = useState(false);
+
+  const viewableItemsChangedForYou = useRef(({viewableItems}) => {
+    if (viewableItems?.length) {
+      setActiveVideoIndexForYou(viewableItems[0].index);
+      setVideoCount(prevCount => prevCount + 1);
+      updateViewsMutation.mutate(viewableItems[0]?.item?._id);
+    }
+  }).current;
+
+  const viewableItemsChangedFollowing = useRef(({viewableItems}) => {
+    if (viewableItems?.length) {
+      setActiveVideoIndexFollwing(viewableItems[0].index);
+      setVideoCount(prevCount => prevCount + 1);
+      updateViewsMutation.mutate(viewableItems[0]?.item?._id);
+    }
+  }).current;
 
   const [storyId, setStoryId] = useState();
 
@@ -156,7 +177,9 @@ export default function ReelsComponent() {
         setSelectedPostId(
           notifReceivedEvent?.notification?.additionalData?._id,
         );
-        commentSheetRef.current?.show();
+        setTimeout(() => {
+          commentSheetRef.current?.show();
+        }, 300);
       }
     });
     OneSignal.setNotificationWillShowInForegroundHandler(
@@ -179,7 +202,9 @@ export default function ReelsComponent() {
             queryClient.invalidateQueries({queryKey: 'profile-stories'});
             if (notification?.body?.includes('comment')) {
               setSelectedPostId(notification.additionalData?._id);
-              commentSheetRef.current?.show();
+              setTimeout(() => {
+                commentSheetRef.current?.show();
+              }, 300);
             }
             setnotificationReceived(true);
           },
@@ -219,6 +244,11 @@ export default function ReelsComponent() {
 
   const {data} = useQuery('user', () => request.get('/user'), {retry: 1});
 
+  useFocusEffect(
+    React.useCallback(() => {
+      flatListRef.current?.scrollToOffset({offset: 0});
+    }, []),
+  );
   const fetchReels = page =>
     request.get(
       `/story/stories?limit=10&page=${page}&userId=${data?.data?.user?._id}`,
@@ -229,7 +259,6 @@ export default function ReelsComponent() {
     isFetchingNextPage,
     isLoading,
     isFetching,
-    refetch: refetchStories,
   } = useInfiniteQuery(
     ['stories', data?.data?.user?._id],
     ({pageParam = 1}) => fetchReels(pageParam),
@@ -264,7 +293,7 @@ export default function ReelsComponent() {
     isFetchingNextPage: isFetchingNextPageFollowing,
     isLoading: isLoadingFollowing,
     isFetching: isFetchingFollowing,
-    refetch: refetchStoriesFollowing,
+    isRefetching: isRefetchingFollowing,
   } = useInfiniteQuery(
     ['stories_following', data?.data?.user?._id],
     ({pageParam = 1}) => fetchReelsFollowing(pageParam),
@@ -308,7 +337,7 @@ export default function ReelsComponent() {
     {
       enabled: !!storyId && !!filteredData?.current?.length,
       onSuccess: res => {
-        setCategory('For You');
+        setIndex(1);
         const filtered = filteredData?.current?.filter(item => {
           return res?.data?.story?._id !== item?._id;
         });
@@ -322,43 +351,22 @@ export default function ReelsComponent() {
     },
   );
 
-  const [pausedVideos, setPausedVideos] = useState([]);
-
-  const musicToneAnimated = useRef(new Animated.Value(0)).current;
-  const musicToneAnimated1 = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    if (isFocused) {
-      Animated.loop(
-        Animated.timing(musicToneAnimated, {
-          toValue: 1,
-          duration: 3000,
-          easing: Easing.linear,
-          useNativeDriver: false,
-        }),
-      ).start();
-      Animated.loop(
-        Animated.timing(musicToneAnimated1, {
-          toValue: 1,
-          duration: 2000,
-          easing: Easing.linear,
-          useNativeDriver: false,
-        }),
-      ).start();
-    }
-  }, [musicToneAnimated, musicToneAnimated1]);
+  const [pausedVideosFollowing, setPausedVideossFollowing] = useState([]);
+  const [pausedVideosForYou, setPausedVideossForYou] = useState([]);
 
   useEffect(() => {
     setExtraData(!extraData);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     isLike,
-    activeVideoIndex,
-    isFocused,
-    category,
-    pausedVideos,
+    activeVideoIndexFollowing,
+    activeVideoIndexForYou,
+    index,
+    pausedVideosFollowing,
+    pausedVideosForYou,
     notificationReceived,
     filteredData.current,
+    filteredDataFollowing.current,
   ]);
 
   const addLikeMutation = useMutation(postId =>
@@ -417,42 +425,87 @@ export default function ReelsComponent() {
   };
 
   const onPressSearch = () => navigation.navigate(StackNav.Search);
-  const togglePause = index => {
-    if (pausedVideos.includes(index)) {
-      setPausedVideos(
-        pausedVideos.filter(pausedIndex => pausedIndex !== index),
+  const togglePauseFollowing = index => {
+    if (pausedVideosFollowing.includes(index)) {
+      setPausedVideossFollowing(
+        pausedVideosFollowing.filter(pausedIndex => pausedIndex !== index),
       );
     } else {
-      setPausedVideos([...pausedVideos, index]);
+      setPausedVideossFollowing([...pausedVideosFollowing, index]);
     }
   };
-  const renderReelComponent = ({item, index}) => {
-    const keyPrefix = `item-${item?._id}-index`;
 
-    return (
-      <ReelComponent
-        item={item}
-        layoutHeight={layoutHeight}
-        keyPrefix={keyPrefix}
-        index={index}
-        isFocused={isFocused}
-        data={data}
-        onPressProfile={onPressProfile}
-        activeVideoIndex={activeVideoIndex}
-        pausedVideos={pausedVideos}
-        togglePause={togglePause}
-        likeRef={likeRef}
-        onPressMore={onPressMore}
-        onPressAvailableLocation={onPressAvailableLocation}
-        onPressComment={onPressComment}
-        isLike={isLike}
-        onPressLike={onPressLike}
-        setIsLike={setIsLike}
-        extraData={extraData}
-        setExtraData={setExtraData}
-        videoError={videoError}
-        onPressReport={onPressReport}
-      />
+  const togglePauseForYou = index => {
+    if (pausedVideosForYou.includes(index)) {
+      setPausedVideossForYou(
+        pausedVideosForYou.filter(pausedIndex => pausedIndex !== index),
+      );
+    } else {
+      setPausedVideossForYou([...pausedVideosForYou, index]);
+    }
+  };
+
+  const renderReelComponent = (
+    item,
+    i,
+    tabIndexDefault,
+    keyPrefix,
+    activeVideoIndex,
+    pausedVideos,
+    togglePause,
+  ) => (
+    <ReelComponent
+      item={item}
+      isFullscreen={isFullscreen}
+      layoutHeight={layoutHeight}
+      keyPrefix={keyPrefix}
+      tabIndex={index}
+      index={i}
+      tabIndexDefault={tabIndexDefault}
+      flatListRef={index === 1 ? flatListRef : flatListRefFollowing}
+      data={data}
+      onPressProfile={onPressProfile}
+      activeVideoIndex={activeVideoIndex}
+      pausedVideos={pausedVideos}
+      togglePause={togglePause}
+      likeRef={likeRef}
+      onPressMore={onPressMore}
+      onPressAvailableLocation={onPressAvailableLocation}
+      onPressComment={onPressComment}
+      isLike={isLike}
+      onPressLike={onPressLike}
+      setIsLike={setIsLike}
+      extraData={extraData}
+      setExtraData={setExtraData}
+      videoError={videoError}
+      onPressReport={onPressReport}
+    />
+  );
+  const renderReelComponentFollowing = ({item, index: i}) => {
+    const keyPrefix = `item-${item?._id}-i`;
+
+    return renderReelComponent(
+      item,
+      i,
+      0,
+      keyPrefix,
+      activeVideoIndexFollowing,
+      pausedVideosFollowing,
+      togglePauseFollowing,
+    );
+  };
+
+  const renderReelComponentForYou = ({item, index: i}) => {
+    const keyPrefix = `item-${item?._id}-i`;
+
+    return renderReelComponent(
+      item,
+      i,
+      1,
+      keyPrefix,
+      activeVideoIndexForYou,
+      pausedVideosForYou,
+      togglePauseForYou,
     );
   };
 
@@ -470,56 +523,100 @@ export default function ReelsComponent() {
     return `item-${item?._id}`;
   }, []);
 
-  const viewableItemsChanged = useRef(({viewableItems}) => {
-    if (viewableItems?.length) {
-      setActiveVideoIndex(viewableItems[0].index);
-      setVideoCount(prevCount => prevCount + 1);
-      updateViewsMutation.mutate(viewableItems[0]?.item?._id);
-    }
-  }).current;
-
   const onSetLayout = e => setLayoutHeight(e.nativeEvent.layout.height);
 
-  const onClickFollowing = () => {
-    refetchStories();
-    setCategory('Following');
+  const [index, setIndex] = React.useState(1);
+  const [routes] = React.useState([
+    {key: 'following', title: 'Following'},
+    {key: 'forYou', title: 'For You'},
+  ]);
+
+  const renderScene = ({route}) => {
+    switch (route.key) {
+      case 'following':
+        return (
+          <FollowingList
+            isLoadingFollowing={isLoadingFollowing}
+            isFetchingFollowing={isFetchingFollowing}
+            isRefetchingFollowing={isRefetchingFollowing}
+            filteredDataFollowing={filteredDataFollowing}
+            layoutHeight={layoutHeight}
+            isFetchingNextPageFollowing={isFetchingNextPageFollowing}
+            fetchNextPageFollowing={fetchNextPageFollowing}
+            flatListRefFollowing={flatListRefFollowing}
+            extraData={extraData}
+            viewableItemsChanged={viewableItemsChangedFollowing}
+            keyExtractor={keyExtractor}
+            renderReelComponent={renderReelComponentFollowing}
+            onSetLayout={onSetLayout}
+            viewConfig={viewConfig}
+            hasNextPageFollowin={hasNextPageFollowin}
+          />
+        );
+      case 'forYou':
+        return (
+          <ForYouList
+            isLoadingStory={isLoadingStory}
+            isFetchingStory={isFetchingStory}
+            isRefetchingStory={isRefetchingStory}
+            filteredData={filteredData}
+            isLoading={isLoading}
+            isFetching={isFetching}
+            layoutHeight={layoutHeight}
+            isFetchingNextPage={isFetchingNextPage}
+            fetchNextPage={fetchNextPage}
+            flatListRef={flatListRef}
+            data={data}
+            extraData={extraData}
+            viewableItemsChanged={viewableItemsChangedForYou}
+            keyExtractor={keyExtractor}
+            renderReelComponent={renderReelComponentForYou}
+            onSetLayout={onSetLayout}
+            viewConfig={viewConfig}
+            hasNextPage={hasNextPage}
+          />
+        );
+      default:
+        return null;
+    }
   };
 
-  const onClickForYou = () => {
-    refetchStoriesFollowing();
-    setCategory('For You');
-  };
-  const onTouchStart = e => (this.touchx = e.nativeEvent.pageX);
-  const onTouchEnd = e => {
-    if (this.touchx - e.nativeEvent.pageX > 30) {
-      onClickForYou();
-    }
-    if (e.nativeEvent.pageX - this.touchx > 30) {
-      onClickFollowing();
-    }
-  };
+  const renderTabBar = props => (
+    <TabBar
+      {...props}
+      contentContainerStyle={localStyles.tabContainer}
+      renderLabel={({route}) => (
+        <HeaderCategoryItem
+          title={route.title}
+          onPress={() => setIndex(props.navigationState.routes.indexOf(route))}
+          category={routes[index].title}
+        />
+      )}
+      tabStyle={localStyles.tab}
+      style={localStyles.tabBar}
+      indicatorStyle={localStyles.tabBarIndicator}
+    />
+  );
 
   return (
     <SafeAreaView style={{flex: 1, backgroundColor: colors.backgroundColor}}>
-      <View
-        onTouchStart={onTouchStart}
-        onTouchEnd={onTouchEnd}
-        style={{flex: 1, backgroundColor: colors.backgroundColor}}>
+      <View style={{flex: 1, backgroundColor: colors.backgroundColor}}>
+        <TabView
+          navigationState={{index, routes}}
+          renderScene={renderScene}
+          onIndexChange={i => {
+            setIndex(i);
+            setExtraData(!extraData);
+          }}
+          style={localStyles.tabBar}
+          indicatorStyle={localStyles.tabBarIndicator}
+          renderTabBar={renderTabBar}
+          initialLayout={{
+            width: 0,
+            height: 0,
+          }} // Set initialLayout to avoid initial re-rendering issues
+        />
         <View style={localStyles.headerContainer}>
-          <View style={localStyles.headerInnerContainer}>
-            <HeaderCategoryItem
-              title={'Following'}
-              onPress={onClickFollowing}
-              category={category}
-            />
-
-            <HeaderCategoryItem
-              title={'For You'}
-              onPress={onClickForYou}
-              category={category}
-            />
-          </View>
-
           <TouchableOpacity onPress={onPressSearch}>
             <Ionicons
               name="search-outline"
@@ -528,115 +625,6 @@ export default function ReelsComponent() {
             />
           </TouchableOpacity>
         </View>
-        {category === 'For You' && (
-          <>
-            <Spinner
-              //visibility of Overlay Loading Spinner
-              visible={isLoadingStory || isFetchingStory || isRefetchingStory}
-            />
-            <FlashList
-              data={filteredData.current}
-              refreshControl={
-                <RefreshControl
-                  refreshing={isLoading || isFetching}
-                  tintColor={colors.primary}
-                  onRefresh={() => {
-                    queryClient.invalidateQueries({queryKey: 'stories'});
-                  }}
-                />
-              }
-              extraData={extraData}
-              keyExtractor={keyExtractor}
-              showsVerticalScrollIndicator={false}
-              renderItem={renderReelComponent}
-              pagingEnabled={Platform.OS === 'ios'}
-              viewabilityConfig={viewConfig}
-              onViewableItemsChanged={viewableItemsChanged}
-              onLayout={onSetLayout}
-              snapToInterval={
-                Platform.OS === 'android' ? layoutHeight : undefined
-              }
-              drawDistance={layoutHeight}
-              decelerationRate={'fast'}
-              disableIntervalMomentum
-              ListEmptyComponent={
-                isLoading || !data?.data?.user?._id ? (
-                  <ActivityIndicator
-                    style={{alignSelf: 'center', marginTop: 400}}
-                    size={'large'}
-                  />
-                ) : (
-                  <ZText
-                    style={{textAlign: 'center', marginTop: 350}}
-                    type={'B30'}>
-                    No Dishes yet! Stay tuned.
-                  </ZText>
-                )
-              }
-              estimatedItemSize={11}
-              ref={flatListRef}
-              onEndReachedThreshold={0.9}
-              onEndReached={hasNextPage ? fetchNextPage : null}
-              ListFooterComponent={
-                isFetchingNextPage && <ActivityIndicator size={'large'} />
-              }
-            />
-          </>
-        )}
-
-        {category !== 'For You' && (
-          <FlashList
-            data={filteredDataFollowing.current}
-            extraData={extraData}
-            keyExtractor={keyExtractor}
-            showsVerticalScrollIndicator={false}
-            renderItem={renderReelComponent}
-            pagingEnabled={Platform.OS === 'ios'}
-            viewabilityConfig={viewConfig}
-            onViewableItemsChanged={viewableItemsChanged}
-            onLayout={onSetLayout}
-            snapToInterval={
-              Platform.OS === 'android' ? layoutHeight : undefined
-            }
-            drawDistance={layoutHeight}
-            decelerationRate={'fast'}
-            disableIntervalMomentum
-            refreshControl={
-              <RefreshControl
-                refreshing={isLoadingFollowing || isFetchingFollowing}
-                tintColor={colors.primary}
-                onRefresh={() => {
-                  queryClient.invalidateQueries({
-                    queryKey: 'stories_following',
-                  });
-                }}
-              />
-            }
-            ListEmptyComponent={
-              isLoadingFollowing ? (
-                <ActivityIndicator
-                  style={{alignSelf: 'center', marginTop: 400}}
-                  size={'large'}
-                />
-              ) : (
-                <ZText
-                  style={{textAlign: 'center', marginTop: 350}}
-                  type={'B30'}>
-                  No Dishes yet! Follow Someone first..
-                </ZText>
-              )
-            }
-            estimatedItemSize={11}
-            ref={flatListRefFollowing}
-            onEndReachedThreshold={0.9}
-            onEndReached={hasNextPageFollowin ? fetchNextPageFollowing : null}
-            ListFooterComponent={
-              isFetchingNextPageFollowing && (
-                <ActivityIndicator size={'large'} />
-              )
-            }
-          />
-        )}
         <Comment
           SheetRef={commentSheetRef}
           postId={selectedPostId}
@@ -674,6 +662,7 @@ const localStyles = StyleSheet.create({
     height: '100%',
     width: '100%',
   },
+  tabContainer: {justifyContent: 'center'},
   loading: {
     position: 'absolute',
     left: 0,
@@ -706,16 +695,25 @@ const localStyles = StyleSheet.create({
   },
   headerContainer: {
     position: 'absolute',
-    top: moderateScale(15),
+    top: moderateScale(10),
     zIndex: 1,
     ...styles.ph20,
-    // ...styles.flex,
-    // marginTop: moderateScale(60),
     ...styles.rowSpaceBetween,
+    right: moderateScale(10),
   },
   headerInnerContainer: {
     ...styles.flex,
     ...styles.rowCenter,
+  },
+  tabBar: {
+    backgroundColor: 'transparent', // Set the background color to 'transparent'
+    justifyContent: 'center', // Align tabs in the center horizontally
+  },
+  tab: {
+    width: 'auto', // Set the desired width for the tabs
+  },
+  tabBarIndicator: {
+    backgroundColor: 'transparent', // Set the background color of the indicator to 'transparent'
   },
   headerCetegoryItemContainer: {
     ...styles.mh10,

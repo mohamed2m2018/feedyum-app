@@ -2,6 +2,7 @@ import React from 'react';
 import {View} from 'react-native';
 import UserDetailComponent from '../../../../components/UserDetailComponent';
 import {FlashList} from '@shopify/flash-list';
+import ZText from '../../../../components/common/ZText';
 
 export default function SearchUser({users, ...props}) {
   return (
@@ -9,6 +10,13 @@ export default function SearchUser({users, ...props}) {
       <FlashList
         data={users}
         {...props}
+        ListEmptyComponent={
+          !props.isFetching && (
+            <ZText style={{textAlign: 'center', marginTop: 250}} type={'B20'}>
+              No users matches your search term.
+            </ZText>
+          )
+        }
         renderItem={({item}) => {
           return (
             <UserDetailComponent

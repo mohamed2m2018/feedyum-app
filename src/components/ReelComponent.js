@@ -29,6 +29,7 @@ export default function ReelComponent({
   id,
   item = {},
   isDeleteAllowed = false,
+  setisLoadingSomething,
 }) {
   const colors = useSelector(state => state.theme.theme);
   const navigation = useNavigation();
@@ -36,15 +37,18 @@ export default function ReelComponent({
 
   const onDeleteStory = async () => {
     try {
+      setisLoadingSomething(true);
       await request.delete(`story/deleteById/${id}`);
       queryClient.invalidateQueries('stories');
       queryClient.invalidateQueries('user');
-      queryClient.invalidateQueries({queryKey: 'profile-stories'});
+      await queryClient.invalidateQueries({queryKey: 'profile-stories'});
       queryClient.invalidateQueries({queryKey: 'stories_following'});
       queryClient.invalidateQueries({queryKey: 'search_user'});
       queryClient.invalidateQueries({queryKey: 'followStatistics'});
+      setisLoadingSomething(false);
       // Handle success or show feedback to the user
     } catch (error) {
+      setisLoadingSomething(false);
       // Handle error or show error message to the user
     }
   };
@@ -79,7 +83,11 @@ export default function ReelComponent({
         },
       ]}>
       <ImageBackground
-        source={reelUrl ? {uri: reelUrl} : images.post}
+        source={
+          reelUrl
+            ? {uri: item.poster || item?.avatarUri || reelUrl}
+            : images.post
+        }
         style={localStyles.postImgStyle}
         resizeMode="cover"
         imageStyle={{borderRadius: moderateScale(10)}}>
@@ -100,7 +108,7 @@ export default function ReelComponent({
               color={colors.primary}
             />
             <ZText type="s14" style={styles.ml5} color={colors.white}>
-              {millify(data) || 0} views
+              {data > 10 ? millify(data || 0) : data} views
             </ZText>
           </View>
         )}
