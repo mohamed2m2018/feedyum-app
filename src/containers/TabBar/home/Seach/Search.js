@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import Spinner from 'react-native-loading-spinner-overlay';
 import React, {memo, useState} from 'react';
 import {useSelector} from 'react-redux';
 import Feather from 'react-native-vector-icons/Feather';
@@ -192,11 +191,9 @@ export default function Search() {
               onMomentumScrollBegin={fetchNextPageUsers}
               isFetchingNextPage={isFetchingNextPageUsers}
             />
-            <Spinner
-              visible={isFetchingUser && !isFetchingNextPageUsers}
-              style={localStyles.loading}
-              size={'large'}
-            />
+            {isFetchingUser && !isFetchingNextPageUsers && (
+              <ActivityIndicator style={localStyles.loading} size={'large'} />
+            )}
           </>
         )}
         {isSelect === 1 && (

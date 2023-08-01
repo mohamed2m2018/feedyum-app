@@ -7,6 +7,7 @@ import {
   View,
 } from 'react-native';
 import React, {useEffect, useRef, useState} from 'react';
+import dynamicLinks from '@react-native-firebase/dynamic-links';
 import {
   GestureDetector,
   GestureHandlerRootView,
@@ -35,6 +36,7 @@ import pluralize from 'pluralize';
 import {useNavigation} from '@react-navigation/native';
 import Video from 'react-native-fast-video';
 import Slider from '@react-native-community/slider';
+import Share from 'react-native-share';
 
 const ReelComponent = ({
   item,
@@ -83,8 +85,49 @@ const ReelComponent = ({
     }
   };
 
-  const tapRef = useRef();
+  const generateDynamicLink = async postItem => {
+    const link = await dynamicLinks().buildShortLink(
+      {
+        link: `http://thefoodtok.com/post/${postItem?._id}`, // The link where the user should be directed when the dynamic link is clicked
+        domainUriPrefix: 'https://foodtok.page.link', // Your Dynamic Links domain prefix
+        android: {
+          packageName: 'com.foodtok', // Your Android package name
+        },
+        ios: {
+          bundleId: 'com.foodtok', // Your iOS bundle ID
+        },
+        social: {
+          title: postItem?.title,
+          description: 'Check my post on FoodTok', // Optional description
+        },
+      },
+      dynamicLinks.ShortLinkType.UNGUESSABLE,
+    );
 
+    console.log('Generated dynamic link:', decodeURIComponent(link));
+    return decodeURIComponent(link);
+    // You can use this 'link' to share with users, send in emails, or use it to navigate users to the post directly.
+  };
+
+  const handleShare = async Postitem => {
+    const link = await generateDynamicLink(Postitem);
+
+    const shareOptions = {
+      title: 'Share via',
+      // message: 'hi',
+      url: link,
+      // social: Share.Social.WHATSAPP,
+      // whatsAppNumber: '9199999999', // country code + phone number
+    };
+
+    Share.open(shareOptions)
+      .then(res => {
+        console.log(res);
+      })
+      .catch(err => {
+        err && console.log(err);
+      });
+  };
   const fetchCommentsCount = async () => {
     const response = await request.get(`/comment/count?post_id=${item?._id}`);
     return response.data;
@@ -287,6 +330,7 @@ const ReelComponent = ({
                     maximumTrackTintColor={colors.grey}
                     thumbTintColor={colors.primary}
                     onSlidingStart={() => {
+                      setExtraData(!extraData);
                       setpaused(true);
                     }}
                     onSlidingComplete={value => {
@@ -349,6 +393,7 @@ const ReelComponent = ({
                 onPress={() => onPressComment(item?._id)}
               />
               <VideoItem icon="eye" data={millify(item?.views || 0)} />
+              <VideoItem icon="share" onPress={() => handleShare(item)} />
             </View>
           </LinearGradient>
           {pausedVideos.includes(index) && !item?.avatarUri && (
@@ -521,7 +566,7 @@ const localStyles = StyleSheet.create({
   },
   verticalContainer: {
     ...styles.ph5,
-    ...styles.mb10,
+    ...styles.mb50,
     ...styles.pl10,
   },
   renderIconContainer: {

@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react/no-unstable-nested-components */
 // Libraries import
 import {
@@ -36,6 +37,7 @@ import OneSignal from 'react-native-onesignal';
 import {ALERT_TYPE, Toast} from 'react-native-alert-notification';
 import Description from '../../../components/models/Descriptions';
 import Locations from '../../../components/models/Locations';
+import dynamicLinks from '@react-native-firebase/dynamic-links';
 import {
   BannerAd,
   BannerAdSize,
@@ -47,6 +49,7 @@ import ReelComponent from './ReelComponent';
 import {TabBar, TabView} from 'react-native-tab-view';
 import FollowingList from './FollowingList';
 import ForYouList from './ForYouList';
+import {AdView} from './ads/AdView';
 
 const HeaderCategoryItem = React.memo(({title, onPress, category}) => {
   const colors = useSelector(state => state.theme.theme);
@@ -72,7 +75,6 @@ const HeaderCategoryItem = React.memo(({title, onPress, category}) => {
 
 export default function ReelsComponent() {
   const colors = useSelector(state => state.theme.theme);
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const commentSheetRef = useRef('');
   const descriptionSheetRef = useRef('');
   const locationSheetRef = useRef('');
@@ -130,6 +132,36 @@ export default function ReelsComponent() {
   const flatListRefFollowing = useRef(null);
   const flatListRef = useRef(null);
   const [notificationReceived, setnotificationReceived] = useState(false);
+
+  const handleDeepLink = link => {
+    // Handle dynamic link inside your own application
+    navigation.navigate(TabNav.Home);
+    const postId = link.url.split('/').pop();
+    setStoryId(postId);
+
+    queryClient.invalidateQueries({queryKey: 'user'});
+    queryClient.invalidateQueries({queryKey: 'profile-stories'});
+
+    setnotificationReceived(true);
+  };
+
+  useEffect(() => {
+    dynamicLinks()
+      .getInitialLink()
+      .then(link => {
+        handleDeepLink(link);
+      });
+  }, []);
+
+  const handleDynamicLink = link => {
+    handleDeepLink(link);
+  };
+
+  useEffect(() => {
+    const unsubscribe = dynamicLinks().onLink(handleDynamicLink);
+    // When the component is unmounted, remove the listener
+    return () => unsubscribe();
+  }, []);
 
   const viewableItemsChangedForYou = useRef(({viewableItems}) => {
     if (viewableItems?.length) {
@@ -376,10 +408,12 @@ export default function ReelsComponent() {
     request.delete(`/like/${postId}`),
   );
 
-  const onPressReport = item =>
+  const onPressReport = item => {
     navigation.navigate(StackNav.Report, {
       storyId: item?._id,
     });
+    setExtraData(!extraData);
+  };
 
   const onPressProfile = (userName, userImage, id) => {
     if (id !== data?.data?.user?._id) {
@@ -453,37 +487,48 @@ export default function ReelsComponent() {
     activeVideoIndex,
     pausedVideos,
     togglePause,
-  ) => (
-    <ReelComponent
-      item={item}
-      isFullscreen={isFullscreen}
-      layoutHeight={layoutHeight}
-      keyPrefix={keyPrefix}
-      tabIndex={index}
-      index={i}
-      tabIndexDefault={tabIndexDefault}
-      flatListRef={index === 1 ? flatListRef : flatListRefFollowing}
-      data={data}
-      onPressProfile={onPressProfile}
-      activeVideoIndex={activeVideoIndex}
-      pausedVideos={pausedVideos}
-      togglePause={togglePause}
-      likeRef={likeRef}
-      onPressMore={onPressMore}
-      onPressAvailableLocation={onPressAvailableLocation}
-      onPressComment={onPressComment}
-      isLike={isLike}
-      onPressLike={onPressLike}
-      setIsLike={setIsLike}
-      extraData={extraData}
-      setExtraData={setExtraData}
-      videoError={videoError}
-      onPressReport={onPressReport}
-    />
-  );
+  ) => {
+    return (
+      <ReelComponent
+        item={item}
+        layoutHeight={layoutHeight}
+        keyPrefix={keyPrefix}
+        tabIndex={index}
+        index={i}
+        tabIndexDefault={tabIndexDefault}
+        flatListRef={index === 1 ? flatListRef : flatListRefFollowing}
+        data={data}
+        onPressProfile={onPressProfile}
+        activeVideoIndex={activeVideoIndex}
+        pausedVideos={pausedVideos}
+        togglePause={togglePause}
+        likeRef={likeRef}
+        onPressMore={onPressMore}
+        onPressAvailableLocation={onPressAvailableLocation}
+        onPressComment={onPressComment}
+        isLike={isLike}
+        onPressLike={onPressLike}
+        setIsLike={setIsLike}
+        extraData={extraData}
+        setExtraData={setExtraData}
+        videoError={videoError}
+        onPressReport={onPressReport}
+      />
+    );
+  };
   const renderReelComponentFollowing = ({item, index: i}) => {
     const keyPrefix = `item-${item?._id}-i`;
-
+    if (typeof item === 'string' && item?.includes('ad')) {
+      return (
+        <AdView
+          layoutHeight={layoutHeight}
+          loadOnMount={false}
+          index={i}
+          type="video"
+          media={true}
+        />
+      );
+    }
     return renderReelComponent(
       item,
       i,
@@ -497,7 +542,17 @@ export default function ReelsComponent() {
 
   const renderReelComponentForYou = ({item, index: i}) => {
     const keyPrefix = `item-${item?._id}-i`;
-
+    if (typeof item === 'string' && item?.includes('ad')) {
+      return (
+        <AdView
+          loadOnMount={false}
+          layoutHeight={layoutHeight}
+          index={i}
+          type="video"
+          media={true}
+        />
+      );
+    }
     return renderReelComponent(
       item,
       i,

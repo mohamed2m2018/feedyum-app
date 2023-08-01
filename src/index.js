@@ -9,6 +9,19 @@ import {SheetProvider} from 'react-native-actions-sheet';
 import TimeAgo from 'javascript-time-ago';
 import en from 'javascript-time-ago/locale/en';
 import {BackgroundUploadProvider} from './providers/BackgroundUploadProvider';
+import * as firebase from '@react-native-firebase/app';
+import dynamicLinks from '@react-native-firebase/dynamic-links';
+
+const firebaseConfig = {
+  apiKey: '***REMOVED***',
+  projectId: 'cookbook-9f0b4',
+  appId: '1:461220795216:android:46cc2983a383da4114d255',
+  databaseURL: '',
+  messagingSenderId: '',
+  storageBucket: '',
+};
+
+firebase.initializeApp(firebaseConfig);
 
 const App = () => {
   const colors = useSelector(state => state.theme.theme);

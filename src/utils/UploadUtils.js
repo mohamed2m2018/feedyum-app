@@ -10,8 +10,7 @@ export const convertVideoToMP4 = async inputPath => {
   await FFmpegKit.execute(
     ` -y -i ${inputPath} -c:v libx264 -preset veryfast -crf 28 -c:a copy ${outputFile}`,
   );
-
-  return outputFile;
+  return inputPath;
 };
 
 export const generateThumbnail = async inputPath => {
