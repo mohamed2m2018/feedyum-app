@@ -1,8 +1,9 @@
 import React from 'react';
 import {ActivityIndicator, View} from 'react-native';
 import LiveComponent from '../../../../components/LiveComponent';
-import {FlashList} from '@shopify/flash-list';
 import ZText from '../../../../components/common/ZText';
+import strings from '../../../../i18n/strings';
+import {FlatList} from 'react-native';
 
 export default function SearchVideo({
   stories = [],
@@ -10,10 +11,9 @@ export default function SearchVideo({
   ...props
 }) {
   return (
-    <View style={{flex: 1}}>
-      <FlashList
+    <View>
+      <FlatList
         data={stories}
-        contentContainerStyle={{flex: 1}}
         ListFooterComponent={
           <View style={{height: 100}}>
             {isFetchingNextPage && <ActivityIndicator size={'small'} />}
@@ -22,7 +22,7 @@ export default function SearchVideo({
         ListEmptyComponent={
           !props.isFetching && (
             <ZText style={{textAlign: 'center', marginTop: 250}} type={'B20'}>
-              No Dishes matches your search term.
+              {strings.noDishesYet}
             </ZText>
           )
         }

@@ -19,12 +19,22 @@ import {styles} from '../../../../themes';
 import ZText from '../../../../components/common/ZText';
 import SearchUser from './SearchUser';
 import SearchVideo from './SearchVideo';
-import {searchCategoryData} from '../../../../api/constant';
 import {useInfiniteQuery, useQuery} from 'react-query';
 import request from '../../../../api/request';
 
 export default function Search() {
   const colors = useSelector(state => state.theme.theme);
+
+  const searchCategoryData = [
+    {
+      id: 0,
+      title: strings.user,
+    },
+    {
+      id: 1,
+      title: strings.video,
+    },
+  ];
 
   const BlurredStyle = {
     backgroundColor: colors.inputBg,

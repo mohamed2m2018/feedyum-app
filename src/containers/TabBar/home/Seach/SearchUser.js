@@ -3,6 +3,7 @@ import {View} from 'react-native';
 import UserDetailComponent from '../../../../components/UserDetailComponent';
 import {FlashList} from '@shopify/flash-list';
 import ZText from '../../../../components/common/ZText';
+import strings from '../../../../i18n/strings';
 
 export default function SearchUser({users, ...props}) {
   return (
@@ -13,7 +14,7 @@ export default function SearchUser({users, ...props}) {
         ListEmptyComponent={
           !props.isFetching && (
             <ZText style={{textAlign: 'center', marginTop: 250}} type={'B20'}>
-              No users matches your search term.
+              {strings.noUsersMatch}
             </ZText>
           )
         }

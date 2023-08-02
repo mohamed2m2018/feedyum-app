@@ -9,7 +9,7 @@ import {searchMusicData, userDetail, videoData} from '../../../../api/constant';
 import SoundComponent from '../../../../components/SoundComponent';
 import ZText from '../../../../components/common/ZText';
 import {styles} from '../../../../themes';
-import {getVideoExtension} from '../../../../common/constants';
+import strings from '../../../../i18n/strings';
 
 export default function SearchTop() {
   const UserItemTitle = ({title}) => {
@@ -51,7 +51,7 @@ export default function SearchTop() {
         )}
         numColumns={3}
         keyExtractor={(item, index) => index.toString()}
-        ListHeaderComponent={() => <UserItemTitle title={'Video'} />}
+        ListHeaderComponent={() => <UserItemTitle title={strings.video} />}
       />
       <FlatList
         data={searchMusicData.slice(0, 3)}

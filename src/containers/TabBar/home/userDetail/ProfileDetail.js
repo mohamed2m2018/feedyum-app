@@ -219,7 +219,7 @@ export default function ProfileDetail({navigation, route}) {
         </View>
         <View style={localStyles.editProfileContainer}>
           <ZButton
-            title={!isFollow ? strings.follow : 'Unfollow'}
+            title={!isFollow ? strings.follow : strings.unfollow}
             onPress={onPressFollow}
             color={colors.white}
             textType="b14"
@@ -239,7 +239,7 @@ export default function ProfileDetail({navigation, route}) {
               <Spinner size={'large'} visible={isLoading} />
             ) : (
               <ZText style={{textAlign: 'center', marginTop: 45}} type={'B20'}>
-                No Dishes yet! Post Something first..
+                {strings.noDishesYetCurrentProfile}
               </ZText>
             )
           }

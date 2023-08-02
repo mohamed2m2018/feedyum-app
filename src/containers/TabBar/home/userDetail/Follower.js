@@ -5,6 +5,7 @@ import {styles} from '../../../../themes';
 import ZText from '../../../../components/common/ZText';
 import {useQuery} from 'react-query';
 import request from '../../../../api/request';
+import strings from '../../../../i18n/strings';
 
 export default function Following({
   followingData: userDetail,
@@ -54,7 +55,7 @@ export default function Following({
               alignSelf: 'center',
             }}
             type={'B20'}>
-            You have no followers, try to publish something :D
+            {strings.noFollower}
           </ZText>
         )
       }

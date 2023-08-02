@@ -181,7 +181,7 @@ export default function Profile({navigation}) {
               <Spinner size={'large'} visible={isLoading} />
             ) : (
               <ZText style={{textAlign: 'center', marginTop: 45}} type={'B20'}>
-                No Dishes yet! Post Something first..
+                {strings.noDishesYetProfileOther}
               </ZText>
             )
           }

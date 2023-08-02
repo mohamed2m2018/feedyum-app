@@ -2,6 +2,7 @@ import {
   ActivityIndicator,
   I18nManager,
   Linking,
+  Platform,
   Pressable,
   StyleSheet,
   TouchableOpacity,
@@ -325,7 +326,8 @@ const ReelComponent = ({
                 <View
                   style={{
                     direction: 'ltr',
-                    ...(I18nManager.isRTL && {transform: [{scaleX: -1}]}),
+                    ...(I18nManager.isRTL &&
+                      Platform.OS === 'ios' && {transform: [{scaleX: -1}]}),
                   }}>
                   <Slider
                     style={localStyles.seekBar}

@@ -5,6 +5,7 @@ import {FlashList} from '@shopify/flash-list';
 import {useQueryClient} from 'react-query';
 import {useSelector} from 'react-redux';
 import ZText from '../../../components/common/ZText';
+import strings from '../../../i18n/strings';
 
 const FollowingList = ({
   isLoadingFollowing,
@@ -62,8 +63,8 @@ const FollowingList = ({
         }
         ListEmptyComponent={
           isLoadingFollowing ? null : (
-            <ZText style={{textAlign: 'center', marginTop: 350}} type={'B30'}>
-              No Dishes yet! Follow Someone first..
+            <ZText style={{textAlign: 'center', marginTop: 250}} type={'B24'}>
+              {strings.noDishesYetFollow}
             </ZText>
           )
         }

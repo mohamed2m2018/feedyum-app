@@ -28,7 +28,7 @@ export default function Description({SheetRef, selectedAreas, selectedGov}) {
             contentContainerStyle={localStyles.content}>
             <ZText type="b18" align="center">
               {strings.dishAvailableIn}{' '}
-              {I18nManager.isRTL ? selected?.arabicValue : selected.value}
+              {I18nManager.isRTL ? selected?.arabicValue : selected?.value}
               {/* in the following areas{' '} */}
               {'\n'}
             </ZText>

@@ -156,7 +156,7 @@ export default function UserNetwork({navigation, route}) {
 
   return (
     <ZSafeAreaView>
-      <ZHeader title={'Follow List'} />
+      <ZHeader title={strings.followList} />
       <TabView
         navigationState={isSelect}
         renderScene={_renderScene}

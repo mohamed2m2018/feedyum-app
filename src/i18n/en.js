@@ -227,4 +227,15 @@ export default {
     'link (optional), if not provided user will contact you through whatsapp',
   selectGov: 'Select governorates',
   reply: 'Reply',
+  followList: 'Follow List',
+  noDishesYet: 'No Dishes matches your search term.',
+  noUsersMatch: 'No users matches your search term',
+  unfollow: 'Unfollow',
+  noDishesYetFollow: 'No Dishes yet! Follow Someone first..',
+  noDishesYetForYou: 'No Dishes yet! Stay tuned.',
+  noDishesYetProfileOther: ' No Dishes yet!..',
+  noDishesYetCurrentProfile: 'No Dishes yet! Post Something first..',
+  notFollowing:
+    'You are not Following anyone. Watch more videos and decide who to follow.',
+  noFollower: 'You have no followers, try to publish something :D',
 };

@@ -160,8 +160,8 @@ export default function PostDetail() {
     if (value.duration && value.duration > 60000) {
       Toast.show({
         type: ALERT_TYPE.DANGER,
-        title: 'Error',
-        textBody: 'Video Duration must be less than 1 minute',
+        title: strings.error,
+        textBody: strings.maxDuration,
       });
       return;
     }

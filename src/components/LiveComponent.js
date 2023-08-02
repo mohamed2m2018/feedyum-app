@@ -14,7 +14,6 @@ import {useNavigation} from '@react-navigation/native';
 import {TabNav} from '../navigation/NavigationKeys';
 
 export default function LiveComponent({
-  data = '',
   reelUrl = '',
   user = '',
   userName = '',
@@ -71,7 +70,11 @@ export default function LiveComponent({
       </TouchableOpacity>
 
       <TouchableOpacity style={localStyles.userDetailContainer}>
-        <ZText type="s14" style={styles.ml5} color={colors.textColor}>
+        <ZText
+          align={'center'}
+          type="s14"
+          style={styles.ml5}
+          color={colors.textColor}>
           {userName}
         </ZText>
       </TouchableOpacity>
@@ -82,6 +85,7 @@ export default function LiveComponent({
 const localStyles = StyleSheet.create({
   postContainer: {
     width: '100%',
+    flex: 1,
   },
   postImgStyle: {
     height: getHeight(280),
@@ -118,10 +122,10 @@ const localStyles = StyleSheet.create({
     borderRadius: moderateScale(12),
   },
   userDetailContainer: {
-    ...styles.flexRow,
-    ...styles.itemsCenter,
-    ...styles.selfStart,
+    // ...styles.flexRow,
+    // ...styles.itemsCenter,
+    // ...styles.selfStart,
     ...styles.mt10,
-    ...styles.ml10,
+    // ...styles.ml10,
   },
 });
