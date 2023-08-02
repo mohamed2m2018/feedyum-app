@@ -225,8 +225,8 @@ const Login = ({navigation}) => {
   const onPressSignWithPassword = async () => {
     await mutate(
       {
-        email,
-        password,
+        email: email || 'guest@foodtok.com',
+        password: password || '123456Ab-',
       },
       {
         onSuccess: async res => {
@@ -244,6 +244,11 @@ const Login = ({navigation}) => {
   };
   const onPressPasswordEyeIcon = () => setIsPasswordVisible(!isPasswordVisible);
   const onPressSignUp = () => navigation.navigate(StackNav.Register);
+  const onPressGuest = () => {
+    setTimeout(() => {
+      onPressSignWithPassword();
+    }, 100);
+  };
   // const onPressForgotPassword = () =>
   //   navigation.navigate(StackNav.ForgotPassword);
 
@@ -347,6 +352,13 @@ const Login = ({navigation}) => {
             <ZText type={'s14'} color={colors.primary}>
               {' '}
               {strings.signUp}
+            </ZText>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={onPressGuest}
+            style={localStyles.signUpContainer}>
+            <ZText type={'s12'} color={colors.grayScale5}>
+              Continue as guest
             </ZText>
           </TouchableOpacity>
         </View>

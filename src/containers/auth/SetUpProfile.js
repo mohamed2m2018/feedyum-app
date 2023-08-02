@@ -10,7 +10,7 @@ import {
 import React, {createRef, useEffect, useState} from 'react';
 import {useSelector} from 'react-redux';
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import Ionicons from 'react-native-vector-icons/Entypo';
 import {Dropdown} from 'react-native-element-dropdown';
 import ImagePicker from 'react-native-image-crop-picker';
 import {Image as ImageCompressor} from 'react-native-compressor';
@@ -115,8 +115,19 @@ const SetUpProfile = props => {
   const onChangedGender = text => setGender(text.value.toLowerCase());
 
   const queryClient = useQueryClient();
-
+  const validatePhoneNumber = input => {
+    const pattern = /^01[0125][0-9]{8}$/;
+    return pattern.test(input);
+  };
   const handleSubmit = () => {
+    if (!validatePhoneNumber(phoneNo)) {
+      Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: 'Error',
+        textBody: 'Please provide a correct egyptian phone number',
+      });
+      return;
+    }
     request
       .post('/user', {
         fullName,
@@ -165,7 +176,6 @@ const SetUpProfile = props => {
     }).then(async response => {
       ProfilePictureSheetRef?.current?.hide();
       setisPhotoUploading(true);
-      const formData = new FormData();
       const result = await ImageCompressor.compress(response.path, {
         compressionMethod: 'auto',
       });
@@ -200,10 +210,10 @@ const SetUpProfile = props => {
     });
   };
 
-  const CountryIcon = () => {
+  const PhoneIcon = () => {
     return (
       <Ionicons
-        name="flag"
+        name="phone"
         size={moderateScale(20)}
         color={colors.grayScale5}
       />
@@ -294,7 +304,7 @@ const SetUpProfile = props => {
             fullNameInputStyle,
           ]}
           _onFocus={onFocusFullName}
-          onBlur={onBlurFullName}
+          _onBlur={onBlurFullName}
         />
         <ZInput
           placeHolder={strings.nickname}
@@ -307,7 +317,7 @@ const SetUpProfile = props => {
             nicknameInputStyle,
           ]}
           _onFocus={onFocusNickName}
-          onBlur={onBlurNickName}
+          _onBlur={onBlurNickName}
         />
 
         <ZInput
@@ -316,14 +326,14 @@ const SetUpProfile = props => {
           _value={phoneNo}
           _maxLength={11}
           toGetTextFieldValue={onChangedPhoneNo}
-          insideLeftIcon={() => <CountryIcon />}
+          insideLeftIcon={() => <PhoneIcon />}
           inputContainerStyle={[
             {backgroundColor: colors.inputBg},
             localStyles.inputContainerStyle,
             phoneNoInputStyle,
           ]}
           _onFocus={onFocusPhoneNo}
-          onBlur={onBlurPhoneNo}
+          _onBlur={onBlurPhoneNo}
         />
 
         <Dropdown

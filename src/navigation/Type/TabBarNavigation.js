@@ -22,6 +22,7 @@ import {styles} from '../../themes';
 import ProfilePicture from '../../components/models/ProfilePicture';
 import request from '../../api/request';
 import {useQuery} from 'react-query';
+import {useHandleAuth} from '../../utils/useHandleAuth';
 
 export default function TabBarNavigation({navigation}) {
   const colors = useSelector(state => state.theme.theme);
@@ -29,6 +30,7 @@ export default function TabBarNavigation({navigation}) {
   const ProfilePictureSheetRef = React.createRef();
   const [index, setIndex] = React.useState(0);
   const {data} = useQuery('user', () => request.get('/user'), {retry: 1});
+  const {handleAuthToast} = useHandleAuth();
 
   const TabText = ({text, focused, icon}) => (
     <View style={localStyles.tabViewContainer}>
@@ -45,7 +47,12 @@ export default function TabBarNavigation({navigation}) {
     </View>
   );
 
-  const onPressAdd = () => ProfilePictureSheetRef?.current?.show();
+  const onPressAdd = () => {
+    if (handleAuthToast()) {
+      return;
+    }
+    ProfilePictureSheetRef?.current?.show();
+  };
 
   const onPressPost = isImage => {
     ProfilePictureSheetRef?.current?.hide();
@@ -137,7 +144,13 @@ export default function TabBarNavigation({navigation}) {
       <Tab.Screen
         name={TabNav.Profile}
         component={TabRoute.Profile}
-        listeners={{tabPress: e => setIndex(1)}}
+        listeners={{
+          tabPress: e => {
+            if (handleAuthToast()) {
+              e.preventDefault();
+            }
+          },
+        }}
         options={{
           tabBarIcon: ({focused}) => (
             <TabText

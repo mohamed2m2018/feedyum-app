@@ -5,6 +5,7 @@ import ZText from '../../../components/common/ZText';
 import {moderateScale} from '../../../common/constants';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useSelector} from 'react-redux';
+import {useHandleAuth} from '../../../utils/useHandleAuth';
 
 export const VideoItem = ({
   onPress,
@@ -20,8 +21,12 @@ export const VideoItem = ({
   const [isLiked, setisLiked] = useState(initialIsLiked);
   const colors = useSelector(state => state.theme.theme);
   const [likesNoLocally, setlikesNoLocally] = useState(data);
+  const {handleAuthToast} = useHandleAuth();
 
   const handlePress = () => {
+    if (handleAuthToast()) {
+      return;
+    }
     if (isLiked === true) {
       setisLiked(false);
       setlikesNoLocally(number => number - 1);

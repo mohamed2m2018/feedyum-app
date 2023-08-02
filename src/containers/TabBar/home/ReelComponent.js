@@ -342,7 +342,8 @@ const ReelComponent = ({
                     textType={'b18'}
                     color={colors.white}
                     containerStyle={localStyles.buttonContainer}
-                    onPress={() =>
+                    onPress={async () => {
+                      const link = await generateDynamicLink(item);
                       item?.linkToGo
                         ? Linking.openURL(
                             item?.linkToGo?.includes('http')
@@ -353,10 +354,12 @@ const ReelComponent = ({
                             'whatsapp://send?text=' +
                               'Hi, I came from FoodTok app, and I want to buy this dish: ' +
                               item.caption +
+                              '\n' +
+                              link +
                               '&phone=2' +
                               item?.author?.phone,
-                          )
-                    }
+                          );
+                    }}
                   />
                 )}
             </View>

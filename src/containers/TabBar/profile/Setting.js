@@ -26,6 +26,7 @@ import LogOut from '../../../components/models/LogOut';
 import {useQuery, useQueryClient} from 'react-query';
 import request from '../../../api/request';
 import {GoogleSignin} from '@react-native-google-signin/google-signin';
+import {useHandleAuth} from '../../../utils/useHandleAuth';
 
 export default Setting = ({navigation}) => {
   const color = useSelector(state => state.theme.theme);
@@ -34,6 +35,7 @@ export default Setting = ({navigation}) => {
   const LogOutSheetRef = createRef();
   const dispatch = useDispatch();
   const queryClient = useQueryClient();
+  const {handleAuthToast} = useHandleAuth();
 
   const [isEnabled, setIsEnabled] = useState(!!color.dark);
 
@@ -101,6 +103,9 @@ export default Setting = ({navigation}) => {
         showsVerticalScrollIndicator={false}
         style={localStyles.root}>
         {ProfileSetting.map((item, index) => {
+          if (item.title === strings.editProfile && handleAuthToast()) {
+            return;
+          }
           return (
             <TouchableOpacity
               disabled={item.title === strings.darkMode}

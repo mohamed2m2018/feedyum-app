@@ -15,6 +15,7 @@ import {useInfiniteQuery, useMutation, useQueryClient} from 'react-query';
 import Spinner from 'react-native-loading-spinner-overlay';
 import {ALERT_TYPE, Toast} from 'react-native-alert-notification';
 import CommentsList from '../../containers/TabBar/comments/CommentsList';
+import {useHandleAuth} from '../../utils/useHandleAuth';
 
 // const CommentRender = ({
 //   item,
@@ -134,6 +135,7 @@ export default function Comment({SheetRef, postId}) {
   );
 
   const queryClient = useQueryClient();
+  const {handleAuthToast} = useHandleAuth();
 
   const addComment = async commentText => {
     const response = await request.post('/comment', {
@@ -179,6 +181,13 @@ export default function Comment({SheetRef, postId}) {
   });
 
   const onPressSend = commentId => {
+    if (handleAuthToast()) {
+      SheetRef.current.hide();
+      setTimeout(() => {
+        handleAuthToast();
+      }, 200);
+      return;
+    }
     Keyboard.dismiss();
     if (commentId) {
       mutation.mutate({
