@@ -204,6 +204,7 @@ export default function PostDetail() {
       <KeyboardAwareScrollView
         enableOnAndroid={true}
         bounces={false}
+        keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.mh20}>
         <View style={localStyles.container}>

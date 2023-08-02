@@ -70,8 +70,6 @@ const ReelComponent = ({
   const [seekValue, setSeekValue] = useState(0);
   const videoRef = useRef();
   const navigation = useNavigation();
-
-  const [isEnd, setisEnd] = useState(false);
   const [durationInSeconds, setDurationInSeconds] = useState(0); // Added state for durationInSeconds
 
   const [paused, setpaused] = useState(false);
@@ -166,15 +164,6 @@ const ReelComponent = ({
     }
   }, [isFocused, index, activeVideoIndex, flatListRef]);
 
-  useEffect(() => {
-    if (isEnd) {
-      flatListRef.current.scrollToIndex({
-        animated: true,
-        index: index + 1,
-      });
-    }
-  }, [isEnd]);
-
   const handlePressProfile = () =>
     onPressProfile(item?.channelName, item?.avatarUri, item?.author?._id);
 
@@ -210,8 +199,11 @@ const ReelComponent = ({
               ref={videoRef}
               onLoad={({duration}) => setDurationInSeconds(duration)}
               onEnd={() => {
-                if (!isEnd) {
-                  setisEnd(true);
+                if (activeVideoIndex === index) {
+                  flatListRef.current.scrollToIndex({
+                    animated: true,
+                    index: index + 1,
+                  });
                 }
               }}
               style={[

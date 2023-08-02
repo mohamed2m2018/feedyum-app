@@ -1,6 +1,6 @@
 // Library import
 import {Keyboard, StyleSheet, TouchableOpacity, View} from 'react-native';
-import React, { useRef, useState} from 'react';
+import React, {useRef, useState} from 'react';
 import ActionSheet from 'react-native-actions-sheet';
 import {useSelector} from 'react-redux';
 import Feather from 'react-native-vector-icons/Feather';
@@ -225,7 +225,11 @@ export default function Comment({SheetRef, postId}) {
         localStyles.actionSheetContainer,
         {backgroundColor: colors.backgroundColor},
       ]}>
-      <Spinner visible={isLoadingAddComments || isLoading} />
+      <Spinner
+        visible={
+          isLoadingAddComments || isLoading || mutation.isLoading || isFetching
+        }
+      />
       <View
         style={[
           localStyles.headerContainer,

@@ -34,8 +34,7 @@ const DropdownGovr = ({postedData, setpostedData}) => {
     dropdown: {
       borderRadius: 8,
       boderWidth: 0,
-      width: 335,
-      marginTop: 4,
+      width: '95%',
     },
     dropdownItem: {
       paddingVertical: 10,

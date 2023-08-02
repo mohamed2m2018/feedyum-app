@@ -521,6 +521,7 @@ export default function ReelsComponent() {
     if (typeof item === 'string' && item?.includes('ad')) {
       return (
         <AdView
+          key={keyPrefix}
           layoutHeight={layoutHeight}
           loadOnMount={false}
           index={i}
@@ -545,6 +546,7 @@ export default function ReelsComponent() {
     if (typeof item === 'string' && item?.includes('ad')) {
       return (
         <AdView
+          key={keyPrefix}
           loadOnMount={false}
           layoutHeight={layoutHeight}
           index={i}

@@ -34,12 +34,9 @@ const App = () => {
 
   useEffect(() => {
     handleRequestPermission();
-    if (!firebase.apps.length) {
-      firebase
-        .initializeApp(firebaseConfig)
-        .then(res => console.log('res', res))
-        .catch(haha => console.log('haha ', haha));
-    }
+    try {
+      firebase.initializeApp(firebaseConfig);
+    } catch {}
   }, []);
 
   const handleRequestPermission = () => {
