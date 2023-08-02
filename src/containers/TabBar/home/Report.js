@@ -10,7 +10,6 @@ import ZHeader from '../../../components/common/ZHeader';
 import strings from '../../../i18n/strings';
 import ZText from '../../../components/common/ZText';
 import {styles} from '../../../themes';
-import {reportData} from '../../../api/constant';
 import {moderateScale} from '../../../common/constants';
 import ZButton from '../../../components/common/ZButton';
 import {useMutation} from 'react-query';
@@ -18,6 +17,47 @@ import request from '../../../api/request';
 import {ALERT_TYPE, Toast} from 'react-native-alert-notification';
 
 export default function Report({navigation, route}) {
+  const reportData = [
+    {
+      lnName: strings.dangerousOrganizationsIndividuals,
+    },
+    {
+      lnName: strings.fraudsScams,
+    },
+    {
+      lnName: strings.misleadingInformation,
+    },
+    {
+      lnName: strings.illegalActivitiesRegulatedGoods,
+    },
+    {
+      lnName: strings.violentGraphicContents,
+    },
+    {
+      lnName: strings.animalCruelty,
+    },
+    {
+      lnName: strings.pornographyNudity,
+    },
+    {
+      lnName: strings.hateSpeech,
+    },
+    {
+      lnName: strings.harassmentBullying,
+    },
+    {
+      lnName: strings.intellectualPropertyInfringement,
+    },
+    {
+      lnName: strings.spam,
+    },
+    {
+      lnName: strings.minorSafety,
+    },
+    {
+      lnName: strings.other,
+    },
+  ];
   const colors = useSelector(state => state.theme.theme);
   const [isSelected, setIsSelected] = useState('');
 
@@ -35,8 +75,8 @@ export default function Report({navigation, route}) {
     onSuccess: () => {
       Toast.show({
         type: ALERT_TYPE.SUCCESS,
-        title: 'Reported',
-        textBody: 'Thank you, We will review this post',
+        title: strings.reported,
+        textBody: strings.willReviewPost,
       });
       onPressSkip();
     },
