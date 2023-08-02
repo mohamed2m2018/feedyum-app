@@ -20,6 +20,7 @@ import {styles} from '../themes';
 import {StackNav, TabNav} from '../navigation/NavigationKeys';
 import request from '../api/request';
 import {useQueryClient} from 'react-query';
+import strings from '../i18n/strings';
 
 export default function ReelComponent({
   data = 0,
@@ -54,13 +55,13 @@ export default function ReelComponent({
   };
 
   const confirmDeleteStory = () => {
-    Alert.alert('Delete Post', 'Are you sure you want to delete this Post?', [
+    Alert.alert(strings.deletePost, strings.areYouSure, [
       {
-        text: 'Cancel',
+        text: strings.cancel,
         style: 'cancel',
       },
       {
-        text: 'Delete',
+        text: strings.delete,
         style: 'destructive',
         onPress: onDeleteStory,
       },

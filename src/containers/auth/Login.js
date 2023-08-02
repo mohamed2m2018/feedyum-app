@@ -42,7 +42,7 @@ const RenderSocialBtn = memo(({item, index}) => {
         {item.icon}
       </TouchableOpacity>
       <ZText type={'r20'} onPress={item.onPress}>
-        Login with Google
+        {strings.loginWithGoogle}
       </ZText>
     </>
   );
@@ -358,7 +358,7 @@ const Login = ({navigation}) => {
             onPress={onPressGuest}
             style={localStyles.signUpContainer}>
             <ZText type={'s12'} color={colors.grayScale5}>
-              Continue as guest
+              {strings.continueGuest}
             </ZText>
           </TouchableOpacity>
         </View>

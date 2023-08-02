@@ -123,8 +123,8 @@ const SetUpProfile = props => {
     if (!validatePhoneNumber(phoneNo)) {
       Toast.show({
         type: ALERT_TYPE.DANGER,
-        title: 'Error',
-        textBody: 'Please provide a correct egyptian phone number',
+        title: strings.error,
+        textBody: strings.pleaseProvideCorrectNo,
       });
       return;
     }
@@ -321,7 +321,7 @@ const SetUpProfile = props => {
         />
 
         <ZInput
-          placeHolder={'Phone number must start with 01....'}
+          placeHolder={strings.phoneNumberStarts}
           keyBoardType={'number-pad'}
           _value={phoneNo}
           _maxLength={11}

@@ -43,7 +43,7 @@ const ProfilePicture = props => {
             style={styles.mr5}
           />
           <ZText type={'s18'} style={styles.ml10}>
-            {post ? 'Post a dish image' : strings.chooseFromGallery}
+            {post ? strings.postDishImage : strings.chooseFromGallery}
           </ZText>
         </TouchableOpacity>
         {post && (
@@ -60,7 +60,7 @@ const ProfilePicture = props => {
               style={styles.mr5}
             />
             <ZText type={'s18'} style={styles.ml10}>
-              {'Post a dish video'}
+              {strings.postDishVideo}
             </ZText>
           </TouchableOpacity>
         )}

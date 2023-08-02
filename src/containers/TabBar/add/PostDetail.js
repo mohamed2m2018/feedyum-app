@@ -2,6 +2,7 @@
 // Library import
 import {
   ActivityIndicator,
+  I18nManager,
   Image,
   StyleSheet,
   TextInput,
@@ -206,7 +207,7 @@ export default function PostDetail() {
         bounces={false}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.mh20}>
+        contentContainerStyle={styles.ph10}>
         <View style={localStyles.container}>
           <TouchableOpacity
             onPress={() => {
@@ -237,15 +238,16 @@ export default function PostDetail() {
               color={colors.white}
               align={'center'}
               style={localStyles.coverPhotoStyle}>
-              {'Upload dish media'}
+              {strings.uploadDishMedia}
             </ZText>
           </TouchableOpacity>
         </View>
         {localUri && (
           <>
             <TextInput
-              placeholder={'Meal Name'}
+              placeholder={strings.mealName}
               multiline={false}
+              textAlign={I18nManager.isRTL ? 'right' : 'left'}
               value={postedData?.title}
               onChangeText={input =>
                 setpostedData(currentState => ({
@@ -265,7 +267,8 @@ export default function PostDetail() {
               inputBoxStyle={localStyles.inputBoxStyle}
             />
             <TextInput
-              placeholder={'Brief description of the meal'}
+              placeholder={strings.description}
+              textAlign={I18nManager.isRTL ? 'right' : 'left'}
               multiline={true}
               value={postedData?.caption}
               onChangeText={input => {
@@ -293,8 +296,9 @@ export default function PostDetail() {
             {user?.type === 'chef' && (
               <>
                 <TextInput
-                  placeholder={'price'}
+                  placeholder={strings.price}
                   keyboardType="number-pad"
+                  textAlign={I18nManager.isRTL ? 'right' : 'left'}
                   value={`${postedData?.price || ''}`}
                   onChangeText={input =>
                     setpostedData(currentState => ({
@@ -316,6 +320,7 @@ export default function PostDetail() {
                 <View style={{flexDirection: 'row', alignItems: 'center'}}>
                   <TextInput
                     placeholder={`No of ${toggleStatus} to deliver this order`}
+                    textAlign={I18nManager.isRTL ? 'right' : 'left'}
                     value={`${postedData?.duration?.split?.(' ')?.[0] || ''}`}
                     multiline={true}
                     keyboardType="number-pad"
@@ -376,6 +381,7 @@ export default function PostDetail() {
                 {!user?.phone && (
                   <TextInput
                     placeholder={'Please add your phone number'}
+                    textAlign={I18nManager.isRTL ? 'right' : 'left'}
                     multiline={false}
                     value={phone}
                     onChangeText={input => setPhone(input)}
@@ -392,9 +398,8 @@ export default function PostDetail() {
                   />
                 )}
                 <TextInput
-                  placeholder={
-                    'link (optional), if not provided user will contact you through whatsapp'
-                  }
+                  placeholder={strings.linkOptional}
+                  textAlign={I18nManager.isRTL ? 'right' : 'left'}
                   multiline={true}
                   value={postedData?.linkToGo}
                   onChangeText={input =>
@@ -440,7 +445,7 @@ export default function PostDetail() {
                 : isImage) && (
                 <>
                   <ZButton
-                    title={'Upload dish photo'}
+                    title={strings.uploadDishPhoto}
                     textType={'b18'}
                     color={colors.white}
                     containerStyle={{paddingHorizontal: 20}}
@@ -448,7 +453,7 @@ export default function PostDetail() {
                   />
                   <View style={{height: 10}} />
                   <ZButton
-                    title={'Capture dish photo'}
+                    title={strings.captureDishPhoto}
                     textType={'b18'}
                     color={colors.white}
                     containerStyle={{paddingHorizontal: 20}}
@@ -463,7 +468,7 @@ export default function PostDetail() {
                 : !isImage) && (
                 <>
                   <ZButton
-                    title={'Upload dish video'}
+                    title={strings.uploadDishVideo}
                     textType={'b18'}
                     color={colors.white}
                     containerStyle={{paddingHorizontal: 20}}
@@ -471,14 +476,14 @@ export default function PostDetail() {
                   />
                   <View style={{height: 10}} />
                   <ZButton
-                    title={'Capture dish video'}
+                    title={strings.captureDishVideo}
                     textType={'b18'}
                     color={colors.white}
                     containerStyle={{paddingHorizontal: 20}}
                     onPress={handleCaptureVideo}
                   />
                   <View style={{height: 10}} />
-                  <ZText>Maximum video duration is 1 minute</ZText>
+                  <ZText>{strings.maxDuration}</ZText>
                 </>
               )}
             </View>

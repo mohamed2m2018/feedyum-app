@@ -1,14 +1,17 @@
-import {StyleSheet, View, Clipboard} from 'react-native';
+import {StyleSheet, View, I18nManager} from 'react-native';
 import React from 'react';
 import ActionSheet from 'react-native-actions-sheet';
 import {useSelector} from 'react-redux';
-
-import {styles} from '../../themes';
 import ZText from '../common/ZText';
 import {GestureHandlerRootView, ScrollView} from 'react-native-gesture-handler';
+import strings from '../../i18n/strings';
+import {governorates} from '../../containers/TabBar/home/DropDownGovr';
 
 export default function Description({SheetRef, selectedAreas, selectedGov}) {
   const colors = useSelector(state => state.theme.theme);
+  const selected = governorates.filter(
+    element => element.value === selectedGov,
+  )?.[0];
 
   return (
     <ActionSheet
@@ -24,7 +27,8 @@ export default function Description({SheetRef, selectedAreas, selectedGov}) {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={localStyles.content}>
             <ZText type="b18" align="center">
-              This dish is available in {selectedGov} 
+              {strings.dishAvailableIn}{' '}
+              {I18nManager.isRTL ? selected?.arabicValue : selected.value}
               {/* in the following areas{' '} */}
               {'\n'}
             </ZText>

@@ -1,4 +1,4 @@
-import {StyleSheet, TouchableOpacity, View} from 'react-native';
+import {I18nManager, StyleSheet, TouchableOpacity, View} from 'react-native';
 import React from 'react';
 import {styles} from '../../themes';
 import {useNavigation} from '@react-navigation/native';
@@ -21,6 +21,7 @@ export default function ZHeader(props) {
             <Ionicons
               name="arrow-back-outline"
               size={moderateScale(26)}
+              style={I18nManager.isRTL && {transform: [{scaleX: -1}]}}
               color={colors.textColor}
             />
           </TouchableOpacity>

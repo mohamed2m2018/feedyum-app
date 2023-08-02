@@ -1,5 +1,6 @@
 // Library import
 import {
+  I18nManager,
   Image,
   ScrollView,
   StyleSheet,
@@ -44,7 +45,10 @@ export default function EditProfile({navigation}) {
             name={item.icon}
             size={moderateScale(26)}
             color={colors.textColor}
-            style={styles.mr10}
+            style={[
+              styles.mr10,
+              {...(I18nManager.isRTL && {transform: [{scaleX: -1}]})},
+            ]}
           />
           <ZText type="s18">{item.type}</ZText>
         </View>
@@ -58,6 +62,9 @@ export default function EditProfile({navigation}) {
           </ZText>
           <Ionicons
             name="chevron-forward-outline"
+            style={{
+              ...(I18nManager.isRTL && {transform: [{scaleX: -1}]}),
+            }}
             size={moderateScale(20)}
             color={colors.textColor}
           />

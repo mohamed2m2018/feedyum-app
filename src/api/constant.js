@@ -1,5 +1,4 @@
 import {Linking} from 'react-native';
-import images from '../assets/images';
 import strings from '../i18n/strings';
 import {StackNav} from '../navigation/NavigationKeys';
 
@@ -28,18 +27,18 @@ const renderChips = [
 
 const editProfileData = (name, email) => [
   {
-    title: 'About You',
+    title: strings.aboutYou,
     data: [
       {
         id: 1,
         icon: 'person-outline',
-        type: 'Name',
+        type: strings.name,
         value: name,
       },
       {
         id: 2,
         icon: 'mail-outline',
-        type: 'Email',
+        type: strings.email,
         value: email,
       },
     ],
@@ -201,63 +200,6 @@ const inboxData = [
         profileImage: 'https://i.ibb.co/J3q5m54/user6.png',
       },
     ],
-  },
-];
-
-const ProfileSetting = [
-  {
-    id: 1,
-    title: strings.editProfile,
-    icon: 'person-outline',
-    route: StackNav.EditProfile,
-  },
-  // {
-  //   id: 2,
-  //   title: strings.privacy,
-  //   icon: 'lock-closed-outline',
-  //   route: StackNav.Privacy,
-  // },
-  // {
-  //   id: 4,
-  //   title: strings.security,
-  //   icon: 'shield-checkmark-outline',
-  //   route: StackNav.Security,
-  // },
-  // {
-  //   id: 4,
-  //   title: strings.qrCode,
-  //   icon: 'scan-outline',
-  //   route: StackNav.QrCode,
-  // },
-  // {
-  //   id: 5,
-  //   title: strings.language,
-  //   icon: 'options-outline',
-  //   value: 'English(US)',
-  //   route: StackNav.Language,
-  // },
-  {
-    id: 6,
-    title: strings.darkMode,
-    icon: 'contrast-outline',
-    rightIcon: 'rightIcon',
-  },
-  // {
-  //   id: 3,
-  //   title: strings.reportProblem,
-  //   icon: 'cloud-download-outline',
-  // },
-  {
-    id: 7,
-    title: strings.helpCenter,
-    icon: 'information-circle-outline',
-    route: StackNav.HelpCenter,
-  },
-  {
-    id: 8,
-    title: strings.privacyPolicy,
-    icon: 'alert-circle-outline',
-    route: StackNav.PrivacyPolicy,
   },
 ];
 
@@ -1180,7 +1122,7 @@ const UserDetailCategory = (
     onPress,
   },
   {
-    title: 'Views',
+    title: strings.Views,
     value: viewsNo,
   },
 ];
@@ -1262,7 +1204,6 @@ const commentData = [
 
 export {
   renderChips,
-  ProfileSetting,
   helperCategoryData,
   helperData,
   contactUsData,

@@ -3,6 +3,44 @@ import {SelectList} from 'react-native-dropdown-select-list';
 import {StyleSheet, View} from 'react-native';
 import {useSelector} from 'react-redux';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import strings from '../../../i18n/strings';
+export const governorates = [
+  {key: '1', value: 'Alexandria', arabicValue: 'الإسكندرية'},
+  {key: '2', value: 'Aswan', arabicValue: 'أسوان'},
+  {key: '3', value: 'Asyut', arabicValue: 'أسيوط'},
+  {key: '4', value: 'Beheira', arabicValue: 'البحيرة'},
+  {key: '5', value: 'Beni Suef', arabicValue: 'بني سويف'},
+  {key: '6', value: 'Cairo', arabicValue: 'القاهرة'},
+  {key: '7', value: 'Dakahlia', arabicValue: 'الدقهلية'},
+  {key: '8', value: 'Damietta', arabicValue: 'دمياط'},
+  {key: '9', value: 'Faiyum', arabicValue: 'الفيوم'},
+  {key: '10', value: 'Gharbia', arabicValue: 'الغربية'},
+  {key: '11', value: 'Giza', arabicValue: 'الجيزة'},
+  {key: '12', value: 'Ismailia', arabicValue: 'الإسماعيلية'},
+  {key: '13', value: 'Kafr El Sheikh', arabicValue: 'كفر الشيخ'},
+  {key: '14', value: 'Luxor', arabicValue: 'الأقصر'},
+  {key: '15', value: 'Matrouh', arabicValue: 'مطروح'},
+  {key: '16', value: 'Minya', arabicValue: 'المنيا'},
+  {key: '17', value: 'Monufia', arabicValue: 'المنوفية'},
+  {
+    key: '18',
+    value: 'New Valley (Al Wadi Al Jadid)',
+    arabicValue: 'الوادي الجديد',
+  },
+  {key: '19', value: 'North Sinai (Shamal Sina)', arabicValue: 'شمال سيناء'},
+  {key: '20', value: 'Port Said', arabicValue: 'بورسعيد'},
+  {key: '21', value: 'Qalyubia', arabicValue: 'القليوبية'},
+  {key: '22', value: 'Qena', arabicValue: 'قنا'},
+  {
+    key: '23',
+    value: 'Red Sea (Al Bahr al Ahmar)',
+    arabicValue: 'البحر الأحمر',
+  },
+  {key: '24', value: 'Sharqia', arabicValue: 'الشرقية'},
+  {key: '25', value: 'Sohag', arabicValue: 'سوهاج'},
+  {key: '26', value: 'South Sinai (Janub Sina)', arabicValue: 'جنوب سيناء'},
+  {key: '27', value: 'Suez', arabicValue: 'السويس'},
+];
 
 const DropdownGovr = ({postedData, setpostedData}) => {
   const colors = useSelector(state => state.theme.theme);
@@ -50,36 +88,6 @@ const DropdownGovr = ({postedData, setpostedData}) => {
       color: colors.textColor, // Dark mode dropdown text color
     },
   };
-
-  const governorates = [
-    {key: '1', value: 'Alexandria'},
-    {key: '2', value: 'Aswan'},
-    {key: '3', value: 'Asyut'},
-    {key: '4', value: 'Beheira'},
-    {key: '5', value: 'Beni Suef'},
-    {key: '6', value: 'Cairo'},
-    {key: '7', value: 'Dakahlia'},
-    {key: '8', value: 'Damietta'},
-    {key: '9', value: 'Faiyum'},
-    {key: '10', value: 'Gharbia'},
-    {key: '11', value: 'Giza'},
-    {key: '12', value: 'Ismailia'},
-    {key: '13', value: 'Kafr El Sheikh'},
-    {key: '14', value: 'Luxor'},
-    {key: '15', value: 'Matrouh'},
-    {key: '16', value: 'Minya'},
-    {key: '17', value: 'Monufia'},
-    {key: '18', value: 'New Valley (Al Wadi Al Jadid)'},
-    {key: '19', value: 'North Sinai (Shamal Sina)'},
-    {key: '20', value: 'Port Said'},
-    {key: '21', value: 'Qalyubia'},
-    {key: '22', value: 'Qena'},
-    {key: '23', value: 'Red Sea (Al Bahr al Ahmar)'},
-    {key: '24', value: 'Sharqia'},
-    {key: '25', value: 'Sohag'},
-    {key: '26', value: 'South Sinai (Janub Sina)'},
-    {key: '27', value: 'Suez'},
-  ];
 
   const areas = {
     Alexandria: [
@@ -269,7 +277,7 @@ const DropdownGovr = ({postedData, setpostedData}) => {
         setSelected={handleGovernoratesSelection}
         data={governorates || []}
         save="value"
-        placeholder="Select governorates"
+        placeholder={strings.selectGov}
         boxStyles={styles.selectBox}
         inputStyles={styles.selectTextGover}
         dropdownStyles={styles.dropdown}

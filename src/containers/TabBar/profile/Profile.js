@@ -52,7 +52,7 @@ export default function Profile({navigation}) {
         }),
     },
     {
-      title: 'Views',
+      title: strings.Views,
       value: viewsNo || 0,
     },
   ];
@@ -163,6 +163,7 @@ export default function Profile({navigation}) {
         <Spinner visible={isLoadingSomething} />
         <FlatList
           data={storiesData}
+          showsVerticalScrollIndicator={false}
           renderItem={({item}) => (
             <ReelComponent
               data={item?.views}

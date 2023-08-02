@@ -1,5 +1,5 @@
 import React from 'react';
-import {StyleSheet, View, TextInput} from 'react-native';
+import {StyleSheet, View, TextInput, I18nManager} from 'react-native';
 import {useSelector} from 'react-redux';
 import {getHeight, moderateScale} from '../../common/constants';
 import {styles} from '../../themes';
@@ -68,6 +68,7 @@ export default ZInput = props => {
           ref={fieldRef}
           secureTextEntry={_isSecure}
           value={_value}
+          textAlign={I18nManager.isRTL ? 'right' : 'left'}
           maxLength={_maxLength}
           defaultValue={_value}
           autoFocus={_autoFocus}

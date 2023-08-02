@@ -4,7 +4,7 @@ import {useSelector} from 'react-redux';
 import Typography from '../../themes/typography';
 
 //Text Component
-const ZText = ({type, style, align, color, children, ...props}) => {
+const ZText = ({type, style, align = 'left', color, children, ...props}) => {
   const colors = useSelector(state => state.theme.theme);
 
   const fontWeights = () => {

@@ -1,5 +1,13 @@
 import React, {useEffect} from 'react';
-import {Linking, Platform, StatusBar, View, LogBox} from 'react-native';
+import {
+  Linking,
+  Platform,
+  StatusBar,
+  View,
+  LogBox,
+  I18nManager,
+} from 'react-native';
+import strings from './i18n/strings';
 import {useSelector} from 'react-redux';
 import {requestNotifications} from 'react-native-permissions';
 import AppNavigator from './navigation';
@@ -8,6 +16,7 @@ import {AlertNotificationRoot, Toast} from 'react-native-alert-notification';
 import {SheetProvider} from 'react-native-actions-sheet';
 import TimeAgo from 'javascript-time-ago';
 import en from 'javascript-time-ago/locale/en';
+import ar from 'javascript-time-ago/locale/ar';
 import {BackgroundUploadProvider} from './providers/BackgroundUploadProvider';
 import firebase from '@react-native-firebase/app';
 
@@ -28,12 +37,18 @@ const firebaseConfig = {
 
 const App = () => {
   const colors = useSelector(state => state.theme.theme);
-  TimeAgo.addDefaultLocale(en);
+  if (I18nManager.isRTL) {
+    TimeAgo.addDefaultLocale(ar);
+  } else {
+    TimeAgo.addDefaultLocale(en);
+  }
 
   LogBox.ignoreAllLogs(true);
-
   useEffect(() => {
     handleRequestPermission();
+    I18nManager.allowRTL(true);
+    I18nManager.forceRTL(true);
+    strings.setLanguage('ar');
     try {
       firebase.initializeApp(firebaseConfig);
     } catch {}

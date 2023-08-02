@@ -11,6 +11,7 @@ import {
 import React, {useEffect, useRef, useState, useCallback} from 'react';
 import {useSelector} from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import strings from '../../../i18n/strings';
 import {
   useFocusEffect,
   useNavigation,
@@ -584,8 +585,8 @@ export default function ReelsComponent() {
 
   const [index, setIndex] = React.useState(1);
   const [routes] = React.useState([
-    {key: 'following', title: 'Following'},
-    {key: 'forYou', title: 'For You'},
+    {key: 'following', title: strings.following},
+    {key: 'forYou', title: strings.foryou},
   ]);
 
   const renderScene = ({route}) => {

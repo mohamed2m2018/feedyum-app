@@ -55,7 +55,7 @@ const RenderSocialBtn = memo(({item, index}) => {
         {item.icon}
       </TouchableOpacity>
       <ZText type={'r20'} onPress={item.onPress}>
-        Sign up with Google
+        {strings.reigsterWithGoogle}
       </ZText>
     </>
   );
@@ -328,7 +328,7 @@ const Register = ({navigation}) => {
               color={colors.primary}
             />
             <ZText type={'s24'} style={styles.mh10}>
-              Are you a Chef or Restaurant?
+              {strings.chefOrResutaurant}
             </ZText>
           </TouchableOpacity>
 

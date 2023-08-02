@@ -32,12 +32,14 @@ export default styles = StyleSheet.create({
   content: {
     padding: 6,
     paddingTop: 1,
+    textAlign: 'left',
     // color: 'white',
   },
   commentOwner: {
     padding: 6,
     paddingBottom: 0,
     fontWeight: 'bold',
+    textAlign: 'left',
     // color: 'white',
   },
   commentFooter: {
@@ -52,6 +54,7 @@ export default styles = StyleSheet.create({
   },
   footerElement: {
     marginRight: 14,
+    textAlign: 'left',
     // color: 'white',
   },
   footerElementLiked: {

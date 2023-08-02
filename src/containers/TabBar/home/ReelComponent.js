@@ -1,11 +1,13 @@
 import {
   ActivityIndicator,
+  I18nManager,
   Linking,
   Pressable,
   StyleSheet,
   TouchableOpacity,
   View,
 } from 'react-native';
+import strings from '../../../i18n/strings';
 import React, {useEffect, useRef, useState} from 'react';
 import dynamicLinks from '@react-native-firebase/dynamic-links';
 import {
@@ -277,10 +279,19 @@ const ReelComponent = ({
               </View>
               {item?.duration && (
                 <ZText type="m12" color={colors.white}>
-                  {`Can be received in ${
+                  {`${
+                    strings.canBeReceivedIn +
                     duration[0] +
                     ' ' +
-                    pluralize(duration[1] || '', duration[0])
+                    (I18nManager.isRTL
+                      ? duration[1] === 'Hours'
+                        ? duration[0] > 1
+                          ? 'ساعات'
+                          : 'ساعة'
+                        : duration[0] > 1
+                        ? 'ايام'
+                        : 'يوم'
+                      : pluralize(duration[1] || '', duration[0]))
                   }`}
                 </ZText>
               )}
@@ -307,11 +318,15 @@ const ReelComponent = ({
                 }
                 style={styles.button}>
                 <ZText type="m14" color={colors.primary} style={styles.mb20}>
-                  Click to check Delivery Locations
+                  {strings.checkLocations}
                 </ZText>
               </TouchableOpacity>
               {!item.avatarUri && (
-                <View>
+                <View
+                  style={{
+                    direction: 'ltr',
+                    ...(I18nManager.isRTL && {transform: [{scaleX: -1}]}),
+                  }}>
                   <Slider
                     style={localStyles.seekBar}
                     minimumValue={0}
@@ -338,7 +353,7 @@ const ReelComponent = ({
               {data?.data?.user?._id !== item?.author?._id &&
                 item?.author?.type !== 'user' && (
                   <ZButton
-                    title={`Buy this for ${item?.price} EGP`}
+                    title={`${strings.buyThisFor} ${item?.price} ${strings.EGP}`}
                     textType={'b18'}
                     color={colors.white}
                     containerStyle={localStyles.buttonContainer}
@@ -567,13 +582,6 @@ const localStyles = StyleSheet.create({
   renderIconContainer: {
     ...styles.itemsCenter,
     ...styles.mt20,
-  },
-  seekBarContainer: {
-    position: 'absolute',
-    bottom: 10,
-    left: 0,
-    right: 0,
-    paddingHorizontal: 20,
   },
   seekBar: {
     height: 40,

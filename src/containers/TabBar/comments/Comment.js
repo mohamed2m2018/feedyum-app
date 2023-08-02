@@ -1,6 +1,6 @@
 import React from 'react';
 
-import {View, Text, Image, TouchableOpacity} from 'react-native';
+import {View, Text, Image, TouchableOpacity, I18nManager} from 'react-native';
 
 import commentStyling from './CommentStyling';
 
@@ -13,6 +13,7 @@ import request from '../../../api/request';
 import {moderateScale} from '../../../common/constants';
 import Feather from 'react-native-vector-icons/Feather';
 import {useNavigation} from '@react-navigation/native';
+import strings from '../../../i18n/strings';
 
 const Comment = props => {
   const queryClient = useQueryClient();
@@ -60,7 +61,7 @@ const Comment = props => {
   } = commentData;
 
   // Create formatter (English).
-  const timeAgo = new TimeAgo('en-US');
+  const timeAgo = I18nManager.isRTL ? new TimeAgo('ar') : new TimeAgo('en-US');
   const date = new Date(created_at);
   const time = timeAgo.format(date);
 
@@ -125,7 +126,7 @@ const Comment = props => {
               commentStyling.footerElement,
               {color: props.theme.textColor},
             ]}>
-            Reply
+            {strings.reply}
           </Text>
         </TouchableOpacity>
         {commentData?.user_id?._id === user?._id && (
