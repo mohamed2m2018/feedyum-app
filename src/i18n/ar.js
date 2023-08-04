@@ -295,4 +295,7 @@ export default {
   errorOccured: 'عفوا حدث خطأ',
   descriptionTooShort: 'الوصف قصير للغاية',
   pleaseFillAllInputs: 'من فضلك قم باجمال جميع المدخلات',
+  dearGuest: 'عزيزنا الزائر',
+  pleaseSignUp: 'يرجى التسجيل أو تسجيل الدخول لتتمكن من اتخاذ جميع الإجراءات',
+  goToAuth: 'تسجيل الدخول',
 };

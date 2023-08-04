@@ -5,7 +5,7 @@ import {StackNav} from '../navigation/NavigationKeys';
 import request from '../api/request';
 import {useNavigation} from '@react-navigation/native';
 import {useQuery, useQueryClient} from 'react-query';
-useQuery;
+import strings from '../i18n/strings';
 
 export const useHandleAuth = () => {
   const navigation = useNavigation();
@@ -18,11 +18,11 @@ export const useHandleAuth = () => {
   const handleAuthToast = () => {
     if (user?.data?.user?.type === 'guest') {
       Dialog.show({
-        title: 'Our Dear Guest',
+        title: strings.dearGuest,
         autoClose: false,
         type: ALERT_TYPE.WARNING,
-        textBody: 'Please signup or login to be able to take all actions',
-        button: 'Go to Auth',
+        textBody: strings.pleaseSignUp,
+        button: strings.goToAuth,
         onPressButton: async () => {
           await AsyncStorage.removeItem(ACCESS_TOKEN);
           await queryClient.removeQueries();

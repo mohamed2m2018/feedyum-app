@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {useDispatch, useSelector} from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import RNRestart from 'react-native-restart';
@@ -19,14 +19,15 @@ import ZText from '../../../components/common/ZText';
 import {styles} from '../../../themes';
 import {moderateScale} from '../../../common/constants';
 import {changeLanguageAction} from '../../../redux/action/profileAction';
-import {languageData} from '../../../api/constant';
-import {setAsyncStorageData} from '../../../utils/helpers';
+import {getAsyncStorageData, setAsyncStorageData} from '../../../utils/helpers';
 
 const Language = ({navigation}) => {
   const colors = useSelector(state => state.theme.theme);
   const language = useSelector(state => state.profile);
   const dispatch = useDispatch();
-  const [isSelected, setIsSelected] = React.useState(language);
+  const [isSelected, setIsSelected] = React.useState(
+    lang === 'en' ? 'English' : 'العربية',
+  );
 
   const RenderHeader = ({title}) => {
     return (
@@ -35,6 +36,20 @@ const Language = ({navigation}) => {
       </ZText>
     );
   };
+
+  const languageData = [
+    {
+      title: strings.language,
+      data: [
+        {
+          lnName: 'English',
+        },
+        {
+          lnName: 'العربية',
+        },
+      ],
+    },
+  ];
 
   const onPressItem = async item => {
     dispatch(changeLanguageAction(item));
@@ -51,6 +66,17 @@ const Language = ({navigation}) => {
       RNRestart.restart();
     }
   };
+
+  const [lang, setlang] = useState();
+
+  useEffect(() => {
+    const getLanguage = async () => {
+      const l = await getAsyncStorageData('language');
+      setlang(l);
+      setIsSelected(l === 'en' ? 'English' : 'العربية');
+    };
+    getLanguage();
+  }, []);
 
   const RenderData = ({item}) => {
     return (

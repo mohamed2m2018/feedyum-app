@@ -357,7 +357,7 @@ const Login = ({navigation}) => {
           <TouchableOpacity
             onPress={onPressGuest}
             style={localStyles.signUpContainer}>
-            <ZText type={'s12'} color={colors.grayScale5}>
+            <ZText type={'s14'} color={colors.iconColor}>
               {strings.continueGuest}
             </ZText>
           </TouchableOpacity>

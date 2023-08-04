@@ -372,7 +372,7 @@ const Register = ({navigation}) => {
             style={localStyles.signUpContainer}>
             <ZText type={'r14'}>{strings.AlreadyHaveAccount}</ZText>
             <ZText type={'s14'} color={colors.primary}>
-              {strings.signIn}
+              {'  ' + strings.signIn}
             </ZText>
           </TouchableOpacity>
         </View>

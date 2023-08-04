@@ -61,12 +61,12 @@ export default Setting = ({navigation}) => {
       value: 'English(US)',
       route: StackNav.Language,
     },
-    {
-      id: 6,
-      title: strings.darkMode,
-      icon: 'contrast-outline',
-      rightIcon: 'rightIcon',
-    },
+    // {
+    //   id: 6,
+    //   title: strings.darkMode,
+    //   icon: 'contrast-outline',
+    //   rightIcon: 'rightIcon',
+    // },
     // {
     //   id: 3,
     //   title: strings.reportProblem,
@@ -180,7 +180,7 @@ export default Setting = ({navigation}) => {
               <View style={localStyles.rightContainer}>
                 {!!item.value && (
                   <ZText type="s18" style={styles.mr10}>
-                    {language}
+                    {I18nManager.isRTL ? 'العربية' : 'English'}
                   </ZText>
                 )}
                 {!!item.rightIcon ? (

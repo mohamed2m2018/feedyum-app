@@ -298,4 +298,7 @@ export default {
   errorOccured: 'Sorry, an error has occured',
   descriptionTooShort: 'Description is too short!',
   pleaseFillAllInputs: 'Please fill all inputs',
+  dearGuest: 'Our Dear Guest',
+  pleaseSignUp: 'Please signup or login to be able to take all actions',
+  goToAuth: 'Go to Auth',
 };

@@ -202,7 +202,11 @@ export default function Search() {
               isFetchingNextPage={isFetchingNextPageUsers}
             />
             {isFetchingUser && !isFetchingNextPageUsers && (
-              <ActivityIndicator style={localStyles.loading} size={'large'} />
+              <ActivityIndicator
+                style={localStyles.loading}
+                size={'large'}
+                color={colors.primary}
+              />
             )}
           </>
         )}

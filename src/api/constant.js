@@ -267,20 +267,6 @@ const contactUsData = [
   },
 ];
 
-const languageData = [
-  {
-    title: strings.language,
-    data: [
-      {
-        lnName: 'English',
-      },
-      {
-        lnName: 'العربية',
-      },
-    ],
-  },
-];
-
 const reportData = [
   {
     lnName: 'Dangerous organizations/individuals',
@@ -1198,7 +1184,6 @@ export {
   helperCategoryData,
   helperData,
   contactUsData,
-  languageData,
   privacyPolicyData,
   editProfileData,
   headerCategoryData,
