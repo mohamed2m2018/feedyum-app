@@ -1,5 +1,6 @@
 import {Dimensions, Platform, StatusBar} from 'react-native';
 import DeviceInfo from 'react-native-device-info';
+import strings from '../i18n/strings';
 
 let iPhoneX = screenHeight === 812 ? true : false;
 
@@ -46,9 +47,9 @@ export const ACCESS_TOKEN = 'ACCESS_TOKEN';
 export const REGISTRATION_COMPLETED = 'REGISTRATION_COMPLETED';
 
 export const GenderData = [
-  {label: 'Male', value: 'male'},
-  {label: 'Female', value: 'female'},
-  {label: 'Other', value: 'other'},
+  {label: strings.male, value: 'male'},
+  {label: strings.female, value: 'female'},
+  {label: strings.other, value: 'other'},
 ];
 
 export function getVideoExtension(url) {
