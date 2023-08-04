@@ -54,13 +54,13 @@ export default Setting = ({navigation}) => {
     //   icon: 'scan-outline',
     //   route: StackNav.QrCode,
     // },
-    // {
-    //   id: 5,
-    //   title: strings.language,
-    //   icon: 'options-outline',
-    //   value: 'English(US)',
-    //   route: StackNav.Language,
-    // },
+    {
+      id: 5,
+      title: strings.language,
+      icon: 'options-outline',
+      value: 'English(US)',
+      route: StackNav.Language,
+    },
     {
       id: 6,
       title: strings.darkMode,

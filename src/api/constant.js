@@ -269,59 +269,13 @@ const contactUsData = [
 
 const languageData = [
   {
-    title: 'Suggested',
-    data: [{lnName: 'English(US)'}, {lnName: 'English(UK)'}],
-  },
-  {
-    title: 'Language',
+    title: strings.language,
     data: [
       {
         lnName: 'English',
       },
       {
-        lnName: 'Spanish',
-      },
-      {
-        lnName: 'French',
-      },
-      {
-        lnName: 'German',
-      },
-      {
-        lnName: 'Italian',
-      },
-      {
-        lnName: 'Portuguese',
-      },
-      {
-        lnName: 'Russian',
-      },
-      {
-        lnName: 'Turkish',
-      },
-      {
-        lnName: 'Chinese',
-      },
-      {
-        lnName: 'Japanese',
-      },
-      {
-        lnName: 'Korean',
-      },
-      {
-        lnName: 'Arabic',
-      },
-      {
-        lnName: 'Hindi',
-      },
-      {
-        lnName: 'Indonesian',
-      },
-      {
-        lnName: 'Malay',
-      },
-      {
-        lnName: 'Thai',
+        lnName: 'العربية',
       },
     ],
   },

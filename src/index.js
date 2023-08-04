@@ -19,6 +19,7 @@ import en from 'javascript-time-ago/locale/en';
 import ar from 'javascript-time-ago/locale/ar';
 import {BackgroundUploadProvider} from './providers/BackgroundUploadProvider';
 import firebase from '@react-native-firebase/app';
+import {getAsyncStorageData} from './utils/helpers';
 
 const firebaseConfig = {
   apiKey:
@@ -45,10 +46,12 @@ const App = () => {
 
   LogBox.ignoreAllLogs(true);
   useEffect(() => {
+    const handleLanguage = async () => {
+      const language = await getAsyncStorageData('language');
+      strings.setLanguage(language);
+    };
     handleRequestPermission();
-    I18nManager.allowRTL(true);
-    I18nManager.forceRTL(true);
-    strings.setLanguage('ar');
+    handleLanguage();
     try {
       firebase.initializeApp(firebaseConfig);
     } catch {}

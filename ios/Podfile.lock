@@ -441,6 +441,8 @@ PODS:
     - React (< 1.0.0, >= 0.13.0)
   - react-native-pager-view (6.2.0):
     - React-Core
+  - react-native-restart (0.0.27):
+    - React-Core
   - react-native-safe-area-context (4.5.3):
     - RCT-Folly
     - RCTRequired
@@ -658,6 +660,7 @@ DEPENDENCIES:
   - react-native-fast-video (from `../node_modules/react-native-fast-video`)
   - react-native-onesignal (from `../node_modules/react-native-onesignal`)
   - react-native-pager-view (from `../node_modules/react-native-pager-view`)
+  - react-native-restart (from `../node_modules/react-native-restart`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - "react-native-slider (from `../node_modules/@react-native-community/slider`)"
   - react-native-splash-screen (from `../node_modules/react-native-splash-screen`)
@@ -797,6 +800,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-onesignal"
   react-native-pager-view:
     :path: "../node_modules/react-native-pager-view"
+  react-native-restart:
+    :path: "../node_modules/react-native-restart"
   react-native-safe-area-context:
     :path: "../node_modules/react-native-safe-area-context"
   react-native-slider:
@@ -935,6 +940,7 @@ SPEC CHECKSUMS:
   react-native-fast-video: 2b3203e05780cbaf23694c64e0194ab66fb8825d
   react-native-onesignal: 7bd44dbd031d8d57110c0203836ffc37ddead526
   react-native-pager-view: 0ccb8bf60e2ebd38b1f3669fa3650ecce81db2df
+  react-native-restart: 7595693413fe3ca15893702f2c8306c62a708162
   react-native-safe-area-context: b8979f5eda6ed5903d4dbc885be3846ea3daa753
   react-native-slider: 33b8d190b59d4f67a541061bb91775d53d617d9d
   react-native-splash-screen: 4312f786b13a81b5169ef346d76d33bc0c6dc457

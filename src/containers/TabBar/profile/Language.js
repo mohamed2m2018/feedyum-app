@@ -1,9 +1,16 @@
+/* eslint-disable react/no-unstable-nested-components */
 // Library import
-import {SectionList, StyleSheet, TouchableOpacity, View} from 'react-native';
+import {
+  I18nManager,
+  SectionList,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import React from 'react';
 import {useDispatch, useSelector} from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-
+import RNRestart from 'react-native-restart';
 // Local import
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
 import ZHeader from '../../../components/common/ZHeader';
@@ -13,6 +20,7 @@ import {styles} from '../../../themes';
 import {moderateScale} from '../../../common/constants';
 import {changeLanguageAction} from '../../../redux/action/profileAction';
 import {languageData} from '../../../api/constant';
+import {setAsyncStorageData} from '../../../utils/helpers';
 
 const Language = ({navigation}) => {
   const colors = useSelector(state => state.theme.theme);
@@ -28,9 +36,20 @@ const Language = ({navigation}) => {
     );
   };
 
-  const onPressItem = item => {
+  const onPressItem = async item => {
     dispatch(changeLanguageAction(item));
     setIsSelected(item);
+    if (item === 'English') {
+      await setAsyncStorageData('language', 'en');
+      await I18nManager.allowRTL(false);
+      await I18nManager.forceRTL(false);
+      RNRestart.restart();
+    } else {
+      await setAsyncStorageData('language', 'ar');
+      I18nManager.allowRTL(true);
+      I18nManager.forceRTL(true);
+      RNRestart.restart();
+    }
   };
 
   const RenderData = ({item}) => {
