@@ -76,15 +76,6 @@ const ReelComponent = ({
   const [durationInSeconds, setDurationInSeconds] = useState(0); // Added state for durationInSeconds
 
   const [paused, setpaused] = useState(false);
-  const onBuffer = ({isBuffering: Buffering}) => {
-    if (Buffering) {
-      // Show buffering indicator or perform other actions
-      setIsBuffering(true);
-    } else {
-      // Buffering completed or resumed
-      setIsBuffering(false);
-    }
-  };
 
   const generateDynamicLink = async postItem => {
     const link = await dynamicLinks().buildShortLink(
@@ -105,7 +96,6 @@ const ReelComponent = ({
       dynamicLinks.ShortLinkType.UNGUESSABLE,
     );
 
-    console.log('Generated dynamic link:', decodeURIComponent(link));
     return decodeURIComponent(link);
     // You can use this 'link' to share with users, send in emails, or use it to navigate users to the post directly.
   };
@@ -144,7 +134,12 @@ const ReelComponent = ({
 
   const duration = item?.duration?.split(' ');
 
-  const debouncedOnProgress = ({currentTime}) => {
+  const debouncedOnProgress = ({currentTime, playableDuration}) => {
+    if (playableDuration !== 0 && playableDuration < currentTime) {
+      setIsBuffering(true);
+    } else {
+      setIsBuffering(false);
+    }
     if (!paused) {
       setSeekValue(currentTime);
     } else {
@@ -200,13 +195,19 @@ const ReelComponent = ({
                 uri: item?.uri,
               }}
               ref={videoRef}
-              onLoad={({duration}) => setDurationInSeconds(duration)}
+              onLoad={({duration}) => {
+                setDurationInSeconds(duration);
+              }}
+              onLoadStart={() => {
+                setIsBuffering(true);
+              }}
               onEnd={() => {
                 if (activeVideoIndex === index) {
                   flatListRef.current.scrollToIndex({
                     animated: true,
                     index: index + 1,
                   });
+                  videoRef.current.seek(0);
                 }
               }}
               style={[
@@ -217,11 +218,9 @@ const ReelComponent = ({
                 },
               ]}
               onProgress={debouncedOnProgress}
-              onBuffer={onBuffer}
               poster={item?.avatarUri || item?.poster}
               posterResizeMode="cover"
               resizeMode="cover"
-              repeat={true}
               navigstor={navigation}
               onError={videoError}
               seekColor={colors.primary}

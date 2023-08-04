@@ -74,7 +74,7 @@ const ForYouList = ({
             </ZText>
           )
         }
-        estimatedItemSize={layoutHeight}
+        estimatedItemSize={11}
         ref={flatListRef}
         onEndReachedThreshold={0.9}
         onEndReached={hasNextPage ? fetchNextPage : null}

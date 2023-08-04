@@ -406,6 +406,7 @@ export default function ReelsComponent() {
     pausedVideosForYou,
     notificationReceived,
     filteredData.current,
+    layoutHeight,
     filteredDataFollowing.current,
   ]);
 
@@ -600,47 +601,51 @@ export default function ReelsComponent() {
     switch (route.key) {
       case 'following':
         return (
-          <FollowingList
-            isLoadingFollowing={isLoadingFollowing}
-            isFetchingFollowing={isFetchingFollowing}
-            isRefetchingFollowing={isRefetchingFollowing}
-            filteredDataFollowing={filteredDataFollowing}
-            layoutHeight={layoutHeight}
-            isFetchingNextPageFollowing={isFetchingNextPageFollowing}
-            fetchNextPageFollowing={fetchNextPageFollowing}
-            flatListRefFollowing={flatListRefFollowing}
-            extraData={extraData}
-            viewableItemsChanged={viewableItemsChangedFollowing}
-            keyExtractor={keyExtractor}
-            renderReelComponent={renderReelComponentFollowing}
-            onSetLayout={onSetLayout}
-            viewConfig={viewConfig}
-            hasNextPageFollowin={hasNextPageFollowin}
-          />
+          <View style={{flex: 1}}>
+            <FollowingList
+              isLoadingFollowing={isLoadingFollowing}
+              isFetchingFollowing={isFetchingFollowing}
+              isRefetchingFollowing={isRefetchingFollowing}
+              filteredDataFollowing={filteredDataFollowing}
+              layoutHeight={layoutHeight}
+              isFetchingNextPageFollowing={isFetchingNextPageFollowing}
+              fetchNextPageFollowing={fetchNextPageFollowing}
+              flatListRefFollowing={flatListRefFollowing}
+              extraData={extraData}
+              viewableItemsChanged={viewableItemsChangedFollowing}
+              keyExtractor={keyExtractor}
+              renderReelComponent={renderReelComponentFollowing}
+              onSetLayout={onSetLayout}
+              viewConfig={viewConfig}
+              hasNextPageFollowin={hasNextPageFollowin}
+            />
+          </View>
         );
       case 'forYou':
         return (
-          <ForYouList
-            isLoadingStory={isLoadingStory}
-            isFetchingStory={isFetchingStory}
-            isRefetchingStory={isRefetchingStory}
-            filteredData={filteredData}
-            isFetched={isFetched}
-            isLoading={isLoading}
-            isFetching={isFetching}
-            layoutHeight={layoutHeight}
-            isFetchingNextPage={isFetchingNextPage}
-            fetchNextPage={fetchNextPage}
-            flatListRef={flatListRef}
-            data={data}
-            extraData={extraData}
-            viewableItemsChanged={viewableItemsChangedForYou}
-            keyExtractor={keyExtractor}
-            renderReelComponent={renderReelComponentForYou}
-            onSetLayout={onSetLayout}
-            viewConfig={viewConfig}
-            hasNextPage={hasNextPage}
-          />
+          <View style={{flex: 1}}>
+            <ForYouList
+              isLoadingStory={isLoadingStory}
+              isFetchingStory={isFetchingStory}
+              isRefetchingStory={isRefetchingStory}
+              filteredData={filteredData}
+              isFetched={isFetched}
+              isLoading={isLoading}
+              isFetching={isFetching}
+              layoutHeight={layoutHeight}
+              isFetchingNextPage={isFetchingNextPage}
+              fetchNextPage={fetchNextPage}
+              flatListRef={flatListRef}
+              data={data}
+              extraData={extraData}
+              viewableItemsChanged={viewableItemsChangedForYou}
+              keyExtractor={keyExtractor}
+              renderReelComponent={renderReelComponentForYou}
+              onSetLayout={onSetLayout}
+              viewConfig={viewConfig}
+              hasNextPage={hasNextPage}
+            />
+          </View>
         );
       default:
         return <Spinner visible={true} color={colors.primary} />;
