@@ -1,5 +1,6 @@
+/* eslint-disable react/no-unstable-nested-components */
 // Library Imports
-import { StyleSheet, View} from 'react-native';
+import {StyleSheet, View} from 'react-native';
 import Image from 'react-native-fast-image';
 import React from 'react';
 import Swiper from 'react-native-swiper';
@@ -17,6 +18,7 @@ import {
 import {StackNav} from '../navigation/NavigationKeys';
 import {setAsyncStorageData} from '../utils/helpers';
 import ZButton from '../components/common/ZButton';
+import strings from '../i18n/strings';
 
 const OnBoarding = ({navigation}) => {
   const colors = useSelector(state => state.theme.theme);
@@ -24,26 +26,26 @@ const OnBoarding = ({navigation}) => {
   const OnBoardingData = {
     tutorialText1: {
       id: 1,
-      title: 'Follow the best Egyptian cookers in the food market',
+      title: strings.followTheBest,
       image: images.onBoardingLight1,
-      desc: 'The best collection of food makers, and dishes',
-      btnTitle: 'Next',
+      desc: strings.bestCollection,
+      btnTitle: strings.next,
       onPress: () => onPressNext(),
     },
     tutorialText2: {
       id: 2,
-      title: 'Wide Variety of Dishes, which you will be able to buy',
-      desc: 'With the best prices ever!',
+      title: strings.wideVariety,
+      desc: strings.withBestPrices,
       image: images.onBoardingLight2,
-      btnTitle: 'Next',
+      btnTitle: strings.next,
       onPress: () => onPressNext(),
     },
     tutorialText3: {
       id: 3,
-      title: "If you are a cooker show us what you can make!",
-      desc: 'We take 0% from you. Free and will remain free',
+      title: strings.showUs,
+      desc: strings.zeroFee,
       image: images.onBoardingLight3,
-      btnTitle: 'Get Started',
+      btnTitle: strings.next,
       onPress: () => onPressGetStarted(),
     },
   };
@@ -55,7 +57,11 @@ const OnBoarding = ({navigation}) => {
           localStyles.tutorialContainer,
           {backgroundColor: colors.backgroundColor},
         ]}>
-        <Image resizeMode='contain' source={bgImage.image} style={localStyles.tutorialImage} />
+        <Image
+          resizeMode="contain"
+          source={bgImage.image}
+          style={localStyles.tutorialImage}
+        />
         <View style={localStyles.headerContainer}>
           <ZText type={'b36'} align={'center'}>
             {header.title}

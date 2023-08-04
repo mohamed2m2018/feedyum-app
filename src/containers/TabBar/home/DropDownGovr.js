@@ -1,6 +1,6 @@
 import React from 'react';
 import {SelectList} from 'react-native-dropdown-select-list';
-import {StyleSheet, View} from 'react-native';
+import {I18nManager, StyleSheet, View} from 'react-native';
 import {useSelector} from 'react-redux';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import strings from '../../../i18n/strings';
@@ -40,6 +40,36 @@ export const governorates = [
   {key: '25', value: 'Sohag', arabicValue: 'سوهاج'},
   {key: '26', value: 'South Sinai (Janub Sina)', arabicValue: 'جنوب سيناء'},
   {key: '27', value: 'Suez', arabicValue: 'السويس'},
+];
+
+const arabicGovernorates = [
+  {key: '1', value: 'الإسكندرية'},
+  {key: '2', value: 'أسوان'},
+  {key: '3', value: 'أسيوط'},
+  {key: '4', value: 'البحيرة'},
+  {key: '5', value: 'بني سويف'},
+  {key: '6', value: 'القاهرة'},
+  {key: '7', value: 'الدقهلية'},
+  {key: '8', value: 'دمياط'},
+  {key: '9', value: 'الفيوم'},
+  {key: '10', value: 'الغربية'},
+  {key: '11', value: 'الجيزة'},
+  {key: '12', value: 'الإسماعيلية'},
+  {key: '13', value: 'كفر الشيخ'},
+  {key: '14', value: 'الأقصر'},
+  {key: '15', value: 'مطروح'},
+  {key: '16', value: 'المنيا'},
+  {key: '17', value: 'المنوفية'},
+  {key: '18', value: 'الوادي الجديد'},
+  {key: '19', value: 'شمال سيناء'},
+  {key: '20', value: 'بورسعيد'},
+  {key: '21', value: 'القليوبية'},
+  {key: '22', value: 'قنا'},
+  {key: '23', value: 'البحر الأحمر'},
+  {key: '24', value: 'الشرقية'},
+  {key: '25', value: 'سوهاج'},
+  {key: '26', value: 'جنوب سيناء'},
+  {key: '27', value: 'السويس'},
 ];
 
 const DropdownGovr = ({postedData, setpostedData}) => {
@@ -255,9 +285,12 @@ const DropdownGovr = ({postedData, setpostedData}) => {
 
   const handleGovernoratesSelection = values => {
     if (isNaN(values)) {
+      const value = I18nManager.isRTL
+        ? governorates.find(element => element.arabicValue === values).value
+        : values;
       setpostedData(currentState => ({
         ...currentState,
-        governorate: values,
+        governorate: value,
         areas: [],
       }));
     }
@@ -274,7 +307,7 @@ const DropdownGovr = ({postedData, setpostedData}) => {
     <View>
       <SelectList
         setSelected={handleGovernoratesSelection}
-        data={governorates || []}
+        data={I18nManager.isRTL ? arabicGovernorates : governorates || []}
         save="value"
         placeholder={strings.selectGov}
         boxStyles={styles.selectBox}

@@ -301,4 +301,11 @@ export default {
   dearGuest: 'Our Dear Guest',
   pleaseSignUp: 'Please signup or login to be able to take all actions',
   goToAuth: 'Go to Auth',
+  followTheBest: 'Follow the best Egyptian cookers in the food market',
+  bestCollection: 'The best collection of food makers, and dishes',
+  wideVariety: 'Wide Variety of Dishes, which you will be able to buy',
+  withBestPrices: 'With the best prices ever!',
+  showUs: 'If you are a cooker show us what you can make!',
+  zeroFee: 'We take 0% from you. Free and will remain free',
+  next: 'Next',
 };

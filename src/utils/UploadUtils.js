@@ -3,8 +3,6 @@ import {createThumbnail} from 'react-native-create-thumbnail';
 import RNFS from 'react-native-fs';
 
 export const convertVideoToMP4 = async inputPath => {
-  console.log('the input path is ', inputPath);
-
   const outputFile = `${RNFS.CachesDirectoryPath}/output.mp4`;
 
   await FFmpegKit.execute(

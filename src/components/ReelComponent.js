@@ -143,12 +143,7 @@ export default function ReelComponent({
           />
         </TouchableOpacity>
       )}
-      <View
-        style={{
-          justifyContent: 'center',
-          alignItems: 'center',
-          marginVertical: 7,
-        }}>
+      <View style={styles.textContainer}>
         <ZText style={[localStyles.titleText, {color: colors.textColor}]}>
           {item?.title}
         </ZText>
@@ -165,6 +160,11 @@ export default function ReelComponent({
 const localStyles = StyleSheet.create({
   postContainer: {
     width: '33%',
+  },
+  textContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginVertical: 7,
   },
   postImgStyle: {
     ...styles.mt5,

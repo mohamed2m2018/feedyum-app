@@ -208,10 +208,6 @@ export function BackgroundUploadProvider({children}) {
         fileInfoVideo = await BackgroundUpload.getFileInfo(mp4Path);
       }
       const fileInfoImage = await BackgroundUpload.getFileInfo(poster);
-      const fileInfo2 = await BackgroundUpload.getFileInfo(response.path);
-
-      console.log('fff ', fileInfoVideo, fileInfo2);
-
       let secureUrlImage = '';
       const optionsImage = {
         type: 'multipart',
@@ -240,12 +236,8 @@ export function BackgroundUploadProvider({children}) {
 
       BackgroundUpload.startUpload(optionsImage)
         .then(uploadId => {
-          console.log(strings.uploadStarted);
           setImageId(uploadId);
           BackgroundUpload.addListener('progress', uploadId, data => {
-            console.log(
-              `${strings.progress} ${Number(data.progress)?.toFixed()}%`,
-            );
             settoastTitle(
               `${strings.uploadingMedia} ${Number(
                 data.progress,
@@ -311,10 +303,8 @@ export function BackgroundUploadProvider({children}) {
         };
         BackgroundUpload.startUpload(optionsVideo)
           .then(async uploadId => {
-            console.log(strings.uploadStarted);
             setVideoId(uploadId);
             BackgroundUpload.addListener('progress', uploadId, data => {
-              console.log(`${strings.progress} ${data.progress}%`);
               settoastTitle(
                 `${strings.uploadingMedia} ${Number(
                   data.progress,
@@ -329,7 +319,6 @@ export function BackgroundUploadProvider({children}) {
             });
             BackgroundUpload.addListener('completed', uploadId, data => {
               // data includes responseCode: number and responseBody: Object
-              console.log('Completed!', data);
               const startTag = '<Location>';
               const endTag = '</Location>';
               const startIndex =
