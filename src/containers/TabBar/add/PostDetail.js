@@ -34,14 +34,13 @@ import DropdownGovr from '../home/DropDownGovr';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import {Dropdown} from 'react-native-element-dropdown';
 import {useBackgroundUpload} from '../../../providers/BackgroundUploadProvider';
-import {string} from 'i/lib/util';
-
-const Duration = [
-  {label: strings.hours, value: 'Hours'},
-  {label: strings.days, value: 'Days'},
-];
 
 export default function PostDetail() {
+  const Duration = [
+    {label: strings.hours, value: 'Hours'},
+    {label: strings.days, value: 'Days'},
+  ];
+
   const colors = useSelector(state => state.theme.theme);
   const navigation = useNavigation();
   const [postedData, setpostedData] = useState({});
@@ -73,7 +72,7 @@ export default function PostDetail() {
         isEdit: true,
         mediaIsEdited,
       });
-      setToggleStatus(postDataToBeEdited.duration?.split(' ')?.[1] || 'hours');
+      setToggleStatus(postDataToBeEdited.duration?.split(' ')?.[1] || 'Hours');
       setlocalUri(
         postDataToBeEdited?.poster || postDataToBeEdited?.avatarUri || '',
       );
@@ -437,7 +436,7 @@ export default function PostDetail() {
         <View style={localStyles.btnContainer}>
           {localUri !== '' ? (
             <ZButton
-              title={postDataToBeEdited ? 'Edit' : strings.post}
+              title={postDataToBeEdited ? strings.Edit : strings.doPost}
               textType={'b18'}
               disabled={isPhotoUploading}
               isLoading={isPhotoUploading}

@@ -168,7 +168,7 @@ export default {
   live: 'Live',
   choose: 'Add New Dish',
   chooseUser: 'Add New Dish Review',
-  post: 'Post',
+  doPost: 'Post',
   checkLocations: 'Click to check Delivery Locations',
   selectCover: 'Select Cover',
   mention: 'Mention',
