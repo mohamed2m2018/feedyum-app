@@ -48,7 +48,7 @@ const App = () => {
   useEffect(() => {
     const handleLanguage = async () => {
       const language = await getAsyncStorageData('language');
-      strings.setLanguage(language);
+      strings.setLanguage(language || 'en');
     };
     handleRequestPermission();
     handleLanguage();
