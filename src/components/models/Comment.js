@@ -1,5 +1,11 @@
 // Library import
-import {Keyboard, StyleSheet, TouchableOpacity, View} from 'react-native';
+import {
+  I18nManager,
+  Keyboard,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import React, {useRef, useState} from 'react';
 import ActionSheet from 'react-native-actions-sheet';
 import {useSelector} from 'react-redux';
@@ -288,6 +294,7 @@ export default function Comment({SheetRef, postId}) {
           <Feather
             name={'send'}
             size={moderateScale(24)}
+            style={{...(I18nManager.isRTL && {transform: [{scaleX: -1}]})}}
             color={colors.white}
           />
         </TouchableOpacity>
