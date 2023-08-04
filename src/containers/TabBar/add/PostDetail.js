@@ -34,10 +34,11 @@ import DropdownGovr from '../home/DropDownGovr';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import {Dropdown} from 'react-native-element-dropdown';
 import {useBackgroundUpload} from '../../../providers/BackgroundUploadProvider';
+import {string} from 'i/lib/util';
 
 const Duration = [
-  {label: 'Hours', value: 'Hours'},
-  {label: 'Days', value: 'Days'},
+  {label: strings.hours, value: 'Hours'},
+  {label: strings.days, value: 'Days'},
 ];
 
 export default function PostDetail() {
@@ -83,8 +84,8 @@ export default function PostDetail() {
     onError: err => {
       Toast.show({
         type: ALERT_TYPE.DANGER,
-        title: 'Error',
-        textBody: err[Object.keys(err)?.[0]] || 'Sorry, an error has occured',
+        title: strings.error,
+        textBody: err[Object.keys(err)?.[0]] || strings.errorOccured,
       });
     },
   });
@@ -120,16 +121,16 @@ export default function PostDetail() {
     if (validation) {
       Toast.show({
         type: ALERT_TYPE.DANGER,
-        title: 'Error',
-        textBody: 'Please fill all inputs',
+        title: strings.error,
+        textBody: strings.pleaseFillAllInputs,
       });
       return;
     }
     if (postedData.caption?.length < 5) {
       Toast.show({
         type: ALERT_TYPE.DANGER,
-        title: 'Error',
-        textBody: 'Description is too short!',
+        title: strings.error,
+        textBody: strings.descriptionTooShort,
       });
       return;
     }
@@ -151,7 +152,7 @@ export default function PostDetail() {
     setisFormFilled(true);
 
     setTimeout(() => {
-      navigation.navigate(TabNav.Profile);
+      navigation.navigate(TabNav.Home);
     }, 100);
   };
 
@@ -215,7 +216,11 @@ export default function PostDetail() {
               postedData.uri = '';
             }}>
             {isPhotoUploading ? (
-              <ActivityIndicator style={{marginBottom: 15}} size={'large'} />
+              <ActivityIndicator
+                color={colors.primary}
+                style={{marginBottom: 15}}
+                size={'large'}
+              />
             ) : (
               <Image
                 source={
@@ -319,7 +324,9 @@ export default function PostDetail() {
                 />
                 <View style={{flexDirection: 'row', alignItems: 'center'}}>
                   <TextInput
-                    placeholder={`No of ${toggleStatus} to deliver this order`}
+                    placeholder={`${strings.no} ${
+                      toggleStatus === 'Hours' ? strings.hours : strings.days
+                    } ${strings.toDeliver}`}
                     textAlign={I18nManager.isRTL ? 'right' : 'left'}
                     value={`${postedData?.duration?.split?.(' ')?.[0] || ''}`}
                     multiline={true}

@@ -51,6 +51,8 @@ import {TabBar, TabView} from 'react-native-tab-view';
 import FollowingList from './FollowingList';
 import ForYouList from './ForYouList';
 import {AdView} from './ads/AdView';
+import Spinner from 'react-native-loading-spinner-overlay/lib';
+import {string} from 'i/lib/util';
 
 const HeaderCategoryItem = React.memo(({title, onPress, category}) => {
   const colors = useSelector(state => state.theme.theme);
@@ -221,8 +223,10 @@ export default function ReelsComponent() {
         const notification = await notifReceivedEvent.getNotification();
         Toast.show({
           type: ALERT_TYPE.SUCCESS,
-          title: 'Notification',
-          textBody: notification.body,
+          title: strings.notification,
+          textBody: notification.body
+            ?.replace('got a comment', strings.gotAcomment)
+            ?.replace('got a like', strings.gotALike),
           onPress: () => {
             navigation.navigate(TabNav.Home);
 
@@ -245,8 +249,10 @@ export default function ReelsComponent() {
 
         Toast.show({
           type: ALERT_TYPE.SUCCESS,
-          title: 'Notification',
-          textBody: notification.body,
+          title: strings.notification,
+          textBody: notification.body
+            ?.replace('got a comment', strings.gotAcomment)
+            ?.replace('got a like', strings.gotALike),
           onPress: () => {
             navigation.navigate(TabNav.Home);
 
@@ -292,6 +298,7 @@ export default function ReelsComponent() {
     isFetchingNextPage,
     isLoading,
     isFetching,
+    isFetched,
   } = useInfiniteQuery(
     ['stories', data?.data?.user?._id],
     ({pageParam = 1}) => fetchReels(pageParam),
@@ -618,6 +625,7 @@ export default function ReelsComponent() {
             isFetchingStory={isFetchingStory}
             isRefetchingStory={isRefetchingStory}
             filteredData={filteredData}
+            isFetched={isFetched}
             isLoading={isLoading}
             isFetching={isFetching}
             layoutHeight={layoutHeight}
@@ -635,7 +643,7 @@ export default function ReelsComponent() {
           />
         );
       default:
-        return null;
+        return <Spinner visible={true} color={colors.primary} />;
     }
   };
 

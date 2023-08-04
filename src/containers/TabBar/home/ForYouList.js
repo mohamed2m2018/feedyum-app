@@ -26,6 +26,7 @@ const ForYouList = ({
   onSetLayout,
   viewConfig,
   hasNextPage,
+  isFetched,
 }) => {
   const queryClient = useQueryClient();
   const colors = useSelector(state => state.theme.theme);
@@ -34,13 +35,20 @@ const ForYouList = ({
     <>
       <Spinner
         size={'large'}
-        visible={isLoadingStory || isFetchingStory || isRefetchingStory}
+        color={colors.primary}
+        visible={
+          isLoadingStory ||
+          isFetchingStory ||
+          isRefetchingStory ||
+          (!isFetched && !data) ||
+          !data?.data?.user?._id
+        }
       />
       <FlashList
         data={filteredData.current}
         refreshControl={
           <RefreshControl
-            refreshing={isLoading || isFetching}
+            refreshing={isFetching && !isLoading}
             tintColor={colors.primary}
             onRefresh={() => {
               queryClient.invalidateQueries({queryKey: 'stories'});
@@ -71,7 +79,9 @@ const ForYouList = ({
         onEndReachedThreshold={0.9}
         onEndReached={hasNextPage ? fetchNextPage : null}
         ListFooterComponent={
-          isFetchingNextPage && <ActivityIndicator size={'large'} />
+          isFetchingNextPage && (
+            <ActivityIndicator color={colors.primary} size={'large'} />
+          )
         }
       />
     </>

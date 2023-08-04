@@ -2,7 +2,6 @@
 import {StyleSheet, TouchableOpacity, View} from 'react-native';
 import React, {useState} from 'react';
 import {useSelector} from 'react-redux';
-import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useInfiniteQuery} from 'react-query';
 
 // Local import
@@ -16,6 +15,7 @@ import {TabView} from 'react-native-tab-view';
 import Following from './Following';
 import Follower from './Follower';
 import request from '../../../../api/request';
+import Spinner from 'react-native-loading-spinner-overlay/lib';
 
 export default function UserNetwork({navigation, route}) {
   const colors = useSelector(state => state.theme.theme);
@@ -26,6 +26,7 @@ export default function UserNetwork({navigation, route}) {
       {key: 'second', title: strings.followers},
     ],
   });
+  const [isFetching, setisFetching] = useState();
 
   const _handleIndexChange = index => {
     setIsSelect({...isSelect, index: index});
@@ -64,7 +65,6 @@ export default function UserNetwork({navigation, route}) {
     );
   };
 
-
   const fetchFollowingData = async ({pageParam = 1}) => {
     // Implement logic to fetch following data for the current user
     const response = await request.get(
@@ -94,6 +94,9 @@ export default function UserNetwork({navigation, route}) {
       },
       cacheTime: 0,
       select: res => res?.pages.flatMap(page => page.following),
+      onSuccess: () => {
+        setisFetching(false);
+      },
     },
   );
 
@@ -110,6 +113,9 @@ export default function UserNetwork({navigation, route}) {
       },
       cacheTime: 0,
       select: res => res?.pages.flatMap(page => page.followers),
+      onSuccess: () => {
+        setisFetching(false);
+      },
     },
   );
 
@@ -120,6 +126,7 @@ export default function UserNetwork({navigation, route}) {
           fetchNextPage={followingQuery.fetchNextPage}
           hasNextPage={followingQuery.hasNextPage}
           followingData={followingQuery.data}
+          setisFetching={setisFetching}
           loading={
             followingQuery.isLoading ||
             (followingQuery.isFetching && !followingQuery.isFetchingNextPage)
@@ -133,6 +140,7 @@ export default function UserNetwork({navigation, route}) {
           fetchNextPage={followerQuery.fetchNextPage}
           hasNextPage={followerQuery.hasNextPage}
           followingData={followerQuery.data}
+          setisFetching={setisFetching}
           loading={
             followerQuery.isLoading ||
             (followerQuery.isFetching && !followerQuery.isFetchingNextPage)
@@ -140,18 +148,6 @@ export default function UserNetwork({navigation, route}) {
         />
       );
     }
-  };
-
-  const RightIcon = () => {
-    return (
-      <TouchableOpacity>
-        <Ionicons
-          name="search-outline"
-          size={moderateScale(26)}
-          color={colors.textColor}
-        />
-      </TouchableOpacity>
-    );
   };
 
   return (
@@ -165,6 +161,7 @@ export default function UserNetwork({navigation, route}) {
         activeColor={{color: colors.primary}}
         navigation={navigation}
       />
+      <Spinner color={colors.primary} visible={isFetching} />
     </ZSafeAreaView>
   );
 }

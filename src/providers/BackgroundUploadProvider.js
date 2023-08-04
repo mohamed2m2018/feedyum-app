@@ -6,6 +6,8 @@ import {ALERT_TYPE, Dialog, Toast} from 'react-native-alert-notification';
 import {useMutation, useQueryClient} from 'react-query';
 import request from '../api/request';
 import {Platform} from 'react-native';
+import strings from '../i18n/strings';
+
 const BackgroundUploadContext = createContext();
 
 export function useBackgroundUpload() {
@@ -20,7 +22,8 @@ export function BackgroundUploadProvider({children}) {
   const [imageId, setImageId] = useState();
   const [videoId, setVideoId] = useState();
 
-  const [toastTitle, settoastTitle] = useState('We are uploading your file');
+  const [toastTitle, settoastTitle] = useState(strings.uploadingFile);
+
   function generateUniqueFileName() {
     const timestamp = new Date().getTime(); // Get current timestamp
     const randomString = Math.random().toString(36).substring(7); // Generate a random string
@@ -58,7 +61,7 @@ export function BackgroundUploadProvider({children}) {
   useEffect(() => {
     if (isFormFilled) {
       Toast.show({
-        title: dataToBeSent?.isEdit ? 'Editing Post...' : 'Adding Post..',
+        title: dataToBeSent?.isEdit ? strings.editingPost : strings.addingPost,
         textBody: toastTitle,
         autoClose: false,
         type: ALERT_TYPE.SUCCESS,
@@ -87,7 +90,7 @@ export function BackgroundUploadProvider({children}) {
 
   const handleCreateOrder = data => {
     if (isFormFilled) {
-      settoastTitle('Finalizing your request..');
+      settoastTitle(strings.processingThumbnail);
 
       mutate(data, {
         onSuccess: async () => {
@@ -98,7 +101,7 @@ export function BackgroundUploadProvider({children}) {
           await queryClient.invalidateQueries({queryKey: 'user'});
           setisFormFilled(false);
           setDataToBeSent({});
-          settoastTitle('Congratulations, your post is published!');
+          settoastTitle(strings.congratulations);
           setTimeout(() => {
             Toast.hide();
             settoastTitle('');
@@ -109,7 +112,7 @@ export function BackgroundUploadProvider({children}) {
           setisFormFilled(false);
           Toast.show({
             type: ALERT_TYPE.DANGER,
-            title: 'Error happened! please upload again',
+            title: strings.uploadError,
             textBody: err[Object.keys(err)?.[0]],
           });
         },
@@ -141,7 +144,7 @@ export function BackgroundUploadProvider({children}) {
       .catch(err =>
         Toast.show({
           type: ALERT_TYPE.DANGER,
-          title: 'Error',
+          title: strings.error,
           textBody: err[Object.keys(err)?.[0]],
         }),
       );
@@ -155,7 +158,7 @@ export function BackgroundUploadProvider({children}) {
   ) => {
     if (isFormFilled) {
       Toast.show({
-        textBody: 'Please wait until we finish uploading your first post',
+        textBody: strings.pleaseWait,
         type: ALERT_TYPE.WARNING,
       });
       setlocalUri('');
@@ -192,7 +195,7 @@ export function BackgroundUploadProvider({children}) {
       let fileInfoVideo = {};
       let mp4Path = {};
       if (!isImage) {
-        settoastTitle('Processing Thumbnail please wait..');
+        settoastTitle(strings.processingThumbnail);
         mp4Path = await convertVideoToMP4(response.path);
         mp4Path =
           Platform.OS === 'ios'
@@ -207,7 +210,7 @@ export function BackgroundUploadProvider({children}) {
       const fileInfoImage = await BackgroundUpload.getFileInfo(poster);
       const fileInfo2 = await BackgroundUpload.getFileInfo(response.path);
 
-      console.log('fff ', fileInfoVideo, fileInfo2)
+      console.log('fff ', fileInfoVideo, fileInfo2);
 
       let secureUrlImage = '';
       const optionsImage = {
@@ -237,16 +240,20 @@ export function BackgroundUploadProvider({children}) {
 
       BackgroundUpload.startUpload(optionsImage)
         .then(uploadId => {
-          console.log('Upload started');
+          console.log(strings.uploadStarted);
           setImageId(uploadId);
           BackgroundUpload.addListener('progress', uploadId, data => {
-            console.log(`Progress: ${Number(data.progress)?.toFixed()}%`);
+            console.log(
+              `${strings.progress} ${Number(data.progress)?.toFixed()}%`,
+            );
             settoastTitle(
-              `Processing Thumbnail ${Number(data.progress)?.toFixed()}%..`,
+              `${strings.uploadingMedia} ${Number(
+                data.progress,
+              )?.toFixed()}%..`,
             );
           });
           BackgroundUpload.addListener('error', uploadId, data => {
-            console.log(`Error: ${data.error}%`);
+            console.log(`${strings.uploadError} ${data.error}%`);
           });
           BackgroundUpload.addListener('cancelled', uploadId, data => {
             console.log('Cancelled!', data);
@@ -275,7 +282,7 @@ export function BackgroundUploadProvider({children}) {
           });
         })
         .catch(err => {
-          console.log('Upload error!', err);
+          console.log(`${strings.uploadError} ${err}`);
         });
       if (!isImage) {
         const optionsVideo = {
@@ -304,16 +311,18 @@ export function BackgroundUploadProvider({children}) {
         };
         BackgroundUpload.startUpload(optionsVideo)
           .then(async uploadId => {
-            console.log('Upload started');
+            console.log(strings.uploadStarted);
             setVideoId(uploadId);
             BackgroundUpload.addListener('progress', uploadId, data => {
-              console.log(`Progress: ${data.progress}%`);
+              console.log(`${strings.progress} ${data.progress}%`);
               settoastTitle(
-                `uploading media ${Number(data.progress)?.toFixed()}%..`,
+                `${strings.uploadingMedia} ${Number(
+                  data.progress,
+                )?.toFixed()}%..`,
               );
             });
             BackgroundUpload.addListener('error', uploadId, data => {
-              console.log(`Error: ${data.error}%`);
+              console.log(`${strings.uploadError} ${data.error}%`);
             });
             BackgroundUpload.addListener('cancelled', uploadId, data => {
               console.log('Cancelled!', data);
@@ -340,7 +349,7 @@ export function BackgroundUploadProvider({children}) {
             });
           })
           .catch(err => {
-            console.log('Upload error!', err);
+            console.log(`${strings.uploadError} ${err}`);
           });
       }
 
@@ -348,12 +357,12 @@ export function BackgroundUploadProvider({children}) {
     } catch (err) {
       // Show error message
       Toast.show({
-        message: 'Upload failed',
+        message: strings.uploadFailed,
         type: 'danger',
         duration: 3000,
         hideOnPress: true,
       });
-      console.log('error ', err);
+      console.log(`${strings.uploadError} ${err}`);
     }
   };
 

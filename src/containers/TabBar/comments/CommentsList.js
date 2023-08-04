@@ -123,7 +123,9 @@ const CommentsList = props => {
         onEndReachedThreshold={0.9}
         onEndReached={handleLoadMore}
         ListFooterComponent={
-          props.isFetchingNextPage && <ActivityIndicator size="large" />
+          props.isFetchingNextPage && (
+            <ActivityIndicator size="large" color={colors.primary} />
+          )
         }
         ref={flatlistRef}
         onScrollToIndexFailed={() => {

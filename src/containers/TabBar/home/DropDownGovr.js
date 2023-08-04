@@ -255,7 +255,6 @@ const DropdownGovr = ({postedData, setpostedData}) => {
 
   const handleGovernoratesSelection = values => {
     if (isNaN(values)) {
-      console.log('inside setposted data ', values);
       setpostedData(currentState => ({
         ...currentState,
         governorate: values,

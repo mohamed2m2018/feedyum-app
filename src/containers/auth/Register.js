@@ -126,7 +126,7 @@ const Register = ({navigation}) => {
       .catch(err => {
         Toast.show({
           type: ALERT_TYPE.DANGER,
-          title: 'Error',
+          title: strings.error,
           textBody: err[Object.keys(err)?.[0]],
         });
       });

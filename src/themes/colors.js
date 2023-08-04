@@ -33,7 +33,7 @@ export const commonColor = {
   grayScale1: '#F5F5F5',
   grayScale3: '#E0E0E0',
   grayScale4: '#BDBDBD',
-  grayScale5: '#9E9E9E',
+  background: '#9E9E9E',
   grayScale7: '#616161',
   primaryTransparent: '#FF4D6714',
   placeHolderColor: '#9E9E9E',

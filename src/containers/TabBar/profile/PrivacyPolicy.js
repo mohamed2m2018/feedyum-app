@@ -1,16 +1,21 @@
 import React from 'react';
-import {ScrollView, StyleSheet, View} from 'react-native';
+import {I18nManager, ScrollView, StyleSheet, View} from 'react-native';
 
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
 import {styles} from '../../../themes';
 import strings from '../../../i18n/strings';
 import ZText from '../../../components/common/ZText';
 import ZHeader from '../../../components/common/ZHeader';
-import {privacyPolicyData} from '../../../api/constant';
+import {
+  privacyPolicyData,
+  privacyPolicyDataArabic,
+} from '../../../api/constant';
+
+const privacy = I18nManager.isRTL ? privacyPolicyDataArabic : privacyPolicyData;
 
 const PrivacyPolicy = () => {
   const RenderData = () => {
-    return privacyPolicyData.map((item, index) => {
+    return privacy.map((item, index) => {
       return (
         <View key={index} style={styles.mt15}>
           <ZText type={'b18'} style={styles.mb10}>

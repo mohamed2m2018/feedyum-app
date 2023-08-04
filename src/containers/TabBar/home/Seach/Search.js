@@ -216,7 +216,11 @@ export default function Search() {
               onMomentumScrollBegin={fetchNextPage}
             />
             {isFetchingsStories && !isFetchingNextPage && (
-              <ActivityIndicator style={localStyles.loading} size={'large'} />
+              <ActivityIndicator
+                style={localStyles.loading}
+                color={colors.primary}
+                size={'large'}
+              />
             )}
           </View>
         )}

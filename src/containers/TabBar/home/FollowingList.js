@@ -31,6 +31,7 @@ const FollowingList = ({
     <>
       <Spinner
         size={'large'}
+        color={colors.primary}
         //visibility of Overlay Loading Spinner
         visible={
           isLoadingFollowing || isFetchingFollowing || isRefetchingFollowing
@@ -52,7 +53,7 @@ const FollowingList = ({
         disableIntervalMomentum
         refreshControl={
           <RefreshControl
-            refreshing={isLoadingFollowing || isFetchingFollowing}
+            refreshing={isFetchingFollowing && !isLoadingFollowing}
             tintColor={colors.primary}
             onRefresh={() => {
               queryClient.invalidateQueries({
@@ -73,7 +74,9 @@ const FollowingList = ({
         onEndReachedThreshold={0.9}
         onEndReached={hasNextPageFollowin ? fetchNextPageFollowing : null}
         ListFooterComponent={
-          isFetchingNextPageFollowing && <ActivityIndicator size={'large'} />
+          isFetchingNextPageFollowing && (
+            <ActivityIndicator size={'large'} color={colors.primary} />
+          )
         }
       />
     </>

@@ -10,15 +10,11 @@ import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
 import ZHeader from '../../../components/common/ZHeader';
 import strings from '../../../i18n/strings';
 import {moderateScale} from '../../../common/constants';
-import {Control, Menu_Dark, Menu_Light} from '../../../assets/svgs';
+import {Menu_Dark, Menu_Light} from '../../../assets/svgs';
 import {styles} from '../../../themes';
 import ZText from '../../../components/common/ZText';
 import ZInput from '../../../components/common/ZInput';
-import {
-  contactUsData,
-  helperCategoryData,
-  helperData,
-} from '../../../api/constant';
+import {contactUsData} from '../../../api/constant';
 import FaqComponent from '../../../components/FaqComponent';
 
 const HelpCenter = () => {
@@ -56,6 +52,37 @@ const HelpCenter = () => {
   const [searchIconStyle, setSearchIconStyle] = useState(BlurredIconStyle);
   const [selectedChips, setSelectedChips] = useState([]);
 
+  const helperData = [
+    {
+      title: strings.whatIsFoodTok,
+      description: strings.foodTokDescription,
+    },
+    {
+      title: strings.howToSignUp,
+      description: strings.signUpDescription,
+    },
+    {
+      title: strings.howToSubmitVideosAndPhotos,
+      description: strings.submitVideosAndPhotosDescription,
+    },
+    {
+      title: strings.contactChefsAndRestaurants,
+      description: strings.contactChefsAndRestaurantsDescription,
+    },
+    {
+      title: strings.howToRemoveVideosAndPhotos,
+      description: strings.removeVideosAndPhotosDescription,
+    },
+    {
+      title: strings.howToDownloadApp,
+      description: strings.downloadAppDescription,
+    },
+    {
+      title: strings.howToUnsubscribeFromPremium,
+      description: strings.unsubscribeFromPremiumDescription,
+    },
+  ];
+
   useEffect(() => {
     setFaqData(helperData);
   }, []);
@@ -89,14 +116,6 @@ const HelpCenter = () => {
   const onUnHighlightInput = () => {
     setSearchInputStyle(BlurredStyle);
     setSearchIconStyle(BlurredIconStyle);
-  };
-
-  const RightIcon = () => {
-    return (
-      <TouchableOpacity style={styles.pr10}>
-        {colors.dark ? <Menu_Dark /> : <Menu_Light />}
-      </TouchableOpacity>
-    );
   };
 
   const HeaderCategory = () => {

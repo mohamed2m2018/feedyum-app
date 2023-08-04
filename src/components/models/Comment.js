@@ -126,8 +126,7 @@ export default function Comment({SheetRef, postId}) {
           Toast.show({
             type: ALERT_TYPE.DANGER,
             title: '',
-            textBody:
-              err[Object.keys(err)?.[0]] || 'Sorry, an error has occured',
+            textBody: err[Object.keys(err)?.[0]] || strings.errorOccured,
           });
         }
       },
@@ -238,6 +237,7 @@ export default function Comment({SheetRef, postId}) {
         visible={
           isLoadingAddComments || isLoading || mutation.isLoading || isFetching
         }
+        color={colors.primary}
       />
       <View
         style={[

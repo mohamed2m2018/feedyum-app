@@ -4,19 +4,23 @@ import LiveComponent from '../../../../components/LiveComponent';
 import ZText from '../../../../components/common/ZText';
 import strings from '../../../../i18n/strings';
 import {FlatList} from 'react-native';
+import {useSelector} from 'react-redux';
 
 export default function SearchVideo({
   stories = [],
   isFetchingNextPage,
   ...props
 }) {
+  const colors = useSelector(state => state.theme.theme);
   return (
     <View>
       <FlatList
         data={stories}
         ListFooterComponent={
           <View style={{height: 100}}>
-            {isFetchingNextPage && <ActivityIndicator size={'small'} />}
+            {isFetchingNextPage && (
+              <ActivityIndicator color={colors.primary} size={'small'} />
+            )}
           </View>
         }
         ListEmptyComponent={
@@ -39,6 +43,7 @@ export default function SearchVideo({
         {...props}
         keyExtractor={item => item?._id}
         numColumns={2}
+        legacyImplementation
         showsVerticalScrollIndicator={false}
       />
     </View>

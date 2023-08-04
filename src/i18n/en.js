@@ -194,6 +194,8 @@ export default {
   askQuestion: 'Ask a question...',
   canBeReceivedIn: 'Can be received in',
   hours: 'Hours',
+  days: 'Days',
+  toDeliver: 'to deliver this order',
   aboutYou: 'About You',
   name: 'Name',
   dishAvailableIn: 'This dish is available in ',
@@ -223,6 +225,7 @@ export default {
   price: 'price',
   noOfHours: 'No of Hours to deliver this order',
   noOfDays: 'No of Days to deliver this order',
+  no: 'No of',
   linkOptional:
     'link (optional), if not provided user will contact you through whatsapp',
   selectGov: 'Select governorates',
@@ -253,4 +256,46 @@ export default {
   other: 'Other',
   reported: 'Reported',
   willReviewPost: 'Thank you, We will review this post',
+  uploadingFile: 'We are uploading your file',
+  editingPost: 'Editing Post...',
+  addingPost: 'Adding Post..',
+  pleaseWait: 'Please wait until we finish uploading your first post',
+  processingThumbnail: 'Processing Thumbnail please wait..',
+  congratulations2: 'Congratulations, your post is published!',
+  errorHappened: 'Error happened! please upload again',
+  progress: 'Progress:',
+  uploadingMedia: 'uploading media',
+  uploadStarted: 'Upload started',
+  uploadError: 'Upload error!',
+  uploadFailed: 'Upload failed',
+  Edit: 'Edit',
+  whatIsFoodTok: 'What is FoodTok?',
+  howToSignUp: 'How can I sign up for FoodTok?',
+  howToSubmitVideosAndPhotos:
+    'How can I submit videos and photos about food on FoodTok?',
+  contactChefsAndRestaurants:
+    'Can I contact chefs and restaurants through FoodTok?',
+  howToRemoveVideosAndPhotos: 'How do I remove videos and photos from FoodTok?',
+  howToDownloadApp: 'How can I download the FoodTok app?',
+  howToUnsubscribeFromPremium: 'How do I unsubscribe from premium on FoodTok?',
+  foodTokDescription:
+    'FoodTok is an app designed for chefs, restaurants, and food enthusiasts to share their passion for food through videos and photos. It provides a platform for users to showcase their culinary creations, discover new recipes, and connect with others in the food community.',
+  signUpDescription:
+    'To sign up for FoodTok, simply download the app from the Google Play Store. The app is currently available exclusively for Android users. Once downloaded, you can create an account by providing your basic information and setting up a profile. Stay tuned for updates on availability for other platforms.',
+  submitVideosAndPhotosDescription:
+    'Submitting videos and photos on FoodTok is easy. After signing up and logging into your account, you can navigate to the "Submit" section within the app. From there, you can choose to upload your own videos and photos showcasing your culinary creations. Please ensure that your submissions adhere to any content guidelines and quality standards set by FoodTok.',
+  contactChefsAndRestaurantsDescription:
+    "Absolutely! FoodTok provides a convenient way to connect with chefs and restaurants. You can explore profiles of chefs and restaurants on the app and engage with them through comments, direct messages, or even collaborations. It's a great opportunity to learn from industry professionals and foster meaningful connections within the culinary community.",
+  removeVideosAndPhotosDescription:
+    "If you want to remove any of your submitted videos or photos from FoodTok, you can easily do so by accessing your profile and selecting the specific content you wish to delete. Keep in mind that once deleted, the content will no longer be visible to other users. However, it's important to note that removing content may also impact its availability for others to discover and engage with.",
+  downloadAppDescription:
+    'Currently, the FoodTok app is available exclusively on the Google Play Store for Android devices. You can search for "FoodTok" in the Play Store and download it for free. Stay tuned for future announcements regarding availability on other platforms, such as iOS.',
+  unsubscribeFromPremiumDescription:
+    'While there is no premium subscription available at the moment, we are actively working on introducing premium features in the near future. Once the premium subscription becomes available, you will be able to manage your subscription through the app settings. We will provide clear instructions on how to unsubscribe if you wish to do so.',
+  gotALike: 'got a like',
+  gotAcomment: 'got a comment',
+  notification: 'Notification',
+  errorOccured: 'Sorry, an error has occured',
+  descriptionTooShort: 'Description is too short!',
+  pleaseFillAllInputs: 'Please fill all inputs',
 };

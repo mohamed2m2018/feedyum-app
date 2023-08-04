@@ -67,8 +67,8 @@ const SetUpProfile = props => {
     onError: err => {
       Toast.show({
         type: ALERT_TYPE.DANGER,
-        title: 'Error',
-        textBody: err[Object.keys(err)?.[0]] || 'Sorry, an error has occured',
+        title: strings.error,
+        textBody: err[Object.keys(err)?.[0]] || strings.errorOccured,
       });
     },
   });
@@ -152,7 +152,7 @@ const SetUpProfile = props => {
       .catch(err =>
         Toast.show({
           type: ALERT_TYPE.DANGER,
-          title: 'Error',
+          title: strings.error,
           textBody: err[Object.keys(err)?.[0]],
         }),
       );
@@ -247,7 +247,7 @@ const SetUpProfile = props => {
       .catch(err =>
         Toast.show({
           type: ALERT_TYPE.DANGER,
-          title: 'Error',
+          title: strings.error,
           textBody: err[Object.keys(err)?.[0]],
         }),
       );
@@ -273,7 +273,7 @@ const SetUpProfile = props => {
           ) : (
             <>
               {isPhotoUploading ? (
-                <ActivityIndicator size={'large'} />
+                <ActivityIndicator size={'large'} color={colors.primary} />
               ) : (
                 <Image
                   source={colors.dark ? images.userDark : images.userLight}

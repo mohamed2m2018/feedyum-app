@@ -85,7 +85,7 @@ const SelectInterest = ({navigation}) => {
           <InterestChips />
         </View>
       </View>
-      <Spinner visible={isLoading} />
+      <Spinner visible={isLoading} color={colors.primary} />
 
       <View style={localStyles.btnContainer}>
         <ZButton

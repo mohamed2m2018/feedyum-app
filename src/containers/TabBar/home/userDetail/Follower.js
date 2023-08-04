@@ -6,13 +6,16 @@ import ZText from '../../../../components/common/ZText';
 import {useQuery} from 'react-query';
 import request from '../../../../api/request';
 import strings from '../../../../i18n/strings';
+import {useSelector} from 'react-redux';
 
 export default function Following({
   followingData: userDetail,
   fetchNextPage,
   hasNextPage,
   loading,
+  setisFetching,
 }) {
+  const colors = useSelector(state => state.theme.theme);
   const {data: currentUserQuery} = useQuery(
     'user',
     () => request.get('/user'),
@@ -26,6 +29,7 @@ export default function Following({
       isFollowed={item?.currentUserFollowed}
       key={item?.follower_id?._id}
       id={item?.follower_id?._id}
+      setisFetching={setisFetching}
       currentUserId={currentUser?._id}
     />
   );
@@ -63,7 +67,9 @@ export default function Following({
       onEndReachedThreshold={0.1}
       onEndReached={fetchNextPage}
       ListFooterComponent={
-        hasNextPage ? <ActivityIndicator size="small" color="#000000" /> : null
+        hasNextPage ? (
+          <ActivityIndicator size="small" color={colors.primary} />
+        ) : null
       }
     />
   );

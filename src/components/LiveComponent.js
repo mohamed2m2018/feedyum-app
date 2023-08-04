@@ -84,7 +84,7 @@ export default function LiveComponent({
 
 const localStyles = StyleSheet.create({
   postContainer: {
-    width: '100%',
+    width: '50%',
     flex: 1,
   },
   postImgStyle: {

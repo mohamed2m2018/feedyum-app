@@ -236,7 +236,11 @@ export default function ProfileDetail({navigation, route}) {
           data={stories}
           ListEmptyComponent={
             isLoading ? (
-              <Spinner size={'large'} visible={isLoading} />
+              <Spinner
+                size={'large'}
+                color={colors.primary}
+                visible={isLoading}
+              />
             ) : (
               <ZText style={{textAlign: 'center', marginTop: 45}} type={'B20'}>
                 {strings.noDishesYetCurrentProfile}

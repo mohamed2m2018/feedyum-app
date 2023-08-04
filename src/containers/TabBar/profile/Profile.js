@@ -107,7 +107,7 @@ export default function Profile({navigation}) {
     onError: err => {
       Toast.show({
         type: ALERT_TYPE.DANGER,
-        title: 'Error',
+        title: strings.error,
         textBody: err[Object.keys(err)?.[0]],
       });
     },
@@ -160,7 +160,7 @@ export default function Profile({navigation}) {
   return (
     <ZSafeAreaView>
       <View style={{flex: 1, height: '100%', padding: 20}}>
-        <Spinner visible={isLoadingSomething} />
+        <Spinner color={colors.primary} visible={isLoadingSomething} />
         <FlatList
           data={storiesData}
           showsVerticalScrollIndicator={false}
@@ -178,7 +178,11 @@ export default function Profile({navigation}) {
           numColumns={3}
           ListEmptyComponent={
             isLoading ? (
-              <Spinner size={'large'} visible={isLoading} />
+              <Spinner
+                color={colors.primary}
+                size={'large'}
+                visible={isLoading}
+              />
             ) : (
               <ZText style={{textAlign: 'center', marginTop: 45}} type={'B20'}>
                 {strings.noDishesYetProfileOther}
@@ -193,7 +197,7 @@ export default function Profile({navigation}) {
           }}
           ListFooterComponent={
             isFetching && !isLoading ? (
-              <ActivityIndicator size={'large'} />
+              <ActivityIndicator size={'large'} color={colors.primary} />
             ) : null
           }
           keyExtractor={(item, index) => index.toString()}

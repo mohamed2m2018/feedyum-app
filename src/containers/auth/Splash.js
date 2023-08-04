@@ -81,8 +81,9 @@ const Splash = ({navigation}) => {
   }, []);
 
   return (
-    <View style={[localStyles.container, {backgroundColor: color.background}]}>
-      <ActivityIndicator size="large" color={color.darkColor} />
+    <View
+      style={[localStyles.container, {backgroundColor: color.backgroundColor}]}>
+      <ActivityIndicator size="large" color={color.primary} />
     </View>
   );
 };
