@@ -16,7 +16,7 @@ import {
   GestureHandlerRootView,
   Gesture,
 } from 'react-native-gesture-handler';
-import Image from 'react-native-fast-image';
+import {Image} from 'react-native';
 import {
   getHeight,
   isAndroid,
@@ -36,10 +36,10 @@ import request from '../../../api/request';
 import {useQuery} from 'react-query';
 import millify from 'millify';
 import pluralize from 'pluralize';
-import {useNavigation} from '@react-navigation/native';
 import Video from 'react-native-fast-video';
 import Slider from '@react-native-community/slider';
 import Share from 'react-native-share';
+import FastImage from 'react-native-fast-image';
 
 const ReelComponent = ({
   item,
@@ -72,8 +72,25 @@ const ReelComponent = ({
   const [isBuffering, setIsBuffering] = useState(false);
   const [seekValue, setSeekValue] = useState(0);
   const videoRef = useRef();
-  const navigation = useNavigation();
   const [durationInSeconds, setDurationInSeconds] = useState(0); // Added state for durationInSeconds
+  const [latestSeekValue, setLatestSeekValue] = useState(0);
+  useEffect(() => {
+    if (activeVideoIndex === index && isFocused && videoRef.current) {
+      setTimeout(() => {
+        videoRef?.current?.seek?.(latestSeekValue);
+      }, 400);
+      setIsBuffering(true);
+    } else {
+      setLatestSeekValue(seekValue);
+    }
+  }, [activeVideoIndex, isFocused]);
+
+  useEffect(() => {
+    if (activeVideoIndex === index && isFocused && videoRef.current) {
+    } else {
+      setLatestSeekValue(seekValue);
+    }
+  }, [seekValue]);
 
   const [paused, setpaused] = useState(false);
 
@@ -134,12 +151,7 @@ const ReelComponent = ({
 
   const duration = item?.duration?.split(' ');
 
-  const debouncedOnProgress = ({currentTime, playableDuration}) => {
-    if (playableDuration !== 0 && playableDuration < currentTime) {
-      setIsBuffering(true);
-    } else {
-      setIsBuffering(false);
-    }
+  const debouncedOnProgress = ({currentTime}) => {
     if (!paused) {
       setSeekValue(currentTime);
     } else {
@@ -179,17 +191,32 @@ const ReelComponent = ({
             likeRef?.current?.[index]?.(item?._id);
           })}>
         <Pressable onPress={() => togglePause(index)}>
-          {item?.avatarUri && (
-            <Image
-              source={{uri: item?.avatarUri}}
-              resizeMode="cover"
-              style={[
-                localStyles.imageContainer,
-                {backgroundColor: colors.backgroundColor},
-              ]}
-            />
+          {(item?.avatarUri ||
+            !(!item.avatarUri && isFocused && activeVideoIndex === index)) && (
+            <>
+              {!item?.avatarUri ? (
+                <Image
+                  source={{uri: item?.avatarUri || item?.poster}}
+                  resizeMode="cover"
+                  blurRadius={3}
+                  style={[
+                    localStyles.imageContainer,
+                    {backgroundColor: colors.backgroundColor},
+                  ]}
+                />
+              ) : (
+                <FastImage
+                  source={{uri: item?.avatarUri}}
+                  resizeMode="cover"
+                  style={[
+                    localStyles.imageContainer,
+                    {backgroundColor: colors.backgroundColor},
+                  ]}
+                />
+              )}
+            </>
           )}
-          {!item.avatarUri && (
+          {!item.avatarUri && isFocused && activeVideoIndex === index ? (
             <Video
               source={{
                 uri: item?.uri,
@@ -198,16 +225,15 @@ const ReelComponent = ({
               onLoad={({duration}) => {
                 setDurationInSeconds(duration);
               }}
-              onLoadStart={() => {
-                setIsBuffering(true);
-              }}
+              onBuffer={({isBuffering: buffering}) => setIsBuffering(buffering)}
               onEnd={() => {
                 if (activeVideoIndex === index) {
                   flatListRef.current.scrollToIndex({
                     animated: true,
                     index: index + 1,
                   });
-                  videoRef.current.seek(0);
+                  setLatestSeekValue(0);
+                  setSeekValue(0);
                 }
               }}
               style={[
@@ -218,10 +244,7 @@ const ReelComponent = ({
                 },
               ]}
               onProgress={debouncedOnProgress}
-              poster={item?.avatarUri || item?.poster}
-              posterResizeMode="cover"
               resizeMode="cover"
-              navigstor={navigation}
               onError={videoError}
               seekColor={colors.primary}
               paused={
@@ -231,6 +254,25 @@ const ReelComponent = ({
                 paused
               }
             />
+          ) : null}
+
+          {/* Adding the blur effect */}
+          {isBuffering && (
+            <View
+              style={[
+                localStyles.blurOverlay,
+                {backgroundColor: colors.backgroundColor},
+              ]}>
+              <Image
+                source={{uri: item?.avatarUri || item?.poster}}
+                resizeMode="cover"
+                blurRadius={3}
+                style={[
+                  localStyles.imageContainer,
+                  {backgroundColor: colors.backgroundColor},
+                ]}
+              />
+            </View>
           )}
 
           <LinearGradient
@@ -338,15 +380,19 @@ const ReelComponent = ({
                     maximumTrackTintColor={colors.grey}
                     thumbTintColor={colors.primary}
                     onSlidingStart={() => {
-                      setExtraData(!extraData);
-                      setpaused(true);
+                      if (activeVideoIndex === index) {
+                        setExtraData(!extraData);
+                        setpaused(true);
+                      }
                     }}
                     onSlidingComplete={value => {
-                      videoRef.current.seek(value);
-                      setSeekValue(value);
-                      setTimeout(() => {
-                        setpaused(false);
-                      }, 400);
+                      if (activeVideoIndex === index) {
+                        videoRef?.current?.seek?.(value);
+                        setSeekValue(value);
+                        setTimeout(() => {
+                          setpaused(false);
+                        }, 400);
+                      }
                     }}
                   />
                 </View>
@@ -491,14 +537,22 @@ const localStyles = StyleSheet.create({
     top: isAndroid ? moderateScale(10) : moderateScale(50),
     left: moderateScale(20),
     right: 0,
-    zIndex: 1,
     ...styles.pr10,
     ...styles.pt15,
   },
+  // Style for the blur overlay
+  blurOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+  }, // Style for the blur overlay
   headerContainer: {
     position: 'absolute',
     top: moderateScale(55),
-    zIndex: 1,
     ...styles.ph20,
     ...styles.rowSpaceBetween,
   },

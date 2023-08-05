@@ -21,6 +21,23 @@ module.exports = (async () => {
         },
       }),
     },
+    minifierConfig: {
+      keep_classnames: true,
+      keep_fnames: true,
+      mangle: {
+        keep_classnames: true,
+        keep_fnames: true,
+      },
+      output: {
+        ascii_only: true,
+        quote_style: 3,
+      },
+      sourceMap: {
+        includeSources: true,
+      },
+      toplevel: true,
+      warnings: false,
+    },
     resolver: {
       assetExts: assetExts.filter(ext => ext !== 'svg'),
       sourceExts: [...sourceExts, 'svg'],

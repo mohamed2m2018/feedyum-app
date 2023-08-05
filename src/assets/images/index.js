@@ -5,8 +5,5 @@ export default {
   userDark: require('./userDark.png'),
   userLight: require('./userLight.png'),
   post: require('./post.png'),
-  music: require('./music.png'),
-  musicTone: require('./musicTone.png'),
-  liveBg: require('./liveBg.png'),
   dishPlaceholder: require('./dishplaceholder.png'),
 };

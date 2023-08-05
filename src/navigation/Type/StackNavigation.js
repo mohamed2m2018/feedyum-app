@@ -30,11 +30,7 @@ export default function StackNavigation() {
           name={StackNav.SelectInterest}
           component={StackRoute.SelectInterest}
         />
-        <Stack.Screen name={StackNav.SetPin} component={StackRoute.SetPin} />
-        <Stack.Screen
-          name={StackNav.Birthday}
-          component={StackRoute.Birthday}
-        />
+
         <Stack.Screen name={StackNav.Gender} component={StackRoute.Gender} />
         <Stack.Screen
           name={StackNav.SetUpProfile}
@@ -48,10 +44,10 @@ export default function StackNavigation() {
           name={StackNav.ForgotPassword}
           component={StackRoute.ForgotPassword}
         />
-        <Stack.Screen
+        {/* <Stack.Screen
           name={StackNav.ForgotPasswordOtp}
           component={StackRoute.ForgotPasswordOtp}
-        />
+        /> */}
         <Stack.Screen
           name={StackNav.CreateNewPassword}
           component={StackRoute.CreateNewPassword}
@@ -80,7 +76,6 @@ export default function StackNavigation() {
         name={StackNav.CreateNewPassword}
         component={StackRoute.CreateNewPassword}
       />
-      <Stack.Screen name={StackNav.SetPin} component={StackRoute.SetPin} />
       <Stack.Screen
         name={StackNav.SetUpProfile}
         component={StackRoute.SetUpProfile}

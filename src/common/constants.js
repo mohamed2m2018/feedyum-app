@@ -1,5 +1,4 @@
 import {Dimensions, Platform, StatusBar} from 'react-native';
-import DeviceInfo from 'react-native-device-info';
 import strings from '../i18n/strings';
 
 let iPhoneX = screenHeight === 812 ? true : false;
@@ -17,10 +16,6 @@ let sampleWidth = 428;
 
 export const isShowLog = true;
 
-// Check if device is Tablet
-export const isTablet = () => {
-  return DeviceInfo.isTablet();
-};
 
 //Get Width of Screen
 export function getWidth(value) {

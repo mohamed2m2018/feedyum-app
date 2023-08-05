@@ -1,7 +1,11 @@
 import React from 'react';
-import {ActivityIndicator, Platform, RefreshControl} from 'react-native';
+import {
+  ActivityIndicator,
+  Platform,
+  RefreshControl,
+  FlatList,
+} from 'react-native';
 import Spinner from 'react-native-loading-spinner-overlay';
-import {FlashList} from '@shopify/flash-list';
 import {useQueryClient} from 'react-query';
 import {useSelector} from 'react-redux';
 import ZText from '../../../components/common/ZText';
@@ -44,7 +48,7 @@ const ForYouList = ({
           !data?.data?.user?._id
         }
       />
-      <FlashList
+      <FlatList
         data={filteredData.current}
         refreshControl={
           <RefreshControl
@@ -64,8 +68,9 @@ const ForYouList = ({
         onViewableItemsChanged={viewableItemsChanged}
         onLayout={onSetLayout}
         snapToInterval={Platform.OS === 'android' ? layoutHeight : undefined}
+        windowSize={10}
         drawDistance={layoutHeight}
-        decelerationRate={'fast'}
+        decelerationRate={0.3}
         disableIntervalMomentum
         ListEmptyComponent={
           isLoading || !data?.data?.user?._id ? null : (

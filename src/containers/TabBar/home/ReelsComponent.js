@@ -52,7 +52,6 @@ import FollowingList from './FollowingList';
 import ForYouList from './ForYouList';
 import {AdView} from './ads/AdView';
 import Spinner from 'react-native-loading-spinner-overlay/lib';
-import {string} from 'i/lib/util';
 
 const HeaderCategoryItem = React.memo(({title, onPress, category}) => {
   const colors = useSelector(state => state.theme.theme);
@@ -285,7 +284,7 @@ export default function ReelsComponent() {
 
   useFocusEffect(
     React.useCallback(() => {
-      flatListRef.current?.scrollToOffset({offset: 0});
+      flatListRef.current?.scrollToOffset({offset: 0, animated: false});
     }, []),
   );
   const fetchReels = page =>
@@ -312,7 +311,7 @@ export default function ReelsComponent() {
       },
       onSuccess: res => {
         if (res?.pageParams?.length === 1) {
-          flatListRef.current?.scrollToOffset({offset: 0});
+          flatListRef.current?.scrollToOffset({offset: 0, animated: false});
         }
         const result = res?.pages.flatMap(page => page.data?.stories || []);
         if (result.length) {
@@ -488,15 +487,20 @@ export default function ReelsComponent() {
     }
   };
 
-  const renderReelComponent = (
-    item,
-    i,
-    tabIndexDefault,
-    keyPrefix,
-    activeVideoIndex,
-    pausedVideos,
-    togglePause,
-  ) => {
+  const renderReelComponentFollowing = ({item, index: i}) => {
+    const keyPrefix = `item-${item?._id}-${i}`;
+    if (typeof item === 'string' && item?.includes('ad')) {
+      return (
+        <AdView
+          key={keyPrefix}
+          layoutHeight={layoutHeight}
+          loadOnMount={false}
+          index={i}
+          type="video"
+          media={true}
+        />
+      );
+    }
     return (
       <ReelComponent
         item={item}
@@ -504,13 +508,13 @@ export default function ReelsComponent() {
         keyPrefix={keyPrefix}
         tabIndex={index}
         index={i}
-        tabIndexDefault={tabIndexDefault}
+        tabIndexDefault={0}
         flatListRef={index === 1 ? flatListRef : flatListRefFollowing}
         data={data}
         onPressProfile={onPressProfile}
-        activeVideoIndex={activeVideoIndex}
-        pausedVideos={pausedVideos}
-        togglePause={togglePause}
+        activeVideoIndex={activeVideoIndexFollowing}
+        pausedVideos={pausedVideosFollowing}
+        togglePause={togglePauseFollowing}
         likeRef={likeRef}
         onPressMore={onPressMore}
         onPressAvailableLocation={onPressAvailableLocation}
@@ -525,33 +529,9 @@ export default function ReelsComponent() {
       />
     );
   };
-  const renderReelComponentFollowing = ({item, index: i}) => {
-    const keyPrefix = `item-${item?._id}-i`;
-    if (typeof item === 'string' && item?.includes('ad')) {
-      return (
-        <AdView
-          key={keyPrefix}
-          layoutHeight={layoutHeight}
-          loadOnMount={false}
-          index={i}
-          type="video"
-          media={true}
-        />
-      );
-    }
-    return renderReelComponent(
-      item,
-      i,
-      0,
-      keyPrefix,
-      activeVideoIndexFollowing,
-      pausedVideosFollowing,
-      togglePauseFollowing,
-    );
-  };
 
   const renderReelComponentForYou = ({item, index: i}) => {
-    const keyPrefix = `item-${item?._id}-i`;
+    const keyPrefix = `item-${item?._id}-${i}`;
     if (typeof item === 'string' && item?.includes('ad')) {
       return (
         <AdView
@@ -564,14 +544,32 @@ export default function ReelsComponent() {
         />
       );
     }
-    return renderReelComponent(
-      item,
-      i,
-      1,
-      keyPrefix,
-      activeVideoIndexForYou,
-      pausedVideosForYou,
-      togglePauseForYou,
+    return (
+      <ReelComponent
+        item={item}
+        layoutHeight={layoutHeight}
+        keyPrefix={keyPrefix}
+        tabIndex={index}
+        index={i}
+        tabIndexDefault={1}
+        flatListRef={index === 1 ? flatListRef : flatListRefFollowing}
+        data={data}
+        onPressProfile={onPressProfile}
+        activeVideoIndex={activeVideoIndexForYou}
+        pausedVideos={pausedVideosForYou}
+        togglePause={togglePauseForYou}
+        likeRef={likeRef}
+        onPressMore={onPressMore}
+        onPressAvailableLocation={onPressAvailableLocation}
+        onPressComment={onPressComment}
+        isLike={isLike}
+        onPressLike={onPressLike}
+        setIsLike={setIsLike}
+        extraData={extraData}
+        setExtraData={setExtraData}
+        videoError={videoError}
+        onPressReport={onPressReport}
+      />
     );
   };
 
@@ -585,9 +583,9 @@ export default function ReelsComponent() {
 
   const updateViewsMutation = useMutation(updateViews);
 
-  const keyExtractor = useCallback(item => {
-    return `item-${item?._id}`;
-  }, []);
+  const keyExtractor = (item, index) => {
+    return `item-${item?._id}-${index}`;
+  };
 
   const onSetLayout = e => setLayoutHeight(e.nativeEvent.layout.height);
 
@@ -597,11 +595,11 @@ export default function ReelsComponent() {
     {key: 'forYou', title: strings.foryou},
   ]);
 
-  const renderScene = ({route}) => {
-    switch (route.key) {
-      case 'following':
-        return (
-          <View style={{flex: 1}}>
+  const renderScene = useCallback(
+    ({route: r}) => {
+      switch (r.key) {
+        case 'following':
+          return (
             <FollowingList
               isLoadingFollowing={isLoadingFollowing}
               isFetchingFollowing={isFetchingFollowing}
@@ -619,11 +617,9 @@ export default function ReelsComponent() {
               viewConfig={viewConfig}
               hasNextPageFollowin={hasNextPageFollowin}
             />
-          </View>
-        );
-      case 'forYou':
-        return (
-          <View style={{flex: 1}}>
+          );
+        case 'forYou':
+          return (
             <ForYouList
               isLoadingStory={isLoadingStory}
               isFetchingStory={isFetchingStory}
@@ -645,12 +641,34 @@ export default function ReelsComponent() {
               viewConfig={viewConfig}
               hasNextPage={hasNextPage}
             />
-          </View>
-        );
-      default:
-        return <Spinner visible={true} color={colors.primary} />;
-    }
-  };
+          );
+        default:
+          return <Spinner visible={true} color={colors.primary} />;
+      }
+    },
+    [
+      isLoadingFollowing,
+      isFetchingStory,
+      isLoadingStory,
+      isRefetchingStory,
+      filteredData,
+      isFetched,
+      isLoading,
+      layoutHeight,
+      hasNextPage,
+      extraData,
+      isFetchingNextPage,
+      data,
+      isLoadingFollowing,
+      isFetchingFollowing,
+      isRefetchingFollowing,
+      filteredDataFollowing,
+      isFetchingNextPageFollowing,
+      flatListRef,
+      flatListRefFollowing,
+      hasNextPageFollowin,
+    ],
+  );
 
   const renderTabBar = props => (
     <TabBar

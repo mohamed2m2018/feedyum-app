@@ -9,7 +9,7 @@ import {
 import React, {memo, useState} from 'react';
 import {useSelector} from 'react-redux';
 import Feather from 'react-native-vector-icons/Feather';
-import debounce from 'lodash.debounce';
+import debounce from 'debounce';
 // Local import
 import ZSafeAreaView from '../../../../components/common/ZSafeAreaView';
 import ZInput from '../../../../components/common/ZInput';

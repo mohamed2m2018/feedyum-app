@@ -48,11 +48,11 @@ export default function PostDetail() {
 
   const [toggleStatus, setToggleStatus] = useState('Hours');
   const route = useRoute();
-  useFocusEffect(
-    React.useCallback(() => {
-      queryClient.invalidateQueries('stories'); // Invalidate the 'stories' query to trigger a refetch
-    }, []),
-  );
+  // useFocusEffect(
+  //   React.useCallback(() => {
+  //     queryClient.invalidateQueries('stories'); // Invalidate the 'stories' query to trigger a refetch
+  //   }, []),
+  // );
   const postDataToBeEdited = route?.params?.postDataToBeEdited;
   const isImage = route.params?.isImage;
   const [mediaIsEdited, setmediaIsEdited] = useState(false);

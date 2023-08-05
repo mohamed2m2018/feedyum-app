@@ -1,7 +1,11 @@
 import React from 'react';
-import {ActivityIndicator, Platform, RefreshControl} from 'react-native';
+import {
+  ActivityIndicator,
+  FlatList,
+  Platform,
+  RefreshControl,
+} from 'react-native';
 import Spinner from 'react-native-loading-spinner-overlay';
-import {FlashList} from '@shopify/flash-list';
 import {useQueryClient} from 'react-query';
 import {useSelector} from 'react-redux';
 import ZText from '../../../components/common/ZText';
@@ -37,11 +41,12 @@ const FollowingList = ({
           isLoadingFollowing || isFetchingFollowing || isRefetchingFollowing
         }
       />
-      <FlashList
+      <FlatList
         data={filteredDataFollowing.current}
         extraData={extraData}
         keyExtractor={keyExtractor}
         showsVerticalScrollIndicator={false}
+        windowSize={10}
         renderItem={renderReelComponent}
         pagingEnabled={Platform.OS === 'ios'}
         viewabilityConfig={viewConfig}
@@ -49,7 +54,7 @@ const FollowingList = ({
         onLayout={onSetLayout}
         snapToInterval={Platform.OS === 'android' ? layoutHeight : undefined}
         drawDistance={layoutHeight}
-        decelerationRate={'fast'}
+        decelerationRate={0.3}
         disableIntervalMomentum
         refreshControl={
           <RefreshControl
@@ -71,7 +76,7 @@ const FollowingList = ({
         }
         estimatedItemSize={layoutHeight}
         ref={flatListRefFollowing}
-        onEndReachedThreshold={0.9}
+        onEndReachedThresholdxw={0.9}
         onEndReached={hasNextPageFollowin ? fetchNextPageFollowing : null}
         ListFooterComponent={
           isFetchingNextPageFollowing && (

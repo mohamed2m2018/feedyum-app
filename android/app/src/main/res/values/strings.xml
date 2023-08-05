@@ -2,7 +2,4 @@
 	<string name="app_name">
 		FoodTok
 	</string>
-	<string moduleConfig="true" name="CodePushDeploymentKey">
-		***REMOVED***
-	</string>
 </resources>
