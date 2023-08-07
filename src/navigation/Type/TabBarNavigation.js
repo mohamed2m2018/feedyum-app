@@ -1,8 +1,8 @@
 // Library import
 import React from 'react';
 import {useSelector} from 'react-redux';
-import {StyleSheet, TouchableOpacity, View} from 'react-native';
-import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import {I18nManager, StyleSheet, TouchableOpacity, View} from 'react-native';
+import {createMaterialTopTabNavigator} from '@react-navigation/material-top-tabs';
 
 // Local import
 import {StackRoute, TabRoute} from '../NavigationRoutes';
@@ -16,6 +16,8 @@ import {
   Home_Dark,
   Home_Light,
   Profile_Dark,
+  Discover_Dark,
+  Discover_Light,
   Profile_Light,
 } from '../../assets/svgs';
 import {styles} from '../../themes';
@@ -26,9 +28,8 @@ import {useHandleAuth} from '../../utils/useHandleAuth';
 
 export default function TabBarNavigation({navigation}) {
   const colors = useSelector(state => state.theme.theme);
-  const Tab = createBottomTabNavigator();
+  const Tab = createMaterialTopTabNavigator();
   const ProfilePictureSheetRef = React.createRef();
-  const [index, setIndex] = React.useState(0);
   const {data} = useQuery('user', () => request.get('/user'), {retry: 1});
   const {handleAuthToast} = useHandleAuth();
 
@@ -37,7 +38,7 @@ export default function TabBarNavigation({navigation}) {
       {icon}
       {!!text && (
         <ZText
-          type={focused ? 'b14' : 'm14'}
+          type={focused ? 'b19' : 'm14'}
           numberOfLines={1}
           style={styles.mt5}
           color={focused ? colors.primary : colors.grayScale5}>
@@ -61,8 +62,14 @@ export default function TabBarNavigation({navigation}) {
 
   return (
     <Tab.Navigator
+      tabBarPosition="bottom"
       screenOptions={{
         headerShown: false,
+        tabBarItemStyle: {height: 60},
+        tabBarLabelStyle: {fontSize: 12},
+        tabBarContentContainerStyle: {
+          backgroundColor: colors.backgroundColor,
+        },
         tabBarStyle: [
           localStyles.tabBarStyle,
           {
@@ -71,17 +78,29 @@ export default function TabBarNavigation({navigation}) {
         ],
         tabBarShowLabel: false,
       }}
-      initialRouteName={TabNav.Home}>
+      initialRouteName={TabNav.ForYou}>
       <Tab.Screen
-        name={TabNav.Home}
-        component={TabRoute.Home}
-        listeners={{tabPress: e => setIndex(0)}}
+        name={TabNav.ForYou}
+        component={TabRoute.ForYou}
         options={{
           tabBarIcon: ({focused}) => (
             <TabText
-              text={strings.home}
+              text={strings.foryou}
               focused={focused}
               icon={focused ? <Home_Dark /> : <Home_Light />}
+            />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name={TabNav.Following}
+        component={TabRoute.Following}
+        options={{
+          tabBarIcon: ({focused}) => (
+            <TabText
+              text={strings.following}
+              focused={focused}
+              icon={focused ? <Discover_Dark /> : <Discover_Light />}
             />
           ),
         }}
@@ -90,7 +109,12 @@ export default function TabBarNavigation({navigation}) {
       <Tab.Screen
         name={StackNav.Search}
         component={StackRoute.Search}
-        listeners={{tabPress: e => e.preventDefault()}}
+        listeners={{
+          tabPress: e => {
+            e.preventDefault();
+            onPressAdd();
+          },
+        }}
         options={{
           // eslint-disable-next-line react/no-unstable-nested-components
           tabBarIcon: ({focused}) => (
@@ -167,10 +191,13 @@ export default function TabBarNavigation({navigation}) {
 
 const localStyles = StyleSheet.create({
   tabBarStyle: {
-    height: checkPlatform() === 'ios' ? getHeight(100) : getHeight(70),
-    paddingHorizontal: moderateScale(10),
+    height: checkPlatform() === 'ios' ? getHeight(100) : getHeight(90),
   },
   tabViewContainer: {
     ...styles.center,
+    // backgroundColor: 'green',
+    width: moderateScale(80),
+    height: getHeight(40),
+    right: !I18nManager.isRTL ? moderateScale(20) : moderateScale(40),
   },
 });

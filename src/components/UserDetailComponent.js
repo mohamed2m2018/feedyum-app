@@ -24,7 +24,6 @@ export default function UserDetailComponent({
   userDescription,
   isSuggested = false,
   currentUserId,
-  setisFetching,
 }) {
   const navigation = useNavigation();
   const colors = useSelector(state => state.theme.theme);
@@ -62,10 +61,8 @@ export default function UserDetailComponent({
   const onPressFollow = () => {
     if (isFollow) {
       unfollowMutation.mutate({_id: id});
-      setisFetching(true);
     } else {
       followMutation.mutate({_id: id});
-      setisFetching(true);
     }
     setIsFollow(!isFollow);
   };

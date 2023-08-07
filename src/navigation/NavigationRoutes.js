@@ -1,5 +1,4 @@
 // Tab Routes
-import Home from '../containers/TabBar/home/Home';
 import Discover from '../containers/TabBar/discover/Discover';
 import Inbox from '../containers/TabBar/inbox/Inbox';
 import Profile from '../containers/TabBar/profile/Profile';
@@ -55,9 +54,12 @@ import PostSound from '../containers/TabBar/add/PostSound';
 import ReelsComponent from '../containers/TabBar/home/ReelsComponent';
 import FindFriends from '../containers/TabBar/profile/FindFriends';
 import Live from '../containers/TabBar/home/Live';
+import ForYou from '../containers/TabBar/home/ForYou';
+import FollowingTab from '../containers/TabBar/home/Following';
 
 export const TabRoute = {
-  Home,
+  ForYou: ForYou,
+  Following: FollowingTab,
   Profile,
   Discover,
   Inbox,

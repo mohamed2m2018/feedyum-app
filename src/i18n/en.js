@@ -308,4 +308,5 @@ export default {
   showUs: 'If you are a cooker show us what you can make!',
   zeroFee: 'We take 0% from you. Free and will remain free',
   next: 'Next',
+  seeMoreDescription: 'See More Description',
 };

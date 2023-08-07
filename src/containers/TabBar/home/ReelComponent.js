@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 import {
   ActivityIndicator,
   I18nManager,
@@ -33,66 +34,85 @@ import images from '../../../assets/images';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Entypo from 'react-native-vector-icons/Entypo';
 import request from '../../../api/request';
-import {useQuery} from 'react-query';
+import {useMutation, useQuery} from 'react-query';
 import millify from 'millify';
 import pluralize from 'pluralize';
 import Video from 'react-native-fast-video';
 import Slider from '@react-native-community/slider';
 import Share from 'react-native-share';
 import FastImage from 'react-native-fast-image';
+import {useIsFocused, useNavigation} from '@react-navigation/native';
+import {StackNav} from '../../../navigation/NavigationKeys';
 
 const ReelComponent = ({
   item,
   layoutHeight,
-  keyPrefix,
-  index,
+  i: index,
   data,
-  onPressProfile,
   activeVideoIndex,
-  pausedVideos,
-  togglePause,
   likeRef,
-  onPressMore,
   onPressAvailableLocation,
-  onPressComment,
-  isLike,
-  onPressLike,
-  setIsLike,
-  extraData,
   flatListRef,
   setExtraData,
-  videoError,
-  tabIndex,
-  tabIndexDefault,
-  onPressReport,
+  setSelectedPostId,
+  commentSheetRef,
+  setselectedDescription,
+  descriptionSheetRef,
 }) => {
   const colors = useSelector(state => state.theme.theme);
-  const isFocused = tabIndex === tabIndexDefault;
+  const isFocused = useIsFocused();
 
+  const onPressComment = () => {
+    setSelectedPostId(item?._id);
+    commentSheetRef.current?.show();
+  };
+
+  const onPressMore = description => {
+    setselectedDescription(description);
+    descriptionSheetRef.current?.show();
+  };
+
+  const addLikeMutation = useMutation(postId =>
+    request.post(`/like/${postId}`),
+  );
+  const removeLikeMutation = useMutation(postId =>
+    request.delete(`/like/${postId}`),
+  );
+  const onPressReport = () => {
+    navigation.navigate(StackNav.Report, {
+      storyId: item?._id,
+    });
+  };
+  const onPressLike = (id, isLiked) => {
+    if (!isLiked) {
+      setIsLike(true);
+      setTimeout(() => {
+        setIsLike(false);
+      }, 1000);
+      addLikeMutation.mutate(id);
+    } else {
+      removeLikeMutation.mutate(id);
+    }
+  };
+  const navigation = useNavigation();
+  const [isLike, setIsLike] = useState(false);
+  const onPressProfile = (userName, userImage, id) =>
+    navigation.navigate(StackNav.ProfileDetail, {
+      userName: userName,
+      userImage: userImage,
+      id: id,
+    });
   const [isBuffering, setIsBuffering] = useState(false);
   const [seekValue, setSeekValue] = useState(0);
   const videoRef = useRef();
   const [durationInSeconds, setDurationInSeconds] = useState(0); // Added state for durationInSeconds
-  const [latestSeekValue, setLatestSeekValue] = useState(0);
-  useEffect(() => {
-    if (activeVideoIndex === index && isFocused && videoRef.current) {
-      setTimeout(() => {
-        videoRef?.current?.seek?.(latestSeekValue);
-      }, 400);
-      setIsBuffering(true);
-    } else {
-      setLatestSeekValue(seekValue);
-    }
-  }, [activeVideoIndex, isFocused]);
-
-  useEffect(() => {
-    if (activeVideoIndex === index && isFocused && videoRef.current) {
-    } else {
-      setLatestSeekValue(seekValue);
-    }
-  }, [seekValue]);
 
   const [paused, setpaused] = useState(false);
+
+  useEffect(() => {
+    setExtraData(e => !e);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paused, isLike]);
 
   const generateDynamicLink = async postItem => {
     const link = await dynamicLinks().buildShortLink(
@@ -162,7 +182,7 @@ const ReelComponent = ({
   useEffect(() => {
     let timeout;
 
-    if (isFocused && index === activeVideoIndex && !!item.avatarUri) {
+    if (index === activeVideoIndex && !!item.avatarUri) {
       timeout = setTimeout(() => {
         flatListRef.current.scrollToIndex({
           animated: true,
@@ -179,7 +199,6 @@ const ReelComponent = ({
 
   return (
     <GestureHandlerRootView
-      key={keyPrefix}
       style={{
         height: layoutHeight,
         backgroundColor: colors.backgroundColor,
@@ -190,71 +209,55 @@ const ReelComponent = ({
           .onStart(() => {
             likeRef?.current?.[index]?.(item?._id);
           })}>
-        <Pressable onPress={() => togglePause(index)}>
-          {(item?.avatarUri ||
-            !(!item.avatarUri && isFocused && activeVideoIndex === index)) && (
-            <>
-              {!item?.avatarUri ? (
-                <Image
-                  source={{uri: item?.avatarUri || item?.poster}}
-                  resizeMode="cover"
-                  blurRadius={3}
-                  style={[
-                    localStyles.imageContainer,
-                    {backgroundColor: colors.backgroundColor},
-                  ]}
-                />
-              ) : (
-                <FastImage
-                  source={{uri: item?.avatarUri}}
-                  resizeMode="cover"
-                  style={[
-                    localStyles.imageContainer,
-                    {backgroundColor: colors.backgroundColor},
-                  ]}
-                />
-              )}
-            </>
-          )}
-          {!item.avatarUri && isFocused && activeVideoIndex === index ? (
-            <Video
-              source={{
-                uri: item?.uri,
-              }}
-              ref={videoRef}
-              onLoad={({duration}) => {
-                setDurationInSeconds(duration);
-              }}
-              onBuffer={({isBuffering: buffering}) => setIsBuffering(buffering)}
-              onEnd={() => {
-                if (activeVideoIndex === index) {
-                  flatListRef.current.scrollToIndex({
-                    animated: true,
-                    index: index + 1,
-                  });
-                  setLatestSeekValue(0);
-                  setSeekValue(0);
-                }
-              }}
+        <Pressable onPress={() => setpaused(p => !p)}>
+          {item?.avatarUri ? (
+            <FastImage
+              source={{uri: item?.avatarUri || item?.poster}}
+              resizeMode="cover"
               style={[
                 localStyles.imageContainer,
-                {
-                  backgroundColor: colors.backgroundColor,
-                  maxHeight: '98%',
-                },
+                {backgroundColor: colors.backgroundColor},
               ]}
-              onProgress={debouncedOnProgress}
-              resizeMode="cover"
-              onError={videoError}
-              seekColor={colors.primary}
-              paused={
-                activeVideoIndex !== index ||
-                !isFocused ||
-                pausedVideos.includes(index) ||
-                paused
-              }
             />
-          ) : null}
+          ) : (
+            !!item?.uri && (
+              <Video
+                source={{
+                  uri: item?.uri,
+                }}
+                ref={videoRef}
+                onLoad={({duration: durationToBeSet}) => {
+                  setDurationInSeconds(durationToBeSet);
+                }}
+                onBuffer={({isBuffering: buffering}) =>
+                  setIsBuffering(buffering)
+                }
+                onEnd={() => {
+                  if (activeVideoIndex === index) {
+                    if (flatListRef.current) {
+                      flatListRef.current.scrollToIndex({
+                        animated: true,
+                        index: index + 1,
+                      });
+                      videoRef.current.seek(0);
+                    }
+                  }
+                }}
+                style={[
+                  localStyles.imageContainer,
+                  {
+                    backgroundColor: colors.backgroundColor,
+                    maxHeight: '98%',
+                  },
+                ]}
+                onProgress={debouncedOnProgress}
+                resizeMode="cover"
+                onError={() => console.log('hello')}
+                seekColor={colors.primary}
+                paused={activeVideoIndex !== index || !isFocused || paused}
+              />
+            )
+          )}
 
           {/* Adding the blur effect */}
           {isBuffering && (
@@ -315,7 +318,7 @@ const ReelComponent = ({
                     style={styles.mb5}
                     numberOfLines={1}
                     color={colors.white}>
-                    {item?.created_at.slice(0, 10)}
+                    {item?.created_at?.slice(0, 10)}
                   </ZText>
                 </View>
               </View>
@@ -350,7 +353,9 @@ const ReelComponent = ({
                   onPress={() => onPressMore(item?.caption)}
                   style={styles.button}>
                   <ZText type="m14" color={colors.primary}>
-                    {item?.caption?.length < 100 ? '' : 'See More Description'}
+                    {item?.caption?.length < 100
+                      ? ''
+                      : strings.seeMoreDescription}
                   </ZText>
                 </TouchableOpacity>
               )}
@@ -381,7 +386,6 @@ const ReelComponent = ({
                     thumbTintColor={colors.primary}
                     onSlidingStart={() => {
                       if (activeVideoIndex === index) {
-                        setExtraData(!extraData);
                         setpaused(true);
                       }
                     }}
@@ -439,8 +443,6 @@ const ReelComponent = ({
                 onPress={onPressLike}
                 index={index}
                 setIsLike={setIsLike}
-                setExtraData={setExtraData}
-                extraData={extraData}
                 likeRef={likeRef}
                 id={item?._id}
               />
@@ -453,20 +455,13 @@ const ReelComponent = ({
               <VideoItem icon="share" onPress={() => handleShare(item)} />
             </View>
           </LinearGradient>
-          {pausedVideos.includes(index) && !item?.avatarUri && (
+          {paused && !item?.avatarUri && (
             <View
-              style={[
-                localStyles.pauseIconContainer,
-                pausedVideos.includes(index) && styles.p15,
-              ]}>
-              {pausedVideos.includes(index) && !item?.avatarUri && (
+              style={[localStyles.pauseIconContainer, paused && styles.p15]}>
+              {paused && !item?.avatarUri && (
                 <Entypo
                   name="triangle-right"
-                  size={
-                    pausedVideos.includes(index) && !item?.avatarUri
-                      ? moderateScale(60)
-                      : 0
-                  }
+                  size={paused && !item?.avatarUri ? moderateScale(60) : 0}
                   color={'white'}
                 />
               )}
@@ -492,7 +487,7 @@ const ReelComponent = ({
   );
 };
 
-export default ReelComponent;
+export default React.memo(ReelComponent);
 
 const localStyles = StyleSheet.create({
   imageContainer: {
