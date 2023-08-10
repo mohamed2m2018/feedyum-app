@@ -63,6 +63,11 @@ export default function TabBarNavigation({navigation}) {
   return (
     <Tab.Navigator
       tabBarPosition="bottom"
+      sceneContainerStyle={{backgroundColor: colors.backgroundColor}}
+      style={{
+        backgroundColor: colors.backgroundColor,
+      }}
+      pagerStyle={{backgroundColor: colors.backgroundColor}}
       screenOptions={{
         headerShown: false,
         tabBarItemStyle: {height: 60},

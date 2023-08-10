@@ -1,6 +1,6 @@
 // Libraries import
 import {StyleSheet, TouchableOpacity, View} from 'react-native';
-import React, {useEffect, useRef, useState, useCallback} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import Description from '../../../components/models/Descriptions';
 import Locations from '../../../components/models/Locations';
 import Comment from '../../../components/models/Comment';
@@ -50,10 +50,10 @@ export default function ReelsComponentFollowing() {
       `/story/following?limit=10&page=${page}&userId=${data?.data?.user?._id}`,
     );
   const {
-    hasNextPageFollowin,
-    fetchNextPageFollowing,
-    isFetchingNextPageFollowing,
-    isLoadingFollowing,
+    hasNextPage: hasNextPageFollowin,
+    fetchNextPage: fetchNextPageFollowing,
+    isFetchingNextPage: isFetchingNextPageFollowing,
+    isLoading: isLoadingFollowing,
   } = useInfiniteQuery(
     ['stories_following', data?.data?.user?._id],
     ({pageParam = 1}) => fetchReelsFollowing(pageParam),

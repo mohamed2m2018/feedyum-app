@@ -79,7 +79,7 @@ export default function Search() {
     isFetchingNextPage,
   } = useInfiniteQuery(['search_story', debouncedSearch], searchStory, {
     keepPreviousData: true,
-    enabled: isSelect === 1,
+    enabled: isSelect === 1 && !!user,
     getNextPageParam: (lastPage, allPages) => {
       const nextPage =
         lastPage?.data?.currentPage < lastPage?.data?.totalPages
@@ -106,7 +106,7 @@ export default function Search() {
     isFetchingNextPage: isFetchingNextPageUsers,
   } = useInfiniteQuery(['search_user', debouncedSearch], searchUser, {
     keepPreviousData: true,
-    enabled: isSelect === 0,
+    enabled: isSelect === 0 && !!user?._id,
     getNextPageParam: (lastPage, allPages) => {
       const nextPage =
         lastPage?.data?.currentPage < lastPage?.data?.totalPages

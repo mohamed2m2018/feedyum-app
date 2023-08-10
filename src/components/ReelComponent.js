@@ -69,7 +69,7 @@ export default function ReelComponent({
   };
 
   const onPressReel = () => {
-    navigation.navigate(TabNav.Home, {
+    navigation.navigate(TabNav.ForYou, {
       storyId: id,
     });
   };
@@ -86,7 +86,21 @@ export default function ReelComponent({
       <ImageBackground
         source={
           reelUrl
-            ? {uri: item.poster || item?.avatarUri || reelUrl}
+            ? {
+                uri:
+                  item.poster?.replace(
+                    'https://foodtokforever.s3.amazonaws.com',
+                    'https://d1wfcrbbkg3bzd.cloudfront.net',
+                  ) ||
+                  item?.avatarUri?.replace(
+                    'https://foodtokforever.s3.amazonaws.com',
+                    'https://d1wfcrbbkg3bzd.cloudfront.net',
+                  ) ||
+                  reelUrl?.replace(
+                    'https://foodtokforever.s3.amazonaws.com',
+                    'https://d1wfcrbbkg3bzd.cloudfront.net',
+                  ),
+              }
             : images.post
         }
         style={localStyles.postImgStyle}
@@ -189,7 +203,6 @@ const localStyles = StyleSheet.create({
     position: 'absolute',
     top: moderateScale(10),
     right: moderateScale(10),
-    zIndex: 1,
   },
   editIconStyle: {
     position: 'absolute',

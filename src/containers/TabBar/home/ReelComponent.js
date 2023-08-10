@@ -212,7 +212,17 @@ const ReelComponent = ({
         <Pressable onPress={() => setpaused(p => !p)}>
           {item?.avatarUri ? (
             <FastImage
-              source={{uri: item?.avatarUri || item?.poster}}
+              source={{
+                uri:
+                  item?.avatarUri?.replace(
+                    'https://foodtokforever.s3.amazonaws.com',
+                    'https://d1wfcrbbkg3bzd.cloudfront.net',
+                  ) ||
+                  item?.poster?.replace(
+                    'https://foodtokforever.s3.amazonaws.com',
+                    'https://d1wfcrbbkg3bzd.cloudfront.net',
+                  ),
+              }}
               resizeMode="cover"
               style={[
                 localStyles.imageContainer,
@@ -223,7 +233,10 @@ const ReelComponent = ({
             !!item?.uri && (
               <Video
                 source={{
-                  uri: item?.uri,
+                  uri: item?.uri?.replace(
+                    'https://foodtokforever.s3.amazonaws.com',
+                    'https://d1wfcrbbkg3bzd.cloudfront.net',
+                  ),
                 }}
                 ref={videoRef}
                 onLoad={({duration: durationToBeSet}) => {

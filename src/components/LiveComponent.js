@@ -23,7 +23,7 @@ export default function LiveComponent({
   const navigation = useNavigation();
 
   const onPressReel = () =>
-    navigation.navigate(TabNav.Home, {
+    navigation.navigate(TabNav.ForYou, {
       storyId: id,
     });
 

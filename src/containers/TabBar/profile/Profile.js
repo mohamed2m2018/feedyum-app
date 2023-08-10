@@ -168,7 +168,16 @@ export default function Profile({navigation}) {
             <ReelComponent
               data={item?.views}
               setisLoadingSomething={setisLoadingSomething}
-              reelUrl={item?.avatarUri || item?.poster}
+              reelUrl={
+                item?.avatarUri?.replace(
+                  'https://foodtokforever.s3.amazonaws.com',
+                  'https://d1wfcrbbkg3bzd.cloudfront.net',
+                ) ||
+                item?.poster?.replace(
+                  'https://foodtokforever.s3.amazonaws.com',
+                  'https://d1wfcrbbkg3bzd.cloudfront.net',
+                )
+              }
               id={item?._id}
               item={item}
               isPlay={!item?.avatarUri}

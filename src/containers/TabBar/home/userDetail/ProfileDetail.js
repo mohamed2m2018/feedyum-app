@@ -251,7 +251,16 @@ export default function ProfileDetail({navigation, route}) {
             <ReelComponent
               data={item?.views}
               item={item}
-              reelUrl={item?.avatarUri || item?.poster}
+              reelUrl={
+                item?.replace(
+                  'https://foodtokforever.s3.amazonaws.com',
+                  'https://d1wfcrbbkg3bzd.cloudfront.net',
+                ) ||
+                item?.poster.replace(
+                  'https://foodtokforever.s3.amazonaws.com',
+                  'https://d1wfcrbbkg3bzd.cloudfront.net',
+                )
+              }
               isPlay={!item?.avatarUri}
               id={item?._id}
             />

@@ -421,6 +421,8 @@ PODS:
     - React-Core
   - react-native-background-upload (6.6.0):
     - React
+  - react-native-blur (4.3.2):
+    - React-Core
   - react-native-compressor (1.6.3):
     - NextLevelSessionExporter
     - React-Core
@@ -443,6 +445,11 @@ PODS:
   - react-native-slider (4.4.2):
     - React-Core
   - react-native-splash-screen (3.3.0):
+    - React-Core
+  - react-native-video (5.2.1):
+    - React-Core
+    - react-native-video/Video (= 5.2.1)
+  - react-native-video/Video (5.2.1):
     - React-Core
   - React-perflogger (0.71.3)
   - React-RCTActionSheet (0.71.3):
@@ -637,6 +644,7 @@ DEPENDENCIES:
   - React-logger (from `../node_modules/react-native/ReactCommon/logger`)
   - react-native-admob-native-ads (from `../node_modules/react-native-admob-native-ads`)
   - react-native-background-upload (from `../node_modules/react-native-background-upload`)
+  - "react-native-blur (from `../node_modules/@react-native-community/blur`)"
   - react-native-compressor (from `../node_modules/react-native-compressor`)
   - react-native-create-thumbnail (from `../node_modules/react-native-create-thumbnail`)
   - react-native-fast-video (from `../node_modules/react-native-fast-video`)
@@ -646,6 +654,7 @@ DEPENDENCIES:
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - "react-native-slider (from `../node_modules/@react-native-community/slider`)"
   - react-native-splash-screen (from `../node_modules/react-native-splash-screen`)
+  - react-native-video (from `../node_modules/react-native-video`)
   - React-perflogger (from `../node_modules/react-native/ReactCommon/reactperflogger`)
   - React-RCTActionSheet (from `../node_modules/react-native/Libraries/ActionSheetIOS`)
   - React-RCTAnimation (from `../node_modules/react-native/Libraries/NativeAnimation`)
@@ -763,6 +772,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-admob-native-ads"
   react-native-background-upload:
     :path: "../node_modules/react-native-background-upload"
+  react-native-blur:
+    :path: "../node_modules/@react-native-community/blur"
   react-native-compressor:
     :path: "../node_modules/react-native-compressor"
   react-native-create-thumbnail:
@@ -781,6 +792,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@react-native-community/slider"
   react-native-splash-screen:
     :path: "../node_modules/react-native-splash-screen"
+  react-native-video:
+    :path: "../node_modules/react-native-video"
   React-perflogger:
     :path: "../node_modules/react-native/ReactCommon/reactperflogger"
   React-RCTActionSheet:
@@ -897,6 +910,7 @@ SPEC CHECKSUMS:
   React-logger: 957e5dc96d9dbffc6e0f15e0ee4d2b42829ff207
   react-native-admob-native-ads: 97b6667c5d4d3e5a75baf264450dbb54ba53a181
   react-native-background-upload: 7c608537f87106c93530a3a19a853afd55466823
+  react-native-blur: cfdad7b3c01d725ab62a8a729f42ea463998afa2
   react-native-compressor: 20af48e04a9b4c82992bcebd6e02dc04ab6be073
   react-native-create-thumbnail: e022bcdcba8a0b4529a50d3fa1a832ec921be39d
   react-native-fast-video: 2b3203e05780cbaf23694c64e0194ab66fb8825d
@@ -906,6 +920,7 @@ SPEC CHECKSUMS:
   react-native-safe-area-context: 9697629f7b2cda43cf52169bb7e0767d330648c2
   react-native-slider: 33b8d190b59d4f67a541061bb91775d53d617d9d
   react-native-splash-screen: 4312f786b13a81b5169ef346d76d33bc0c6dc457
+  react-native-video: c26780b224543c62d5e1b2a7244a5cd1b50e8253
   React-perflogger: af8a3d31546077f42d729b949925cc4549f14def
   React-RCTActionSheet: 57cc5adfefbaaf0aae2cf7e10bccd746f2903673
   React-RCTAnimation: 11c61e94da700c4dc915cf134513764d87fc5e2b

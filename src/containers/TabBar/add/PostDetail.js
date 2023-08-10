@@ -151,7 +151,7 @@ export default function PostDetail() {
     setisFormFilled(true);
 
     setTimeout(() => {
-      navigation.navigate(TabNav.Home);
+      navigation.navigate(TabNav.ForYou);
     }, 100);
   };
 
