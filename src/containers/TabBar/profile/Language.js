@@ -67,7 +67,7 @@ const Language = ({navigation}) => {
     }
   };
 
-  const [lang, setlang] = useState();
+  const [lang, setlang] = useState('en');
 
   useEffect(() => {
     const getLanguage = async () => {
