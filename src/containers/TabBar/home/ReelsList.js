@@ -1,7 +1,6 @@
 import {FlashList} from '@shopify/flash-list';
 import React from 'react';
-import {ActivityIndicator, Platform} from 'react-native';
-import {screenHeight} from '../../../common/constants';
+import {ActivityIndicator, Platform, RefreshControl} from 'react-native';
 import {useSelector} from 'react-redux';
 import ZText from '../../../components/common/ZText';
 
@@ -21,6 +20,8 @@ const ReelsList = ({
   fetchNextPage,
   user,
   emptylistMessage,
+  isRefetching,
+  refetch,
 }) => {
   const colors = useSelector(state => state.theme.theme);
 
@@ -38,9 +39,17 @@ const ReelsList = ({
       snapToInterval={Platform.OS === 'android' ? layoutHeight : undefined}
       drawDistance={layoutHeight}
       decelerationRate={'fast'}
+      refreshControl={
+        <RefreshControl
+          refreshing={isRefetching}
+          onRefresh={() => {
+            refetch();
+          }}
+        />
+      }
       disableIntervalMomentum
       ListEmptyComponent={
-        isLoading || !user ? (
+        isLoading || isRefetching || !user ? (
           <ActivityIndicator
             style={{alignSelf: 'center', marginTop: 300}}
             size={'large'}
@@ -55,8 +64,8 @@ const ReelsList = ({
           </ZText>
         )
       }
-      estimatedItemSize={11}
       ref={flatListRef}
+      estimatedItemSize={11}
       onEndReachedThreshold={0.4}
       onEndReached={hasNextPage ? fetchNextPage : null}
       ListFooterComponent={

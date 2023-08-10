@@ -131,7 +131,9 @@ export const AdView = React.memo(
                 opacity: !loading && !error && loaded ? 0 : 1,
                 zIndex: !loading && !error && loaded ? 0 : 10,
               }}>
-              {!loading && <ActivityIndicator size={28} color="#a9a9a9" />}
+              {!loading && (
+                <ActivityIndicator size={28} color={colors.primary} />
+              )}
             </View>
 
             <View

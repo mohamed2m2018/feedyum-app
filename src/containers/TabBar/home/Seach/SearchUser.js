@@ -11,6 +11,7 @@ export default function SearchUser({users, ...props}) {
       <FlashList
         data={users}
         {...props}
+        estimatedItemSize={100}
         ListEmptyComponent={
           !props.isFetching && (
             <ZText style={{textAlign: 'center', marginTop: 250}} type={'B20'}>

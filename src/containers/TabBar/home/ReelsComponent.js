@@ -6,7 +6,12 @@ import Locations from '../../../components/models/Locations';
 import Comment from '../../../components/models/Comment';
 import {useSelector} from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {useNavigation, useRoute} from '@react-navigation/native';
+import {
+  useFocusEffect,
+  useIsFocused,
+  useNavigation,
+  useRoute,
+} from '@react-navigation/native';
 import {AdView} from './ads/AdView';
 
 // Local import
@@ -16,6 +21,7 @@ import {
   isAndroid,
   moderateScale,
   screenFullHeight,
+  screenHeight,
 } from '../../../common/constants';
 import {StackNav} from '../../../navigation/NavigationKeys';
 import {useInfiniteQuery, useMutation, useQuery} from 'react-query';
@@ -24,9 +30,11 @@ import request from '../../../api/request';
 import {BannerAd, BannerAdSize, TestIds} from 'react-native-google-mobile-ads';
 import ReelsList from './ReelsList';
 import strings from '../../../i18n/strings';
+import Spinner from 'react-native-loading-spinner-overlay';
 
 export default function ReelsComponent() {
   const colors = useSelector(state => state.theme.theme);
+  const isFocused = useIsFocused();
   const commentSheetRef = useRef('');
   const descriptionSheetRef = useRef('');
   const locationSheetRef = useRef('');
@@ -48,44 +56,51 @@ export default function ReelsComponent() {
     request.get(
       `/story/stories?limit=10&page=${page}&userId=${data?.data?.user?._id}`,
     );
-  const {hasNextPage, fetchNextPage, isFetchingNextPage, isLoading} =
-    useInfiniteQuery(
-      ['stories', data?.data?.user?._id],
-      ({pageParam = 1}) => fetchReels(pageParam),
-      {
-        getNextPageParam: (lastPage, allPages) => {
-          const nextPage =
-            lastPage?.data?.currentPage < lastPage?.data?.totalPages
-              ? allPages.length + 1
-              : undefined;
-          return nextPage;
-        },
-        onSuccess: res => {
-          if (res?.pageParams?.length === 1) {
-            flatListRef.current?.scrollToOffset({offset: 0});
-          }
-          const result = res?.pages.flatMap(page => page.data?.stories || []);
-          if (result.length) {
-            setFilteredData(result);
-          }
-        },
-        refetchOnWindowFocus: false,
-        refetchOnMount: false,
-        enabled: !!data?.data?.user?._id,
-        refetchOnReconnect: false,
+  const {
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+    isLoading,
+    refetch,
+    isRefetching,
+  } = useInfiniteQuery(
+    ['stories', data?.data?.user?._id],
+    ({pageParam = 1}) => fetchReels(pageParam),
+    {
+      retry: 0,
+      getNextPageParam: (lastPage, allPages) => {
+        const nextPage =
+          lastPage?.data?.currentPage < lastPage?.data?.totalPages
+            ? allPages.length + 1
+            : undefined;
+        return nextPage;
       },
-    );
+      onSuccess: res => {
+        if (res?.pageParams?.length === 1) {
+          flatListRef.current?.scrollToOffset({offset: 0});
+        }
+        const result = res?.pages.flatMap(page => page.data?.stories || []);
+        if (result.length) {
+          setFilteredData(result);
+        }
+      },
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      enabled: !!data?.data?.user?._id,
+      refetchOnReconnect: false,
+    },
+  );
 
-  useQuery(
+  const {isLoading: isLoadingStory} = useQuery(
     ['storyById', route.params?.storyId],
     () => request.get(`/story/${route.params?.storyId}`),
     {
       enabled: !!route.params?.storyId,
       onSuccess: res => {
-        const filtered = filteredData?.current?.filter(item => {
+        const filtered = filteredData?.filter(item => {
           return res?.data?.story?._id !== item?._id;
         });
-        if (filtered.length) {
+        if (filtered?.length) {
           setFilteredData([res?.data?.story, ...filtered]);
         }
         flatListRef.current?.scrollToOffset({offset: 0});
@@ -94,9 +109,23 @@ export default function ReelsComponent() {
   );
 
   useEffect(() => {
-    setExtraData(!extraData);
+    setExtraData(e => !e);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeVideoIndex]);
+  }, [activeVideoIndex, isFocused]);
+
+  // Refetch data when the tab screen gains focus
+  useFocusEffect(
+    React.useCallback(() => {
+      // Perform your refetch logic here
+      setExtraData(e => !e);
+
+      return () => {
+        refetch(); // Example: calling refetch from react-query
+        setFilteredData([]);
+        // Cleanup or unsubscribe if needed
+      };
+    }, []),
+  );
 
   const onPressSearch = () => navigation.navigate(StackNav.Search);
 
@@ -124,7 +153,8 @@ export default function ReelsComponent() {
         <ReelComponent
           item={item}
           i={index}
-          layoutHeight={layoutHeight}
+          isFocused={isFocused}
+          layoutHeight={layoutHeight || screenHeight}
           data={data}
           activeVideoIndex={activeVideoIndex}
           likeRef={likeRef}
@@ -144,6 +174,7 @@ export default function ReelsComponent() {
       activeVideoIndex,
       likeRef,
       flatListRef,
+      isFocused,
       setExtraData,
       setSelectedPostId,
       commentSheetRef,
@@ -172,6 +203,7 @@ export default function ReelsComponent() {
 
   return (
     <View style={[localStyles.outerContainer, {color: colors.backgroundColor}]}>
+      <Spinner color={colors.primary} visible={isLoadingStory} />
       <View style={localStyles.headerContainer}>
         <TouchableOpacity onPress={onPressSearch}>
           <Ionicons
@@ -184,6 +216,8 @@ export default function ReelsComponent() {
       <ReelsList
         filteredData={filteredData}
         extraData={extraData}
+        isRefetching={isRefetching}
+        refetch={refetch}
         user={data?.data?.user}
         keyExtractor={(item, index) => 'item-ForYou' + item?._id + index}
         renderReelComponent={renderReelComponent}

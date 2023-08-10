@@ -26,7 +26,6 @@ import ReelComponent from '../../../components/ReelComponent';
 import {useQuery} from 'react-query';
 import request from '../../../api/request';
 import {Toast, ALERT_TYPE} from 'react-native-alert-notification';
-import Spinner from 'react-native-loading-spinner-overlay/lib';
 
 export default function Profile({navigation}) {
   const UserDetail = (postsNo, followersNo, followingNo, viewsNo) => [
@@ -160,7 +159,13 @@ export default function Profile({navigation}) {
   return (
     <ZSafeAreaView>
       <View style={{flex: 1, height: '100%', padding: 20}}>
-        <Spinner color={colors.primary} visible={isLoadingSomething} />
+        {isLoadingSomething && (
+          <ActivityIndicator
+            color={colors.primary}
+            size={'large'}
+            style={{alignSelf: 'center'}}
+          />
+        )}
         <FlatList
           data={storiesData}
           showsVerticalScrollIndicator={false}
@@ -187,7 +192,7 @@ export default function Profile({navigation}) {
           numColumns={3}
           ListEmptyComponent={
             isLoading ? (
-              <Spinner
+              <ActivityIndicator
                 color={colors.primary}
                 size={'large'}
                 visible={isLoading}

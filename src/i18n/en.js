@@ -192,7 +192,7 @@ export default {
   risingStar: 'Rising Star',
   request: 'Request',
   askQuestion: 'Ask a question...',
-  canBeReceivedIn: 'Can be received in',
+  canBeReceivedIn: 'Can be received in ',
   hours: 'Hours',
   days: 'Days',
   toDeliver: 'to deliver this order',

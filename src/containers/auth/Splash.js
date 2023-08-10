@@ -1,6 +1,6 @@
 // Library Imports
 import {StyleSheet, View} from 'react-native';
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import {useDispatch, useSelector} from 'react-redux';
 import {ActivityIndicator} from 'react-native';
 import SplashScreen from 'react-native-splash-screen';
@@ -15,7 +15,7 @@ import request from '../../api/request';
 const Splash = ({navigation}) => {
   const color = useSelector(state => state.theme.theme);
   const dispatch = useDispatch();
-
+  const [isnavigating, setIsNavigating] = useState(false);
   const asyncProcess = async () => {
     try {
       let asyncData = await AsyncStorage.multiGet([
@@ -35,34 +35,27 @@ const Splash = ({navigation}) => {
             dispatch(changeThemeAction(colors.dark));
           }
         }
-        // if (!registeration_completed) {
-        //   navigation.reset({
-        //     index: 0,
-        //     routes: [
-        //       {
-        //         name: StackNav.SetUpProfile,
-        //         params: {
-        //           title: strings.fillYourProfile,
-        //         },
-        //       },
-        //     ],
-        //   });
-        //   return;
-        // }
 
         if (access_token) {
           request.defaults.headers.common.Authorization = access_token;
+          setIsNavigating(true);
+          SplashScreen.hide();
           navigation.reset({
             index: 0,
             routes: [{name: StackNav.TabBar}],
           });
         } else {
           if (appOpenFirstTime) {
+            SplashScreen.hide();
+
+            setIsNavigating(true);
             navigation.reset({
               index: 0,
               routes: [{name: StackNav.Auth}],
             });
           } else {
+            SplashScreen.hide();
+            setIsNavigating(true);
             navigation.reset({
               index: 0,
               routes: [{name: StackNav.onBoarding}],
@@ -77,13 +70,14 @@ const Splash = ({navigation}) => {
 
   useEffect(() => {
     asyncProcess();
-    SplashScreen.hide();
   }, []);
 
   return (
     <View
       style={[localStyles.container, {backgroundColor: color.backgroundColor}]}>
-      <ActivityIndicator size="large" color={color.primary} />
+      {!isnavigating && (
+        <ActivityIndicator size="large" color={color.primary} />
+      )}
     </View>
   );
 };

@@ -6,7 +6,12 @@ import Locations from '../../../components/models/Locations';
 import Comment from '../../../components/models/Comment';
 import {useSelector} from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {useNavigation, useRoute} from '@react-navigation/native';
+import {
+  useFocusEffect,
+  useIsFocused,
+  useNavigation,
+  useRoute,
+} from '@react-navigation/native';
 import {AdView} from './ads/AdView';
 
 // Local import
@@ -31,14 +36,12 @@ export default function ReelsComponentFollowing() {
   const descriptionSheetRef = useRef('');
   const locationSheetRef = useRef('');
   const navigation = useNavigation();
-  const route = useRoute();
   const [activeVideoIndex, setActiveVideoIndex] = useState(0);
   const [layoutHeight, setLayoutHeight] = useState(0);
   const [extraData, setExtraData] = useState(true);
-  const [filteredData, setFilteredData] = useState([]);
+  const isFocused = useIsFocused();
   const [filteredDataFollowing, setFilteredDataFollowing] = useState([]);
   const flatListRefFollowing = useRef(null);
-  const flatListRef = useRef(null);
   const likeRef = useRef([]);
   const [selectedDescription, setselectedDescription] = useState('');
   const [selectedAreas, setSelectedAreas] = useState([]);
@@ -54,6 +57,8 @@ export default function ReelsComponentFollowing() {
     fetchNextPage: fetchNextPageFollowing,
     isFetchingNextPage: isFetchingNextPageFollowing,
     isLoading: isLoadingFollowing,
+    refetch,
+    isRefetching,
   } = useInfiniteQuery(
     ['stories_following', data?.data?.user?._id],
     ({pageParam = 1}) => fetchReelsFollowing(pageParam),
@@ -84,23 +89,6 @@ export default function ReelsComponentFollowing() {
     },
   );
 
-  useQuery(
-    ['storyById', route.params?.storyId],
-    () => request.get(`/story/${route.params?.storyId}`),
-    {
-      enabled: !!route.params?.storyId,
-      onSuccess: res => {
-        const filtered = filteredData?.current?.filter(item => {
-          return res?.data?.story?._id !== item?._id;
-        });
-        if (filtered.length) {
-          setFilteredData([res?.data?.story, ...filtered]);
-        }
-        flatListRef.current?.scrollToOffset({offset: 0});
-      },
-    },
-  );
-
   useEffect(() => {
     setExtraData(!extraData);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -109,6 +97,20 @@ export default function ReelsComponentFollowing() {
   const onPressSearch = () => navigation.navigate(StackNav.Search);
 
   const [selectedPostId, setSelectedPostId] = useState();
+
+  // Refetch data when the tab screen gains focus
+  useFocusEffect(
+    React.useCallback(() => {
+      // Perform your refetch logic here
+      setExtraData(e => !e);
+
+      return () => {
+        refetch(); // Example: calling refetch from react-query
+        setFilteredDataFollowing([]);
+        // Cleanup or unsubscribe if needed
+      };
+    }, []),
+  );
 
   const onPressAvailableLocation = (gov, areas) => {
     setSelectedAreas(areas);
@@ -136,6 +138,7 @@ export default function ReelsComponentFollowing() {
         data={data}
         activeVideoIndex={activeVideoIndex}
         likeRef={likeRef}
+        isFocused={isFocused}
         onPressAvailableLocation={onPressAvailableLocation}
         flatListRef={flatListRefFollowing}
         setExtraData={setExtraData}
@@ -184,6 +187,8 @@ export default function ReelsComponentFollowing() {
         keyExtractor={(item, index) => 'item-Following' + item?._id + index}
         renderReelComponent={renderReelComponent}
         viewConfig={viewConfig}
+        isRefetching={isRefetching}
+        refetch={refetch}
         viewableItemsChanged={viewableItemsChanged}
         layoutHeight={layoutHeight}
         isLoading={isLoadingFollowing}

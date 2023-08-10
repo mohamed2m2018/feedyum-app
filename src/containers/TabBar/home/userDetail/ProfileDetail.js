@@ -247,16 +247,16 @@ export default function ProfileDetail({navigation, route}) {
               </ZText>
             )
           }
-          renderItem={({item, index}) => (
+          renderItem={({item}) => (
             <ReelComponent
               data={item?.views}
               item={item}
               reelUrl={
-                item?.replace(
+                item?.avatarUri?.replace(
                   'https://foodtokforever.s3.amazonaws.com',
                   'https://d1wfcrbbkg3bzd.cloudfront.net',
                 ) ||
-                item?.poster.replace(
+                item?.poster?.replace(
                   'https://foodtokforever.s3.amazonaws.com',
                   'https://d1wfcrbbkg3bzd.cloudfront.net',
                 )

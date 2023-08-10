@@ -70,6 +70,7 @@ export default function TabBarNavigation({navigation}) {
       pagerStyle={{backgroundColor: colors.backgroundColor}}
       screenOptions={{
         headerShown: false,
+        lazy: true,
         tabBarItemStyle: {height: 60},
         tabBarLabelStyle: {fontSize: 12},
         tabBarContentContainerStyle: {
@@ -200,7 +201,6 @@ const localStyles = StyleSheet.create({
   },
   tabViewContainer: {
     ...styles.center,
-    // backgroundColor: 'green',
     width: moderateScale(80),
     height: getHeight(40),
     right: !I18nManager.isRTL ? moderateScale(20) : moderateScale(40),
