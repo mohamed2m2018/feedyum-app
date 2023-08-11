@@ -79,7 +79,11 @@ export default function ReelsComponent() {
         if (res?.pageParams?.length === 1) {
           flatListRef.current?.scrollToOffset({offset: 0});
         }
-        const result = res?.pages.flatMap(page => page.data?.stories || []);
+        const ad = {_id: 'ad' + res?.pageParams?.length, type: 'ad'};
+        const result = res?.pages.flatMap(page => [
+          ...(page.data?.stories || []),
+          ad,
+        ]);
         if (result.length) {
           setFilteredData(result);
         }
@@ -113,20 +117,6 @@ export default function ReelsComponent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeVideoIndex, isFocused]);
 
-  // Refetch data when the tab screen gains focus
-  useFocusEffect(
-    React.useCallback(() => {
-      // Perform your refetch logic here
-      setExtraData(e => !e);
-
-      return () => {
-        refetch(); // Example: calling refetch from react-query
-        setFilteredData([]);
-        // Cleanup or unsubscribe if needed
-      };
-    }, []),
-  );
-
   const onPressSearch = () => navigation.navigate(StackNav.Search);
 
   const [selectedPostId, setSelectedPostId] = useState();
@@ -138,17 +128,6 @@ export default function ReelsComponent() {
   };
   const renderReelComponent = useCallback(
     ({item, index}) => {
-      const isAdIndex = (index + 1) % 10 === 0;
-      if (isAdIndex) {
-        return (
-          <AdView
-            loadOnMount={false}
-            layoutHeight={layoutHeight}
-            type="video"
-            media={true}
-          />
-        );
-      }
       return (
         <ReelComponent
           item={item}

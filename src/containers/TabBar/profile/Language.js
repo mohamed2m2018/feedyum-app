@@ -23,7 +23,6 @@ import {getAsyncStorageData, setAsyncStorageData} from '../../../utils/helpers';
 
 const Language = ({navigation}) => {
   const colors = useSelector(state => state.theme.theme);
-  const language = useSelector(state => state.profile);
   const dispatch = useDispatch();
   const [isSelected, setIsSelected] = React.useState(
     lang === 'en' ? 'English' : 'العربية',
@@ -67,7 +66,7 @@ const Language = ({navigation}) => {
     }
   };
 
-  const [lang, setlang] = useState();
+  const [lang, setlang] = useState('en');
 
   useEffect(() => {
     const getLanguage = async () => {

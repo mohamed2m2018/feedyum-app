@@ -10,9 +10,7 @@ import {
   useFocusEffect,
   useIsFocused,
   useNavigation,
-  useRoute,
 } from '@react-navigation/native';
-import {AdView} from './ads/AdView';
 
 // Local import
 import {styles} from '../../../themes';
@@ -75,7 +73,11 @@ export default function ReelsComponentFollowing() {
         if (res?.pageParams?.length === 1) {
           flatListRefFollowing.current?.scrollToOffset({offset: 0});
         }
-        const result = res?.pages.flatMap(page => page.data?.stories || []);
+        const ad = {_id: 'ad' + res?.pageParams?.length, type: 'ad'};
+        const result = res?.pages.flatMap(page => [
+          ...(page.data?.stories || []),
+          ad,
+        ]);
         if (result.length) {
           setFilteredDataFollowing(result);
         }
@@ -119,17 +121,6 @@ export default function ReelsComponentFollowing() {
   };
 
   const renderReelComponent = ({item, index}) => {
-    const isAdIndex = (index + 1) % 10 === 0;
-    if (isAdIndex) {
-      return (
-        <AdView
-          loadOnMount={false}
-          layoutHeight={layoutHeight}
-          type="video"
-          media={true}
-        />
-      );
-    }
     return (
       <ReelComponent
         item={item}

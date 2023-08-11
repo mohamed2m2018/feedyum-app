@@ -41,8 +41,9 @@ import Video from 'react-native-fast-video';
 import Slider from '@react-native-community/slider';
 import Share from 'react-native-share';
 import FastImage from 'react-native-fast-image';
-import {useIsFocused, useNavigation} from '@react-navigation/native';
+import {useNavigation} from '@react-navigation/native';
 import {StackNav} from '../../../navigation/NavigationKeys';
+import {AdView} from './ads/AdView';
 
 const ReelComponent = ({
   item,
@@ -203,302 +204,326 @@ const ReelComponent = ({
     onPressProfile(item?.channelName, item?.avatarUri, item?.author?._id);
 
   return (
-    <GestureHandlerRootView
-      style={{
-        height: layoutHeight,
-        backgroundColor: colors.backgroundColor,
-      }}>
-      <GestureDetector
-        gesture={Gesture.Tap()
-          .numberOfTaps(2)
-          .onStart(() => {
-            likeRef?.current?.[index]?.(item?._id);
-          })}>
-        <Pressable
-          onPress={() =>
-            setpaused(p => ({
-              slider: p.slider,
-              paused: !p.paused,
-            }))
-          }>
-          {item?.avatarUri ? (
-            <FastImage
-              source={{
-                uri:
-                  item?.avatarUri?.replace(
-                    'https://foodtokforever.s3.amazonaws.com',
-                    'https://d1wfcrbbkg3bzd.cloudfront.net',
-                  ) ||
-                  item?.poster?.replace(
-                    'https://foodtokforever.s3.amazonaws.com',
-                    'https://d1wfcrbbkg3bzd.cloudfront.net',
-                  ),
-              }}
-              resizeMode="cover"
-              style={[
-                localStyles.imageContainer,
-                {backgroundColor: colors.backgroundColor},
-              ]}
-            />
-          ) : (
-            !!item?.uri &&
-            isFocused && (
-              <Video
-                source={{
-                  uri: item?.uri?.replace(
-                    'https://foodtokforever.s3.amazonaws.com',
-                    'https://d1wfcrbbkg3bzd.cloudfront.net',
-                  ),
-                }}
-                ref={videoRef}
-                onLoadStart={() => {
-                  setIsBuffering(true);
-                }}
-                onLoad={({duration: durationToBeSet}) => {
-                  setDurationInSeconds(durationToBeSet);
-                }}
-                onEnd={() => {
-                  if (activeVideoIndex === index) {
-                    if (flatListRef.current) {
-                      flatListRef.current.scrollToIndex({
-                        animated: true,
-                        index: index + 1,
-                      });
-                      videoRef.current.seek(0);
-                    }
-                  }
-                }}
-                style={[
-                  localStyles.imageContainer,
-                  {
-                    backgroundColor: colors.backgroundColor,
-                  },
-                ]}
-                poster={item?.avatarUri || item?.poster}
-                posterResizeMode="cover"
-                onProgress={debouncedOnProgress}
-                resizeMode="cover"
-                onError={() => console.log('hello')}
-                seekColor={colors.primary}
-                paused={
-                  activeVideoIndex !== index ||
-                  !isFocused ||
-                  paused.paused ||
-                  paused.slider
-                }
-              />
-            )
-          )}
-
-          <LinearGradient
-            key={`item-${item?._id}`}
-            colors={['transparent', 'rgba(0, 0, 0, 1)']}
-            style={localStyles.bottomContainer}>
-            <View style={styles.flex}>
-              <View style={styles.rowCenter}>
-                <TouchableOpacity
-                  onPress={handlePressProfile}
-                  style={styles.mb10}>
-                  <Image
-                    resizeMode="cover"
-                    source={
-                      item?.author?.avatar
-                        ? {uri: item?.author?.avatar}
-                        : colors.dark
-                        ? images.userDark
-                        : images.userLight
-                    }
-                    style={localStyles.userImage}
-                  />
-                </TouchableOpacity>
-                <View style={[styles.mh20, styles.flex]}>
-                  <ZText
-                    onPress={() =>
-                      onPressProfile(
-                        item?.channelName,
-                        item?.avatarUri,
-                        item?.author?._id,
+    <>
+      {item?.type !== 'ad' && (
+        <GestureHandlerRootView
+          style={{
+            height: layoutHeight,
+            backgroundColor: colors.backgroundColor,
+          }}>
+          <GestureDetector
+            gesture={Gesture.Tap()
+              .numberOfTaps(2)
+              .onStart(() => {
+                likeRef?.current?.[index]?.(item?._id);
+              })}>
+            <Pressable
+              onPress={() =>
+                setpaused(p => ({
+                  slider: p.slider,
+                  paused: !p.paused,
+                }))
+              }>
+              {item?.avatarUri ? (
+                <FastImage
+                  source={{
+                    uri:
+                      item?.avatarUri?.replace(
+                        'https://foodtokforever.s3.amazonaws.com',
+                        'https://d1wfcrbbkg3bzd.cloudfront.net',
+                      ) ||
+                      item?.poster?.replace(
+                        'https://foodtokforever.s3.amazonaws.com',
+                        'https://d1wfcrbbkg3bzd.cloudfront.net',
+                      ),
+                  }}
+                  resizeMode="cover"
+                  style={[
+                    localStyles.imageContainer,
+                    {backgroundColor: colors.backgroundColor},
+                  ]}
+                />
+              ) : (
+                !!item?.uri &&
+                isFocused && (
+                  <Video
+                    source={{
+                      uri: item?.uri?.replace(
+                        'https://foodtokforever.s3.amazonaws.com',
+                        'https://d1wfcrbbkg3bzd.cloudfront.net',
+                      ),
+                    }}
+                    ref={videoRef}
+                    onLoadStart={() => {
+                      setIsBuffering(true);
+                    }}
+                    onLoad={({duration: durationToBeSet}) => {
+                      setDurationInSeconds(durationToBeSet);
+                    }}
+                    onEnd={() => {
+                      if (activeVideoIndex === index) {
+                        if (flatListRef.current) {
+                          flatListRef.current.scrollToIndex({
+                            animated: true,
+                            index: index + 1,
+                          });
+                          videoRef.current.seek(0);
+                        }
+                      }
+                    }}
+                    style={[
+                      localStyles.imageContainer,
+                      {
+                        backgroundColor: colors.backgroundColor,
+                      },
+                    ]}
+                    poster={
+                      item?.avatarUri?.replace(
+                        'https://foodtokforever.s3.amazonaws.com',
+                        'https://d1wfcrbbkg3bzd.cloudfront.net',
+                      ) ||
+                      item?.poster?.replace(
+                        'https://foodtokforever.s3.amazonaws.com',
+                        'https://d1wfcrbbkg3bzd.cloudfront.net',
                       )
                     }
-                    type="b18"
-                    numberOfLines={1}
-                    color={colors.white}>
-                    {item?.author?.fullName}
-                  </ZText>
-                  <ZText
-                    type="m12"
-                    style={styles.mb5}
-                    numberOfLines={1}
-                    color={colors.white}>
-                    {item?.created_at?.slice(0, 10)}
-                  </ZText>
-                </View>
-              </View>
-              {item?.duration && (
-                <ZText type="m12" color={colors.white}>
-                  {`${
-                    strings.canBeReceivedIn +
-                    duration[0] +
-                    ' ' +
-                    (I18nManager.isRTL
-                      ? duration[1] === 'Hours'
-                        ? duration[0] > 1
-                          ? 'ساعات'
-                          : 'ساعة'
-                        : duration[0] > 1
-                        ? 'ايام'
-                        : 'يوم'
-                      : pluralize(duration[1] || '', duration[0]))
-                  }`}
-                </ZText>
+                    posterResizeMode="cover"
+                    onProgress={debouncedOnProgress}
+                    resizeMode="cover"
+                    onError={() => console.log('hello')}
+                    seekColor={colors.primary}
+                    paused={
+                      activeVideoIndex !== index ||
+                      !isFocused ||
+                      paused.paused ||
+                      paused.slider
+                    }
+                  />
+                )
               )}
-              <ZText type="m14" color={colors.white}>
-                {item.title}
-              </ZText>
-              <ZText type="m14" color={colors.white} style={styles.mv10}>
-                {item?.caption?.length < 100
-                  ? item?.caption
-                  : item?.caption?.slice(0, 100) + '...'}
-              </ZText>
-              {item?.caption?.length > 100 && (
-                <TouchableOpacity
-                  onPress={() => onPressMore(item?.caption)}
-                  style={styles.button}>
-                  <ZText type="m14" color={colors.primary}>
+
+              <LinearGradient
+                key={`item-${item?._id}`}
+                colors={['transparent', 'rgba(0, 0, 0, 1)']}
+                style={localStyles.bottomContainer}>
+                <View style={styles.flex}>
+                  <View style={styles.rowCenter}>
+                    <TouchableOpacity
+                      onPress={handlePressProfile}
+                      style={styles.mb10}>
+                      <Image
+                        resizeMode="cover"
+                        source={
+                          item?.author?.avatar
+                            ? {uri: item?.author?.avatar}
+                            : colors.dark
+                            ? images.userDark
+                            : images.userLight
+                        }
+                        style={localStyles.userImage}
+                      />
+                    </TouchableOpacity>
+                    <View style={[styles.mh20, styles.flex]}>
+                      <ZText
+                        onPress={() =>
+                          onPressProfile(
+                            item?.channelName,
+                            item?.avatarUri,
+                            item?.author?._id,
+                          )
+                        }
+                        type="b18"
+                        numberOfLines={1}
+                        color={colors.white}>
+                        {item?.author?.fullName}
+                      </ZText>
+                      <ZText
+                        type="m12"
+                        style={styles.mb5}
+                        numberOfLines={1}
+                        color={colors.white}>
+                        {item?.created_at?.slice(0, 10)}
+                      </ZText>
+                    </View>
+                  </View>
+                  {item?.duration && (
+                    <ZText type="m12" color={colors.white}>
+                      {`${
+                        strings.canBeReceivedIn +
+                        duration[0] +
+                        ' ' +
+                        (I18nManager.isRTL
+                          ? duration[1] === 'Hours'
+                            ? duration[0] > 1
+                              ? 'ساعات'
+                              : 'ساعة'
+                            : duration[0] > 1
+                            ? 'ايام'
+                            : 'يوم'
+                          : pluralize(duration[1] || '', duration[0]))
+                      }`}
+                    </ZText>
+                  )}
+                  <ZText type="m14" color={colors.white}>
+                    {item.title}
+                  </ZText>
+                  <ZText type="m14" color={colors.white} style={styles.mv10}>
                     {item?.caption?.length < 100
-                      ? ''
-                      : strings.seeMoreDescription}
+                      ? item?.caption
+                      : item?.caption?.slice(0, 100) + '...'}
                   </ZText>
-                </TouchableOpacity>
-              )}
-              <TouchableOpacity
-                onPress={() =>
-                  onPressAvailableLocation(item?.governorate, item?.areas)
-                }
-                style={styles.button}>
-                <ZText type="m14" color={colors.primary} style={styles.mb20}>
-                  {strings.checkLocations}
-                </ZText>
-              </TouchableOpacity>
-              {!item.avatarUri && (
+                  {item?.caption?.length > 100 && (
+                    <TouchableOpacity
+                      onPress={() => onPressMore(item?.caption)}
+                      style={styles.button}>
+                      <ZText type="m14" color={colors.primary}>
+                        {item?.caption?.length < 100
+                          ? ''
+                          : strings.seeMoreDescription}
+                      </ZText>
+                    </TouchableOpacity>
+                  )}
+                  <TouchableOpacity
+                    onPress={() =>
+                      onPressAvailableLocation(item?.governorate, item?.areas)
+                    }
+                    style={styles.button}>
+                    <ZText
+                      type="m14"
+                      color={colors.primary}
+                      style={styles.mb20}>
+                      {strings.checkLocations}
+                    </ZText>
+                  </TouchableOpacity>
+                  {!item.avatarUri && (
+                    <View
+                      style={{
+                        direction: 'ltr',
+                        ...(I18nManager.isRTL &&
+                          Platform.OS === 'ios' && {transform: [{scaleX: -1}]}),
+                      }}>
+                      <Slider
+                        style={localStyles.seekBar}
+                        minimumValue={0}
+                        tapToSeek
+                        maximumValue={durationInSeconds}
+                        value={seekValue}
+                        minimumTrackTintColor={colors.primary}
+                        maximumTrackTintColor={colors.grey}
+                        thumbTintColor={colors.primary}
+                        onSlidingStart={() => {
+                          if (activeVideoIndex === index) {
+                            setpaused({slider: true, paused: false});
+                            setIsBuffering(true);
+                          }
+                        }}
+                        onSlidingComplete={value => {
+                          if (activeVideoIndex === index) {
+                            videoRef?.current?.seek?.(value);
+                            setSeekValue(value);
+                            setTimeout(() => {
+                              setpaused({slider: false, paused: false});
+                              setIsBuffering(false);
+                            }, 400);
+                          }
+                        }}
+                      />
+                    </View>
+                  )}
+                  {data?.data?.user?._id !== item?.author?._id &&
+                    item?.author?.type !== 'user' && (
+                      <ZButton
+                        title={`${strings.buyThisFor} ${item?.price} ${strings.EGP}`}
+                        textType={'b18'}
+                        color={colors.white}
+                        containerStyle={localStyles.buttonContainer}
+                        onPress={async () => {
+                          const link = await generateDynamicLink(item);
+                          item?.linkToGo
+                            ? Linking.openURL(
+                                item?.linkToGo?.includes('http')
+                                  ? item?.linkToGo
+                                  : 'https://' + item?.linkToGo,
+                              )
+                            : Linking.openURL(
+                                'whatsapp://send?text=' +
+                                  'Hi, I came from FoodTok app, and I want to buy this dish: ' +
+                                  item.caption +
+                                  '\n' +
+                                  link +
+                                  '&phone=2' +
+                                  item?.author?.phone,
+                              );
+                        }}
+                      />
+                    )}
+                </View>
+                <View style={localStyles.verticalContainer}>
+                  <VideoItem
+                    icon="flag"
+                    size={moderateScale(24)}
+                    onPress={() => onPressReport(item)}
+                  />
+                  <VideoItem
+                    icon="heart"
+                    data={millify(item?.likesNo || 0)}
+                    initialIsLiked={item?.currentUserLiked}
+                    color={colors.primary}
+                    onPress={onPressLike}
+                    index={index}
+                    setIsLike={setIsLike}
+                    likeRef={likeRef}
+                    id={item?._id}
+                  />
+                  <VideoItem
+                    icon="chatbubble-ellipses"
+                    data={millify(commentsCount?.count || 0)}
+                    onPress={() => onPressComment(item?._id)}
+                  />
+                  <VideoItem icon="eye" data={millify(item?.views || 0)} />
+                  <VideoItem icon="share" onPress={() => handleShare(item)} />
+                </View>
+              </LinearGradient>
+              {paused.paused && !paused.slider && !item?.avatarUri && (
                 <View
-                  style={{
-                    direction: 'ltr',
-                    ...(I18nManager.isRTL &&
-                      Platform.OS === 'ios' && {transform: [{scaleX: -1}]}),
-                  }}>
-                  <Slider
-                    style={localStyles.seekBar}
-                    minimumValue={0}
-                    tapToSeek
-                    maximumValue={durationInSeconds}
-                    value={seekValue}
-                    minimumTrackTintColor={colors.primary}
-                    maximumTrackTintColor={colors.grey}
-                    thumbTintColor={colors.primary}
-                    onSlidingStart={() => {
-                      if (activeVideoIndex === index) {
-                        setpaused({slider: true, paused: false});
-                        setIsBuffering(true);
-                      }
-                    }}
-                    onSlidingComplete={value => {
-                      if (activeVideoIndex === index) {
-                        videoRef?.current?.seek?.(value);
-                        setSeekValue(value);
-                        setTimeout(() => {
-                          setpaused({slider: false, paused: false});
-                          setIsBuffering(false);
-                        }, 400);
-                      }
-                    }}
+                  style={[
+                    localStyles.pauseIconContainer,
+                    paused.paused && styles.p15,
+                  ]}>
+                  <Entypo
+                    name="triangle-right"
+                    size={paused && !item?.avatarUri ? moderateScale(60) : 0}
+                    color={'white'}
                   />
                 </View>
               )}
-              {data?.data?.user?._id !== item?.author?._id &&
-                item?.author?.type !== 'user' && (
-                  <ZButton
-                    title={`${strings.buyThisFor} ${item?.price} ${strings.EGP}`}
-                    textType={'b18'}
-                    color={colors.white}
-                    containerStyle={localStyles.buttonContainer}
-                    onPress={async () => {
-                      const link = await generateDynamicLink(item);
-                      item?.linkToGo
-                        ? Linking.openURL(
-                            item?.linkToGo?.includes('http')
-                              ? item?.linkToGo
-                              : 'https://' + item?.linkToGo,
-                          )
-                        : Linking.openURL(
-                            'whatsapp://send?text=' +
-                              'Hi, I came from FoodTok app, and I want to buy this dish: ' +
-                              item.caption +
-                              '\n' +
-                              link +
-                              '&phone=2' +
-                              item?.author?.phone,
-                          );
-                    }}
+              <View style={[localStyles.likeIcon, isLike && styles.p15]}>
+                {isLike && (
+                  <Ionicons
+                    name="heart"
+                    size={isLike ? moderateScale(120) : 0}
+                    color={'red'}
                   />
                 )}
-            </View>
-            <View style={localStyles.verticalContainer}>
-              <VideoItem
-                icon="flag"
-                size={moderateScale(24)}
-                onPress={() => onPressReport(item)}
-              />
-              <VideoItem
-                icon="heart"
-                data={millify(item?.likesNo || 0)}
-                initialIsLiked={item?.currentUserLiked}
-                color={colors.primary}
-                onPress={onPressLike}
-                index={index}
-                setIsLike={setIsLike}
-                likeRef={likeRef}
-                id={item?._id}
-              />
-              <VideoItem
-                icon="chatbubble-ellipses"
-                data={millify(commentsCount?.count || 0)}
-                onPress={() => onPressComment(item?._id)}
-              />
-              <VideoItem icon="eye" data={millify(item?.views || 0)} />
-              <VideoItem icon="share" onPress={() => handleShare(item)} />
-            </View>
-          </LinearGradient>
-          {paused.paused && !paused.slider && !item?.avatarUri && (
-            <View
-              style={[
-                localStyles.pauseIconContainer,
-                paused.paused && styles.p15,
-              ]}>
-              <Entypo
-                name="triangle-right"
-                size={paused && !item?.avatarUri ? moderateScale(60) : 0}
-                color={'white'}
-              />
-            </View>
-          )}
-          <View style={[localStyles.likeIcon, isLike && styles.p15]}>
-            {isLike && (
-              <Ionicons
-                name="heart"
-                size={isLike ? moderateScale(120) : 0}
-                color={'red'}
-              />
-            )}
-          </View>
-          {isBuffering && (
-            <View style={localStyles.bufferingIndicator}>
-              <ActivityIndicator size="large" color="gray" />
-            </View>
-          )}
-        </Pressable>
-      </GestureDetector>
-    </GestureHandlerRootView>
+              </View>
+              {isBuffering && (
+                <View style={localStyles.bufferingIndicator}>
+                  <ActivityIndicator size="large" color="gray" />
+                </View>
+              )}
+            </Pressable>
+          </GestureDetector>
+        </GestureHandlerRootView>
+      )}
+      {item?.type === 'ad' && (
+        <AdView
+          loadOnMount={false}
+          layoutHeight={layoutHeight}
+          type="video"
+          media
+        />
+      )}
+    </>
   );
 };
 
