@@ -1,5 +1,6 @@
 // Library import
 import {
+  ActivityIndicator,
   FlatList,
   Image,
   ScrollView,
@@ -9,7 +10,6 @@ import {
 } from 'react-native';
 import React, {useState} from 'react';
 import {useSelector} from 'react-redux';
-import Spinner from 'react-native-loading-spinner-overlay/lib';
 
 // Local import
 import ZSafeAreaView from '../../../../components/common/ZSafeAreaView';
@@ -236,11 +236,7 @@ export default function ProfileDetail({navigation, route}) {
           data={stories}
           ListEmptyComponent={
             isLoading ? (
-              <Spinner
-                size={'large'}
-                color={colors.primary}
-                visible={isLoading}
-              />
+              <ActivityIndicator size={'large'} color={colors.primary} />
             ) : (
               <ZText style={{textAlign: 'center', marginTop: 45}} type={'B20'}>
                 {strings.noDishesYetCurrentProfile}

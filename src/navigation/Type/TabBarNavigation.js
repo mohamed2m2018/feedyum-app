@@ -5,7 +5,7 @@ import {I18nManager, StyleSheet, TouchableOpacity, View} from 'react-native';
 import {createMaterialTopTabNavigator} from '@react-navigation/material-top-tabs';
 
 // Local import
-import {StackRoute, TabRoute} from '../NavigationRoutes';
+import {TabRoute} from '../NavigationRoutes';
 import {StackNav, TabNav} from '../NavigationKeys';
 import {checkPlatform} from '../../utils/helpers';
 import {getHeight, moderateScale} from '../../common/constants';
@@ -19,6 +19,8 @@ import {
   Discover_Dark,
   Discover_Light,
   Profile_Light,
+  Search_Dark,
+  Search_Light,
 } from '../../assets/svgs';
 import {styles} from '../../themes';
 import ProfilePicture from '../../components/models/ProfilePicture';
@@ -114,7 +116,7 @@ export default function TabBarNavigation({navigation}) {
       />
 
       <Tab.Screen
-        name={StackNav.Search}
+        name={StackNav.PostDetail}
         component={AddPost}
         listeners={{
           tabPress: e => {
@@ -139,7 +141,7 @@ export default function TabBarNavigation({navigation}) {
                 SheetRef={ProfilePictureSheetRef}
                 post={true}
                 live={false}
-                isFromTab={false}
+                isFromTab={true}
                 title={
                   data?.data?.user?.type === 'user'
                     ? strings.chooseUser
@@ -148,6 +150,20 @@ export default function TabBarNavigation({navigation}) {
                 onPressCamera={onPressPost}
               />
             </TouchableOpacity>
+          ),
+        }}
+      />
+
+      <Tab.Screen
+        name={TabNav.Search}
+        component={TabRoute.Search}
+        options={{
+          tabBarIcon: ({focused}) => (
+            <TabText
+              text={strings.search}
+              focused={focused}
+              icon={focused ? <Search_Dark /> : <Search_Light />}
+            />
           ),
         }}
       />
@@ -209,7 +225,7 @@ const localStyles = StyleSheet.create({
   },
   tabViewContainer: {
     ...styles.center,
-    width: moderateScale(80),
+    width: moderateScale(70),
     height: getHeight(40),
     right: !I18nManager.isRTL ? moderateScale(20) : moderateScale(40),
   },

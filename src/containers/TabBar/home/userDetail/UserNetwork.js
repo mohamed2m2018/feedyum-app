@@ -1,5 +1,10 @@
 // Library import
-import {StyleSheet, TouchableOpacity, View} from 'react-native';
+import {
+  ActivityIndicator,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import React, {useState} from 'react';
 import {useSelector} from 'react-redux';
 import {useInfiniteQuery} from 'react-query';
@@ -161,7 +166,9 @@ export default function UserNetwork({navigation, route}) {
         activeColor={{color: colors.primary}}
         navigation={navigation}
       />
-      <Spinner color={colors.primary} visible={isFetching} />
+      {isFetching && (
+        <ActivityIndicator size={'large'} color={colors.primary} />
+      )}
     </ZSafeAreaView>
   );
 }

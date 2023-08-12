@@ -60,6 +60,7 @@ import FollowingTab from '../containers/TabBar/home/Following';
 export const TabRoute = {
   ForYou: ForYou,
   Following: FollowingTab,
+  Search: Search,
   Profile,
   Discover,
   Inbox,

@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React from 'react';
 import strings from '../../../i18n/strings';
 import {useQuery} from 'react-query';
 import request from '../../../api/request';
@@ -6,11 +6,14 @@ import ProfilePicture from '../../../components/models/ProfilePicture';
 import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import {StackNav} from '../../../navigation/NavigationKeys';
 import {useHandleAuth} from '../../../utils/useHandleAuth';
+import {ActivityIndicator, StyleSheet} from 'react-native';
+import {useSelector} from 'react-redux';
 
 export default function AddPost() {
   const navigation = useNavigation();
+  const color = useSelector(state => state.theme.theme);
   const ProfilePictureSheetRef = React.createRef();
-  const {data} = useQuery('user', () => request.get('/user'), {retry: 1});
+  const {data} = useQuery('user', () => request.get('/user'));
   const onPressPost = isImage => {
     ProfilePictureSheetRef?.current?.hide();
     navigation.navigate(StackNav.PostDetail, {isImage});
@@ -41,3 +44,11 @@ export default function AddPost() {
     </>
   );
 }
+
+const localStyles = StyleSheet.create({
+  loader: {
+    alignSelf: 'center',
+    position: 'absolute',
+    top: '50%',
+  },
+});

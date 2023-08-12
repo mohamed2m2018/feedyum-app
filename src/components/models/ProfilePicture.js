@@ -10,15 +10,25 @@ import {moderateScale} from '../../common/constants';
 import {styles} from '../../themes';
 import ZText from '../common/ZText';
 import strings from '../../i18n/strings';
+import {useNavigation} from '@react-navigation/native';
+import {TabNav} from '../../navigation/NavigationKeys';
 
 const ProfilePicture = props => {
-  const {SheetRef, onPressGallery, onPressCamera, title, post} = props;
+  const {SheetRef, onPressGallery, onPressCamera, title, post, isFromTab} =
+    props;
   const colors = useSelector(state => state.theme.theme);
+
+  const navigation = useNavigation();
 
   return (
     <ActionSheet
       ref={SheetRef}
       gestureEnabled={true}
+      onBeforeClose={() => {
+        if (isFromTab) {
+          navigation.navigate(TabNav.Search);
+        }
+      }}
       indicatorStyle={{width: moderateScale(100)}}
       containerStyle={[
         localStyles.actionSheetContainer,

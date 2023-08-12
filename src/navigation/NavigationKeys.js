@@ -4,6 +4,7 @@ export const TabNav = {
   Profile: 'Profile',
   Discover: 'Orders',
   Inbox: 'Inbox',
+  Search: 'Search',
 };
 
 export const StackNav = {
@@ -45,7 +46,7 @@ export const StackNav = {
   HashtagCategory: 'HashtagCategory',
   TrendingSound: 'TrendingSound',
   TrendingHashtag: 'TrendingHashtag',
-  Search: 'Search',
+  Search: 'SearchStack',
   SearchTop: 'SearchTop',
   SearchVideo: 'SearchVideo',
   SearchSound: 'SearchSound',

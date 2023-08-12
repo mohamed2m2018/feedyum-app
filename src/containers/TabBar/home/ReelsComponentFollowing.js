@@ -16,7 +16,7 @@ import {
   moderateScale,
   screenFullHeight,
 } from '../../../common/constants';
-import {StackNav} from '../../../navigation/NavigationKeys';
+import {StackNav, TabNav} from '../../../navigation/NavigationKeys';
 import {useInfiniteQuery, useMutation, useQuery} from 'react-query';
 import ReelComponent from './ReelComponent';
 import request from '../../../api/request';
@@ -92,7 +92,7 @@ export default function ReelsComponentFollowing() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeVideoIndex]);
 
-  const onPressSearch = () => navigation.navigate(StackNav.Search);
+  const onPressSearch = () => navigation.navigate(TabNav.Search);
 
   const [selectedPostId, setSelectedPostId] = useState();
 
