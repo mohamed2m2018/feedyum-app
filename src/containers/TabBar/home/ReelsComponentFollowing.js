@@ -6,11 +6,7 @@ import Locations from '../../../components/models/Locations';
 import Comment from '../../../components/models/Comment';
 import {useSelector} from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {
-  useFocusEffect,
-  useIsFocused,
-  useNavigation,
-} from '@react-navigation/native';
+import {useIsFocused, useNavigation} from '@react-navigation/native';
 
 // Local import
 import {styles} from '../../../themes';
@@ -100,20 +96,6 @@ export default function ReelsComponentFollowing() {
 
   const [selectedPostId, setSelectedPostId] = useState();
 
-  // Refetch data when the tab screen gains focus
-  useFocusEffect(
-    React.useCallback(() => {
-      // Perform your refetch logic here
-      setExtraData(e => !e);
-
-      return () => {
-        refetch(); // Example: calling refetch from react-query
-        setFilteredDataFollowing([]);
-        // Cleanup or unsubscribe if needed
-      };
-    }, []),
-  );
-
   const onPressAvailableLocation = (gov, areas) => {
     setSelectedAreas(areas);
     setselectedGov(gov);
@@ -157,6 +139,8 @@ export default function ReelsComponentFollowing() {
     }
   }).current;
 
+  const keyExtractor = (item, index) => 'item-Following' + item?._id + index;
+
   const onSetLayout = e => setLayoutHeight(e.nativeEvent.layout.height);
 
   return (
@@ -175,7 +159,7 @@ export default function ReelsComponentFollowing() {
         extraData={extraData}
         emptylistMessage={strings.noDishesYetFollow}
         user={data?.data?.user}
-        keyExtractor={(item, index) => 'item-Following' + item?._id + index}
+        keyExtractor={keyExtractor}
         renderReelComponent={renderReelComponent}
         viewConfig={viewConfig}
         isRefetching={isRefetching}
@@ -218,10 +202,6 @@ export default function ReelsComponentFollowing() {
 }
 
 const localStyles = StyleSheet.create({
-  imageContainer: {
-    height: '100%',
-    width: '100%',
-  },
   bannerContainer: {
     alignItems: 'center',
     backgroundColor: 'transparent',

@@ -20,13 +20,9 @@ import {getHeight, moderateScale} from '../../../common/constants';
 import typography from '../../../themes/typography';
 import ZText from '../../../components/common/ZText';
 import ZButton from '../../../components/common/ZButton';
-import {
-  useFocusEffect,
-  useNavigation,
-  useRoute,
-} from '@react-navigation/native';
+import {useNavigation, useRoute} from '@react-navigation/native';
 import {TabNav} from '../../../navigation/NavigationKeys';
-import {useQueryClient, useQuery} from 'react-query';
+import {useQuery} from 'react-query';
 import request from '../../../api/request';
 import {ALERT_TYPE, Toast} from 'react-native-alert-notification';
 import images from '../../../assets/images';
@@ -44,7 +40,6 @@ export default function PostDetail() {
   const colors = useSelector(state => state.theme.theme);
   const navigation = useNavigation();
   const [postedData, setpostedData] = useState({});
-  const queryClient = useQueryClient();
 
   const [toggleStatus, setToggleStatus] = useState('Hours');
   const route = useRoute();

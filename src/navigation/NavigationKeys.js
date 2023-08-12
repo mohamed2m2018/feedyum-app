@@ -1,6 +1,6 @@
 export const TabNav = {
   ForYou: 'For You',
-  Following: 'Following',
+  FollowingTab: 'FollowingTab',
   Profile: 'Profile',
   Discover: 'Orders',
   Inbox: 'Inbox',

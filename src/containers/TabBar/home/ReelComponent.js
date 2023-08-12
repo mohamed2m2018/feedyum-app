@@ -10,7 +10,7 @@ import {
   View,
 } from 'react-native';
 import strings from '../../../i18n/strings';
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useEffect, useMemo, useRef, useState} from 'react';
 import dynamicLinks from '@react-native-firebase/dynamic-links';
 import {
   GestureDetector,
@@ -54,7 +54,6 @@ const ReelComponent = ({
   likeRef,
   onPressAvailableLocation,
   flatListRef,
-  setExtraData,
   setSelectedPostId,
   commentSheetRef,
   setselectedDescription,
@@ -96,6 +95,7 @@ const ReelComponent = ({
     }
   };
   const navigation = useNavigation();
+
   const [isLike, setIsLike] = useState(false);
   const onPressProfile = (userName, userImage, id) =>
     navigation.navigate(StackNav.ProfileDetail, {
@@ -180,15 +180,13 @@ const ReelComponent = ({
     }
     if (!paused.slider || !paused.paused) {
       setSeekValue(currentTime);
-    } else {
-      setSeekValue(seekValue);
     }
   };
 
   useEffect(() => {
     let timeout;
 
-    if (index === activeVideoIndex && !!item.avatarUri) {
+    if (index === activeVideoIndex && !!item.avatarUri && isFocused) {
       timeout = setTimeout(() => {
         flatListRef.current.scrollToIndex({
           animated: true,
@@ -202,6 +200,38 @@ const ReelComponent = ({
 
   const handlePressProfile = () =>
     onPressProfile(item?.channelName, item?.avatarUri, item?.author?._id);
+
+  const imageStyles = useMemo(
+    () => [
+      localStyles.imageContainer,
+      {backgroundColor: colors.backgroundColor},
+    ],
+    [colors.backgroundColor],
+  );
+
+  const uri = item?.uri?.replace(
+    'https://foodtokforever.s3.amazonaws.com',
+    'https://d1wfcrbbkg3bzd.cloudfront.net',
+  );
+
+  const poster =
+    item?.avatarUri?.replace(
+      'https://foodtokforever.s3.amazonaws.com',
+      'https://d1wfcrbbkg3bzd.cloudfront.net',
+    ) ||
+    item?.poster?.replace(
+      'https://foodtokforever.s3.amazonaws.com',
+      'https://d1wfcrbbkg3bzd.cloudfront.net',
+    );
+
+  const handleOnLoad = ({duration: durationToBeSet}) => {
+    console.log(item.title)
+    setDurationInSeconds(durationToBeSet);
+    if (seekValue !== 0 && activeVideoIndex === index) {
+      const val = seekValue;
+      videoRef.current.seek(val);
+    }
+  };
 
   return (
     <>
@@ -227,41 +257,27 @@ const ReelComponent = ({
               {item?.avatarUri ? (
                 <FastImage
                   source={{
-                    uri:
-                      item?.avatarUri?.replace(
-                        'https://foodtokforever.s3.amazonaws.com',
-                        'https://d1wfcrbbkg3bzd.cloudfront.net',
-                      ) ||
-                      item?.poster?.replace(
-                        'https://foodtokforever.s3.amazonaws.com',
-                        'https://d1wfcrbbkg3bzd.cloudfront.net',
-                      ),
+                    uri: poster,
                   }}
                   resizeMode="cover"
-                  style={[
-                    localStyles.imageContainer,
-                    {backgroundColor: colors.backgroundColor},
-                  ]}
+                  style={imageStyles}
                 />
               ) : (
-                !!item?.uri &&
-                isFocused && (
+                !!item?.uri && (
                   <Video
                     source={{
-                      uri: item?.uri?.replace(
-                        'https://foodtokforever.s3.amazonaws.com',
-                        'https://d1wfcrbbkg3bzd.cloudfront.net',
-                      ),
+                      uri,
                     }}
                     ref={videoRef}
                     onLoadStart={() => {
                       setIsBuffering(true);
                     }}
-                    onLoad={({duration: durationToBeSet}) => {
-                      setDurationInSeconds(durationToBeSet);
+                    onLoad={handleOnLoad}
+                    onSeek={config => {
+                      console.log('seeking', item?.title, config);
                     }}
                     onEnd={() => {
-                      if (activeVideoIndex === index) {
+                      if (activeVideoIndex === index && isFocused) {
                         if (flatListRef.current) {
                           flatListRef.current.scrollToIndex({
                             animated: true,
@@ -277,21 +293,13 @@ const ReelComponent = ({
                         backgroundColor: colors.backgroundColor,
                       },
                     ]}
-                    poster={
-                      item?.avatarUri?.replace(
-                        'https://foodtokforever.s3.amazonaws.com',
-                        'https://d1wfcrbbkg3bzd.cloudfront.net',
-                      ) ||
-                      item?.poster?.replace(
-                        'https://foodtokforever.s3.amazonaws.com',
-                        'https://d1wfcrbbkg3bzd.cloudfront.net',
-                      )
-                    }
+                    poster={poster}
                     posterResizeMode="cover"
                     onProgress={debouncedOnProgress}
                     resizeMode="cover"
                     onError={() => console.log('hello')}
                     seekColor={colors.primary}
+                    muted={!isFocused}
                     paused={
                       activeVideoIndex !== index ||
                       !isFocused ||

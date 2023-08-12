@@ -26,6 +26,8 @@ import ReelComponent from '../../../components/ReelComponent';
 import {useQuery} from 'react-query';
 import request from '../../../api/request';
 import {Toast, ALERT_TYPE} from 'react-native-alert-notification';
+import {useHandleAuth} from '../../../utils/useHandleAuth';
+import {useFocusEffect} from '@react-navigation/native';
 
 export default function Profile({navigation}) {
   const UserDetail = (postsNo, followersNo, followingNo, viewsNo) => [
@@ -112,35 +114,10 @@ export default function Profile({navigation}) {
     },
   });
 
-  // const categoryData = [
-  //   {
-  //     id: 0,
-  //     icon: 'apps',
-  //     onPress: () => setIsSelect(0),
-  //   },
-  //   {
-  //     id: 1,
-  //     icon: 'lock-closed',
-  //     onPress: () => setIsSelect(1),
-  //   },
-  //   {
-  //     id: 2,
-  //     icon: 'bookmark',
-  //     onPress: () => setIsSelect(2),
-  //   },
-  //   {
-  //     id: 3,
-  //     icon: 'heart',
-  //     onPress: () => setIsSelect(3),
-  //   },
-  // ];
-
   const onPressEditProfile = () =>
     navigation.navigate(StackNav.EditProfile, {user});
 
   const onPressSetting = () => navigation.navigate(StackNav.Setting);
-
-  // const onPressFindFriend = () => navigation.navigate(StackNav.FindFriends);
 
   // eslint-disable-next-line react/no-unstable-nested-components
   const RenderUserDetail = ({item}) => {
@@ -156,139 +133,151 @@ export default function Profile({navigation}) {
     );
   };
 
+  const {isGuest, handleAuthToast} = useHandleAuth();
+
+  useFocusEffect(
+    React.useCallback(() => {
+      handleAuthToast();
+    }, []),
+  );
+
   return (
     <ZSafeAreaView>
-      <View style={{flex: 1, height: '100%', padding: 20}}>
-        {isLoadingSomething && (
-          <ActivityIndicator
-            color={colors.primary}
-            size={'large'}
-            style={{alignSelf: 'center'}}
-          />
-        )}
-        <FlatList
-          data={storiesData}
-          showsVerticalScrollIndicator={false}
-          renderItem={({item}) => (
-            <ReelComponent
-              data={item?.views}
-              setisLoadingSomething={setisLoadingSomething}
-              reelUrl={
-                item?.avatarUri?.replace(
-                  'https://foodtokforever.s3.amazonaws.com',
-                  'https://d1wfcrbbkg3bzd.cloudfront.net',
-                ) ||
-                item?.poster?.replace(
-                  'https://foodtokforever.s3.amazonaws.com',
-                  'https://d1wfcrbbkg3bzd.cloudfront.net',
-                )
-              }
-              id={item?._id}
-              item={item}
-              isPlay={!item?.avatarUri}
-              isDeleteAllowed={true}
+      {!isGuest && (
+        <View style={{flex: 1, height: '100%', padding: 20}}>
+          {isLoadingSomething && (
+            <ActivityIndicator
+              color={colors.primary}
+              size={'large'}
+              style={{alignSelf: 'center'}}
             />
           )}
-          numColumns={3}
-          ListEmptyComponent={
-            isLoading ? (
-              <ActivityIndicator
-                color={colors.primary}
-                size={'large'}
-                visible={isLoading}
+          <FlatList
+            data={storiesData}
+            showsVerticalScrollIndicator={false}
+            renderItem={({item}) => (
+              <ReelComponent
+                data={item?.views}
+                setisLoadingSomething={setisLoadingSomething}
+                reelUrl={
+                  item?.avatarUri?.replace(
+                    'https://foodtokforever.s3.amazonaws.com',
+                    'https://d1wfcrbbkg3bzd.cloudfront.net',
+                  ) ||
+                  item?.poster?.replace(
+                    'https://foodtokforever.s3.amazonaws.com',
+                    'https://d1wfcrbbkg3bzd.cloudfront.net',
+                  )
+                }
+                id={item?._id}
+                item={item}
+                isPlay={!item?.avatarUri}
+                isDeleteAllowed={true}
               />
-            ) : (
-              <ZText style={{textAlign: 'center', marginTop: 45}} type={'B20'}>
-                {strings.noDishesYetProfileOther}
-              </ZText>
-            )
-          }
-          onEndReachedThreshold={0.9}
-          onMomentumScrollBegin={() => {
-            if (queryData?.data?.totalPages > page) {
-              setpage(old => old + 1);
+            )}
+            numColumns={3}
+            ListEmptyComponent={
+              isLoading ? (
+                <ActivityIndicator
+                  color={colors.primary}
+                  size={'large'}
+                  visible={isLoading}
+                />
+              ) : (
+                <ZText
+                  style={{textAlign: 'center', marginTop: 45}}
+                  type={'B20'}>
+                  {strings.noDishesYetProfileOther}
+                </ZText>
+              )
             }
-          }}
-          ListFooterComponent={
-            isFetching && !isLoading ? (
-              <ActivityIndicator size={'large'} color={colors.primary} />
-            ) : null
-          }
-          keyExtractor={(item, index) => index.toString()}
-          ListHeaderComponent={
-            <>
-              <View style={localStyles.headerContainer}>
-                <TouchableOpacity onPress={onPressSetting}>
-                  <Ionicons
-                    name="settings-outline"
-                    size={moderateScale(30)}
-                    color={colors.dark ? colors.white : colors.darkColor}
-                  />
-                </TouchableOpacity>
-              </View>
-              <View style={styles.itemsCenter}>
-                <TouchableOpacity
-                  onPress={onPressEditProfile}
-                  style={styles.mt40}>
-                  <Image
-                    source={
-                      user?.avatar
-                        ? {uri: user?.avatar}
-                        : colors.dark
-                        ? images.userDark
-                        : images.userLight
-                    }
-                    style={localStyles.userImage}
-                  />
-                  <MaterialIcon
-                    name="pencil-box"
-                    size={moderateScale(30)}
-                    color={colors.primary}
-                    style={localStyles.editIcon}
-                  />
-                </TouchableOpacity>
-                <View style={styles.mv20}>
-                  <ZText type="b24" align={'center'}>
-                    {user?.fullName}
-                  </ZText>
-                  <ZText type="m14" align={'center'} style={styles.mt10}>
-                    {user?.email}
-                  </ZText>
+            onEndReachedThreshold={0.9}
+            onMomentumScrollBegin={() => {
+              if (queryData?.data?.totalPages > page) {
+                setpage(old => old + 1);
+              }
+            }}
+            ListFooterComponent={
+              isFetching && !isLoading ? (
+                <ActivityIndicator size={'large'} color={colors.primary} />
+              ) : null
+            }
+            keyExtractor={(item, index) => index.toString()}
+            ListHeaderComponent={
+              <>
+                <View style={localStyles.headerContainer}>
+                  <TouchableOpacity onPress={onPressSetting}>
+                    <Ionicons
+                      name="settings-outline"
+                      size={moderateScale(30)}
+                      color={colors.dark ? colors.white : colors.darkColor}
+                    />
+                  </TouchableOpacity>
                 </View>
-              </View>
-              <View style={[styles.flexRow, styles.justifyEvenly]}>
-                {UserDetail(
-                  user?.postsNo,
-                  followStatistics?.data?.followersCount,
-                  followStatistics?.data?.followingCount,
-                  views?.data?.viewsCount || 0,
-                ).map((item, index) => (
-                  <RenderUserDetail item={item} key={index} />
-                ))}
-              </View>
-              <ZButton
-                title={strings.editProfile}
-                onPress={onPressEditProfile}
-                color={colors.primary}
-                textType="b18"
-                style={styles.ml10}
-                containerStyle={[
-                  localStyles.buttonContainer,
-                  {borderColor: colors.primary},
-                ]}
-                bgColor={colors.tranparent}
-                frontIcon={<Inbox_Dark />}
-              />
-              {/* <View style={localStyles.mainContainer}>
+                <View style={styles.itemsCenter}>
+                  <TouchableOpacity
+                    onPress={onPressEditProfile}
+                    style={styles.mt40}>
+                    <Image
+                      source={
+                        user?.avatar
+                          ? {uri: user?.avatar}
+                          : colors.dark
+                          ? images.userDark
+                          : images.userLight
+                      }
+                      style={localStyles.userImage}
+                    />
+                    <MaterialIcon
+                      name="pencil-box"
+                      size={moderateScale(30)}
+                      color={colors.primary}
+                      style={localStyles.editIcon}
+                    />
+                  </TouchableOpacity>
+                  <View style={styles.mv20}>
+                    <ZText type="b24" align={'center'}>
+                      {user?.fullName}
+                    </ZText>
+                    <ZText type="m14" align={'center'} style={styles.mt10}>
+                      {user?.email}
+                    </ZText>
+                  </View>
+                </View>
+                <View style={[styles.flexRow, styles.justifyEvenly]}>
+                  {UserDetail(
+                    user?.postsNo,
+                    followStatistics?.data?.followersCount,
+                    followStatistics?.data?.followingCount,
+                    views?.data?.viewsCount || 0,
+                  ).map((item, index) => (
+                    <RenderUserDetail item={item} key={index} />
+                  ))}
+                </View>
+                <ZButton
+                  title={strings.editProfile}
+                  onPress={onPressEditProfile}
+                  color={colors.primary}
+                  textType="b18"
+                  style={styles.ml10}
+                  containerStyle={[
+                    localStyles.buttonContainer,
+                    {borderColor: colors.primary},
+                  ]}
+                  bgColor={colors.tranparent}
+                  frontIcon={<Inbox_Dark />}
+                />
+                {/* <View style={localStyles.mainContainer}>
                 {categoryData.map((item, index) => (
                   <HeaderCategory item={item} key={index} />
                 ))}
               </View> */}
-            </>
-          }
-        />
-        {/* <SwitchAccont SheetRef={switchAccountRef} /> */}
-      </View>
+              </>
+            }
+          />
+          {/* <SwitchAccont SheetRef={switchAccountRef} /> */}
+        </View>
+      )}
     </ZSafeAreaView>
   );
 }

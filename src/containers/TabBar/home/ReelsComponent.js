@@ -147,19 +147,7 @@ export default function ReelsComponent() {
         />
       );
     },
-    [
-      layoutHeight,
-      data,
-      activeVideoIndex,
-      likeRef,
-      flatListRef,
-      isFocused,
-      setExtraData,
-      setSelectedPostId,
-      commentSheetRef,
-      setselectedDescription,
-      descriptionSheetRef,
-    ],
+    [layoutHeight, data, activeVideoIndex, isFocused],
   );
 
   const viewConfig = useRef({viewAreaCoveragePercentThreshold: 50}).current;
@@ -177,6 +165,8 @@ export default function ReelsComponent() {
       updateViewsMutation.mutate(viewableItems[0]?.item?._id);
     }
   }).current;
+
+  const keyExtractor = (item, index) => 'item-ForYou' + item?._id + index;
 
   const onSetLayout = e => setLayoutHeight(e.nativeEvent.layout.height);
 
@@ -198,7 +188,7 @@ export default function ReelsComponent() {
         isRefetching={isRefetching}
         refetch={refetch}
         user={data?.data?.user}
-        keyExtractor={(item, index) => 'item-ForYou' + item?._id + index}
+        keyExtractor={keyExtractor}
         renderReelComponent={renderReelComponent}
         viewConfig={viewConfig}
         viewableItemsChanged={viewableItemsChanged}
@@ -240,10 +230,6 @@ export default function ReelsComponent() {
 }
 
 const localStyles = StyleSheet.create({
-  imageContainer: {
-    height: '100%',
-    width: '100%',
-  },
   bannerContainer: {
     alignItems: 'center',
     backgroundColor: 'transparent',

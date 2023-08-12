@@ -25,6 +25,7 @@ import ProfilePicture from '../../components/models/ProfilePicture';
 import request from '../../api/request';
 import {useQuery} from 'react-query';
 import {useHandleAuth} from '../../utils/useHandleAuth';
+import AddPost from '../../containers/TabBar/add/addPost';
 
 export default function TabBarNavigation({navigation}) {
   const colors = useSelector(state => state.theme.theme);
@@ -99,7 +100,7 @@ export default function TabBarNavigation({navigation}) {
         }}
       />
       <Tab.Screen
-        name={TabNav.Following}
+        name={TabNav.FollowingTab}
         component={TabRoute.Following}
         options={{
           tabBarIcon: ({focused}) => (
@@ -114,11 +115,17 @@ export default function TabBarNavigation({navigation}) {
 
       <Tab.Screen
         name={StackNav.Search}
-        component={StackRoute.Search}
+        component={AddPost}
         listeners={{
           tabPress: e => {
             e.preventDefault();
             onPressAdd();
+          },
+          swipeEnd: () => {
+            if (handleAuthToast()) {
+              return;
+            }
+            ProfilePictureSheetRef?.current?.show();
           },
         }}
         options={{
@@ -132,6 +139,7 @@ export default function TabBarNavigation({navigation}) {
                 SheetRef={ProfilePictureSheetRef}
                 post={true}
                 live={false}
+                isFromTab={false}
                 title={
                   data?.data?.user?.type === 'user'
                     ? strings.chooseUser

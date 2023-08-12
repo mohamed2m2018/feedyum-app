@@ -29,7 +29,7 @@ import {
 } from '../../common/constants';
 import ZInput from '../../components/common/ZInput';
 import ZKeyBoardAvoidWrapper from '../../components/common/ZKeyBoardAvoidWrapper';
-import {StackNav} from '../../navigation/NavigationKeys';
+import {StackNav, TabNav} from '../../navigation/NavigationKeys';
 import ProfilePicture from '../../components/models/ProfilePicture';
 import ZButton from '../../components/common/ZButton';
 import {setAsyncStorageData} from '../../utils/helpers';
@@ -43,6 +43,7 @@ const SetUpProfile = props => {
   const {navigation} = props;
   const headerTitle = props.route.params.title;
   const {email, password, type} = props.route.params;
+  const [isUpdating, setisUpdating] = useState(false);
 
   const colors = useSelector(state => state.theme.theme);
   const ProfilePictureSheetRef = createRef();
@@ -78,21 +79,17 @@ const SetUpProfile = props => {
       setFullName(undefined);
       setGender(undefined);
       setPhoneNo(undefined);
-      setNickname(undefined);
     }
   }, [isEdit]);
 
   const [fullName, setFullName] = useState(
     editUser?.data?.user?.fullName || '',
   );
-  const [nickname, setNickname] = useState(
-    editUser?.data?.user?.username || '',
-  );
+
   const [phoneNo, setPhoneNo] = useState(editUser?.data?.user?.phone || '');
   const [gender, setGender] = useState(editUser?.data?.user?.gender || '');
   const [fullNameInputStyle, setFullNameInputStyle] = useState(BlurredStyle);
   const [phoneNoInputStyle, setPhoneNoInputStyle] = useState(BlurredStyle);
-  const [nicknameInputStyle, setNicknameInputStyle] = useState(BlurredStyle);
   const [selectImage, setSelectImage] = useState(editUser?.data?.user?.avatar);
   const [isPhotoUploading, setisPhotoUploading] = useState(false);
 
@@ -102,15 +99,12 @@ const SetUpProfile = props => {
   // const onBlurIcon = onUnHighlight => onUnHighlight(BlurredIconStyle);
 
   const onFocusFullName = () => onFocusInput(setFullNameInputStyle);
-  const onFocusNickName = () => onFocusInput(setNicknameInputStyle);
   const onFocusPhoneNo = () => onFocusInput(setPhoneNoInputStyle);
 
   const onBlurFullName = () => onBlurInput(setFullNameInputStyle);
-  const onBlurNickName = () => onBlurInput(setNicknameInputStyle);
   const onBlurPhoneNo = () => onBlurInput(setPhoneNoInputStyle);
 
   const onChangedFullName = text => setFullName(text);
-  const onChangedNickName = text => setNickname(text);
   const onChangedPhoneNo = text => setPhoneNo(text);
   const onChangedGender = text => setGender(text.value.toLowerCase());
 
@@ -132,7 +126,6 @@ const SetUpProfile = props => {
       .post('/user', {
         fullName,
         phone: phoneNo,
-        userName: nickname,
         gender,
         email,
         password,
@@ -225,12 +218,13 @@ const SetUpProfile = props => {
 
     if (fullName) data.fullName = fullName;
     if (phoneNo) data.phone = phoneNo;
-    if (nickname) data.userName = nickname;
     if (gender) data.gender = gender;
     if (email) data.email = email;
     if (password) data.password = password;
     if (type) data.type = type;
     if (selectImage) data.avatar = selectImage;
+
+    setisUpdating(true);
 
     request
       .patch('/user', {
@@ -238,19 +232,17 @@ const SetUpProfile = props => {
       })
       .then(async () => {
         await queryClient.invalidateQueries({queryKey: 'user'});
-
-        navigation.reset({
-          index: 0,
-          routes: [{name: StackNav.TabBar}],
-        });
+        navigation.navigate(TabNav.ForYou);
+        setisUpdating(false);
       })
-      .catch(err =>
+      .catch(err => {
+        setisUpdating(false);
         Toast.show({
           type: ALERT_TYPE.DANGER,
           title: strings.error,
           textBody: err[Object.keys(err)?.[0]],
-        }),
-      );
+        });
+      });
   };
 
   const onPressContinue = () => {
@@ -306,19 +298,6 @@ const SetUpProfile = props => {
           _onFocus={onFocusFullName}
           _onBlur={onBlurFullName}
         />
-        <ZInput
-          placeHolder={strings.nickname}
-          _value={nickname}
-          autoCapitalize={'none'}
-          toGetTextFieldValue={onChangedNickName}
-          inputContainerStyle={[
-            {backgroundColor: colors.inputBg},
-            localStyles.inputContainerStyle,
-            nicknameInputStyle,
-          ]}
-          _onFocus={onFocusNickName}
-          _onBlur={onBlurNickName}
-        />
 
         <ZInput
           placeHolder={strings.phoneNumberStarts}
@@ -371,28 +350,19 @@ const SetUpProfile = props => {
           textType={'b18'}
           disabled={isPhotoUploading}
           color={colors.white}
-          isLoading={isPhotoUploading}
+          isLoading={isPhotoUploading || isUpdating}
           title={strings.update}
           onPress={onPressUpdate}
           containerStyle={styles.m20}
         />
       ) : (
         <View style={localStyles.btnContainer}>
-          {/* <ZButton
-            title={strings.skip}
-            textType={'b18'}
-            color={colors.dark ? colors.white : colors.primary}
-            containerStyle={[localStyles.skipBtnContainer]}
-            bgColor={colors.dark3}
-            onPress={onPressSkip}
-          /> */}
           <ZButton
             title={strings.continue}
             textType={'b18'}
             disabled={
               !fullName ||
               !phoneNo ||
-              !nickname ||
               !gender ||
               !email ||
               !password ||
