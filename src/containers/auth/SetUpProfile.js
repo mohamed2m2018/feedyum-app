@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import React, {createRef, useEffect, useState} from 'react';
 import {useSelector} from 'react-redux';
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -326,6 +327,14 @@ const SetUpProfile = props => {
           ]}
           placeholderStyle={{color: colors.iconColor}}
           data={GenderData}
+          renderRightIcon={() => (
+            <FontAwesome
+              style={{paddingRight: 10}}
+              name="chevron-down"
+              size={12}
+              color={colors.textColor}
+            />
+          )}
           maxHeight={moderateScale(180)}
           labelField="label"
           valueField="value"

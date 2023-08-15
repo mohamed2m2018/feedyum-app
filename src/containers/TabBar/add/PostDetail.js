@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import React, {useEffect, useState} from 'react';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {useSelector} from 'react-redux';
 import ImagePicker from 'react-native-image-crop-picker';
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
@@ -359,6 +360,14 @@ export default function PostDetail() {
                           zIndex: 10000,
                         },
                       ]}
+                      renderRightIcon={() => (
+                        <FontAwesome
+                          style={{paddingRight: 10}}
+                          name="chevron-down"
+                          size={12}
+                          color={colors.textColor}
+                        />
+                      )}
                       placeholderStyle={{color: colors.grayScale5}}
                       data={Duration}
                       maxHeight={moderateScale(180)}
