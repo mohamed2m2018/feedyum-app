@@ -24,9 +24,6 @@ export const useHandleAuth = () => {
           type: ALERT_TYPE.WARNING,
           textBody: strings.pleaseSignUp,
           button: strings.goToAuth,
-          onHide: () => {
-            navigation.navigate(TabNav.ForYou);
-          },
           onPressButton: async () => {
             await AsyncStorage.removeItem(ACCESS_TOKEN);
             await queryClient.removeQueries();

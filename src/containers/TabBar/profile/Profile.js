@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 
@@ -27,7 +27,7 @@ import {useQuery} from 'react-query';
 import request from '../../../api/request';
 import {Toast, ALERT_TYPE} from 'react-native-alert-notification';
 import {useHandleAuth} from '../../../utils/useHandleAuth';
-import {useFocusEffect} from '@react-navigation/native';
+import {useIsFocused} from '@react-navigation/native';
 
 export default function Profile({navigation}) {
   const UserDetail = (postsNo, followersNo, followingNo, viewsNo) => [
@@ -137,11 +137,14 @@ export default function Profile({navigation}) {
 
   const {isGuest, handleAuthToast} = useHandleAuth();
 
-  useFocusEffect(
-    React.useCallback(() => {
-      handleAuthToast();
-    }, []),
-  );
+  const isFocused = useIsFocused();
+  useEffect(() => {
+    if (isFocused) {
+      if (handleAuthToast()) {
+        navigation.goBack();
+      }
+    }
+  }, [isFocused]);
 
   return (
     <ZSafeAreaView>

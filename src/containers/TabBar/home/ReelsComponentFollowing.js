@@ -71,10 +71,9 @@ export default function ReelsComponentFollowing() {
           flatListRefFollowing.current?.scrollToOffset({offset: 0});
         }
         const ad = {_id: 'ad' + res?.pageParams?.length, type: 'ad'};
-        const result = res?.pages.flatMap(page => [
-          ...(page.data?.stories || []),
-          ad,
-        ]);
+        const result = res?.pages.flatMap(page =>
+          page.data?.stories?.length ? [...(page.data?.stories || []), ad] : [],
+        );
         if (result.length) {
           setFilteredDataFollowing(result);
         }

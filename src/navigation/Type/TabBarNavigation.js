@@ -28,6 +28,7 @@ import request from '../../api/request';
 import {useQuery} from 'react-query';
 import {useHandleAuth} from '../../utils/useHandleAuth';
 import AddPost from '../../containers/TabBar/add/addPost';
+import {useScreen} from '../screenContext';
 
 export default function TabBarNavigation({navigation}) {
   const colors = useSelector(state => state.theme.theme);
@@ -62,6 +63,8 @@ export default function TabBarNavigation({navigation}) {
     ProfilePictureSheetRef?.current?.hide();
     navigation.navigate(StackNav.PostDetail, {isImage});
   };
+
+  const {currentScreen: previousScreen} = useScreen();
 
   return (
     <Tab.Navigator
@@ -130,9 +133,13 @@ export default function TabBarNavigation({navigation}) {
           },
           swipeEnd: () => {
             if (handleAuthToast()) {
-              return;
+              if (previousScreen === TabNav.FollowingTab) {
+                navigation.navigate(TabNav.Search);
+              } else {
+                navigation.navigate(TabNav.FollowingTab);
+              }
+              // return;
             }
-            ProfilePictureSheetRef?.current?.show();
           },
         }}
         options={{
@@ -146,7 +153,6 @@ export default function TabBarNavigation({navigation}) {
                 SheetRef={ProfilePictureSheetRef}
                 post={true}
                 live={false}
-                isFromTab={true}
                 title={
                   data?.data?.user?.type === 'user'
                     ? strings.chooseUser

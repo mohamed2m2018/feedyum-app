@@ -12,21 +12,30 @@ import ZText from '../common/ZText';
 import strings from '../../i18n/strings';
 import {useNavigation} from '@react-navigation/native';
 import {TabNav} from '../../navigation/NavigationKeys';
+import {useScreen} from '../../navigation/screenContext';
 
 const ProfilePicture = props => {
-  const {SheetRef, onPressGallery, onPressCamera, title, post, isFromTab} =
+  const {SheetRef, onPressGallery, onPressCamera, title, post, isFromSwipe} =
     props;
   const colors = useSelector(state => state.theme.theme);
 
   const navigation = useNavigation();
 
+  const {currentScreen: previousScreen} = useScreen();
+
+
   return (
     <ActionSheet
       ref={SheetRef}
       gestureEnabled={true}
-      onBeforeClose={() => {
-        if (isFromTab) {
-          navigation.goBack();
+      onClose={() => {
+        if (previousScreen && isFromSwipe) {
+          console.log('pppp ', previousScreen)
+          if (previousScreen === TabNav.FollowingTab) {
+            navigation.navigate(TabNav.Search);
+          } else {
+            navigation.navigate(TabNav.FollowingTab);
+          }
         }
       }}
       indicatorStyle={{width: moderateScale(100)}}

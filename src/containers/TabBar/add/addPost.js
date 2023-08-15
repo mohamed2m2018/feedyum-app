@@ -1,9 +1,13 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import strings from '../../../i18n/strings';
 import {useQuery} from 'react-query';
 import request from '../../../api/request';
 import ProfilePicture from '../../../components/models/ProfilePicture';
-import {useFocusEffect, useNavigation} from '@react-navigation/native';
+import {
+  useFocusEffect,
+  useIsFocused,
+  useNavigation,
+} from '@react-navigation/native';
 import {StackNav} from '../../../navigation/NavigationKeys';
 import {useHandleAuth} from '../../../utils/useHandleAuth';
 import {ActivityIndicator, StyleSheet} from 'react-native';
@@ -11,6 +15,7 @@ import {useSelector} from 'react-redux';
 
 export default function AddPost() {
   const navigation = useNavigation();
+  const isFocused = useIsFocused();
   const color = useSelector(state => state.theme.theme);
   const ProfilePictureSheetRef = React.createRef();
   const {data} = useQuery('user', () => request.get('/user'));
@@ -18,7 +23,15 @@ export default function AddPost() {
     ProfilePictureSheetRef?.current?.hide();
     navigation.navigate(StackNav.PostDetail, {isImage});
   };
+
   const {handleAuthToast, isGuest} = useHandleAuth();
+
+  useEffect(() => {
+    if (ProfilePictureSheetRef.current && isFocused && !isGuest) {
+      ProfilePictureSheetRef?.current?.show?.();
+    }
+  }, [isFocused]);
+
 
   useFocusEffect(
     React.useCallback(() => {
@@ -38,6 +51,7 @@ export default function AddPost() {
           SheetRef={ProfilePictureSheetRef}
           post={true}
           live={false}
+          isFromSwipe
           title={
             data?.data?.user?.type === 'user'
               ? strings.chooseUser

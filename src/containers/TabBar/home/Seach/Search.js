@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {memo, useState} from 'react';
+import React, {memo, useEffect, useState} from 'react';
 import {useSelector} from 'react-redux';
 import Feather from 'react-native-vector-icons/Feather';
 import debounce from 'debounce';
@@ -21,6 +21,9 @@ import SearchUser from './SearchUser';
 import SearchVideo from './SearchVideo';
 import {useInfiniteQuery, useQuery} from 'react-query';
 import request from '../../../../api/request';
+import {useIsFocused} from '@react-navigation/native';
+import {useScreen} from '../../../../navigation/screenContext';
+import {TabNav} from '../../../../navigation/NavigationKeys';
 
 export default function Search() {
   const colors = useSelector(state => state.theme.theme);
@@ -53,6 +56,15 @@ export default function Search() {
   const [searchInputStyle, setSearchInputStyle] = useState(BlurredStyle);
   const [searchIconStyle, setSearchIconStyle] = useState(BlurredIconStyle);
   const [isSelect, setIsSelect] = useState(0);
+
+  const isFocused = useIsFocused();
+  const {updateCurrentScreen} = useScreen();
+
+  useEffect(() => {
+    if (isFocused) {
+      updateCurrentScreen(TabNav.Search);
+    }
+  }, [isFocused, updateCurrentScreen]);
 
   const onSearchInput = text => {
     setSearch(text);

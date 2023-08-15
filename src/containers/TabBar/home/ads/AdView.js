@@ -20,7 +20,7 @@ import {getHeight, moderateScale} from '../../../../common/constants';
 export const AdView = React.memo(
   ({index, media, type, loadOnMount = true, layoutHeight}) => {
     const [aspectRatio, setAspectRatio] = useState(1.5);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [loaded, setLoaded] = useState(false);
     const [error, setError] = useState(false);
     const nativeAdRef = useRef();

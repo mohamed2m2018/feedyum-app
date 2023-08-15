@@ -8,6 +8,7 @@ import {
   I18nManager,
 } from 'react-native';
 import strings from './i18n/strings';
+import {ScreenProvider} from './navigation/screenContext';
 import {useSelector} from 'react-redux';
 import {requestNotifications} from 'react-native-permissions';
 import AppNavigator from './navigation';
@@ -83,7 +84,9 @@ const App = () => {
         />
         <AlertNotificationRoot>
           <SheetProvider>
-            <AppNavigator />
+            <ScreenProvider>
+              <AppNavigator />
+            </ScreenProvider>
           </SheetProvider>
         </AlertNotificationRoot>
       </View>
