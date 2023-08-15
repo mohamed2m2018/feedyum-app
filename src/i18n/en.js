@@ -117,6 +117,7 @@ export default {
   post: 'Posts',
   followers: 'Followers',
   following: 'Following',
+  hefollowing: 'Following',
   foryou: 'For You',
   likes: 'Likes',
   switchAccount: 'Switch Account',
