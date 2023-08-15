@@ -187,7 +187,7 @@ const ReelComponent = ({
           animated: true,
           index: index + 1,
         });
-      }, 30000); // 0.5 minute
+      }, 10000); // 0.5 minute
 
       return () => clearTimeout(timeout);
     }

@@ -30,6 +30,10 @@ const ProfilePicture = props => {
       } else {
         navigation.navigate(TabNav.FollowingTab);
       }
+    } else {
+      setTimeout(() => {
+        buttonClicked.current = false;
+      }, 500);
     }
   };
 
