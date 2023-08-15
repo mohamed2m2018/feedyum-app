@@ -17,7 +17,7 @@ import {useSelector} from 'react-redux';
 import {styles} from '../../../themes';
 import {getHeight, moderateScale} from '../../../common/constants';
 import ZText from '../../../components/common/ZText';
-import {StackNav} from '../../../navigation/NavigationKeys';
+import {StackNav, TabNav} from '../../../navigation/NavigationKeys';
 import strings from '../../../i18n/strings';
 import images from '../../../assets/images';
 import ZButton from '../../../components/common/ZButton';
@@ -28,6 +28,7 @@ import request from '../../../api/request';
 import {Toast, ALERT_TYPE} from 'react-native-alert-notification';
 import {useHandleAuth} from '../../../utils/useHandleAuth';
 import {useIsFocused} from '@react-navigation/native';
+import {useScreen} from '../../../navigation/screenContext';
 
 export default function Profile({navigation}) {
   const UserDetail = (postsNo, followersNo, followingNo, viewsNo) => [
@@ -138,11 +139,14 @@ export default function Profile({navigation}) {
   const {isGuest, handleAuthToast} = useHandleAuth();
 
   const isFocused = useIsFocused();
+  const {updateCurrentScreen} = useScreen();
+
   useEffect(() => {
     if (isFocused) {
       if (handleAuthToast()) {
         navigation.goBack();
       }
+      updateCurrentScreen(TabNav.Profile);
     }
   }, [isFocused]);
 

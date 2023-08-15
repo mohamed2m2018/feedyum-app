@@ -32,7 +32,6 @@ export default function AddPost() {
     }
   }, [isFocused]);
 
-
   useFocusEffect(
     React.useCallback(() => {
       handleAuthToast();

@@ -21,7 +21,11 @@ import {getHeight, moderateScale} from '../../../common/constants';
 import typography from '../../../themes/typography';
 import ZText from '../../../components/common/ZText';
 import ZButton from '../../../components/common/ZButton';
-import {useNavigation, useRoute} from '@react-navigation/native';
+import {
+  useFocusEffect,
+  useNavigation,
+  useRoute,
+} from '@react-navigation/native';
 import {TabNav} from '../../../navigation/NavigationKeys';
 import {useQuery} from 'react-query';
 import request from '../../../api/request';
@@ -31,6 +35,7 @@ import DropdownGovr from '../home/DropDownGovr';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import {Dropdown} from 'react-native-element-dropdown';
 import {useBackgroundUpload} from '../../../providers/BackgroundUploadProvider';
+import {useScreen} from '../../../navigation/screenContext';
 
 export default function PostDetail() {
   const Duration = [
@@ -44,11 +49,26 @@ export default function PostDetail() {
 
   const [toggleStatus, setToggleStatus] = useState('Hours');
   const route = useRoute();
-  // useFocusEffect(
-  //   React.useCallback(() => {
-  //     queryClient.invalidateQueries('stories'); // Invalidate the 'stories' query to trigger a refetch
-  //   }, []),
-  // );
+
+  const {currentScreen: previousScreen} = useScreen();
+
+  // Override the back button behavior
+  useFocusEffect(() => {
+    const onBackPress = () => {
+      // Your custom logic here
+      // For example, navigate to a different screen or show an alert
+      navigation.navigate(previousScreen);
+      return true; // Return true to prevent default back behavior
+    };
+
+    navigation.addListener('beforeRemove', e => {
+      if (!onBackPress()) {
+        e.preventDefault();
+      }
+    });
+
+    return () => navigation.removeListener('beforeRemove');
+  });
   const postDataToBeEdited = route?.params?.postDataToBeEdited;
   const isImage = route.params?.isImage;
   const [mediaIsEdited, setmediaIsEdited] = useState(false);
@@ -199,7 +219,10 @@ export default function PostDetail() {
 
   return (
     <ZSafeAreaView>
-      <ZHeader title={strings.post} />
+      <ZHeader
+        onPressBack={() => navigation.navigate(previousScreen)}
+        title={strings.post}
+      />
       <KeyboardAwareScrollView
         enableOnAndroid={true}
         bounces={false}

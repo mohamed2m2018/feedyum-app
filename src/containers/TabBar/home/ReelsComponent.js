@@ -94,11 +94,6 @@ export default function ReelsComponent() {
             navigation.navigate(TabNav.ForYou);
 
             setStoryId(notification.additionalData?._id);
-            console.log(
-              'inside toast ',
-              notification.additionalData?._id,
-              notification.additionalData,
-            );
 
             setTimeout(() => {
               refetchStory();

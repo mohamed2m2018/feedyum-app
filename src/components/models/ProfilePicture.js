@@ -1,6 +1,6 @@
 // Library import
 import {StyleSheet, TouchableOpacity, View} from 'react-native';
-import React from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {useSelector} from 'react-redux';
 import ActionSheet from 'react-native-actions-sheet';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -10,7 +10,7 @@ import {moderateScale} from '../../common/constants';
 import {styles} from '../../themes';
 import ZText from '../common/ZText';
 import strings from '../../i18n/strings';
-import {useNavigation} from '@react-navigation/native';
+import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import {TabNav} from '../../navigation/NavigationKeys';
 import {useScreen} from '../../navigation/screenContext';
 
@@ -20,24 +20,28 @@ const ProfilePicture = props => {
   const colors = useSelector(state => state.theme.theme);
 
   const navigation = useNavigation();
-
   const {currentScreen: previousScreen} = useScreen();
+  const buttonClicked = useRef(false);
 
+  const handleClose = () => {
+    if (previousScreen && isFromSwipe && !buttonClicked.current) {
+      if (previousScreen === TabNav.FollowingTab) {
+        navigation.navigate(TabNav.Search);
+      } else {
+        navigation.navigate(TabNav.FollowingTab);
+      }
+    }
+  };
+
+  useEffect(() => {
+    buttonClicked.current = false;
+  }, [previousScreen]);
 
   return (
     <ActionSheet
       ref={SheetRef}
       gestureEnabled={true}
-      onClose={() => {
-        if (previousScreen && isFromSwipe) {
-          console.log('pppp ', previousScreen)
-          if (previousScreen === TabNav.FollowingTab) {
-            navigation.navigate(TabNav.Search);
-          } else {
-            navigation.navigate(TabNav.FollowingTab);
-          }
-        }
-      }}
+      onClose={handleClose}
       indicatorStyle={{width: moderateScale(100)}}
       containerStyle={[
         localStyles.actionSheetContainer,
@@ -54,7 +58,17 @@ const ProfilePicture = props => {
             localStyles.contextContainer,
             {borderColor: colors.textColor},
           ]}
-          onPress={onPressGallery ? onPressGallery : () => onPressCamera(true)}>
+          onPress={
+            onPressGallery
+              ? () => {
+                  onPressGallery();
+                  buttonClicked.current = true;
+                }
+              : () => {
+                  onPressCamera(true);
+                  buttonClicked.current = true;
+                }
+          }>
           <Ionicons
             name={post ? 'add-circle-outline' : 'ios-camera'}
             size={moderateScale(26)}
@@ -71,7 +85,10 @@ const ProfilePicture = props => {
               localStyles.contextContainer,
               {borderColor: colors.textColor},
             ]}
-            onPress={() => onPressCamera(false)}>
+            onPress={() => {
+              onPressCamera(false);
+              buttonClicked.current = true;
+            }}>
             <Ionicons
               name={'add-circle-outline'}
               size={moderateScale(26)}
