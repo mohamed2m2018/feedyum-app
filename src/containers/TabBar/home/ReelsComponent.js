@@ -288,6 +288,7 @@ export default function ReelsComponent() {
   const updateViews = async s =>
     request.post('/views', {
       storyId: s,
+      userId: data?.data?.user?._id,
     });
 
   const updateViewsMutation = useMutation(updateViews);
@@ -295,7 +296,7 @@ export default function ReelsComponent() {
   const viewableItemsChanged = useRef(({viewableItems}) => {
     if (viewableItems?.length) {
       setActiveVideoIndex(viewableItems[0].index);
-      updateViewsMutation.mutate(viewableItems[0]?.index);
+      updateViewsMutation.mutate(viewableItems[0]?.item?._id);
     }
   }).current;
 

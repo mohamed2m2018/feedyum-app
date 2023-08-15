@@ -128,10 +128,12 @@ export default function ReelsComponentFollowing() {
 
   const viewConfig = useRef({viewAreaCoveragePercentThreshold: 50}).current;
 
-  const updateViews = async storyId =>
+  const updateViews = async storyId => {
     request.post('/views', {
       storyId,
+      userId: data?.data?.user?._id,
     });
+  };
 
   const updateViewsMutation = useMutation(updateViews);
 
