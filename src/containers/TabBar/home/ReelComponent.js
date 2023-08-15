@@ -255,7 +255,7 @@ const ReelComponent = ({
                 source={{
                   uri: poster,
                 }}
-                resizeMode="cover"
+                resizeMode="contain"
                 style={imageStyles}
               />
             ) : (
@@ -448,7 +448,6 @@ const ReelComponent = ({
                       containerStyle={localStyles.buttonContainer}
                       onPress={async () => {
                         const link = await generateDynamicLink(item);
-                        console.log('lll ', item?.linkToGo);
                         item?.linkToGo
                           ? Linking.openURL(
                               item?.linkToGo?.includes('http') ||
