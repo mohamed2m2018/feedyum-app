@@ -1,6 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
 import {
-  ActivityIndicator,
   I18nManager,
   Linking,
   Platform,
@@ -268,7 +267,7 @@ const ReelComponent = ({
                   hideShutterView
                   onLoad={handleOnLoad}
                   onSeek={config => {
-                    console.log('seeking', item?.title, config);
+                    // console.log('seeking', item?.title, config);
                   }}
                   onEnd={() => {
                     if (activeVideoIndex === index && isFocused) {
@@ -293,7 +292,7 @@ const ReelComponent = ({
                   resizeMode="cover"
                   playInBackground={false}
                   disableFocus={true}
-                  onError={err => console.log('hello', err)}
+                  // onError={err => console.log('hello', err)}
                   seekColor={colors.primary}
                   muted={!isFocused}
                   paused={

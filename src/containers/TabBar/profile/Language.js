@@ -24,6 +24,7 @@ import {getAsyncStorageData, setAsyncStorageData} from '../../../utils/helpers';
 const Language = ({navigation}) => {
   const colors = useSelector(state => state.theme.theme);
   const dispatch = useDispatch();
+  const [lang, setlang] = useState('en');
   const [isSelected, setIsSelected] = React.useState(
     lang === 'en' ? 'English' : 'العربية',
   );
@@ -66,13 +67,11 @@ const Language = ({navigation}) => {
     }
   };
 
-  const [lang, setlang] = useState('en');
-
   useEffect(() => {
     const getLanguage = async () => {
       const l = await getAsyncStorageData('language');
       setlang(l);
-      setIsSelected(l === 'en' ? 'English' : 'العربية');
+      setIsSelected(l === 'en' || !l ? 'English' : 'العربية');
     };
     getLanguage();
   }, []);
