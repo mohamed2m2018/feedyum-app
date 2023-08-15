@@ -296,7 +296,7 @@ const ReelComponent = ({
                   resizeMode="cover"
                   playInBackground={false}
                   disableFocus={true}
-                  // onError={err => console.log('hello', err)}
+                  onError={err => console.log('hello', err)}
                   seekColor={colors.primary}
                   muted={!isFocused}
                   paused={

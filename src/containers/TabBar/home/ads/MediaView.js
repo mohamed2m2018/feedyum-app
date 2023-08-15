@@ -48,7 +48,7 @@ export const MediaView = ({layoutHeight}) => {
           position: 'absolute',
           zIndex: 1000,
           top: moderateScale(130),
-          color: colors.textColort,
+          color: colors.textColor,
         }}>
         Sponsored Ad
       </ZText>
