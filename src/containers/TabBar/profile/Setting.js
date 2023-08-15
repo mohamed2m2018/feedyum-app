@@ -27,6 +27,7 @@ import {useQuery, useQueryClient} from 'react-query';
 import request from '../../../api/request';
 import {GoogleSignin} from '@react-native-google-signin/google-signin';
 import {useHandleAuth} from '../../../utils/useHandleAuth';
+import OneSignal from 'react-native-onesignal';
 
 export default Setting = ({navigation}) => {
   const ProfileSetting = [
@@ -137,6 +138,7 @@ export default Setting = ({navigation}) => {
       await queryClient.removeQueries();
       delete request.defaults.headers.common.Authorization;
       googleSignOut();
+      OneSignal.removeExternalUserId();
       setTimeout(() => {
         navigation.reset({
           index: 0,

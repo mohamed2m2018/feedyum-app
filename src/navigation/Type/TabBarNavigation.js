@@ -74,8 +74,11 @@ export default function TabBarNavigation({navigation}) {
       screenOptions={{
         headerShown: false,
         lazy: true,
+        detachPreviousScreen: false,
+        detachInactiveScreens: false,
         tabBarItemStyle: {height: 60},
         tabBarLabelStyle: {fontSize: 12},
+        freezeOnBlur: true,
         tabBarContentContainerStyle: {
           backgroundColor: colors.backgroundColor,
         },
@@ -87,6 +90,9 @@ export default function TabBarNavigation({navigation}) {
         ],
         tabBarShowLabel: false,
       }}
+      detachPreviousScreen={false}
+      freezeOnBlur={true}
+      detachInactiveScreens={false}
       initialRouteName={TabNav.ForYou}>
       <Tab.Screen
         name={TabNav.ForYou}
@@ -116,7 +122,7 @@ export default function TabBarNavigation({navigation}) {
       />
 
       <Tab.Screen
-        name={StackNav.PostDetail}
+        name={'AddPost'}
         component={AddPost}
         listeners={{
           tabPress: e => {
@@ -227,6 +233,6 @@ const localStyles = StyleSheet.create({
     ...styles.center,
     width: moderateScale(70),
     height: getHeight(40),
-    right: !I18nManager.isRTL ? moderateScale(20) : moderateScale(40),
+    right: moderateScale(20),
   },
 });

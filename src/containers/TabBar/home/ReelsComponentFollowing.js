@@ -1,6 +1,6 @@
 // Libraries import
 import {StyleSheet, TouchableOpacity, View} from 'react-native';
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import Description from '../../../components/models/Descriptions';
 import Locations from '../../../components/models/Locations';
 import Comment from '../../../components/models/Comment';
@@ -15,6 +15,7 @@ import {
   isAndroid,
   moderateScale,
   screenFullHeight,
+  screenHeight,
 } from '../../../common/constants';
 import {StackNav, TabNav} from '../../../navigation/NavigationKeys';
 import {useInfiniteQuery, useMutation, useQuery} from 'react-query';
@@ -90,7 +91,7 @@ export default function ReelsComponentFollowing() {
   useEffect(() => {
     setExtraData(!extraData);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeVideoIndex]);
+  }, [activeVideoIndex, isFocused]);
 
   const onPressSearch = () => navigation.navigate(TabNav.Search);
 
@@ -102,26 +103,29 @@ export default function ReelsComponentFollowing() {
     locationSheetRef.current?.show();
   };
 
-  const renderReelComponent = ({item, index}) => {
-    return (
-      <ReelComponent
-        item={item}
-        i={index}
-        layoutHeight={layoutHeight}
-        data={data}
-        activeVideoIndex={activeVideoIndex}
-        likeRef={likeRef}
-        isFocused={isFocused}
-        onPressAvailableLocation={onPressAvailableLocation}
-        flatListRef={flatListRefFollowing}
-        setExtraData={setExtraData}
-        setSelectedPostId={setSelectedPostId}
-        commentSheetRef={commentSheetRef}
-        setselectedDescription={setselectedDescription}
-        descriptionSheetRef={descriptionSheetRef}
-      />
-    );
-  };
+  const renderReelComponent = useCallback(
+    ({item, index}) => {
+      return (
+        <ReelComponent
+          item={item}
+          i={index}
+          isFocused={isFocused}
+          layoutHeight={layoutHeight || screenHeight}
+          data={data}
+          activeVideoIndex={activeVideoIndex}
+          likeRef={likeRef}
+          onPressAvailableLocation={onPressAvailableLocation}
+          flatListRef={flatListRefFollowing}
+          setExtraData={setExtraData}
+          setSelectedPostId={setSelectedPostId}
+          commentSheetRef={commentSheetRef}
+          setselectedDescription={setselectedDescription}
+          descriptionSheetRef={descriptionSheetRef}
+        />
+      );
+    },
+    [layoutHeight, data, activeVideoIndex, isFocused],
+  );
 
   const viewConfig = useRef({viewAreaCoveragePercentThreshold: 50}).current;
 
@@ -139,7 +143,7 @@ export default function ReelsComponentFollowing() {
     }
   }).current;
 
-  const keyExtractor = (item, index) => 'item-Following' + item?._id + index;
+  const keyExtractor = item => 'item-Following' + item?._id;
 
   const onSetLayout = e => setLayoutHeight(e.nativeEvent.layout.height);
 

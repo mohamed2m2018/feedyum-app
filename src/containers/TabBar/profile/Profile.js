@@ -41,6 +41,7 @@ export default function Profile({navigation}) {
       onPress: () => {
         navigation.navigate(StackNav.UserNetwork, {
           userId: user?._id,
+          page: strings.followers,
         });
       },
     },
@@ -50,6 +51,7 @@ export default function Profile({navigation}) {
       onPress: () =>
         navigation.navigate(StackNav.UserNetwork, {
           userId: user?._id,
+          page: strings.following,
         }),
     },
     {

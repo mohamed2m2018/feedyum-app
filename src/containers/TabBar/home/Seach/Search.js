@@ -144,6 +144,7 @@ export default function Search() {
         style={[
           localStyles.root,
           {
+            height: '100%',
             borderBottomColor:
               isSelect === index ? colors.primary : colors.dark3,
           },
@@ -178,7 +179,7 @@ export default function Search() {
           _onFocus={onHighlightInput}
           onBlur={onUnHighlightInput}
         />
-        <View style={{height: moderateScale(50)}}>
+        <View style={{height: moderateScale(70), alignSelf: 'flex-start'}}>
           <FlatList
             data={searchCategoryData}
             keyboardShouldPersistTaps={'always'}

@@ -28,6 +28,11 @@ export default function AddPost() {
 
   return (
     <>
+      <ActivityIndicator
+        size={'large'}
+        style={localStyles.loader}
+        color={color.primary}
+      />
       {!isGuest && (
         <ProfilePicture
           SheetRef={ProfilePictureSheetRef}

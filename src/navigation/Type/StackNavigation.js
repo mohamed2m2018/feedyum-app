@@ -13,8 +13,12 @@ export default function StackNavigation() {
       <Stack.Navigator
         screenOptions={{
           headerShown: false,
+          detachPreviousScreen: false,
+          detachInactiveScreens: false,
         }}
-        initialRouteName={StackNav.Login}>
+        initialRouteName={StackNav.Login}
+        detachPreviousScreen={false}
+        detachInactiveScreens={false}>
         <Stack.Screen
           screenOptions={{
             headerShown: false,
@@ -63,6 +67,8 @@ export default function StackNavigation() {
         headerShown: false,
         mode: 'modal',
         transparentCard: true,
+        detachPreviousScreen: false,
+        detachInactiveScreens: false,
       }}
       initialRouteName={StackNav.Splash}>
       <Stack.Screen name={StackNav.Splash} component={StackRoute.Splash} />

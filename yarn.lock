@@ -3978,7 +3978,7 @@ electron-to-chromium@^1.4.477:
 
 eme-encryption-scheme-polyfill@^2.0.1:
   version "2.1.1"
-  resolved "https://registry.npmjs.org/eme-encryption-scheme-polyfill/-/eme-encryption-scheme-polyfill-2.1.1.tgz"
+  resolved "https://registry.yarnpkg.com/eme-encryption-scheme-polyfill/-/eme-encryption-scheme-polyfill-2.1.1.tgz#91c823ed584e8ec5a9f03a6a676def8f80c57a4c"
   integrity sha512-njD17wcUrbqCj0ArpLu5zWXtaiupHb/2fIUQGdInf83GlI+Q6mmqaPGLdrke4savKAu15J/z1Tg/ivDgl14g0g==
 
 emittery@^0.13.1:
@@ -8162,7 +8162,7 @@ react-native-fast-image@^8.6.3:
 
 react-native-fast-video@^5.1.7:
   version "5.1.7"
-  resolved "https://registry.npmjs.org/react-native-fast-video/-/react-native-fast-video-5.1.7.tgz"
+  resolved "https://registry.yarnpkg.com/react-native-fast-video/-/react-native-fast-video-5.1.7.tgz#e4c0cdae7e6819baee4bf60ba2f9e26b5674e4af"
   integrity sha512-pSRFDmEDjBedaDXj4F5jJu0s/lHJzAc6rUahIuLvoSgw8zQ7rHbCxCDiNNNMMhrMdmQ/oElfCVls7kgk6Nhdug==
   dependencies:
     keymirror "^0.1.1"
@@ -8829,7 +8829,7 @@ setprototypeof@1.2.0:
 
 shaka-player@^2.5.9:
   version "2.5.23"
-  resolved "https://registry.npmjs.org/shaka-player/-/shaka-player-2.5.23.tgz"
+  resolved "https://registry.yarnpkg.com/shaka-player/-/shaka-player-2.5.23.tgz#db92d1c6cf2314f0180a2cec11b0e2f2560336f5"
   integrity sha512-3MC9k0OXJGw8AZ4n/ZNCZS2yDxx+3as5KgH6Tx4Q5TRboTBBCu6dYPI5vp1DxKeyU12MBN1Zcbs7AKzXv2EnCg==
   dependencies:
     eme-encryption-scheme-polyfill "^2.0.1"

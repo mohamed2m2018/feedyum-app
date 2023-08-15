@@ -1,18 +1,13 @@
 // Libraries import
 import {StyleSheet, TouchableOpacity, View} from 'react-native';
-import React, {useEffect, useRef, useState, useCallback} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import Description from '../../../components/models/Descriptions';
 import Locations from '../../../components/models/Locations';
 import Comment from '../../../components/models/Comment';
 import {useSelector} from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {
-  useFocusEffect,
-  useIsFocused,
-  useNavigation,
-  useRoute,
-} from '@react-navigation/native';
-import {AdView} from './ads/AdView';
+import dynamicLinks from '@react-native-firebase/dynamic-links';
+import {useIsFocused, useNavigation, useRoute} from '@react-navigation/native';
 
 // Local import
 import {styles} from '../../../themes';
@@ -23,24 +18,34 @@ import {
   screenFullHeight,
   screenHeight,
 } from '../../../common/constants';
-import {StackNav, TabNav} from '../../../navigation/NavigationKeys';
-import {useInfiniteQuery, useMutation, useQuery} from 'react-query';
+import {TabNav} from '../../../navigation/NavigationKeys';
+import {
+  QueryClient,
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+} from 'react-query';
 import ReelComponent from './ReelComponent';
 import request from '../../../api/request';
 import {BannerAd, BannerAdSize, TestIds} from 'react-native-google-mobile-ads';
 import ReelsList from './ReelsList';
 import strings from '../../../i18n/strings';
 import Spinner from 'react-native-loading-spinner-overlay';
+import OneSignal from 'react-native-onesignal';
+import {ALERT_TYPE, Toast} from 'react-native-alert-notification';
 
 export default function ReelsComponent() {
+  const [storyId, setStoryId] = useState();
   const colors = useSelector(state => state.theme.theme);
   const isFocused = useIsFocused();
   const commentSheetRef = useRef('');
   const descriptionSheetRef = useRef('');
+  const [notificationReceived, setnotificationReceived] = useState(false);
   const locationSheetRef = useRef('');
   const navigation = useNavigation();
   const route = useRoute();
   const [activeVideoIndex, setActiveVideoIndex] = useState(0);
+  const [selectedPostId, setSelectedPostId] = useState();
   const [layoutHeight, setLayoutHeight] = useState(0);
   const [extraData, setExtraData] = useState(true);
   const [filteredData, setFilteredData] = useState([]);
@@ -49,8 +54,100 @@ export default function ReelsComponent() {
   const [selectedDescription, setselectedDescription] = useState('');
   const [selectedAreas, setSelectedAreas] = useState([]);
   const [selectedGov, setselectedGov] = useState('');
+  const [queryClient] = React.useState(() => new QueryClient());
 
   const {data} = useQuery('user', () => request.get('/user'), {retry: 1});
+
+  React.useEffect(() => {
+    // Handle notifications received while the app is in the foreground
+
+    OneSignal.setNotificationOpenedHandler(async notifReceivedEvent => {
+      // Display or handle the notification as needed
+      navigation.navigate(TabNav.ForYou);
+      setStoryId(notifReceivedEvent?.notification?.additionalData?._id);
+
+      queryClient.invalidateQueries({queryKey: 'user'});
+      queryClient.invalidateQueries({queryKey: 'profile-stories'});
+
+      setnotificationReceived(true);
+      if (notifReceivedEvent?.notification?.body?.includes('comment')) {
+        setSelectedPostId(
+          notifReceivedEvent?.notification?.additionalData?._id,
+        );
+        setTimeout(() => {
+          commentSheetRef.current?.show();
+        }, 300);
+      }
+    });
+
+    OneSignal.setNotificationWillShowInForegroundHandler(
+      async notifReceivedEvent => {
+        // Display or handle the notification as needed
+        const notification = await notifReceivedEvent.getNotification();
+        Toast.show({
+          type: ALERT_TYPE.SUCCESS,
+          title: strings.notification,
+          textBody: notification.body
+            ?.replace('got a comment', strings.gotAcomment)
+            ?.replace('got a like', strings.gotALike),
+          onPress: () => {
+            navigation.navigate(TabNav.ForYou);
+
+            setStoryId(notification.additionalData?._id);
+            console.log(
+              'inside toast ',
+              notification.additionalData?._id,
+              notification.additionalData,
+            );
+
+            setTimeout(() => {
+              refetchStory();
+            }, 500);
+            queryClient.invalidateQueries({queryKey: 'user'});
+            queryClient.invalidateQueries({queryKey: 'profile-stories'});
+            if (notification?.body?.includes('comment')) {
+              setSelectedPostId(notification.additionalData?._id);
+              setTimeout(() => {
+                commentSheetRef.current?.show();
+              }, 300);
+            }
+            setnotificationReceived(true);
+          },
+        });
+
+        Toast.show({
+          type: ALERT_TYPE.SUCCESS,
+          title: strings.notification,
+          textBody: notification.body
+            ?.replace('got a comment', strings.gotAcomment)
+            ?.replace('got a like', strings.gotALike),
+          onPress: () => {
+            navigation.navigate(TabNav.ForYou);
+
+            setStoryId(notification.additionalData?._id);
+
+            setTimeout(() => {
+              refetchStory();
+            }, 500);
+            queryClient.invalidateQueries({queryKey: 'user'});
+            queryClient.invalidateQueries({queryKey: 'profile-stories'});
+            if (notification?.body?.includes('comment')) {
+              setSelectedPostId(notification.additionalData?._id);
+              commentSheetRef.current?.show();
+            }
+            setnotificationReceived(true);
+          },
+        });
+        notifReceivedEvent.complete(notifReceivedEvent.getNotification());
+      },
+    );
+
+    return () => {
+      // Clean up OneSignal event handlers when the component unmounts
+      OneSignal.clearHandlers();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [commentSheetRef]);
 
   const fetchReels = page =>
     request.get(
@@ -95,37 +192,78 @@ export default function ReelsComponent() {
     },
   );
 
-  const {isLoading: isLoadingStory} = useQuery(
-    ['storyById', route.params?.storyId],
-    () => request.get(`/story/${route.params?.storyId}`),
+  const {refetch: refetchStory, isLoading: isLoadingStory} = useQuery(
+    ['storyById', storyId],
+    () =>
+      request.get(`/story/${storyId}`, {
+        params: {
+          userId: data?.data?.user?._id,
+        },
+      }),
     {
-      enabled: !!route.params?.storyId,
+      enabled: !!storyId && !!filteredData?.length,
       onSuccess: res => {
         const filtered = filteredData?.filter(item => {
           return res?.data?.story?._id !== item?._id;
         });
-        if (filtered?.length) {
-          setFilteredData([res?.data?.story, ...filtered]);
+        if (filtered.length) {
+          setFilteredData(
+            (filteredData.current = [res?.data?.story, ...filtered]),
+          );
         }
         flatListRef.current?.scrollToOffset({offset: 0});
+        updateViewsMutation.mutate(res?.data?.story?._id);
+        setStoryId(null);
       },
     },
   );
-
   useEffect(() => {
     setExtraData(e => !e);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeVideoIndex, isFocused]);
+  }, [activeVideoIndex, isFocused, notificationReceived]);
 
   const onPressSearch = () => navigation.navigate(TabNav.Search);
 
-  const [selectedPostId, setSelectedPostId] = useState();
+  const handleDeepLink = link => {
+    // Handle dynamic link inside your own application
+    navigation.navigate(TabNav.ForYou);
+    const postId = link?.url?.split?.('/')?.pop();
+    setStoryId(postId);
+
+    queryClient.invalidateQueries({queryKey: 'user'});
+    queryClient.invalidateQueries({queryKey: 'profile-stories'});
+
+    setnotificationReceived(true);
+  };
+
+  useEffect(() => {
+    dynamicLinks()
+      .getInitialLink()
+      .then(link => {
+        handleDeepLink(link);
+      });
+  }, []);
+
+  const handleDynamicLink = link => {
+    handleDeepLink(link);
+  };
+
+  useEffect(() => {
+    const unsubscribe = dynamicLinks().onLink(handleDynamicLink);
+    // When the component is unmounted, remove the listener
+    return () => unsubscribe();
+  }, []);
+
+  React.useEffect(() => {
+    setStoryId(route.params?.storyId);
+  }, [route.params]);
 
   const onPressAvailableLocation = (gov, areas) => {
     setSelectedAreas(areas);
     setselectedGov(gov);
     locationSheetRef.current?.show();
   };
+
   const renderReelComponent = useCallback(
     ({item, index}) => {
       return (
@@ -152,9 +290,9 @@ export default function ReelsComponent() {
 
   const viewConfig = useRef({viewAreaCoveragePercentThreshold: 50}).current;
 
-  const updateViews = async storyId =>
+  const updateViews = async s =>
     request.post('/views', {
-      storyId,
+      storyId: s,
     });
 
   const updateViewsMutation = useMutation(updateViews);
@@ -162,11 +300,11 @@ export default function ReelsComponent() {
   const viewableItemsChanged = useRef(({viewableItems}) => {
     if (viewableItems?.length) {
       setActiveVideoIndex(viewableItems[0].index);
-      updateViewsMutation.mutate(viewableItems[0]?.item?._id);
+      updateViewsMutation.mutate(viewableItems[0]?.index);
     }
   }).current;
 
-  const keyExtractor = (item, index) => 'item-ForYou' + item?._id + index;
+  const keyExtractor = item => 'item-ForYou' + item?._id;
 
   const onSetLayout = e => setLayoutHeight(e.nativeEvent.layout.height);
 

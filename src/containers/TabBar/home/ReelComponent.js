@@ -222,9 +222,10 @@ const ReelComponent = ({
   const handleOnLoad = ({duration: durationToBeSet}) => {
     setDurationInSeconds(durationToBeSet);
     if (seekValue !== 0 && activeVideoIndex === index) {
-      console.log('ii', item.title);
       const val = seekValue;
       videoRef.current.seek(val);
+    } else {
+      videoRef.current.seek(0.1);
     }
   };
 
@@ -264,6 +265,7 @@ const ReelComponent = ({
                   onLoadStart={() => {
                     setIsBuffering(true);
                   }}
+                  hideShutterView
                   onLoad={handleOnLoad}
                   onSeek={config => {
                     console.log('seeking', item?.title, config);
@@ -289,7 +291,9 @@ const ReelComponent = ({
                   posterResizeMode="cover"
                   onProgress={debouncedOnProgress}
                   resizeMode="cover"
-                  onError={() => console.log('hello')}
+                  playInBackground={false}
+                  disableFocus={true}
+                  onError={err => console.log('hello', err)}
                   seekColor={colors.primary}
                   muted={!isFocused}
                   paused={
@@ -503,11 +507,11 @@ const ReelComponent = ({
                 />
               )}
             </View>
-            {isBuffering && (
+            {/* {isBuffering && (
               <View style={localStyles.bufferingIndicator}>
                 <ActivityIndicator size="large" color="gray" />
               </View>
-            )}
+            )} */}
           </DoubleClick>
         </View>
       )}

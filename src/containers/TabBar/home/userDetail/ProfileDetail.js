@@ -156,9 +156,11 @@ export default function ProfileDetail({navigation, route}) {
   //   },
   // ];
 
-  const onPressEditProfile = () =>
+  const onPressEditProfile = page =>
     navigation.navigate(StackNav.UserNetwork, {
       userId: user?._id,
+      page,
+      isOther: true,
     });
   const onPressModalClose = () => setModalVisible(false);
 

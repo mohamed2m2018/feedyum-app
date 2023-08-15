@@ -642,7 +642,7 @@ const videoData = [
     views: '110EGP',
   },
   {
-    id:11,
+    id: 11,
     channelName: 'zuzu_fan',
     uri: 'https://user-images.githubusercontent.com/129170600/231968281-f8450cd9-9adf-4002-8e77-947140fc19ec.mp4',
     caption: '#cute #girls #tikto #tiktoapp #tiktofan #tiktofans',
@@ -724,7 +724,8 @@ const videoData = [
     poster:
       'https://res.cloudinary.com/givantk/image/upload/v1684603315/x4papvm45uh3e6niqmpj.jpg',
     views: '200EGP',
-  },  {
+  },
+  {
     id: 16,
     channelName: 'Rashmika_Mandanna',
     uri: 'https://user-images.githubusercontent.com/129170600/231968235-a6a60f18-6b50-459d-8c7c-9716d9df0730.mp4',
@@ -1396,10 +1397,10 @@ const UserDetailCategory = (
   {
     title: strings.followers,
     value: followersNo,
-    onPress,
+    onPress: () => onPress(strings.followers),
   },
   {
-    title: strings.following,
+    title: strings.hefollowing,
     value: followingNo,
     onPress,
   },

@@ -20,14 +20,15 @@ import {TabView} from 'react-native-tab-view';
 import Following from './Following';
 import Follower from './Follower';
 import request from '../../../../api/request';
-import Spinner from 'react-native-loading-spinner-overlay/lib';
 
 export default function UserNetwork({navigation, route}) {
   const colors = useSelector(state => state.theme.theme);
+  const showOne = route.params?.page === strings.followers;
+  const isOther = route.params?.isOther === true;
   const [isSelect, setIsSelect] = useState({
-    index: 0,
+    index: showOne ? 1 : 0,
     routes: [
-      {key: 'first', title: strings.following},
+      {key: 'first', title: isOther ? strings.following : strings.hefollowing},
       {key: 'second', title: strings.followers},
     ],
   });
