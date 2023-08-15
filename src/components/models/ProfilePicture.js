@@ -26,7 +26,7 @@ const ProfilePicture = props => {
       gestureEnabled={true}
       onBeforeClose={() => {
         if (isFromTab) {
-          navigation.navigate(TabNav.Search);
+          navigation.goBack();
         }
       }}
       indicatorStyle={{width: moderateScale(100)}}

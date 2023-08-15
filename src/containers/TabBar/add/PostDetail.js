@@ -180,12 +180,14 @@ export default function PostDetail() {
   const handleCaptureImage = () =>
     ImagePicker.openCamera({
       cropping: true,
+      compressImageQuality: 1,
     }).then(handleMedia);
 
   const handlepickImage = () =>
     ImagePicker.openPicker({
       mediaType: 'image',
       cropping: true,
+      compressImageQuality: 1,
     }).then(handleMedia);
 
   const handlePickVideo = () =>
@@ -296,7 +298,7 @@ export default function PostDetail() {
               <>
                 <TextInput
                   placeholder={strings.price}
-                  keyboardType="number-pad"
+                  keyboardType="numbers-and-punctuation"
                   textAlign={I18nManager.isRTL ? 'right' : 'left'}
                   value={`${postedData?.price || ''}`}
                   onChangeText={input =>
@@ -321,10 +323,10 @@ export default function PostDetail() {
                     placeholder={`${strings.no} ${
                       toggleStatus === 'Hours' ? strings.hours : strings.days
                     } ${strings.toDeliver}`}
+                    keyboardType="numbers-and-punctuation"
                     textAlign={I18nManager.isRTL ? 'right' : 'left'}
                     value={`${postedData?.duration?.split?.(' ')?.[0] || ''}`}
                     multiline={true}
-                    keyboardType="number-pad"
                     onChangeText={input =>
                       setpostedData(currentState => ({
                         ...currentState,

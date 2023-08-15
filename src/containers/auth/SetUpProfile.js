@@ -321,10 +321,10 @@ const SetUpProfile = props => {
             {
               backgroundColor: colors.inputBg,
               borderColor: colors.inputBg,
-              color: colors.white,
+              color: colors.textColor,
             },
           ]}
-          placeholderStyle={{color: colors.grayScale5}}
+          placeholderStyle={{color: colors.iconColor}}
           data={GenderData}
           maxHeight={moderateScale(180)}
           labelField="label"

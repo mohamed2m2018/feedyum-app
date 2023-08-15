@@ -161,7 +161,7 @@ export default function ReelComponent({
         <ZText style={[localStyles.titleText, {color: colors.textColor}]}>
           {item?.title}
         </ZText>
-        {item?.price && (
+        {!!item?.price && (
           <ZText style={[localStyles.priceText, {color: colors.textColor}]}>
             {item?.price} LE
           </ZText>

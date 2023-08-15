@@ -27,7 +27,8 @@ export default function Description({SheetRef, selectedAreas, selectedGov}) {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={localStyles.content}>
             <ZText type="b18" align="center">
-              {strings.dishAvailableIn}{' '}
+              {strings.dishAvailableIn}
+              {''}
               {I18nManager.isRTL ? selected?.arabicValue : selected?.value}
               {/* in the following areas{' '} */}
               {'\n'}

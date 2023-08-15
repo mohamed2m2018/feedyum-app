@@ -5,6 +5,7 @@ import {useSelector} from 'react-redux';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import strings from '../../../i18n/strings';
 export const governorates = [
+  {key: '1', value: 'Multiple governorates', arabicValue: 'محافظات متعددة'},
   {key: '1', value: 'Alexandria', arabicValue: 'الإسكندرية'},
   {key: '2', value: 'Aswan', arabicValue: 'أسوان'},
   {key: '3', value: 'Asyut', arabicValue: 'أسيوط'},

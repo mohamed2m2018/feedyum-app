@@ -38,6 +38,7 @@ import {useNavigation} from '@react-navigation/native';
 import {StackNav} from '../../../navigation/NavigationKeys';
 import {AdView} from './ads/AdView';
 import DoubleClick from 'react-native-double-tap';
+import {governorates} from './DropDownGovr';
 
 const ReelComponent = ({
   item,
@@ -228,6 +229,9 @@ const ReelComponent = ({
     }
   };
 
+  const selected = governorates.filter(
+    element => element.value === item?.governorate,
+  )?.[0];
   return (
     <>
       {item?.type !== 'ad' && (
@@ -392,7 +396,12 @@ const ReelComponent = ({
                   }
                   style={styles.button}>
                   <ZText type="m14" color={colors.primary} style={styles.mb20}>
-                    {strings.checkLocations}
+                    {/* {strings.checkLocations} */}
+                    {strings.dishAvailableIn}
+                    {''}
+                    {I18nManager.isRTL
+                      ? selected?.arabicValue
+                      : selected?.value}
                   </ZText>
                 </TouchableOpacity>
                 {!item.avatarUri && (
@@ -439,16 +448,20 @@ const ReelComponent = ({
                       containerStyle={localStyles.buttonContainer}
                       onPress={async () => {
                         const link = await generateDynamicLink(item);
+                        console.log('lll ', item?.linkToGo);
                         item?.linkToGo
                           ? Linking.openURL(
-                              item?.linkToGo?.includes('http')
+                              item?.linkToGo?.includes('http') ||
+                                item?.linkToGo
+                                  ?.toLocaleLowerCase()
+                                  ?.includes('wwww')
                                 ? item?.linkToGo
                                 : 'https://' + item?.linkToGo,
                             )
                           : Linking.openURL(
                               'whatsapp://send?text=' +
                                 'Hi, I came from FoodTok app, and I want to buy this dish: ' +
-                                item.caption +
+                                item.title +
                                 '\n' +
                                 link +
                                 '&phone=2' +

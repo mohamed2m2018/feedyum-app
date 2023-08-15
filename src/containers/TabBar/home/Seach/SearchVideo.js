@@ -34,7 +34,7 @@ export default function SearchVideo({
           return (
             <LiveComponent
               id={item._id}
-              data={item?.caption}
+              data={item?.title}
               reelUrl={
                 item?.avatarUri?.replace(
                   'https://foodtokforever.s3.amazonaws.com',
@@ -45,7 +45,7 @@ export default function SearchVideo({
                   'https://d1wfcrbbkg3bzd.cloudfront.net',
                 )
               }
-              userName={item?.caption}
+              userName={item?.title}
             />
           );
         }}

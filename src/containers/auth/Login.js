@@ -1,8 +1,9 @@
 // Library Imports
-import {StyleSheet, View, TouchableOpacity} from 'react-native';
+import {StyleSheet, View, TouchableOpacity, I18nManager} from 'react-native';
 import React, {memo, useEffect} from 'react';
 import {useSelector} from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import RNRestart from 'react-native-restart';
 
 // Local Imports
 import strings from '../../i18n/strings';
@@ -243,6 +244,18 @@ const Login = ({navigation}) => {
     );
   };
   const onPressPasswordEyeIcon = () => setIsPasswordVisible(!isPasswordVisible);
+  const onPressEnglish = async () => {
+    await setAsyncStorageData('language', 'en');
+    await I18nManager.allowRTL(false);
+    await I18nManager.forceRTL(false);
+    RNRestart.restart();
+  };
+  const onPressArabic = async () => {
+    await setAsyncStorageData('language', 'ar');
+    I18nManager.allowRTL(true);
+    I18nManager.forceRTL(true);
+    RNRestart.restart();
+  };
   const onPressSignUp = () => navigation.navigate(StackNav.Register);
   const onPressGuest = () => {
     setTimeout(() => {
@@ -361,6 +374,27 @@ const Login = ({navigation}) => {
               {strings.continueGuest}
             </ZText>
           </TouchableOpacity>
+          <View
+            style={{flexDirection: 'row', alignSelf: 'center', marginTop: 100}}>
+            <TouchableOpacity
+              onPress={onPressEnglish}
+              style={[localStyles.signUpContainer, {marginRight: 10}]}>
+              <ZText
+                type={'s14'}
+                color={I18nManager.isRTL ? colors.textColor : colors.primary}>
+                English
+              </ZText>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={onPressArabic}
+              style={localStyles.signUpContainer}>
+              <ZText
+                type={'s14'}
+                color={!I18nManager.isRTL ? colors.textColor : colors.primary}>
+                العربية
+              </ZText>
+            </TouchableOpacity>
+          </View>
         </View>
       </ZKeyBoardAvoidWrapper>
     </ZSafeAreaView>

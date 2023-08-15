@@ -73,7 +73,6 @@ export default function TabBarNavigation({navigation}) {
       pagerStyle={{backgroundColor: colors.backgroundColor}}
       screenOptions={{
         headerShown: false,
-        lazy: true,
         detachPreviousScreen: false,
         detachInactiveScreens: false,
         tabBarItemStyle: {height: 60},
