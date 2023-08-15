@@ -1,6 +1,6 @@
 // Library import
 import {StyleSheet, TouchableOpacity, View} from 'react-native';
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useEffect, useRef} from 'react';
 import {useSelector} from 'react-redux';
 import ActionSheet from 'react-native-actions-sheet';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -10,7 +10,7 @@ import {moderateScale} from '../../common/constants';
 import {styles} from '../../themes';
 import ZText from '../common/ZText';
 import strings from '../../i18n/strings';
-import {useFocusEffect, useNavigation} from '@react-navigation/native';
+import {useNavigation} from '@react-navigation/native';
 import {TabNav} from '../../navigation/NavigationKeys';
 import {useScreen} from '../../navigation/screenContext';
 
