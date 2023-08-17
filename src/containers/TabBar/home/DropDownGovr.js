@@ -310,7 +310,7 @@ const DropdownGovr = ({postedData, setpostedData}) => {
         setSelected={handleGovernoratesSelection}
         data={I18nManager.isRTL ? arabicGovernorates : governorates || []}
         save="value"
-        placeholder={strings.selectGov}
+        placeholder={strings.selectGov + ' *'}
         boxStyles={styles.selectBox}
         inputStyles={styles.selectTextGover}
         dropdownStyles={styles.dropdown}

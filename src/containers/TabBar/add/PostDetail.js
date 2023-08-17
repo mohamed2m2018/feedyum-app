@@ -270,7 +270,7 @@ export default function PostDetail() {
         {localUri && (
           <>
             <TextInput
-              placeholder={strings.mealName}
+              placeholder={strings.mealName + ' *'}
               multiline={false}
               textAlign={I18nManager.isRTL ? 'right' : 'left'}
               value={postedData?.title}
@@ -292,7 +292,7 @@ export default function PostDetail() {
               inputBoxStyle={localStyles.inputBoxStyle}
             />
             <TextInput
-              placeholder={strings.description}
+              placeholder={strings.description + ' *'}
               textAlign={I18nManager.isRTL ? 'right' : 'left'}
               multiline={true}
               value={postedData?.caption}
@@ -321,7 +321,7 @@ export default function PostDetail() {
             {user?.type === 'chef' && (
               <>
                 <TextInput
-                  placeholder={strings.price}
+                  placeholder={strings.price + ' *'}
                   keyboardType="numbers-and-punctuation"
                   textAlign={I18nManager.isRTL ? 'right' : 'left'}
                   value={`${postedData?.price || ''}`}
@@ -346,7 +346,7 @@ export default function PostDetail() {
                   <TextInput
                     placeholder={`${strings.no} ${
                       toggleStatus === 'Hours' ? strings.hours : strings.days
-                    } ${strings.toDeliver}`}
+                    } ${strings.toDeliver} *`}
                     keyboardType="numbers-and-punctuation"
                     textAlign={I18nManager.isRTL ? 'right' : 'left'}
                     value={`${postedData?.duration?.split?.(' ')?.[0] || ''}`}
