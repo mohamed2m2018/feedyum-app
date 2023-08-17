@@ -1,7 +1,7 @@
 // Library import
 import React from 'react';
 import {useSelector} from 'react-redux';
-import {I18nManager, StyleSheet, TouchableOpacity, View} from 'react-native';
+import {StyleSheet, TouchableOpacity, View} from 'react-native';
 import {createMaterialTopTabNavigator} from '@react-navigation/material-top-tabs';
 
 // Local import
@@ -79,6 +79,7 @@ export default function TabBarNavigation({navigation}) {
         detachPreviousScreen: false,
         detachInactiveScreens: false,
         tabBarItemStyle: {height: 60},
+        animationEnabled: false,
         tabBarLabelStyle: {fontSize: 12},
         freezeOnBlur: true,
         tabBarContentContainerStyle: {
