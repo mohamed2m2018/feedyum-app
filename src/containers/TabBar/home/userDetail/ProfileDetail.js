@@ -32,6 +32,7 @@ import {
 } from 'react-query';
 import request from '../../../../api/request';
 import strings from '../../../../i18n/strings';
+import {useHandleAuth} from '../../../../utils/useHandleAuth';
 
 export default function ProfileDetail({navigation, route}) {
   const {id} = route.params;
@@ -79,6 +80,7 @@ export default function ProfileDetail({navigation, route}) {
     enabled: !!data?.data?.user,
   });
 
+  const {handleAuthToast} = useHandleAuth();
   const followMutation = useMutation(
     userToFollow => request.post('/follow', {userToFollow}),
     {
@@ -105,6 +107,9 @@ export default function ProfileDetail({navigation, route}) {
     },
   );
   const onPressFollow = () => {
+    if (handleAuthToast()) {
+      return;
+    }
     if (isFollow) {
       unfollowMutation.mutate({_id: id});
     } else {

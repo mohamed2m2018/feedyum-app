@@ -15,6 +15,7 @@ import images from '../assets/images';
 import request from '../api/request';
 import {useMutation, useQueryClient} from 'react-query';
 import strings from '../i18n/strings';
+import {useHandleAuth} from '../utils/useHandleAuth';
 
 export default function UserDetailComponent({
   id,
@@ -58,7 +59,12 @@ export default function UserDetailComponent({
       },
     },
   );
+  const {handleAuthToast} = useHandleAuth();
+
   const onPressFollow = () => {
+    if (handleAuthToast()) {
+      return;
+    }
     if (isFollow) {
       unfollowMutation.mutate({_id: id});
     } else {
