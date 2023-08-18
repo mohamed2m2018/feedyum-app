@@ -4,6 +4,7 @@ import {Logger} from './utils';
 import {useSelector} from 'react-redux';
 import ZText from '../../../../components/common/ZText';
 import {moderateScale} from '../../../../common/constants';
+import strings from '../../../../i18n/strings';
 
 export const MediaView = ({layoutHeight}) => {
   const colors = useSelector(state => state.theme.theme);
@@ -50,7 +51,7 @@ export const MediaView = ({layoutHeight}) => {
           top: moderateScale(130),
           color: colors.textColor,
         }}>
-        Sponsored Ad
+        {strings.sponsored}
       </ZText>
     </>
   );

@@ -149,6 +149,14 @@ export default function PostDetail() {
       });
       return;
     }
+    if (postedData.title?.length > 30) {
+      Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: strings.error,
+        textBody: strings.tooLargeTitle,
+      });
+      return;
+    }
 
     const dataToBeSent = postedData?.linkToGo
       ? {

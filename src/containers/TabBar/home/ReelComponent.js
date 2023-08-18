@@ -311,13 +311,13 @@ const ReelComponent = ({
 
             <LinearGradient
               key={`item-${item?._id}`}
-              colors={['transparent', 'rgba(0, 0, 0, 1)']}
+              colors={['rgba(0, 0, 0, 0.01)', 'rgba(0, 0, 0, 1)']}
               style={localStyles.bottomContainer}>
               <View style={styles.flex}>
                 <View style={styles.rowCenter}>
                   <TouchableOpacity
                     onPress={handlePressProfile}
-                    style={styles.mb10}>
+                    style={styles.mb5}>
                     <Image
                       resizeMode="cover"
                       source={
@@ -330,7 +330,7 @@ const ReelComponent = ({
                       style={localStyles.userImage}
                     />
                   </TouchableOpacity>
-                  <View style={[styles.mh20, styles.flex]}>
+                  <View style={[styles.mh10, styles.flex]}>
                     <ZText
                       onPress={() =>
                         onPressProfile(
@@ -339,7 +339,7 @@ const ReelComponent = ({
                           item?.author?._id,
                         )
                       }
-                      type="b18"
+                      type="b15"
                       numberOfLines={1}
                       color={colors.white}>
                       {item?.author?.fullName}
@@ -371,10 +371,10 @@ const ReelComponent = ({
                     }`}
                   </ZText>
                 )}
-                <ZText type="b20" color={colors.white}>
+                <ZText align="left" type="b14" color={colors.white}>
                   {item.title}
                 </ZText>
-                <ZText type="m14" color={colors.white} style={styles.mv10}>
+                <ZText type="m13" color={colors.white} style={styles.mv5}>
                   {item?.caption?.length < 100
                     ? item?.caption
                     : item?.caption?.slice(0, 100) + '...'}
@@ -395,7 +395,7 @@ const ReelComponent = ({
                     onPressAvailableLocation(item?.governorate, item?.areas)
                   }
                   style={styles.button}>
-                  <ZText type="m14" color={colors.primary} style={styles.mb20}>
+                  <ZText type="m14" color={colors.primary} style={styles.mb10}>
                     {/* {strings.checkLocations} */}
                     {strings.dishAvailableIn}
                     {''}
@@ -634,8 +634,8 @@ const localStyles = StyleSheet.create({
     ...styles.itemsEnd,
   },
   userImage: {
-    width: moderateScale(60),
-    height: moderateScale(60),
+    width: moderateScale(40),
+    height: moderateScale(40),
     borderRadius: moderateScale(30),
   },
   editIcon: {

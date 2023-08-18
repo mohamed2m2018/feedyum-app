@@ -74,6 +74,17 @@ const Login = ({navigation}) => {
               routes: [{name: StackNav.TabBar}],
             });
           },
+          onError: () => {
+            Toast.show({
+              type: ALERT_TYPE.WARNING,
+              textBody: strings.notsignedInWithGoogle,
+            });
+            setTimeout(() => {
+              navigation.navigate(StackNav.Register, {
+                isGoogleSignInFailed: true,
+              });
+            }, 200);
+          },
         },
       );
     } catch (error) {

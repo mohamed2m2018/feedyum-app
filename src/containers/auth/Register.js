@@ -1,6 +1,11 @@
 // Library Imports
-import {StyleSheet, View, TouchableOpacity} from 'react-native';
-import React, {memo, useEffect} from 'react';
+import {
+  StyleSheet,
+  View,
+  TouchableOpacity,
+  ActivityIndicator,
+} from 'react-native';
+import React, {memo, useEffect, useState} from 'react';
 import {useSelector} from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
@@ -27,6 +32,7 @@ import request from '../../api/request';
 import {setAsyncStorageData} from '../../utils/helpers';
 import OneSignal from 'react-native-onesignal';
 import {ALERT_TYPE, Toast} from 'react-native-alert-notification';
+import Spinner from 'react-native-loading-spinner-overlay';
 
 GoogleSignin.configure({
   // Add your web client ID here
@@ -60,8 +66,15 @@ const RenderSocialBtn = memo(({item, index}) => {
     </>
   );
 });
-const Register = ({navigation}) => {
+const Register = ({navigation, route}) => {
   const colors = useSelector(state => state.theme.theme);
+  const [isLoading, setisLoading] = useState(false);
+
+  useEffect(() => {
+    if (route.params?.isGoogleSignInFailed) {
+      onPressSignUpWithGoogle();
+    }
+  }, [route]);
 
   const BlurredStyle = {
     backgroundColor: colors.inputBg,
@@ -101,6 +114,7 @@ const Register = ({navigation}) => {
     type,
     selectImage,
   ) => {
+    setisLoading(true);
     request
       .post('/user', {
         fullName,
@@ -118,12 +132,14 @@ const Register = ({navigation}) => {
         await setAsyncStorageData(ACCESS_TOKEN, res?.data?.token);
         OneSignal.setExternalUserId(res?.data?.user?._id);
         request.defaults.headers.common.Authorization = res?.data?.token;
+        setisLoading(false);
         navigation.reset({
           index: 0,
           routes: [{name: StackNav.TabBar}],
         });
       })
       .catch(err => {
+        setisLoading(false);
         Toast.show({
           type: ALERT_TYPE.DANGER,
           title: strings.error,
@@ -133,6 +149,7 @@ const Register = ({navigation}) => {
   };
 
   const onPressSignUpWithGoogle = async () => {
+    setisLoading(true);
     try {
       await GoogleSignin.hasPlayServices();
       const {user} = await GoogleSignin.signIn();
@@ -277,7 +294,9 @@ const Register = ({navigation}) => {
     <ZSafeAreaView>
       <ZHeader />
       <ZKeyBoardAvoidWrapper>
-        <View style={localStyles.mainContainer}>
+        <View
+          style={localStyles.mainContainer}
+          pointerEvents={isLoading ? 'none' : 'auto'}>
           <ZText type={'b46'} align={'left'} style={styles.mv40}>
             {strings.createYourAccount}
           </ZText>
@@ -331,7 +350,13 @@ const Register = ({navigation}) => {
               {strings.chefOrResutaurant}
             </ZText>
           </TouchableOpacity>
-
+          {isLoading && (
+            <ActivityIndicator
+              size={'large'}
+              style={{alignSelf: 'center'}}
+              color={colors.primary}
+            />
+          )}
           <ZButton
             title={strings.signUp}
             textType={'b18'}
@@ -343,6 +368,7 @@ const Register = ({navigation}) => {
             onPress={onPressSignWithPassword}
             disabled={isSubmitDisabled}
           />
+
           <View style={localStyles.divider}>
             <View
               style={[

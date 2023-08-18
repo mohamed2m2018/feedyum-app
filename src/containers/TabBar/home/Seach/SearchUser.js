@@ -1,11 +1,13 @@
 import React from 'react';
-import {View} from 'react-native';
+import {ActivityIndicator, View} from 'react-native';
 import UserDetailComponent from '../../../../components/UserDetailComponent';
 import {FlashList} from '@shopify/flash-list';
 import ZText from '../../../../components/common/ZText';
 import strings from '../../../../i18n/strings';
+import {useSelector} from 'react-redux';
 
 export default function SearchUser({users, ...props}) {
+  const colors = useSelector(state => state.theme.theme);
   return (
     <View style={{flex: 1}}>
       <FlashList
@@ -32,6 +34,11 @@ export default function SearchUser({users, ...props}) {
         }}
         keyExtractor={item => item?._id}
         showsVerticalScrollIndicator={false}
+        ListFooterComponent={
+          props.isFetchingNextPage && (
+            <ActivityIndicator size={'small'} color={colors.primary} />
+          )
+        }
       />
     </View>
   );
