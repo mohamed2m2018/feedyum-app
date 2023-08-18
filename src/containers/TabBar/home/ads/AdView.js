@@ -101,13 +101,18 @@ export const AdView = React.memo(
         mediationOptions={{
           nativeBanner: true,
         }}
-        adUnitID={type === 'image' ? adUnitIDs.image : adUnitIDs.video} // REPLACE WITH NATIVE_AD_VIDEO_ID for video ads.
+        adUnitID={
+          Platform.OS === 'android'
+            ? 'ca-app-pub-2374540952576524/6063023777'
+            : 'ca-app-pub-2374540952576524/3227008227'
+        } // REPLACE WITH NATIVE_AD_VIDEO_ID for video ads.
         // repository={type === 'image' ? 'imageAd' : 'videoAd'}
       >
         <View
           style={{
             width: '100%',
             alignItems: 'center',
+            height: layoutHeight || screenHeight,
           }}>
           {media ? (
             <MediaView layoutHeight={layoutHeight} aspectRatio={aspectRatio} />
@@ -139,7 +144,8 @@ export const AdView = React.memo(
             <View
               style={{
                 height: 140,
-                width: '100%',
+                width: '90%',
+                alignSelf: 'center',
                 alignItems: 'center',
                 paddingHorizontal: 10,
                 opacity: loading || error || !loaded ? 0 : 1,

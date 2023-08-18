@@ -1,5 +1,5 @@
 // Libraries import
-import {StyleSheet, TouchableOpacity, View} from 'react-native';
+import {Platform, StyleSheet, TouchableOpacity, View} from 'react-native';
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import Description from '../../../components/models/Descriptions';
 import Locations from '../../../components/models/Locations';
@@ -352,7 +352,11 @@ export default function ReelsComponent() {
       />
       <View style={localStyles.bannerContainer}>
         <BannerAd
-          unitId={TestIds.BANNER}
+          unitId={
+            Platform.OS === 'android'
+              ? 'ca-app-pub-2374540952576524/7430114790'
+              : 'ca-app-pub-2374540952576524/7194173394'
+          }
           size={BannerAdSize.BANNER}
           requestOptions={{
             requestNonPersonalizedAdsOnly: true,

@@ -3,10 +3,10 @@ import {NativeMediaView} from 'react-native-admob-native-ads';
 import {Logger} from './utils';
 import {useSelector} from 'react-redux';
 import ZText from '../../../../components/common/ZText';
-import {moderateScale} from '../../../../common/constants';
+import {moderateScale, screenHeight} from '../../../../common/constants';
 import strings from '../../../../i18n/strings';
 
-export const MediaView = ({layoutHeight}) => {
+export const MediaView = ({layoutHeight, aspectRatio}) => {
   const colors = useSelector(state => state.theme.theme);
   const onVideoPlay = () => {
     Logger('VIDEO', 'PLAY', 'Video is now playing');
@@ -31,9 +31,11 @@ export const MediaView = ({layoutHeight}) => {
   return (
     <>
       <NativeMediaView
+        // eslint-disable-next-line react-native/no-inline-styles
         style={{
+          marginTop: moderateScale(120),
           width: '100%',
-          height: layoutHeight,
+          height: (layoutHeight || screenHeight) - moderateScale(320),
           backgroundColor: colors.backgroundColor,
         }}
         onVideoPause={onVideoPause}
@@ -48,7 +50,7 @@ export const MediaView = ({layoutHeight}) => {
         style={{
           position: 'absolute',
           zIndex: 1000,
-          top: moderateScale(130),
+          top: moderateScale(50),
           color: colors.textColor,
         }}>
         {strings.sponsored}
