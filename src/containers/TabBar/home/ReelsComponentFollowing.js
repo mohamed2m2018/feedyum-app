@@ -76,6 +76,8 @@ export default function ReelsComponentFollowing() {
         );
         if (result.length) {
           setFilteredDataFollowing(result);
+        } else if (res?.pageParams?.length === 1) {
+          setFilteredDataFollowing([]);
         }
       },
       onError: error =>

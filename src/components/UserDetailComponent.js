@@ -38,7 +38,7 @@ export default function UserDetailComponent({
     {
       onSuccess: () => {
         queryClient.invalidateQueries({queryKey: 'stories_following'});
-        queryClient.invalidateQueries({queryKey: 'search_user'});
+        // queryClient.invalidateQueries({queryKey: 'search_user'});
         queryClient.invalidateQueries({queryKey: 'followStatistics'});
         queryClient.invalidateQueries('IamFollowing');
         queryClient.invalidateQueries('IamFollowed');
@@ -51,7 +51,7 @@ export default function UserDetailComponent({
     {
       onSuccess: () => {
         queryClient.invalidateQueries({queryKey: 'stories_following'});
-        queryClient.invalidateQueries({queryKey: 'search_user'});
+        // queryClient.invalidateQueries({queryKey: 'search_user'});
         queryClient.invalidateQueries({queryKey: 'followStatistics'});
         queryClient.invalidateQueries('IamFollowing');
         queryClient.invalidateQueries('IamFollowed');

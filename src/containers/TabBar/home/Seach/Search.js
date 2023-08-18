@@ -129,7 +129,6 @@ export default function Search() {
 
     select: res => res?.pages.flatMap(page => page.data?.users || []),
   });
-
   const SearchIcon = () => {
     return (
       <Feather name="search" size={moderateScale(20)} color={searchIconStyle} />
@@ -209,7 +208,7 @@ export default function Search() {
           <>
             <SearchUser
               users={isFetchingUser && !isFetchingNextPageUsers ? [] : users}
-              onEndReachedThreshold={0.9}
+              onEndReachedThreshold={0.5}
               isFetching={isFetchingUser}
               onMomentumScrollBegin={fetchNextPageUsers}
               isFetchingNextPage={isFetchingNextPageUsers}
