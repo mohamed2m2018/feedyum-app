@@ -219,20 +219,23 @@ export default function ProfileDetail({navigation, route}) {
             <RenderUserDetail item={item} key={index} />
           ))}
         </View>
-        <View style={localStyles.editProfileContainer}>
-          <ZButton
-            title={!isFollow ? strings.follow : strings.unfollow}
-            onPress={onPressFollow}
-            color={colors.white}
-            textType="b14"
-            style={styles.ml5}
-            containerStyle={[
-              localStyles.buttonContainer,
-              {borderColor: colors.primary},
-            ]}
-            bgColor={colors.primary}
-          />
-        </View>
+        {!isLoading && (
+          <View style={localStyles.editProfileContainer}>
+            <ZButton
+              title={!isFollow ? strings.follow : strings.unfollow}
+              onPress={onPressFollow}
+              color={colors.white}
+              disabled={isLoading}
+              textType="b14"
+              style={styles.ml5}
+              containerStyle={[
+                localStyles.buttonContainer,
+                {borderColor: colors.primary},
+              ]}
+              bgColor={colors.primary}
+            />
+          </View>
+        )}
 
         <FlatList
           data={stories}

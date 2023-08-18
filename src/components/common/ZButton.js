@@ -32,7 +32,7 @@ export default function ZButton({
         containerStyle,
         disabled
           ? // eslint-disable-next-line react-native/no-inline-styles
-            {backgroundColor: 'grey'}
+            {backgroundColor: 'grey', borderColor: 'grey'}
           : bgColor
           ? {backgroundColor: bgColor}
           : {backgroundColor: colors.primary},
