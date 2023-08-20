@@ -353,7 +353,9 @@ export default function ReelsComponent() {
       <View style={localStyles.bannerContainer}>
         <BannerAd
           unitId={
-            Platform.OS === 'android'
+            __DEV__
+              ? TestIds.BANNER
+              : Platform.OS === 'android'
               ? 'ca-app-pub-2374540952576524/7430114790'
               : 'ca-app-pub-2374540952576524/7194173394'
           }
