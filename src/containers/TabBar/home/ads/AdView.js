@@ -48,19 +48,27 @@ export const AdView = React.memo(
        * If you have recently created AdMob IDs for your ads, it might take
        * a few days until the ads will start showing.
        */
-      Logger('AD', 'FAILED', event.message);
+      if (__DEV__) {
+        Logger('AD', 'FAILED', event.message);
+      }
     };
 
     const onAdLoaded = () => {
-      Logger('AD', 'LOADED', 'Ad has loaded successfully');
+      if (__DEV__) {
+        Logger('AD', 'LOADED', 'Ad has loaded successfully');
+      }
     };
 
     const onAdClicked = () => {
-      Logger('AD', 'CLICK', 'User has clicked the Ad');
+      if (__DEV__) {
+        Logger('AD', 'CLICK', 'User has clicked the Ad');
+      }
     };
 
     const onAdImpression = () => {
-      Logger('AD', 'IMPRESSION', 'Ad impression recorded');
+      if (__DEV__) {
+        Logger('AD', 'IMPRESSION', 'Ad impression recorded');
+      }
     };
 
     const onNativeAdLoaded = event => {
@@ -72,7 +80,9 @@ export const AdView = React.memo(
     };
 
     const onAdLeftApplication = () => {
-      Logger('AD', 'LEFT', 'Ad left application');
+      if (__DEV__) {
+        Logger('AD', 'LEFT', 'Ad left application');
+      }
     };
 
     useEffect(() => {

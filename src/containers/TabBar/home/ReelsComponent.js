@@ -174,7 +174,7 @@ export default function ReelsComponent() {
         const result = res?.pages.flatMap(page => [
           ...(page.data?.stories || []),
 
-          {_id: 'ad' + page.data?.stories.length + 1, type: 'ad'},
+          {_id: 'ad' + Number(page.data?.stories.length + 1), type: 'ad'},
         ]);
         if (result.length) {
           setFilteredData(result);
