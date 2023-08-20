@@ -70,9 +70,13 @@ export default function ReelsComponentFollowing() {
         if (res?.pageParams?.length === 1) {
           flatListRefFollowing.current?.scrollToOffset({offset: 0});
         }
-        const ad = {_id: 'ad' + res?.pageParams?.length, type: 'ad'};
         const result = res?.pages.flatMap(page =>
-          page.data?.stories?.length ? [...(page.data?.stories || []), ad] : [],
+          page.data?.stories?.length
+            ? [
+                ...(page.data?.stories || []),
+                {_id: 'ad' + Number(page.data?.stories.length + 1), type: 'ad'},
+              ]
+            : [],
         );
         if (result.length) {
           setFilteredDataFollowing(result);
