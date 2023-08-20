@@ -237,7 +237,9 @@ export default {
   noDishesYetCurrentProfile: 'لا يوجد أطباق حتى الآن! قم بنشر شيء أولاً...',
   notFollowing:
     'أنت لا تتابع أي شخص. شاهد المزيد من الفيديوهات وقرر من ستتابع.',
+  notFollowingUser: 'هذا المستخدم لا يقوم بمتابعة أحد',
   noFollower: 'ليس لديك أي متابعين، جرب نشر شيء :D',
+  noFollowerUser: 'هذا المستخدم ليس لديه متابعين',
   dangerousOrganizationsIndividuals: 'المنظمات / الأفراد الخطرة',
   fraudsScams: 'الاحتيال',
   misleadingInformation: 'معلومات مضللة',

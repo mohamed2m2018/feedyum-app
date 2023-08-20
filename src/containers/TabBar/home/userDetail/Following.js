@@ -14,6 +14,7 @@ export default function Following({
   hasNextPage,
   loading,
   setisFetching,
+  userId,
 }) {
   const {data: currentUserQuery} = useQuery(
     'user',
@@ -35,7 +36,6 @@ export default function Following({
       currentUserId={currentUser?._id}
     />
   );
-
   return (
     <FlatList
       data={userDetail}
@@ -61,7 +61,9 @@ export default function Following({
               alignSelf: 'center',
             }}
             type={'B20'}>
-            {strings.notFollowing}
+            {currentUser?._id === userId
+              ? strings.notFollowing
+              : strings.notFollowingUser}
           </ZText>
         )
       }

@@ -133,6 +133,7 @@ export default function UserNetwork({navigation, route}) {
           hasNextPage={followingQuery.hasNextPage}
           followingData={followingQuery.data}
           setisFetching={setisFetching}
+          userId={route.params?.userId}
           loading={
             followingQuery.isLoading ||
             (followingQuery.isFetching && !followingQuery.isFetchingNextPage)
@@ -147,6 +148,7 @@ export default function UserNetwork({navigation, route}) {
           hasNextPage={followerQuery.hasNextPage}
           followingData={followerQuery.data}
           setisFetching={setisFetching}
+          userId={route.params?.userId}
           loading={
             followerQuery.isLoading ||
             (followerQuery.isFetching && !followerQuery.isFetchingNextPage)

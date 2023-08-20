@@ -14,6 +14,7 @@ export default function Following({
   hasNextPage,
   loading,
   setisFetching,
+  userId,
 }) {
   const colors = useSelector(state => state.theme.theme);
   const {data: currentUserQuery} = useQuery(
@@ -59,7 +60,9 @@ export default function Following({
               alignSelf: 'center',
             }}
             type={'B20'}>
-            {strings.noFollower}
+            {currentUser?._id === userId
+              ? strings.noFollower
+              : strings.noFollowerUser}
           </ZText>
         )
       }

@@ -244,7 +244,9 @@ export default {
   noDishesYetCurrentProfile: 'No Dishes yet! Post Something first..',
   notFollowing:
     'You are not Following anyone. Watch more videos and decide who to follow.',
+  notFollowingUser: 'This user is not Following anyone',
   noFollower: 'You have no followers, try to publish something :D',
+  noFollowerUser: 'This user has no followers',
   dangerousOrganizationsIndividuals: 'Dangerous organizations/individuals',
   fraudsScams: 'Frauds & Scams',
   misleadingInformation: 'Misleading Information',

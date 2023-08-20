@@ -175,7 +175,11 @@ export default function PostDetail() {
     setisFormFilled(true);
 
     setTimeout(() => {
-      navigation.navigate(TabNav.ForYou);
+      if (postDataToBeEdited) {
+        navigation.navigate(TabNav.Profile);
+      } else {
+        navigation.navigate(TabNav.ForYou);
+      }
     }, 100);
   };
 

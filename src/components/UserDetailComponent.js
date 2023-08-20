@@ -9,7 +9,7 @@ import ZText from './common/ZText';
 import ZButton from './common/ZButton';
 import {getHeight, moderateScale} from '../common/constants';
 import {styles} from '../themes';
-import {StackNav} from '../navigation/NavigationKeys';
+import {StackNav, TabNav} from '../navigation/NavigationKeys';
 import {useNavigation} from '@react-navigation/native';
 import images from '../assets/images';
 import request from '../api/request';
@@ -73,11 +73,15 @@ export default function UserDetailComponent({
     setIsFollow(!isFollow);
   };
   const onPressUser = () => {
-    navigation.navigate(StackNav.ProfileDetail, {
-      userName: userName,
-      userImage: userImage,
-      id,
-    });
+    if (currentUserId === id) {
+      navigation.navigate(TabNav.Profile);
+    } else {
+      navigation.navigate(StackNav.ProfileDetail, {
+        userName: userName,
+        userImage: userImage,
+        id,
+      });
+    }
   };
   return (
     <View style={localStyles.rootContainer}>

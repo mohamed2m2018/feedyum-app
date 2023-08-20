@@ -171,10 +171,10 @@ export default function ReelsComponent() {
         if (res?.pageParams?.length === 1) {
           flatListRef.current?.scrollToOffset({offset: 0});
         }
-        const ad = {_id: 'ad' + res?.pageParams?.length, type: 'ad'};
         const result = res?.pages.flatMap(page => [
           ...(page.data?.stories || []),
-          ad,
+
+          {_id: 'ad' + page.data?.stories.length + 1, type: 'ad'},
         ]);
         if (result.length) {
           setFilteredData(result);

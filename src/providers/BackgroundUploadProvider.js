@@ -213,7 +213,7 @@ export function BackgroundUploadProvider({children}) {
         type: 'multipart',
         method: 'POST',
         headers: {
-          'content-type': fileInfoImage.mimeType || 'image/jpeg', // server requires a content-type header
+          'content-type': fileInfoImage.mimeType || 'image/jpg', // server requires a content-type header
           // 'content-length': `${fileInfoImage.size}`,
         },
         url: 'https://foodtokforever.s3.amazonaws.com',
@@ -229,7 +229,7 @@ export function BackgroundUploadProvider({children}) {
             successActionStatus: 201,
             key: `${fileInfoImage.name}`,
             date: new Date(),
-            contentType: fileInfoImage.mimeType || 'image/jpeg',
+            contentType: fileInfoImage.mimeType || 'image/jpg',
           }),
         },
       };

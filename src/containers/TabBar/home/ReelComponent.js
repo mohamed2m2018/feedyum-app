@@ -35,7 +35,7 @@ import Slider from '@react-native-community/slider';
 import Share from 'react-native-share';
 import FastImage from 'react-native-fast-image';
 import {useNavigation} from '@react-navigation/native';
-import {StackNav} from '../../../navigation/NavigationKeys';
+import {StackNav, TabNav} from '../../../navigation/NavigationKeys';
 import {AdView} from './ads/AdView';
 import DoubleClick from 'react-native-double-tap';
 import {governorates} from './DropDownGovr';
@@ -92,13 +92,18 @@ const ReelComponent = ({
   const navigation = useNavigation();
 
   const [isLike, setIsLike] = useState(false);
-  const onPressProfile = (userName, userImage, id) =>
-    navigation.navigate(StackNav.ProfileDetail, {
-      userName: userName,
-      userImage: userImage,
-      id: id,
-    });
-  const [isBuffering, setIsBuffering] = useState(false);
+  const onPressProfile = (userName, userImage, id) => {
+    if (id === data?.data?.user?._id) {
+      navigation.navigate(TabNav.Profile);
+    } else {
+      navigation.navigate(StackNav.ProfileDetail, {
+        userName: userName,
+        userImage: userImage,
+        id: id,
+      });
+    }
+  };
+
   const [seekValue, setSeekValue] = useState(0);
   const videoRef = useRef();
   const [durationInSeconds, setDurationInSeconds] = useState(0); // Added state for durationInSeconds
@@ -144,13 +149,9 @@ const ReelComponent = ({
       // whatsAppNumber: '9199999999', // country code + phone number
     };
 
-    Share.open(shareOptions)
-      .then(res => {
-        console.log(res);
-      })
-      .catch(err => {
-        err && console.log(err);
-      });
+    Share.open(shareOptions).catch(err => {
+      err && console.log(err);
+    });
   };
   const fetchCommentsCount = async () => {
     const response = await request.get(`/comment/count?post_id=${item?._id}`);
@@ -168,11 +169,11 @@ const ReelComponent = ({
   const duration = item?.duration?.split(' ');
 
   const debouncedOnProgress = ({currentTime, playableDuration}) => {
-    if (playableDuration !== 0 && playableDuration < currentTime) {
-      setIsBuffering(true);
-    } else {
-      setIsBuffering(false);
-    }
+    // if (playableDuration !== 0 && playableDuration < currentTime) {
+    //   setIsBuffering(true);
+    // } else {
+    //   setIsBuffering(false);
+    // }
     if (!paused.slider || !paused.paused) {
       setSeekValue(currentTime);
     }
@@ -265,9 +266,9 @@ const ReelComponent = ({
                     uri,
                   }}
                   ref={videoRef}
-                  onLoadStart={() => {
-                    setIsBuffering(true);
-                  }}
+                  // onLoadStart={() => {
+                  //   // setIsBuffering(true);
+                  // }}
                   hideShutterView
                   onLoad={handleOnLoad}
                   onSeek={config => {
@@ -315,9 +316,7 @@ const ReelComponent = ({
               style={localStyles.bottomContainer}>
               <View style={styles.flex}>
                 <View style={styles.rowCenter}>
-                  <TouchableOpacity
-                    onPress={handlePressProfile}
-                    style={styles.mb5}>
+                  <TouchableOpacity onPress={handlePressProfile}>
                     <Image
                       resizeMode="cover"
                       source={
@@ -331,19 +330,23 @@ const ReelComponent = ({
                     />
                   </TouchableOpacity>
                   <View style={[styles.mh10, styles.flex]}>
-                    <ZText
+                    <TouchableOpacity
+                      style={{
+                        maxWidth: moderateScale(100),
+                      }}
                       onPress={() =>
                         onPressProfile(
                           item?.channelName,
                           item?.avatarUri,
                           item?.author?._id,
                         )
-                      }
-                      type="b15"
-                      numberOfLines={1}
-                      color={colors.white}>
-                      {item?.author?.fullName}
-                    </ZText>
+                      }>
+                      <ZText type="b15" numberOfLines={1} color={colors.white}>
+                        {item?.author?.fullName}
+                      </ZText>
+                      <View />
+                    </TouchableOpacity>
+
                     <ZText
                       type="m12"
                       style={styles.mb5}
@@ -371,7 +374,7 @@ const ReelComponent = ({
                     }`}
                   </ZText>
                 )}
-                <ZText align="left" type="b14" color={colors.white}>
+                <ZText align="left" type="b15" color={colors.white}>
                   {item.title}
                 </ZText>
                 <ZText type="m13" color={colors.white} style={styles.mv5}>
@@ -423,7 +426,7 @@ const ReelComponent = ({
                       onSlidingStart={() => {
                         if (activeVideoIndex === index) {
                           setpaused({slider: true, paused: false});
-                          setIsBuffering(true);
+                          // setIsBuffering(true);
                         }
                       }}
                       onSlidingComplete={value => {
@@ -432,7 +435,7 @@ const ReelComponent = ({
                           setSeekValue(value);
                           setTimeout(() => {
                             setpaused({slider: false, paused: false});
-                            setIsBuffering(false);
+                            // setIsBuffering(false);
                           }, 400);
                         }
                       }}

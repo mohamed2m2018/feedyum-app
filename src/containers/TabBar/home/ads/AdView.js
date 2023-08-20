@@ -10,9 +10,10 @@ import NativeAdView, {
   StarRatingView,
   StoreView,
   TaglineView,
+  TestIds,
 } from 'react-native-admob-native-ads';
 import {MediaView} from './MediaView';
-import {Logger, adUnitIDs} from './utils';
+import {Logger} from './utils';
 import {useSelector} from 'react-redux';
 import Typography from '../../../../themes/typography';
 import {getHeight, moderateScale} from '../../../../common/constants';
@@ -104,7 +105,7 @@ export const AdView = React.memo(
         adUnitID={
           Platform.OS === 'android'
             ? 'ca-app-pub-2374540952576524/6063023777'
-            : 'ca-app-pub-2374540952576524/3227008227'
+            : TestIds.Video
         } // REPLACE WITH NATIVE_AD_VIDEO_ID for video ads.
         // repository={type === 'image' ? 'imageAd' : 'videoAd'}
       >
