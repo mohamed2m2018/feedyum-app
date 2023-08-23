@@ -2,22 +2,23 @@ import React from 'react';
 import LottieView from 'lottie-react-native';
 import {moderateScale, screenHeight, screenWidth} from '../../common/constants';
 import {View, Text} from 'react-native';
-const ZLoader = ({height, top, bottom, overlay = true}) => {
+const ZLoader = ({height, top, bottom, left, right, overlay}) => {
   return (
     <View
-      pointerEvents="box-none"
+      pointerEvents={overlay ? 'auto' : 'box-none'}
       style={{
         position: 'absolute',
         height: screenHeight,
         width: screenWidth,
-        zIndex: overlay ? 1 : 0,
+        zIndex: 1,
       }}>
-      <Text>hello</Text>
       <LottieView
         style={{
           height: height ? moderateScale(height) : moderateScale(100),
           top: top ? moderateScale(top) : moderateScale(0),
           bottom: bottom ? moderateScale(bottom) : moderateScale(0),
+          left: left ? moderateScale(left) : moderateScale(0),
+          right: right ? moderateScale(right) : moderateScale(0),
         }}
         source={require('../../containers/auth/loader.json')}
         autoPlay
