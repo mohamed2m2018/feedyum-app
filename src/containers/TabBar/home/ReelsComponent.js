@@ -30,9 +30,9 @@ import request from '../../../api/request';
 import {BannerAd, BannerAdSize, TestIds} from 'react-native-google-mobile-ads';
 import ReelsList from './ReelsList';
 import strings from '../../../i18n/strings';
-import Spinner from 'react-native-loading-spinner-overlay';
 import OneSignal from 'react-native-onesignal';
 import {ALERT_TYPE, Toast} from 'react-native-alert-notification';
+import ZLoader from '../../../components/common/ZLoader';
 
 export default function ReelsComponent() {
   const [storyId, setStoryId] = useState();
@@ -306,7 +306,7 @@ export default function ReelsComponent() {
 
   return (
     <View style={[localStyles.outerContainer, {color: colors.backgroundColor}]}>
-      <Spinner color={colors.primary} visible={isLoadingStory} />
+      {isLoadingStory && <ZLoader overlay={true} height={100} top={300} />}
       <View style={localStyles.headerContainer}>
         <TouchableOpacity onPress={onPressSearch}>
           <Ionicons

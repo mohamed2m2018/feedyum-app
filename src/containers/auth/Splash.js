@@ -1,19 +1,18 @@
 // Library Imports
-import {StyleSheet, View} from 'react-native';
+import {View} from 'react-native';
 import React, {useEffect, useState} from 'react';
-import {useDispatch, useSelector} from 'react-redux';
-import {ActivityIndicator} from 'react-native';
+import {useDispatch} from 'react-redux';
 import SplashScreen from 'react-native-splash-screen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 // Local Imports
-import {colors, styles} from '../../themes';
+import {colors} from '../../themes';
 import {StackNav} from '../../navigation/NavigationKeys';
 import {ACCESS_TOKEN, APP_OPEN_FIRST_TIME, THEME} from '../../common/constants';
 import {changeThemeAction} from '../../redux/action/themeAction';
 import request from '../../api/request';
+import ZLoader from '../../components/common/ZLoader';
 
 const Splash = ({navigation}) => {
-  const color = useSelector(state => state.theme.theme);
   const dispatch = useDispatch();
   const [isnavigating, setIsNavigating] = useState(false);
   const asyncProcess = async () => {
@@ -47,7 +46,6 @@ const Splash = ({navigation}) => {
         } else {
           if (appOpenFirstTime) {
             SplashScreen.hide();
-
             setIsNavigating(true);
             navigation.reset({
               index: 0,
@@ -72,22 +70,7 @@ const Splash = ({navigation}) => {
     asyncProcess();
   }, []);
 
-  return (
-    <View
-      style={[localStyles.container, {backgroundColor: color.backgroundColor}]}>
-      {!isnavigating && (
-        <ActivityIndicator size="large" color={color.primary} />
-      )}
-    </View>
-  );
+  return <View>{!isnavigating && <ZLoader height={150} top={300} />}</View>;
 };
 
 export default Splash;
-
-const localStyles = StyleSheet.create({
-  container: {
-    ...styles.itemsCenter,
-    ...styles.flex,
-    ...styles.justifyCenter,
-  },
-});

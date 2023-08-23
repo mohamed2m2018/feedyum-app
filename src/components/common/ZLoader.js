@@ -1,30 +1,30 @@
-import {useIsFocused} from '@react-navigation/native';
 import React from 'react';
-import {View, StyleSheet, ActivityIndicator, Modal} from 'react-native';
-import {colors, styles} from '../../themes';
-
-const ZLoader = () => {
-  const isFocused = useIsFocused();
-
-  if (!isFocused) {
-    return <View />;
-  }
-
+import LottieView from 'lottie-react-native';
+import {moderateScale, screenHeight, screenWidth} from '../../common/constants';
+import {View, Text} from 'react-native';
+const ZLoader = ({height, top, bottom, overlay = true}) => {
   return (
-    <Modal transparent>
-      <View style={localStyles.vwMainStyle}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    </Modal>
+    <View
+      pointerEvents="box-none"
+      style={{
+        position: 'absolute',
+        height: screenHeight,
+        width: screenWidth,
+        zIndex: overlay ? 1 : 0,
+      }}>
+      <Text>hello</Text>
+      <LottieView
+        style={{
+          height: height ? moderateScale(height) : moderateScale(100),
+          top: top ? moderateScale(top) : moderateScale(0),
+          bottom: bottom ? moderateScale(bottom) : moderateScale(0),
+        }}
+        source={require('../../containers/auth/loader.json')}
+        autoPlay
+        loop
+      />
+    </View>
   );
 };
-
-const localStyles = StyleSheet.create({
-  vwMainStyle: {
-    ...styles.flex,
-    ...styles.center,
-    backgroundColor: colors.modalBg,
-  },
-});
 
 export default React.memo(ZLoader);

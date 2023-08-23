@@ -1,11 +1,5 @@
 // Library import
-import {
-  ActivityIndicator,
-  FlatList,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import {FlatList, StyleSheet, TouchableOpacity, View} from 'react-native';
 import React, {memo, useEffect, useState} from 'react';
 import {useSelector} from 'react-redux';
 import Feather from 'react-native-vector-icons/Feather';
@@ -24,6 +18,7 @@ import request from '../../../../api/request';
 import {useIsFocused} from '@react-navigation/native';
 import {useScreen} from '../../../../navigation/screenContext';
 import {TabNav} from '../../../../navigation/NavigationKeys';
+import ZLoader from '../../../../components/common/ZLoader';
 
 export default function Search() {
   const colors = useSelector(state => state.theme.theme);
@@ -214,11 +209,7 @@ export default function Search() {
               isFetchingNextPage={isFetchingNextPageUsers}
             />
             {isFetchingUser && !isFetchingNextPageUsers && (
-              <ActivityIndicator
-                style={localStyles.loading}
-                size={'large'}
-                color={colors.primary}
-              />
+              <ZLoader height={100} top={260} />
             )}
           </>
         )}
@@ -232,11 +223,7 @@ export default function Search() {
               onMomentumScrollBegin={fetchNextPage}
             />
             {isFetchingsStories && !isFetchingNextPage && (
-              <ActivityIndicator
-                style={localStyles.loading}
-                color={colors.primary}
-                size={'large'}
-              />
+              <ZLoader height={100} top={120} />
             )}
           </View>
         )}

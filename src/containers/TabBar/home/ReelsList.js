@@ -1,8 +1,8 @@
 import {FlashList} from '@shopify/flash-list';
 import React from 'react';
 import {ActivityIndicator, Platform, RefreshControl} from 'react-native';
-import {useSelector} from 'react-redux';
 import ZText from '../../../components/common/ZText';
+import ZLoader from '../../../components/common/ZLoader';
 
 const ReelsList = ({
   filteredData,
@@ -23,8 +23,6 @@ const ReelsList = ({
   isRefetching,
   refetch,
 }) => {
-  const colors = useSelector(state => state.theme.theme);
-
   return (
     <FlashList
       data={filteredData}
@@ -50,11 +48,7 @@ const ReelsList = ({
       disableIntervalMomentum
       ListEmptyComponent={
         isLoading || isRefetching || !user ? (
-          <ActivityIndicator
-            style={{alignSelf: 'center', marginTop: 300}}
-            size={'large'}
-            color={colors.primary}
-          />
+          <ZLoader height={150} top={300} />
         ) : (
           <ZText
             align="center"

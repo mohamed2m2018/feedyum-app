@@ -28,6 +28,7 @@
     "ffmpeg-kit-react-native": "^5.1.0",
     "i": "^0.3.7",
     "javascript-time-ago": "^2.5.9",
+    "lottie-react-native": "^6.2.0",
     "millify": "^6.1.0",
     "npm": "^9.8.1",
     "pluralize": "^8.0.0",
