@@ -124,12 +124,10 @@ export default function PostDetail() {
   const onPressHome = async () => {
     const validationChef =
       !postedData?.title ||
-      !postedData?.price ||
       !postedData?.caption ||
       // !postedData?.uri ||
       !postedData.governorate ||
       // || !postedData.areas.length
-      !postedData.duration ||
       (!user?.phone && !phone);
     const validationUser = !postedData?.title || !postedData?.caption;
     const validation = user?.type === 'chef' ? validationChef : validationUser;
@@ -333,7 +331,7 @@ export default function PostDetail() {
             {user?.type === 'chef' && (
               <>
                 <TextInput
-                  placeholder={strings.price + ' *'}
+                  placeholder={strings.price + ' ' + strings.optional}
                   keyboardType="number-pad"
                   textAlign={I18nManager.isRTL ? 'right' : 'left'}
                   value={`${postedData?.price || ''}`}
@@ -358,7 +356,7 @@ export default function PostDetail() {
                   <TextInput
                     placeholder={`${strings.no} ${
                       toggleStatus === 'Hours' ? strings.hours : strings.days
-                    } ${strings.toDeliver} *`}
+                    } ${strings.toDeliver} ${strings.optional}`}
                     keyboardType="number-pad"
                     textAlign={I18nManager.isRTL ? 'right' : 'left'}
                     value={`${postedData?.duration?.split?.(' ')?.[0] || ''}`}

@@ -23,8 +23,8 @@ export const useHandleAuth = () => {
           autoClose: false,
           type: ALERT_TYPE.WARNING,
           textBody: strings.pleaseSignUp,
-          button: strings.goToAuth,
-          onPressButton: async () => {
+          buttonOne: strings.goToAuth,
+          onPressButtonOne: async () => {
             await AsyncStorage.removeItem(ACCESS_TOKEN);
             await queryClient.removeQueries();
             delete request.defaults.headers.common.Authorization;

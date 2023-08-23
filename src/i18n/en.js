@@ -320,7 +320,7 @@ export default {
   noo: 'No',
   chefOrResutaurantMessage:
     'Chefs/Restaurants can share more dish info and receive user inquiries through whatsapp or custom links.',
-  optional: 'optional',
+  optional: '(optional)',
   switchTo: 'Switch to ',
   account: 'account',
   userSwitchAccount: 'user ',

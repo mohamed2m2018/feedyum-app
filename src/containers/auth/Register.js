@@ -31,8 +31,7 @@ import axios from 'axios';
 import request from '../../api/request';
 import {setAsyncStorageData} from '../../utils/helpers';
 import OneSignal from 'react-native-onesignal';
-import {ALERT_TYPE, Toast} from 'react-native-alert-notification';
-import Spinner from 'react-native-loading-spinner-overlay';
+import {ALERT_TYPE, Dialog, Toast} from 'react-native-alert-notification';
 
 GoogleSignin.configure({
   // Add your web client ID here
@@ -185,7 +184,25 @@ const Register = ({navigation, route}) => {
   const socialIcon = [
     {
       icon: <Google_Icon />,
-      onPress: () => onPressSignUpWithGoogle(),
+      onPress: () => {
+        Dialog.show({
+          title: strings.chefOrResutaurant,
+          buttonOne: strings.yes,
+          buttonTwo: strings.noo,
+          textBody: strings.chefOrRestaurantMessage,
+          type: ALERT_TYPE.WARNING,
+          onPressButtonOne: () => {
+            Dialog.hide();
+            setIsChef(true);
+            onPressSignUpWithGoogle();
+          },
+          onPressButtonTwo: () => {
+            Dialog.hide();
+            setIsChef(false);
+            onPressSignUpWithGoogle();
+          },
+        });
+      },
     },
   ];
   const [email, setEmail] = React.useState('');
@@ -233,10 +250,28 @@ const Register = ({navigation, route}) => {
   };
 
   const onPressSignWithPassword = () => {
-    navigation.navigate(StackNav.SelectInterest, {
-      email,
-      password,
-      type: isChef ? 'chef' : 'user',
+    Dialog.show({
+      title: strings.chefOrResutaurant,
+      buttonOne: strings.yes,
+      buttonTwo: strings.noo,
+      textBody: strings.chefOrRestaurantMessage,
+      type: ALERT_TYPE.WARNING,
+      onPressButtonOne: () => {
+        Dialog.hide();
+        navigation.navigate(StackNav.SelectInterest, {
+          email,
+          password,
+          type: 'chef',
+        });
+      },
+      onPressButtonTwo: () => {
+        Dialog.hide();
+        navigation.navigate(StackNav.SelectInterest, {
+          email,
+          password,
+          type: 'user',
+        });
+      },
     });
   };
 
@@ -337,18 +372,6 @@ const Register = ({navigation, route}) => {
             rightAccessory={() => <RightPasswordEyeIcon />}
           />
 
-          <TouchableOpacity
-            onPress={() => setIsChef(!isChef)}
-            style={localStyles.checkboxContainer}>
-            <Ionicons
-              name={!isChef ? 'square-outline' : 'checkbox'}
-              size={moderateScale(26)}
-              color={colors.primary}
-            />
-            <ZText type={'s24'} style={styles.mh10}>
-              {strings.chefOrResutaurant}
-            </ZText>
-          </TouchableOpacity>
           {isLoading && (
             <ActivityIndicator
               size={'large'}
