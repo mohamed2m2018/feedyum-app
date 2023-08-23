@@ -370,7 +370,7 @@ const ReelComponent = ({
                           : duration[0] > 1
                           ? 'ايام'
                           : 'يوم'
-                        : pluralize(duration[1] || '', duration[0]))
+                        : pluralize(duration[1], Number(duration[0])))
                     }`}
                   </ZText>
                 )}
