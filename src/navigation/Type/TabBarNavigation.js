@@ -45,7 +45,7 @@ export default function TabBarNavigation({navigation}) {
           type={focused ? 'b19' : 'm14'}
           numberOfLines={1}
           style={styles.mt5}
-          color={focused ? colors.primary : colors.grayScale5}>
+          color={focused ? colors.primary : colors.grayScale4}>
           {text}
         </ZText>
       )}

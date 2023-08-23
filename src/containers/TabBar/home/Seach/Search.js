@@ -48,7 +48,7 @@ export default function Search() {
     borderColor: colors.primary,
   };
 
-  const BlurredIconStyle = colors.grayScale5;
+  const BlurredIconStyle = colors.grayScale4;
   const FocusedIconStyle = colors.primary;
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');

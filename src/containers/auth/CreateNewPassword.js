@@ -34,7 +34,7 @@ const CreateNewPassword = ({navigation}) => {
     borderColor: colors.primary,
   };
 
-  const BlurredIconStyle = colors.grayScale5;
+  const BlurredIconStyle = colors.grayScale4;
   const FocusedIconStyle = colors.primary;
 
   const [password, setPassword] = useState('');

@@ -113,7 +113,7 @@ const Login = ({navigation}) => {
     borderColor: colors.primary,
   };
 
-  const BlurredIconStyle = colors.grayScale5;
+  const BlurredIconStyle = colors.grayScale4;
   const FocusedIconStyle = colors.primary;
 
   const socialIcon = [

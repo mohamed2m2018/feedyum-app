@@ -84,7 +84,7 @@ const Register = ({navigation, route}) => {
     backgroundColor: colors.inputFocusColor,
     borderColor: colors.primary,
   };
-  const BlurredIconStyle = colors.grayScale5;
+  const BlurredIconStyle = colors.grayScale4;
   const FocusedIconStyle = colors.primary;
 
   const getPhoneNumber = async accessToken => {
@@ -188,7 +188,6 @@ const Register = ({navigation, route}) => {
       onPress: () => onPressSignUpWithGoogle(),
     },
   ];
-
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [isChef, setIsChef] = React.useState(true);
