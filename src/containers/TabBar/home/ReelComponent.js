@@ -457,7 +457,11 @@ const ReelComponent = ({
                 {data?.data?.user?._id !== item?.author?._id &&
                   item?.author?.type !== 'user' && (
                     <ZButton
-                      title={`${strings.buyThisFor} ${item?.price} ${strings.EGP}`}
+                      title={
+                        item?.price
+                          ? `${strings.buyThisFor} ${item?.price} ${strings.EGP}`
+                          : strings.inquireDish
+                      }
                       textType={'b18'}
                       color={colors.white}
                       containerStyle={localStyles.buttonContainer}
