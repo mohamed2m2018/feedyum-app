@@ -1,13 +1,13 @@
 import React from 'react';
 import LottieView from 'lottie-react-native';
 import {moderateScale, screenHeight, screenWidth} from '../../common/constants';
-import {View, Text} from 'react-native';
-const ZLoader = ({height, top, bottom, left, right, overlay}) => {
+import {View} from 'react-native';
+const ZLoader = ({height, top, bottom, left, right, overlay, absolute}) => {
   return (
     <View
       pointerEvents={overlay ? 'auto' : 'box-none'}
       style={{
-        position: 'absolute',
+        ...(absolute && {position: 'absolute'}),
         height: screenHeight,
         width: screenWidth,
         zIndex: 1,

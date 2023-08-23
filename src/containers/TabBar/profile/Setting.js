@@ -193,11 +193,11 @@ export default Setting = ({navigation}) => {
   return (
     <ZSafeAreaView>
       <ZHeader title={strings.setting} />
+      {isloading && <ZLoader absolute overlay height={130} top={280} />}
       <ScrollView
         bounces={false}
         showsVerticalScrollIndicator={false}
         style={localStyles.root}>
-        {isloading && <ZLoader overlay height={130} top={280} />}
         {ProfileSetting.map((item, index) => {
           if (item.title === strings.editProfile && handleAuthToast()) {
             return;
