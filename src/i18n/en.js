@@ -160,7 +160,7 @@ export default {
   AddFavorites: 'Add to Favorites',
   playSong: 'Play Song',
   useThisSound: 'Use this Sound',
-  video: 'Video',
+  video: 'Dishes',
   joinThisHashtag: 'Join this Hashtag',
   comments: 'Comments',
   top: 'Top',
