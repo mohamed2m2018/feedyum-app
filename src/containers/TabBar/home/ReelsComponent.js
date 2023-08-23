@@ -41,6 +41,7 @@ export default function ReelsComponent() {
   const commentSheetRef = useRef('');
   const descriptionSheetRef = useRef('');
   const [notificationReceived, setnotificationReceived] = useState(false);
+  const [adFailedToLoad, setadFailedToLoad] = useState(false);
   const locationSheetRef = useRef('');
   const navigation = useNavigation();
   const route = useRoute();
@@ -306,7 +307,7 @@ export default function ReelsComponent() {
 
   return (
     <View style={[localStyles.outerContainer, {color: colors.backgroundColor}]}>
-      {isLoadingStory && <ZLoader height={100} top={300} />}
+      {isLoadingStory && <ZLoader absolute height={100} top={300} />}
       <View style={localStyles.headerContainer}>
         <TouchableOpacity onPress={onPressSearch}>
           <Ionicons
@@ -350,21 +351,25 @@ export default function ReelsComponent() {
         selectedAreas={selectedAreas}
         selectedGov={selectedGov}
       />
-      <View style={localStyles.bannerContainer}>
-        <BannerAd
-          unitId={
-            __DEV__
-              ? TestIds.BANNER
-              : Platform.OS === 'android'
-              ? 'ca-app-pub-2374540952576524/7430114790'
-              : 'ca-app-pub-2374540952576524/7194173394'
-          }
-          size={BannerAdSize.BANNER}
-          requestOptions={{
-            requestNonPersonalizedAdsOnly: true,
-          }}
-        />
-      </View>
+      {!adFailedToLoad && (
+        <View style={localStyles.bannerContainer}>
+          <BannerAd
+            unitId={
+              __DEV__
+                ? TestIds.BANNER
+                : Platform.OS === 'android'
+                ? 'ca-app-pub-2374540952576524/7430114790'
+                : 'ca-app-pub-2374540952576524/7194173394'
+            }
+            size={BannerAdSize.BANNER}
+            onAdLoaded={() => setadFailedToLoad(false)}
+            onAdFailedToLoad={() => setadFailedToLoad(true)}
+            requestOptions={{
+              requestNonPersonalizedAdsOnly: true,
+            }}
+          />
+        </View>
+      )}
     </View>
   );
 }

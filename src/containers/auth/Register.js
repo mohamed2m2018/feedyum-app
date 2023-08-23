@@ -71,7 +71,23 @@ const Register = ({navigation, route}) => {
 
   useEffect(() => {
     if (route.params?.isGoogleSignInFailed) {
-      onPressSignUpWithGoogle();
+      Dialog.show({
+        title: strings.chefOrResutaurant,
+        buttonOne: strings.yes,
+        buttonTwo: strings.noo,
+        textBody: strings.chefOrResutaurantMessage,
+        type: ALERT_TYPE.WARNING,
+        onPressButtonOne: () => {
+          Dialog.hide();
+          setIsChef(true);
+          onPressSignUpWithGoogle();
+        },
+        onPressButtonTwo: () => {
+          Dialog.hide();
+          setIsChef(false);
+          onPressSignUpWithGoogle();
+        },
+      });
     }
   }, [route]);
 
@@ -165,6 +181,7 @@ const Register = ({navigation, route}) => {
         user.photo,
       );
     } catch (error) {
+      setisLoading(false);
       if (error.code === statusCodes.SIGN_IN_CANCELLED) {
         // User cancelled the sign-in flow
         console.log('Sign in cancelled');
@@ -189,7 +206,7 @@ const Register = ({navigation, route}) => {
           title: strings.chefOrResutaurant,
           buttonOne: strings.yes,
           buttonTwo: strings.noo,
-          textBody: strings.chefOrRestaurantMessage,
+          textBody: strings.chefOrResutaurantMessage,
           type: ALERT_TYPE.WARNING,
           onPressButtonOne: () => {
             Dialog.hide();
@@ -254,7 +271,7 @@ const Register = ({navigation, route}) => {
       title: strings.chefOrResutaurant,
       buttonOne: strings.yes,
       buttonTwo: strings.noo,
-      textBody: strings.chefOrRestaurantMessage,
+      textBody: strings.chefOrResutaurantMessage,
       type: ALERT_TYPE.WARNING,
       onPressButtonOne: () => {
         Dialog.hide();

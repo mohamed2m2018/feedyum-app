@@ -92,6 +92,7 @@ export const AdView = React.memo(
         Logger('AD', 'LOADED ALREADY');
       }
     }, [loaded]);
+    if (error) return null;
     return (
       <NativeAdView
         ref={nativeAdRef}
