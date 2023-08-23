@@ -341,7 +341,11 @@ const ReelComponent = ({
                           item?.author?._id,
                         )
                       }>
-                      <ZText type="b15" numberOfLines={1} color={colors.white}>
+                      <ZText
+                        style={localStyles.bold}
+                        type="b15"
+                        numberOfLines={1}
+                        color={colors.white}>
                         {item?.author?.fullName}
                       </ZText>
                       <View />
@@ -374,7 +378,11 @@ const ReelComponent = ({
                     }`}
                   </ZText>
                 )}
-                <ZText align="left" type="b15" color={colors.white}>
+                <ZText
+                  style={localStyles.bold}
+                  align="left"
+                  type="b15"
+                  color={colors.white}>
                   {item.title}
                 </ZText>
                 <ZText type="m13" color={colors.white} style={styles.mv5}>
@@ -627,6 +635,9 @@ const localStyles = StyleSheet.create({
     borderRadius: 5,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  bold: {
+    fontWeight: 'bold',
   },
   bottomContainer: {
     position: 'absolute',
