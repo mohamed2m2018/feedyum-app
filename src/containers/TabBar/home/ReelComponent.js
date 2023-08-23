@@ -189,7 +189,6 @@ const ReelComponent = ({
           index: index + 1,
         });
       }, 10000); // 0.5 minute
-
       return () => clearTimeout(timeout);
     }
   }, [isFocused, index, activeVideoIndex, flatListRef]);
@@ -329,7 +328,7 @@ const ReelComponent = ({
                       style={localStyles.userImage}
                     />
                   </TouchableOpacity>
-                  <View style={[styles.mh10, styles.flex]}>
+                  <View style={[styles.m10, styles.flex]}>
                     <TouchableOpacity
                       style={{
                         maxWidth: moderateScale(100),
@@ -360,7 +359,7 @@ const ReelComponent = ({
                     </ZText>
                   </View>
                 </View>
-                {item?.duration && (
+                {duration[0] !== 'undefined' && (
                   <ZText type="m12" color={colors.white}>
                     {`${
                       strings.canBeReceivedIn +
@@ -385,36 +384,41 @@ const ReelComponent = ({
                   color={colors.white}>
                   {item.title}
                 </ZText>
-                <ZText type="m13" color={colors.white} style={styles.mv5}>
-                  {item?.caption?.length < 100
+                <ZText type="m13" color={colors.white} style={styles.mv10}>
+                  {item?.caption?.length < 50
                     ? item?.caption
-                    : item?.caption?.slice(0, 100) + '...'}
+                    : item?.caption?.slice(0, 50) + '...'}
                 </ZText>
-                {item?.caption?.length > 100 && (
+                {item?.caption?.length > 50 && (
                   <TouchableOpacity
                     onPress={() => onPressMore(item?.caption)}
                     style={styles.button}>
                     <ZText type="m14" color={colors.primary}>
-                      {item?.caption?.length < 100
+                      {item?.caption?.length < 50
                         ? ''
                         : strings.seeMoreDescription}
                     </ZText>
                   </TouchableOpacity>
                 )}
-                <TouchableOpacity
-                  onPress={() =>
-                    onPressAvailableLocation(item?.governorate, item?.areas)
-                  }
-                  style={styles.button}>
-                  <ZText type="m14" color={colors.primary} style={styles.mb10}>
-                    {/* {strings.checkLocations} */}
-                    {strings.dishAvailableIn}
-                    {''}
-                    {I18nManager.isRTL
-                      ? selected?.arabicValue
-                      : selected?.value}
-                  </ZText>
-                </TouchableOpacity>
+                {!!item?.governorate && (
+                  <TouchableOpacity
+                    onPress={() =>
+                      onPressAvailableLocation(item?.governorate, item?.areas)
+                    }
+                    style={styles.button}>
+                    <ZText
+                      type="m14"
+                      color={colors.primary}
+                      style={styles.mb10}>
+                      {/* {strings.checkLocations} */}
+                      {strings.dishAvailableIn}
+                      {''}
+                      {I18nManager.isRTL
+                        ? selected?.arabicValue
+                        : selected?.value}
+                    </ZText>
+                  </TouchableOpacity>
+                )}
                 {!item.avatarUri && (
                   <View
                     style={{
@@ -642,7 +646,7 @@ const localStyles = StyleSheet.create({
   bottomContainer: {
     position: 'absolute',
     bottom: 0,
-    paddingVertical: 5,
+    paddingVertical: 20,
     ...styles.ph20,
     ...styles.flexRow,
     ...styles.itemsEnd,
