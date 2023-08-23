@@ -60,6 +60,59 @@ export default function StackNavigation() {
     );
   }
 
+  // Auth Stack
+  function AuthNavigation2() {
+    return (
+      <Stack.Navigator
+        screenOptions={{
+          headerShown: false,
+          detachPreviousScreen: false,
+          detachInactiveScreens: false,
+        }}
+        initialRouteName={StackNav.Register}
+        detachPreviousScreen={false}
+        detachInactiveScreens={false}>
+        <Stack.Screen
+          screenOptions={{
+            headerShown: false,
+          }}
+          name={StackNav.Login}
+          component={StackRoute.Login}
+        />
+        <Stack.Screen
+          name={StackNav.Register}
+          component={StackRoute.Register}
+        />
+        <Stack.Screen
+          name={StackNav.SelectInterest}
+          component={StackRoute.SelectInterest}
+        />
+
+        <Stack.Screen name={StackNav.Gender} component={StackRoute.Gender} />
+        <Stack.Screen
+          name={StackNav.SetUpProfile}
+          component={StackRoute.SetUpProfile}
+        />
+        <Stack.Screen
+          name={StackNav.SetSecure}
+          component={StackRoute.SetSecure}
+        />
+        <Stack.Screen
+          name={StackNav.ForgotPassword}
+          component={StackRoute.ForgotPassword}
+        />
+        {/* <Stack.Screen
+            name={StackNav.ForgotPasswordOtp}
+            component={StackRoute.ForgotPasswordOtp}
+          /> */}
+        <Stack.Screen
+          name={StackNav.CreateNewPassword}
+          component={StackRoute.CreateNewPassword}
+        />
+      </Stack.Navigator>
+    );
+  }
+
   // Main Stack
   return (
     <Stack.Navigator
@@ -77,6 +130,7 @@ export default function StackNavigation() {
         component={StackRoute.OnBoarding}
       />
       <Stack.Screen name={StackNav.Auth} component={AuthNavigation} />
+      <Stack.Screen name={StackNav.Auth2} component={AuthNavigation2} />
       <Stack.Screen name={StackNav.TabBar} component={StackRoute.TabBar} />
       <Stack.Screen
         name={StackNav.CreateNewPassword}

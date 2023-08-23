@@ -32,7 +32,7 @@ export const useHandleAuth = () => {
               Dialog.hide();
               navigation.reset({
                 index: 0,
-                routes: [{name: StackNav.Auth}],
+                routes: [{name: StackNav.Auth2}],
               });
             }, 500);
             return true;

@@ -307,7 +307,7 @@ export default {
   pleaseFillAllInputs: 'Please fill all inputs',
   dearGuest: 'Our Dear Guest',
   pleaseSignUp: 'Please signup or login to be able to take all actions',
-  goToAuth: 'Go to Auth',
+  goToAuth: 'Register',
   followTheBest: 'Follow the best Egyptian cookers in the food market',
   bestCollection: 'The best collection of food makers, and dishes',
   wideVariety: 'Wide Variety of Dishes, which you will be able to buy',

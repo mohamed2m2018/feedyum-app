@@ -9,6 +9,7 @@ export const TabNav = {
 
 export const StackNav = {
   Auth: 'Auth',
+  Auth2: 'Auth2',
   TabBar: 'TabBar',
   Splash: 'Splash',
   Connect: 'Connect',
