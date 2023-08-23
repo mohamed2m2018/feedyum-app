@@ -334,7 +334,7 @@ export default function PostDetail() {
               <>
                 <TextInput
                   placeholder={strings.price + ' *'}
-                  keyboardType="numbers-and-punctuation"
+                  keyboardType="number-pad"
                   textAlign={I18nManager.isRTL ? 'right' : 'left'}
                   value={`${postedData?.price || ''}`}
                   onChangeText={input =>
@@ -359,7 +359,7 @@ export default function PostDetail() {
                     placeholder={`${strings.no} ${
                       toggleStatus === 'Hours' ? strings.hours : strings.days
                     } ${strings.toDeliver} *`}
-                    keyboardType="numbers-and-punctuation"
+                    keyboardType="number-pad"
                     textAlign={I18nManager.isRTL ? 'right' : 'left'}
                     value={`${postedData?.duration?.split?.(' ')?.[0] || ''}`}
                     multiline={true}
