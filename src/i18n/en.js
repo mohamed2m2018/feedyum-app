@@ -40,7 +40,7 @@ export default {
   skip: 'Skip',
   continue: 'Continue',
   fillYourProfile: 'Fill Your Profile',
-  fullName: 'Full Name',
+  fullName: 'Name',
   nickname: 'Nickname',
   phoneNumber: 'Phone Number',
   gender: 'Gender',

@@ -316,43 +316,45 @@ const SetUpProfile = props => {
           _onBlur={onBlurPhoneNo}
         />
 
-        <Dropdown
-          style={[
-            localStyles.dropdownStyle,
-            {
-              backgroundColor: colors.inputBg,
-              borderColor: colors.inputBg,
+        {type === 'user' && (
+          <Dropdown
+            style={[
+              localStyles.dropdownStyle,
+              {
+                backgroundColor: colors.inputBg,
+                borderColor: colors.inputBg,
+                color: colors.textColor,
+              },
+            ]}
+            placeholderStyle={{color: colors.iconColor}}
+            data={GenderData}
+            renderRightIcon={() => (
+              <FontAwesome
+                style={{paddingRight: 10}}
+                name="chevron-down"
+                size={12}
+                color={colors.textColor}
+              />
+            )}
+            maxHeight={moderateScale(180)}
+            labelField="label"
+            valueField="value"
+            placeholder={strings.gender}
+            value={gender}
+            itemTextStyle={{
               color: colors.textColor,
-            },
-          ]}
-          placeholderStyle={{color: colors.iconColor}}
-          data={GenderData}
-          renderRightIcon={() => (
-            <FontAwesome
-              style={{paddingRight: 10}}
-              name="chevron-down"
-              size={12}
-              color={colors.textColor}
-            />
-          )}
-          maxHeight={moderateScale(180)}
-          labelField="label"
-          valueField="value"
-          placeholder={strings.gender}
-          value={gender}
-          itemTextStyle={{
-            color: colors.textColor,
-            fontSize: moderateScale(16),
-          }}
-          onChange={onChangedGender}
-          selectedTextStyle={{
-            color: colors.textColor,
-          }}
-          itemContainerStyle={{
-            backgroundColor: colors.inputBg,
-          }}
-          activeColor={colors.inputBg}
-        />
+              fontSize: moderateScale(16),
+            }}
+            onChange={onChangedGender}
+            selectedTextStyle={{
+              color: colors.textColor,
+            }}
+            itemContainerStyle={{
+              backgroundColor: colors.inputBg,
+            }}
+            activeColor={colors.inputBg}
+          />
+        )}
       </ZKeyBoardAvoidWrapper>
       {headerTitle === strings.editProfile ? (
         <ZButton
@@ -372,7 +374,7 @@ const SetUpProfile = props => {
             disabled={
               !fullName ||
               !phoneNo ||
-              !gender ||
+              (!gender && type === 'user') ||
               !email ||
               !password ||
               !type ||

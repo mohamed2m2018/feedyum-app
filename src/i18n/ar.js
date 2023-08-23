@@ -38,7 +38,7 @@ export default {
   skip: 'تخطى',
   continue: 'متابعة',
   fillYourProfile: 'املأ ملفك الشخصي',
-  fullName: 'الاسم الكامل',
+  fullName: 'الاسم',
   nickname: 'اسم المستخدم',
   phoneNumber: 'رقم الهاتف',
   gender: 'الجنس',
