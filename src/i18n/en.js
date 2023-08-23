@@ -164,7 +164,7 @@ export default {
   joinThisHashtag: 'Join this Hashtag',
   comments: 'Comments',
   top: 'Top',
-  user: 'User',
+  user: 'Users',
   videos: 'Videos',
   live: 'Live',
   choose: 'Add New Dish',
