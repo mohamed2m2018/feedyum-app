@@ -18,6 +18,9 @@ const fontWeights = {
 
 // App font sizes:
 const fontSizes = {
+  f10: {
+    fontSize: moderateScale(10),
+  },
   f12: {
     fontSize: moderateScale(12),
   },

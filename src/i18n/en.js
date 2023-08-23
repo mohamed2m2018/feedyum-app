@@ -232,7 +232,7 @@ export default {
   no: 'No of',
   linkOptional:
     'Link (optional), if not provided user will contact you through whatsapp',
-  selectGov: 'Select governorates',
+  selectGov: 'Select delivery governorates',
   reply: 'Reply',
   followList: 'Follow List',
   noDishesYet: 'No Dishes matches your search term.',
