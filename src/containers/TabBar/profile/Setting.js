@@ -11,7 +11,7 @@ import React, {createRef, useState} from 'react';
 import {useDispatch, useSelector} from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import ZLoader from '../../../components/common/ZLoader';
 // Local import
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
 import ZHeader from '../../../components/common/ZHeader';
@@ -21,15 +21,19 @@ import {ACCESS_TOKEN, moderateScale, THEME} from '../../../common/constants';
 import ZText from '../../../components/common/ZText';
 import {changeThemeAction} from '../../../redux/action/themeAction';
 import {setAsyncStorageData} from '../../../utils/helpers';
-import {StackNav} from '../../../navigation/NavigationKeys';
+import {StackNav, TabNav} from '../../../navigation/NavigationKeys';
 import LogOut from '../../../components/models/LogOut';
 import {useQuery, useQueryClient} from 'react-query';
 import request from '../../../api/request';
 import {GoogleSignin} from '@react-native-google-signin/google-signin';
 import {useHandleAuth} from '../../../utils/useHandleAuth';
 import OneSignal from 'react-native-onesignal';
+import {ALERT_TYPE, Toast} from 'react-native-alert-notification';
 
 export default Setting = ({navigation}) => {
+  const {data: user} = useQuery('user', () => request.get('/user'));
+
+  const [isloading, setisloading] = useState(false);
   const ProfileSetting = [
     {
       id: 1,
@@ -85,10 +89,41 @@ export default Setting = ({navigation}) => {
       icon: 'alert-circle-outline',
       route: StackNav.PrivacyPolicy,
     },
+    {
+      id: 8,
+      title:
+        strings.switchTo +
+        (user?.data?.user?.type === 'chef'
+          ? strings.userSwitchAccount
+          : strings.chefSwitchAccount) +
+        strings.account,
+      icon: 'alert-circle-outline',
+      onPress: () => {
+        if (!isloading) {
+          setisloading(true);
+          request
+            .patch('/user', {
+              type: user?.data?.user?.type === 'chef' ? 'user' : 'chef',
+            })
+            .then(async () => {
+              await queryClient.invalidateQueries({queryKey: 'user'});
+              setisloading(false);
+              navigation.navigate(TabNav.ForYou);
+            })
+            .catch(err => {
+              setisloading(false);
+              Toast.show({
+                type: ALERT_TYPE.DANGER,
+                title: strings.error,
+                textBody: err[Object.keys(err)?.[0]],
+              });
+            });
+        }
+      },
+    },
   ];
+
   const color = useSelector(state => state.theme.theme);
-  const language = useSelector(state => state.profile.language);
-  const {data: user} = useQuery('user', () => request.get('/user'));
   const LogOutSheetRef = createRef();
   const dispatch = useDispatch();
   const queryClient = useQueryClient();
@@ -121,6 +156,8 @@ export default Setting = ({navigation}) => {
         title: item.header,
         user: user?.data?.user,
       });
+    } else {
+      item?.onPress();
     }
   };
 
@@ -160,6 +197,7 @@ export default Setting = ({navigation}) => {
         bounces={false}
         showsVerticalScrollIndicator={false}
         style={localStyles.root}>
+        {isloading && <ZLoader overlay height={130} top={280} />}
         {ProfileSetting.map((item, index) => {
           if (item.title === strings.editProfile && handleAuthToast()) {
             return;

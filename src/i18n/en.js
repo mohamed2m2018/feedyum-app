@@ -208,7 +208,7 @@ export default {
   Views: 'Views',
   loginWithGoogle: 'Login with Google',
   reigsterWithGoogle: 'Register with Google',
-  chefOrResutaurant: 'Are you a Chef or Restaurant?',
+  chefOrResutaurant: 'Are you a Chef/Restaurant?',
   continueGuest: 'Continue as guest',
   deletePost: 'Delete Post',
   areYouSure: 'Are you sure you want to delete this Post?',
@@ -316,4 +316,14 @@ export default {
   zeroFee: 'We take 0% from you. Free and will remain free',
   next: 'Next',
   seeMoreDescription: 'See More Description',
+  yes: 'Yes',
+  noo: 'No',
+  chefOrResutaurantMessage:
+    'Chefs/Restaurants can share more dish info and receive user inquiries through whatsapp or custom links.',
+  optional: 'optional',
+  switchTo: 'Switch to ',
+  account: 'account',
+  userSwitchAccount: 'user ',
+  chefSwitchAccount: 'chef ',
+  inquireDish: 'Inquire About This Dish',
 };

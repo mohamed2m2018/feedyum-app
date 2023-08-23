@@ -312,4 +312,14 @@ export default {
   seeMoreDescription: 'اضغط للمزيد من الوصف',
   sponsored: 'اعلان ممول',
   notsignedInWithGoogle: 'ليس لديك حساب سوف نقوم بانشاء واحد. انتظر لثواني',
+  yes: 'نعم',
+  noo: 'لا',
+  chefOrRestaurantMessage:
+    'يمكن للطهاة / المطاعم مشاركة مزيد من معلومات الأطباق واستقبال استفسارات المستخدمين عبر واتساب أو روابط مخصصة.',
+  optional: 'اختياري',
+  switchTo: 'التبديل إلى',
+  account: 'حساب',
+  userSwitchAccount: 'مستخدم',
+  chefSwitchAccount: 'طاهٍ',
+  inquireDish: 'الاستفسار حول هذا الطبق',
 };
