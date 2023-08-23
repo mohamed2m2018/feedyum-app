@@ -306,7 +306,7 @@ export default function ReelsComponent() {
 
   return (
     <View style={[localStyles.outerContainer, {color: colors.backgroundColor}]}>
-      {isLoadingStory && <ZLoader overlay={true} height={100} top={300} />}
+      {isLoadingStory && <ZLoader height={100} top={300} />}
       <View style={localStyles.headerContainer}>
         <TouchableOpacity onPress={onPressSearch}>
           <Ionicons

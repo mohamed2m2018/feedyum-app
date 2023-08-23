@@ -1,15 +1,14 @@
 // Library import
 import {
-  ActivityIndicator,
   FlatList,
   Image,
-  ScrollView,
   StyleSheet,
   TouchableOpacity,
   View,
 } from 'react-native';
 import React, {useState} from 'react';
 import {useSelector} from 'react-redux';
+import ZLoader from '../../../../components/common/ZLoader';
 
 // Local import
 import ZSafeAreaView from '../../../../components/common/ZSafeAreaView';
@@ -187,10 +186,7 @@ export default function ProfileDetail({navigation, route}) {
   return (
     <ZSafeAreaView>
       <ZHeader />
-      <ScrollView
-        bounces={false}
-        showsVerticalScrollIndicator={false}
-        style={localStyles.root}>
+      <View style={{flex: 1}}>
         <View style={styles.itemsCenter}>
           <TouchableOpacity onPress={onPressEditProfile} style={styles.mt25}>
             <Image
@@ -246,10 +242,10 @@ export default function ProfileDetail({navigation, route}) {
           data={stories}
           ListEmptyComponent={
             isLoading ? (
-              <ActivityIndicator size={'large'} color={colors.primary} />
+              <ZLoader height={100} />
             ) : (
               <ZText style={{textAlign: 'center', marginTop: 45}} type={'B20'}>
-                {strings.noDishesYetCurrentProfile}
+                {strings.noDishesYetProfileOther}
               </ZText>
             )
           }
@@ -276,7 +272,7 @@ export default function ProfileDetail({navigation, route}) {
           keyExtractor={(item, index) => index.toString()}
           contentContainerStyle={styles.mt20}
         />
-      </ScrollView>
+      </View>
       <SuccessModal
         visible={modalVisible}
         onPressModalClose={onPressModalClose}

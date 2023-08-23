@@ -7,6 +7,7 @@ import {useQuery} from 'react-query';
 import request from '../../../../api/request';
 import strings from '../../../../i18n/strings';
 import {useSelector} from 'react-redux';
+import ZLoader from '../../../../components/common/ZLoader';
 
 export default function Following({
   followingData: userDetail,
@@ -47,11 +48,7 @@ export default function Following({
       bounces={false}
       ListEmptyComponent={
         loading ? (
-          <ActivityIndicator
-            style={{marginTop: 50}}
-            size={'large'}
-            color={'red'}
-          />
+          <ZLoader height={120} top={80} />
         ) : (
           <ZText
             style={{

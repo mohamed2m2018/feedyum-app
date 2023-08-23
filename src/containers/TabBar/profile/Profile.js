@@ -29,6 +29,7 @@ import {Toast, ALERT_TYPE} from 'react-native-alert-notification';
 import {useHandleAuth} from '../../../utils/useHandleAuth';
 import {useIsFocused} from '@react-navigation/native';
 import {useScreen} from '../../../navigation/screenContext';
+import ZLoader from '../../../components/common/ZLoader';
 
 export default function Profile({navigation}) {
   const UserDetail = (postsNo, followersNo, followingNo, viewsNo) => [
@@ -155,11 +156,7 @@ export default function Profile({navigation}) {
       {!isGuest && (
         <View style={{flex: 1, height: '100%', padding: 20}}>
           {isLoadingSomething && (
-            <ActivityIndicator
-              color={colors.primary}
-              size={'large'}
-              style={{alignSelf: 'center'}}
-            />
+            <ZLoader overlay={true} top={440} left={-10} />
           )}
           <FlatList
             data={storiesData}
@@ -186,17 +183,13 @@ export default function Profile({navigation}) {
             )}
             numColumns={3}
             ListEmptyComponent={
-              isLoading ? (
-                <ActivityIndicator
-                  color={colors.primary}
-                  size={'large'}
-                  visible={isLoading}
-                />
+              isLoading || !data?.data?.user?._id ? (
+                <ZLoader top={440} left={-10} />
               ) : (
                 <ZText
                   style={{textAlign: 'center', marginTop: 45}}
                   type={'B20'}>
-                  {strings.noDishesYetProfileOther}
+                  {strings.noDishesYetCurrentProfile}
                 </ZText>
               )
             }
