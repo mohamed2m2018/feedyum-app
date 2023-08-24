@@ -114,9 +114,10 @@ export const AdView = React.memo(
           nativeBanner: true,
         }}
         adUnitID={
-          Platform.OS === 'android'
-            ? 'ca-app-pub-2374540952576524/6063023777'
-            : TestIds.Video
+          // Platform.OS === 'android'
+          //   ? 'ca-app-pub-2374540952576524/6063023777'
+          //   :
+          TestIds.Video
         } // REPLACE WITH NATIVE_AD_VIDEO_ID for video ads.
         // repository={type === 'image' ? 'imageAd' : 'videoAd'}
       >

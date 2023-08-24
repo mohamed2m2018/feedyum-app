@@ -355,11 +355,11 @@ export default function ReelsComponent() {
         <View style={localStyles.bannerContainer}>
           <BannerAd
             unitId={
-              __DEV__
-                ? TestIds.BANNER
-                : Platform.OS === 'android'
-                ? 'ca-app-pub-2374540952576524/7430114790'
-                : 'ca-app-pub-2374540952576524/7194173394'
+              // __DEV__?
+              TestIds.BANNER
+              // : Platform.OS === 'android'
+              // ? 'ca-app-pub-2374540952576524/7430114790'
+              // : 'ca-app-pub-2374540952576524/7194173394'
             }
             size={BannerAdSize.BANNER}
             onAdLoaded={() => setadFailedToLoad(false)}

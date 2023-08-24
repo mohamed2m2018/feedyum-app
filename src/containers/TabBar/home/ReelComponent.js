@@ -483,9 +483,7 @@ const ReelComponent = ({
                                 '\n' +
                                 link +
                                 '&phone=2' +
-                                item?.author?.phone
-                                  ?.replace('+21', '01')
-                                  ?.replace('+201', '01'),
+                                item?.author?.phone,
                             );
                       }}
                     />
