@@ -7,6 +7,8 @@ import {useMutation, useQueryClient} from 'react-query';
 import request from '../api/request';
 import {Platform} from 'react-native';
 import strings from '../i18n/strings';
+import {useNavigation} from '@react-navigation/native';
+import {TabNav} from '../navigation/NavigationKeys';
 
 const BackgroundUploadContext = createContext();
 
@@ -21,6 +23,7 @@ export function BackgroundUploadProvider({children}) {
   const [editedData, seteditedData] = useState({});
   const [imageId, setImageId] = useState();
   const [videoId, setVideoId] = useState();
+  const navigation = useNavigation();
 
   const [toastTitle, settoastTitle] = useState(strings.uploadingFile);
 
@@ -45,7 +48,7 @@ export function BackgroundUploadProvider({children}) {
 
   const {mutate} = useMutation(dataToBeSent?.isEdit ? editPost : addNewPost, {
     onSuccess: () => {
-      queryClient.invalidateQueries('stories'); // Invalidate the 'stories' query to trigger a refetch
+      // queryClient.invalidateQueries('stories'); // Invalidate the 'stories' query to trigger a refetch
       queryClient.invalidateQueries('user');
       queryClient.invalidateQueries({queryKey: 'profile-stories'});
       queryClient.invalidateQueries({queryKey: 'stories_following'});
@@ -84,21 +87,22 @@ export function BackgroundUploadProvider({children}) {
       EditValidation;
 
     if (isFormFilled && validation) {
-      handleCreateOrder(dataToBeSent);
+      handleCreatePost(dataToBeSent);
     }
   }, [isFormFilled, dataToBeSent, editedData]);
 
-  const handleCreateOrder = data => {
+  const handleCreatePost = data => {
     if (isFormFilled) {
       settoastTitle(strings.processingThumbnail);
 
       mutate(data, {
-        onSuccess: async () => {
-          await queryClient.invalidateQueries({queryKey: 'stories'});
+        onSuccess: async res => {
+          // await queryClient.invalidateQueries({queryKey: 'stories'});
           await queryClient.invalidateQueries({
             queryKey: 'profile-stories',
           });
           await queryClient.invalidateQueries({queryKey: 'user'});
+
           setisFormFilled(false);
           setDataToBeSent({});
           settoastTitle(strings.congratulations);
@@ -106,6 +110,9 @@ export function BackgroundUploadProvider({children}) {
             Toast.hide();
             settoastTitle('');
           }, 500);
+          navigation.navigate(TabNav.ForYou, {
+            storyId: res?.data?.story?._id,
+          });
         },
         onError: err => {
           Dialog.hide();
