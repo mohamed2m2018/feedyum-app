@@ -156,7 +156,7 @@ export default function Profile({navigation}) {
       {!isGuest && (
         <View style={{flex: 1, height: '100%', padding: 20}}>
           {isLoadingSomething && (
-            <ZLoader overlay={true} top={440} left={-10} />
+            <ZLoader overlay={true} absolute top={440} left={-10} />
           )}
           <FlatList
             data={storiesData}
@@ -184,7 +184,7 @@ export default function Profile({navigation}) {
             numColumns={3}
             ListEmptyComponent={
               isLoading || !data?.data?.user?._id ? (
-                <ZLoader top={440} left={-10} />
+                <ZLoader top={44} left={-10} />
               ) : (
                 <ZText
                   style={{textAlign: 'center', marginTop: 45}}
