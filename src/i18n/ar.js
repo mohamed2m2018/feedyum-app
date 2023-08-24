@@ -189,7 +189,7 @@ export default {
   risingStar: 'نجم ناشئ',
   request: 'طلب',
   askQuestion: 'اطرح سؤالًا...',
-  canBeReceivedIn: ' احصل عليه بعد',
+  canBeReceivedIn: 'احصل عليه بعد ',
   aboutYou: 'عنك',
   name: 'الاسم',
   dishAvailableIn: 'متاح في ',
