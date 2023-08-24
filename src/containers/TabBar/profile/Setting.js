@@ -93,10 +93,10 @@ export default Setting = ({navigation}) => {
       id: 8,
       title:
         strings.switchTo +
+        ' ' +
         (user?.data?.user?.type === 'chef'
           ? strings.userSwitchAccount
-          : strings.chefSwitchAccount) +
-        strings.account,
+          : strings.chefSwitchAccount),
       icon: 'alert-circle-outline',
       onPress: () => {
         if (!isloading) {

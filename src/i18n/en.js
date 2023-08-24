@@ -323,7 +323,7 @@ export default {
   optional: '(optional)',
   switchTo: 'Switch to ',
   account: 'account',
-  userSwitchAccount: 'user ',
-  chefSwitchAccount: 'chef ',
+  userSwitchAccount: 'user account',
+  chefSwitchAccount: 'chef account',
   inquireDish: 'Inquire About This Dish',
 };

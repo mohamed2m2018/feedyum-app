@@ -314,12 +314,12 @@ export default {
   notsignedInWithGoogle: 'ليس لديك حساب سوف نقوم بانشاء واحد. انتظر لثواني',
   yes: 'نعم',
   noo: 'لا',
-  chefOrRestaurantMessage:
+  chefOrResutaurantMessage:
     'يمكن للطهاة / المطاعم مشاركة مزيد من معلومات الأطباق واستقبال استفسارات المستخدمين عبر واتساب أو روابط مخصصة.',
   optional: 'اختياري',
   switchTo: 'التبديل إلى',
   account: 'حساب',
-  userSwitchAccount: 'مستخدم',
-  chefSwitchAccount: 'طاهٍ',
+  userSwitchAccount: 'حساب مستخدم',
+  chefSwitchAccount: 'حساب طاه',
   inquireDish: 'الاستفسار حول هذا الطبق',
 };
