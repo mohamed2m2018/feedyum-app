@@ -2,8 +2,9 @@ import React from 'react';
 import {NavigationContainer} from '@react-navigation/native';
 import StackNavigation from './Type/StackNavigation';
 import {useSelector} from 'react-redux';
+import {BackgroundUploadProvider} from '../providers/BackgroundUploadProvider';
 
-export default function AppNavigator() {
+export default function pAppNavigator() {
   const color = useSelector(state => state.theme.theme);
 
   const colors = {
@@ -11,7 +12,9 @@ export default function AppNavigator() {
   };
   return (
     <NavigationContainer theme={colors}>
-      <StackNavigation />
+      <BackgroundUploadProvider>
+        <StackNavigation />
+      </BackgroundUploadProvider>
     </NavigationContainer>
   );
 }

@@ -18,7 +18,6 @@ import {SheetProvider} from 'react-native-actions-sheet';
 import TimeAgo from 'javascript-time-ago';
 import en from 'javascript-time-ago/locale/en';
 import ar from 'javascript-time-ago/locale/ar';
-import {BackgroundUploadProvider} from './providers/BackgroundUploadProvider';
 import firebase from '@react-native-firebase/app';
 import {getAsyncStorageData} from './utils/helpers';
 
@@ -77,20 +76,18 @@ const App = () => {
     }
   };
   return (
-    <BackgroundUploadProvider>
-      <View style={styles.flex}>
-        <StatusBar
-          barStyle={colors.dark === 'dark' ? 'light-content' : 'dark-content'}
-        />
-        <AlertNotificationRoot>
-          <SheetProvider>
-            <ScreenProvider>
-              <AppNavigator />
-            </ScreenProvider>
-          </SheetProvider>
-        </AlertNotificationRoot>
-      </View>
-    </BackgroundUploadProvider>
+    <View style={styles.flex}>
+      <StatusBar
+        barStyle={colors.dark === 'dark' ? 'light-content' : 'dark-content'}
+      />
+      <AlertNotificationRoot>
+        <SheetProvider>
+          <ScreenProvider>
+            <AppNavigator />
+          </ScreenProvider>
+        </SheetProvider>
+      </AlertNotificationRoot>
+    </View>
   );
 };
 
