@@ -343,7 +343,7 @@ const Register = ({navigation, route}) => {
 
   return (
     <ZSafeAreaView>
-      <ZHeader />
+      {navigation.canGoBack() && <ZHeader />}
       <ZKeyBoardAvoidWrapper>
         <View
           style={localStyles.mainContainer}

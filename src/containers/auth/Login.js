@@ -27,6 +27,7 @@ import {
   GoogleSignin,
   statusCodes,
 } from '@react-native-google-signin/google-signin';
+import ZHeader from '../../components/common/ZHeader';
 
 const RenderSocialBtn = memo(({item, index}) => {
   return (
@@ -279,6 +280,7 @@ const Login = ({navigation}) => {
   return (
     <ZSafeAreaView style={localStyles.root}>
       <ZKeyBoardAvoidWrapper>
+        {navigation.canGoBack() && <ZHeader />}
         <View style={localStyles.mainContainer}>
           <ZText type={'b46'} align={'left'} style={styles.mv40}>
             {strings.loginYourAccount}
