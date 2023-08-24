@@ -17,7 +17,7 @@ import {
   screenFullHeight,
   screenHeight,
 } from '../../../common/constants';
-import {StackNav, TabNav} from '../../../navigation/NavigationKeys';
+import {TabNav} from '../../../navigation/NavigationKeys';
 import {useInfiniteQuery, useMutation, useQuery} from 'react-query';
 import ReelComponent from './ReelComponent';
 import request from '../../../api/request';
@@ -29,6 +29,7 @@ export default function ReelsComponentFollowing() {
   const colors = useSelector(state => state.theme.theme);
   const commentSheetRef = useRef('');
   const descriptionSheetRef = useRef('');
+  const [adFailedToLoad, setadFailedToLoad] = useState(false);
   const locationSheetRef = useRef('');
   const navigation = useNavigation();
   const [activeVideoIndex, setActiveVideoIndex] = useState(0);
@@ -199,21 +200,25 @@ export default function ReelsComponentFollowing() {
         selectedAreas={selectedAreas}
         selectedGov={selectedGov}
       />
-      <View style={localStyles.bannerContainer}>
-        <BannerAd
-          unitId={
-            __DEV__
-              ? TestIds.BANNER
-              : Platform.OS === 'android'
-              ? 'ca-app-pub-2374540952576524/7430114790'
-              : 'ca-app-pub-2374540952576524/7194173394'
-          }
-          size={BannerAdSize.BANNER}
-          requestOptions={{
-            requestNonPersonalizedAdsOnly: true,
-          }}
-        />
-      </View>
+      {!adFailedToLoad && (
+        <View style={localStyles.bannerContainer}>
+          <BannerAd
+            unitId={
+              __DEV__
+                ? TestIds.BANNER
+                : Platform.OS === 'android'
+                ? 'ca-app-pub-2374540952576524/7430114790'
+                : 'ca-app-pub-2374540952576524/7194173394'
+            }
+            size={BannerAdSize.BANNER}
+            onAdLoaded={() => setadFailedToLoad(false)}
+            onAdFailedToLoad={() => setadFailedToLoad(true)}
+            requestOptions={{
+              requestNonPersonalizedAdsOnly: true,
+            }}
+          />
+        </View>
+      )}
     </View>
   );
 }
