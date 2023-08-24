@@ -105,7 +105,7 @@ export default function EditProfile({navigation}) {
           </TouchableOpacity>
         </View>
         <SectionList
-          sections={editProfileData(user?.fullName, user?.email)}
+          sections={editProfileData(user?.fullName, user?.phone)}
           keyExtractor={(item, index) => index.toString()}
           renderItem={({item}) => <RenderInfoItem item={item} key={item.id} />}
           renderSectionHeader={({section: {title}}) => (

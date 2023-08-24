@@ -24,7 +24,7 @@ const renderChips = [
   'Harem',
 ];
 
-const editProfileData = (name, email) => [
+const editProfileData = (name, phone) => [
   {
     title: strings.aboutYou,
     data: [
@@ -36,9 +36,9 @@ const editProfileData = (name, email) => [
       },
       {
         id: 2,
-        icon: 'mail-outline',
-        type: strings.email,
-        value: email,
+        icon: 'phone-portrait-outline',
+        type: strings.phoneNumber,
+        value: phone,
       },
     ],
   },
