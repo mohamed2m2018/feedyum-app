@@ -45,7 +45,7 @@ export default function Following({
         data={userDetail}
         renderItem={renderItem}
         extraData={loading}
-        keyExtractor={item => item?._id}
+        keyExtractor={item => item?._id + 'follower'}
         contentContainerStyle={styles.mh20}
         showsVerticalScrollIndicator={false}
         bounces={false}

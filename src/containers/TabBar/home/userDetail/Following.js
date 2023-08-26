@@ -44,8 +44,9 @@ export default function Following({
       {loading && <ZLoader absolute height={120} top={80} />}
       <FlatList
         data={userDetail}
+        key={'following'}
         renderItem={renderItem}
-        keyExtractor={item => item?._id}
+        keyExtractor={item => item?._id + 'following'}
         contentContainerStyle={styles.mh20}
         showsVerticalScrollIndicator={false}
         extraData={loading}
