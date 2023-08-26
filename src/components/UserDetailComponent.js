@@ -25,6 +25,7 @@ export default function UserDetailComponent({
   userDescription,
   isSuggested = false,
   currentUserId,
+  isSearch,
 }) {
   const navigation = useNavigation();
   const colors = useSelector(state => state.theme.theme);
@@ -39,7 +40,9 @@ export default function UserDetailComponent({
     {
       onSuccess: () => {
         queryClient.invalidateQueries({queryKey: 'stories_following'});
-        // queryClient.invalidateQueries({queryKey: 'search_user'});
+        if (!isSearch) {
+          queryClient.invalidateQueries({queryKey: 'search_user'});
+        }
         queryClient.invalidateQueries({queryKey: 'followStatistics'});
         queryClient.invalidateQueries('IamFollowing');
         queryClient.invalidateQueries('IamFollowed');
@@ -52,7 +55,9 @@ export default function UserDetailComponent({
     {
       onSuccess: () => {
         queryClient.invalidateQueries({queryKey: 'stories_following'});
-        // queryClient.invalidateQueries({queryKey: 'search_user'});
+        if (!isSearch) {
+          queryClient.invalidateQueries({queryKey: 'search_user'});
+        }
         queryClient.invalidateQueries({queryKey: 'followStatistics'});
         queryClient.invalidateQueries('IamFollowing');
         queryClient.invalidateQueries('IamFollowed');

@@ -29,6 +29,7 @@ export default function SearchUser({users, ...props}) {
               userDescription={item?.description}
               isFollowed={item?.currentUserFollowed}
               id={item?._id}
+              isSearch
             />
           );
         }}
