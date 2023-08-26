@@ -125,8 +125,8 @@ export default function UserNetwork({navigation, route}) {
     },
   );
 
-  const _renderScene = ({route}) => {
-    if (route.key === 'first' && isSelect.index === 0) {
+  const _renderScene = ({route: r}) => {
+    if (r.key === 'first' && isSelect.index === 0) {
       return (
         <Following
           fetchNextPage={followingQuery.fetchNextPage}
@@ -141,7 +141,7 @@ export default function UserNetwork({navigation, route}) {
         />
       );
     }
-    if (route.key === 'second' && isSelect.index === 1) {
+    if (r.key === 'second' && isSelect.index === 1) {
       return (
         <Follower
           fetchNextPage={followerQuery.fetchNextPage}
