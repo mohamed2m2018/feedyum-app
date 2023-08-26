@@ -26,52 +26,55 @@ export default function Following({
 
   const currentUser = currentUserQuery?.data?.user;
 
-  const renderItem = ({item}) => (
-    <UserDetailComponent
-      userName={item?.following_id?.fullName}
-      userImage={item?.following_id?.avatar}
-      setisFetching={setisFetching}
-      isFollowed={item?.currentUserFollowed}
-      key={item?.following_id?._id}
-      id={item?.following_id?._id}
-      currentUserId={currentUser?._id}
-    />
-  );
+  const renderItem = ({item}) => {
+    return (
+      <UserDetailComponent
+        userName={item?.following_id?.fullName}
+        userImage={item?.following_id?.avatar}
+        setisFetching={setisFetching}
+        isFollowed={!!item?.currentUserFollowed?._id}
+        key={item?.following_id?._id}
+        id={item?.following_id?._id}
+        currentUserId={currentUser?._id}
+      />
+    );
+  };
   return (
-    <FlatList
-      data={userDetail}
-      renderItem={renderItem}
-      keyExtractor={item => item?._id}
-      contentContainerStyle={styles.mh20}
-      showsVerticalScrollIndicator={false}
-      extraData={userDetail}
-      bounces={false}
-      ListEmptyComponent={
-        loading ? (
-          <ZLoader height={120} top={80} />
-        ) : (
-          <ZText
-            style={{
-              textAlign: 'center',
-              marginTop: 150,
-              maxWidth: '90%',
-              alignSelf: 'center',
-            }}
-            type={'B20'}>
-            {currentUser?._id === userId
-              ? strings.notFollowing
-              : strings.notFollowingUser}
-          </ZText>
-        )
-      }
-      // Pagination props
-      onEndReachedThreshold={0.1}
-      onEndReached={fetchNextPage}
-      ListFooterComponent={
-        hasNextPage ? (
-          <ActivityIndicator size="small" color={colors.primary} />
-        ) : null
-      }
-    />
+    <>
+      {loading && <ZLoader absolute height={120} top={80} />}
+      <FlatList
+        data={userDetail}
+        renderItem={renderItem}
+        keyExtractor={item => item?._id}
+        contentContainerStyle={styles.mh20}
+        showsVerticalScrollIndicator={false}
+        extraData={loading}
+        bounces={false}
+        ListEmptyComponent={
+          loading ? null : (
+            <ZText
+              style={{
+                textAlign: 'center',
+                marginTop: 150,
+                maxWidth: '90%',
+                alignSelf: 'center',
+              }}
+              type={'B20'}>
+              {currentUser?._id === userId
+                ? strings.notFollowing
+                : strings.notFollowingUser}
+            </ZText>
+          )
+        }
+        // Pagination props
+        onEndReachedThreshold={0.8}
+        onEndReached={fetchNextPage}
+        ListFooterComponent={
+          hasNextPage ? (
+            <ActivityIndicator size="small" color={colors.primary} />
+          ) : null
+        }
+      />
+    </>
   );
 }

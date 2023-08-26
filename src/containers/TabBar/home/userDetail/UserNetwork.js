@@ -87,7 +87,14 @@ export default function UserNetwork({navigation, route}) {
     return response.data;
   };
 
-  const followingQuery = useInfiniteQuery(
+  const {
+    data: dataFollowing,
+    hasNextPage: hasnextPageFollowing,
+    fetchNextPage: fetchNextPageFollowing,
+    isLoading: isLoadingFollowing,
+    isFetching: isFetchingFollowing,
+    isFetchingNextPage: isFetchingNextPageFollowing,
+  } = useInfiniteQuery(
     ['IamFollowing', route.params?.userId],
     fetchFollowingData,
     {
@@ -99,14 +106,29 @@ export default function UserNetwork({navigation, route}) {
         return nextPage;
       },
       cacheTime: 0,
-      select: res => res?.pages.flatMap(page => page.following),
+      retry: 0,
+      select: res => {
+        if (res.pages?.[0] === undefined) {
+          return [];
+        }
+        return res?.pages.flatMap(page => page?.following);
+      },
+      refetchOnMount: true,
+      refetchOnWindowFocus: true,
       onSuccess: () => {
         setisFetching(false);
       },
     },
   );
 
-  const followerQuery = useInfiniteQuery(
+  const {
+    data: dataFollower,
+    hasNextPage: hasNextPageFollower,
+    fetchNextPage: fetchNextPageFollower,
+    isLoading: isLoadingFollower,
+    isFetching: isFetchingFollower,
+    isFetchingNextPage: isFecthingNextpageFollower,
+  } = useInfiniteQuery(
     ['IamFollowed', route.params?.userId],
     fetchFollowerData,
     {
@@ -118,7 +140,12 @@ export default function UserNetwork({navigation, route}) {
         return nextPage;
       },
       cacheTime: 0,
-      select: res => res?.pages.flatMap(page => page.followers),
+      retry: 0,
+      refetchOnMount: true,
+      refetchOnWindowFocus: true,
+      select: res => {
+        return res?.pages.flatMap(page => page.followers);
+      },
       onSuccess: () => {
         setisFetching(false);
       },
@@ -129,14 +156,14 @@ export default function UserNetwork({navigation, route}) {
     if (r.key === 'first' && isSelect.index === 0) {
       return (
         <Following
-          fetchNextPage={followingQuery.fetchNextPage}
-          hasNextPage={followingQuery.hasNextPage}
-          followingData={followingQuery.data}
+          fetchNextPage={fetchNextPageFollowing}
+          hasNextPage={hasnextPageFollowing}
+          followingData={dataFollowing}
           setisFetching={setisFetching}
           userId={route.params?.userId}
           loading={
-            followingQuery.isLoading ||
-            (followingQuery.isFetching && !followingQuery.isFetchingNextPage)
+            isLoadingFollowing ||
+            (isFetchingFollowing && !isFetchingNextPageFollowing)
           }
         />
       );
@@ -144,14 +171,14 @@ export default function UserNetwork({navigation, route}) {
     if (r.key === 'second' && isSelect.index === 1) {
       return (
         <Follower
-          fetchNextPage={followerQuery.fetchNextPage}
-          hasNextPage={followerQuery.hasNextPage}
-          followingData={followerQuery.data}
+          fetchNextPage={fetchNextPageFollower}
+          hasNextPage={hasNextPageFollower}
+          followingData={dataFollower}
           setisFetching={setisFetching}
           userId={route.params?.userId}
           loading={
-            followerQuery.isLoading ||
-            (followerQuery.isFetching && !followerQuery.isFetchingNextPage)
+            isLoadingFollower ||
+            (isFetchingFollower && !isFecthingNextpageFollower)
           }
         />
       );
