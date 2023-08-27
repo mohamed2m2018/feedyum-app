@@ -1,5 +1,5 @@
 import {ActivityIndicator, FlatList} from 'react-native';
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import UserDetailComponent from '../../../../components/UserDetailComponent';
 import {styles} from '../../../../themes';
 import ZText from '../../../../components/common/ZText';
@@ -7,7 +7,7 @@ import {useQuery} from 'react-query';
 import request from '../../../../api/request';
 import strings from '../../../../i18n/strings';
 import {useSelector} from 'react-redux';
-import ZLoader from '../../../../components/common/ZLoader';
+import Spinner from 'react-native-loading-spinner-overlay';
 
 export default function Following({
   followingData: userDetail,
@@ -18,6 +18,7 @@ export default function Following({
   userId,
 }) {
   const colors = useSelector(state => state.theme.theme);
+  const [isAdding, setIsAdding] = useState(false);
   const {data: currentUserQuery} = useQuery(
     'user',
     () => request.get('/user'),
@@ -30,21 +31,29 @@ export default function Following({
         userName={item?.follower_id?.fullName}
         userImage={item?.follower_id?.avatar}
         isFollowed={!!item?.currentUserFollowed?._id}
-        key={item?.follower_id?._id}
         id={item?.follower_id?._id}
         setisFetching={setisFetching}
         currentUserId={currentUser?._id}
+        setIsAdding={setIsAdding}
       />
     );
   };
 
+  useEffect(() => {
+    if (loading || isAdding) {
+      setisFetching(true);
+    } else {
+      setisFetching(false);
+    }
+  }, [loading, isAdding]);
+
   return (
     <>
-      {loading && <ZLoader absolute height={120} top={80} />}
+      <Spinner visible={loading || isAdding} color={colors.primary} />
       <FlatList
         data={userDetail}
         renderItem={renderItem}
-        extraData={loading}
+        extraData={loading || isAdding}
         keyExtractor={item => item?._id + 'follower'}
         contentContainerStyle={styles.mh20}
         showsVerticalScrollIndicator={false}

@@ -1,5 +1,5 @@
 import {ActivityIndicator, FlatList} from 'react-native';
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import UserDetailComponent from '../../../../components/UserDetailComponent';
 import {styles} from '../../../../themes';
 import ZText from '../../../../components/common/ZText';
@@ -7,7 +7,7 @@ import {useQuery} from 'react-query';
 import request from '../../../../api/request';
 import strings from '../../../../i18n/strings';
 import {useSelector} from 'react-redux';
-import ZLoader from '../../../../components/common/ZLoader';
+import Spinner from 'react-native-loading-spinner-overlay';
 
 export default function Following({
   followingData: userDetail,
@@ -17,13 +17,14 @@ export default function Following({
   setisFetching,
   userId,
 }) {
+
+  const colors = useSelector(state => state.theme.theme);
+  const [isAdding, setIsAdding] = useState(false);
   const {data: currentUserQuery} = useQuery(
     'user',
     () => request.get('/user'),
     {retry: 1},
   );
-  const colors = useSelector(state => state.theme.theme);
-
   const currentUser = currentUserQuery?.data?.user;
 
   const renderItem = ({item}) => {
@@ -33,23 +34,31 @@ export default function Following({
         userImage={item?.following_id?.avatar}
         setisFetching={setisFetching}
         isFollowed={!!item?.currentUserFollowed?._id}
-        key={item?.following_id?._id}
         id={item?.following_id?._id}
         currentUserId={currentUser?._id}
+        setIsAdding={setIsAdding}
       />
     );
   };
+
+  useEffect(() => {
+    if (loading || isAdding) {
+      setisFetching(true);
+    } else {
+      setisFetching(false);
+    }
+  }, [loading, isAdding]);
+
   return (
     <>
-      {loading && <ZLoader absolute height={120} top={80} />}
+      <Spinner visible={loading || isAdding} color={colors.primary} />
       <FlatList
         data={userDetail}
-        key={'following'}
         renderItem={renderItem}
         keyExtractor={item => item?._id + 'following'}
         contentContainerStyle={styles.mh20}
         showsVerticalScrollIndicator={false}
-        extraData={loading}
+        extraData={loading || isAdding}
         bounces={false}
         ListEmptyComponent={
           loading ? null : (

@@ -113,8 +113,6 @@ export default function UserNetwork({navigation, route}) {
         }
         return res?.pages.flatMap(page => page?.following);
       },
-      refetchOnMount: true,
-      refetchOnWindowFocus: true,
       onSuccess: () => {
         setisFetching(false);
       },
@@ -139,10 +137,7 @@ export default function UserNetwork({navigation, route}) {
             : undefined;
         return nextPage;
       },
-      cacheTime: 0,
       retry: 0,
-      refetchOnMount: true,
-      refetchOnWindowFocus: true,
       select: res => {
         return res?.pages.flatMap(page => page.followers);
       },
@@ -186,20 +181,19 @@ export default function UserNetwork({navigation, route}) {
   };
 
   return (
-    <ZSafeAreaView>
-      <ZHeader title={strings.followList} />
-      <TabView
-        navigationState={isSelect}
-        renderScene={_renderScene}
-        renderTabBar={_renderTabBar}
-        onIndexChange={_handleIndexChange}
-        activeColor={{color: colors.primary}}
-        navigation={navigation}
-      />
-      {isFetching && (
-        <ActivityIndicator size={'large'} color={colors.primary} />
-      )}
-    </ZSafeAreaView>
+    <View pointerEvents={isFetching ? 'box-none' : 'auto'} style={{flex: 1}}>
+      <ZSafeAreaView>
+        <ZHeader title={strings.followList} />
+        <TabView
+          navigationState={isSelect}
+          renderScene={_renderScene}
+          renderTabBar={_renderTabBar}
+          onIndexChange={_handleIndexChange}
+          activeColor={{color: colors.primary}}
+          navigation={navigation}
+        />
+      </ZSafeAreaView>
+    </View>
   );
 }
 

@@ -26,6 +26,7 @@ export default function UserDetailComponent({
   isSuggested = false,
   currentUserId,
   isSearch,
+  setIsAdding = () => {},
 }) {
   const navigation = useNavigation();
   const colors = useSelector(state => state.theme.theme);
@@ -46,6 +47,14 @@ export default function UserDetailComponent({
         queryClient.invalidateQueries({queryKey: 'followStatistics'});
         queryClient.invalidateQueries('IamFollowing');
         queryClient.invalidateQueries('IamFollowed');
+        setTimeout(() => {
+          setIsAdding?.(false);
+        }, 100);
+      },
+      onError: () => {
+        setTimeout(() => {
+          setIsAdding?.(false);
+        }, 100);
       },
     },
   );
@@ -61,6 +70,12 @@ export default function UserDetailComponent({
         queryClient.invalidateQueries({queryKey: 'followStatistics'});
         queryClient.invalidateQueries('IamFollowing');
         queryClient.invalidateQueries('IamFollowed');
+        setTimeout(() => {
+          setIsAdding?.(false);
+        }, 100);
+      },
+      onError: () => {
+        setIsAdding?.(false);
       },
     },
   );
@@ -70,6 +85,7 @@ export default function UserDetailComponent({
     if (handleAuthToast()) {
       return;
     }
+    setIsAdding?.(true);
     if (isFollow) {
       unfollowMutation.mutate({_id: id});
     } else {
