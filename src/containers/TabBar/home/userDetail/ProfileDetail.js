@@ -50,7 +50,7 @@ export default function ProfileDetail({navigation, route}) {
   const currentUser = currentUserQuery?.data?.user;
   const [isFollow, setIsFollow] = useState(false);
 
-  const {data} = useQuery(
+  const {data, isFetching: isFetchingUserDetailsFollowed} = useQuery(
     ['user', id],
     () =>
       request.get(`user/${id}`, {
@@ -220,7 +220,7 @@ export default function ProfileDetail({navigation, route}) {
             <RenderUserDetail item={item} key={index} />
           ))}
         </View>
-        {!isLoading && (
+        {!isLoading && !isFetchingUserDetailsFollowed && (
           <View style={localStyles.editProfileContainer}>
             <ZButton
               title={!isFollow ? strings.follow : strings.unfollow}
