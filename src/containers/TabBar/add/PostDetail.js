@@ -147,7 +147,7 @@ export default function PostDetail() {
       });
       return;
     }
-    if (postedData.title?.length > 35) {
+    if (postedData.title?.length > 45) {
       Toast.show({
         type: ALERT_TYPE.DANGER,
         title: strings.error,

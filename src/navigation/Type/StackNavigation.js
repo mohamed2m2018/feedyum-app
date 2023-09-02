@@ -124,7 +124,11 @@ export default function StackNavigation() {
         detachInactiveScreens: false,
       }}
       initialRouteName={StackNav.Splash}>
-      <Stack.Screen name={StackNav.Splash} component={StackRoute.Splash} />
+      <Stack.Screen
+        name={StackNav.Splash}
+        options={{animation: 'none'}}
+        component={StackRoute.Splash}
+      />
       <Stack.Screen
         name={StackNav.onBoarding}
         component={StackRoute.OnBoarding}

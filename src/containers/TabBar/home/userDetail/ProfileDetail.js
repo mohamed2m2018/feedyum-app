@@ -240,6 +240,7 @@ export default function ProfileDetail({navigation, route}) {
 
         <FlatList
           data={stories}
+          showsVerticalScrollIndicator={false}
           ListEmptyComponent={
             isLoading ? (
               <ZLoader height={100} />
@@ -269,8 +270,7 @@ export default function ProfileDetail({navigation, route}) {
           )}
           numColumns={3}
           onMomentumScrollBegin={fetchNextPage}
-          keyExtractor={(item, index) => index.toString()}
-          contentContainerStyle={styles.mt20}
+          keyExtractor={item => item?._id}
         />
       </View>
       <SuccessModal
@@ -307,6 +307,7 @@ const localStyles = StyleSheet.create({
     ...styles.flexRow,
     ...styles.justifyEvenly,
     ...styles.mt25,
+    marginBottom: 20,
   },
   buttonContainer: {
     ...styles.ph15,
