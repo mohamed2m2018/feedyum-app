@@ -75,7 +75,10 @@ export default function ReelsComponentFollowing() {
           page.data?.stories?.length
             ? [
                 ...(page.data?.stories || []),
-                {_id: 'ad' + Number(page.data?.stories.length + 1), type: 'ad'},
+                {
+                  _id: 'ad' + page.data?.stories[-1]?._id + 1,
+                  type: 'ad',
+                },
               ]
             : [],
         );

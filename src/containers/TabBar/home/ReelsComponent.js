@@ -174,8 +174,10 @@ export default function ReelsComponent() {
         }
         const result = res?.pages.flatMap(page => [
           ...(page.data?.stories || []),
-
-          {_id: 'ad' + Number(page.data?.stories.length + 1), type: 'ad'},
+          {
+            _id: 'ad' + page.data?.stories[-1]?._id + 1,
+            type: 'ad',
+          },
         ]);
         if (result.length) {
           setFilteredData(result);
@@ -301,7 +303,7 @@ export default function ReelsComponent() {
     }
   }).current;
 
-  const keyExtractor = item => 'item-ForYou' + item?._id;
+  const keyExtractor = (item, index) => 'item-ForYou' + item?._id + index;
 
   const onSetLayout = e => setLayoutHeight(e.nativeEvent.layout.height);
 
