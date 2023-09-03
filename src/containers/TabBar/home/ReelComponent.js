@@ -193,6 +193,13 @@ const ReelComponent = ({
     }
   }, [isFocused, index, activeVideoIndex, flatListRef]);
 
+  useEffect(() => {
+    if (index !== activeVideoIndex && videoRef.current) {
+      setSeekValue(0);
+      videoRef.current.seek(0);
+    }
+  }, [activeVideoIndex]);
+
   const handlePressProfile = () =>
     onPressProfile(item?.channelName, item?.avatarUri, item?.author?._id);
 
