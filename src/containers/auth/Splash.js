@@ -11,10 +11,12 @@ import {ACCESS_TOKEN, APP_OPEN_FIRST_TIME, THEME} from '../../common/constants';
 import {changeThemeAction} from '../../redux/action/themeAction';
 import request from '../../api/request';
 import ZLoader from '../../components/common/ZLoader';
+import {useQuery} from 'react-query';
 
 const Splash = ({navigation}) => {
   const dispatch = useDispatch();
   const [isnavigating, setIsNavigating] = useState(false);
+  useQuery('user', () => request.get('/user'), {retry: 1, cacheTime: Infinity});
   const asyncProcess = async () => {
     try {
       let asyncData = await AsyncStorage.multiGet([
