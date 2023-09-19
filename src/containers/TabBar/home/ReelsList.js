@@ -1,6 +1,6 @@
 import {FlashList} from '@shopify/flash-list';
 import React from 'react';
-import {ActivityIndicator, Platform, RefreshControl} from 'react-native';
+import {ActivityIndicator, FlatList, Platform, RefreshControl} from 'react-native';
 import ZText from '../../../components/common/ZText';
 import ZLoader from '../../../components/common/ZLoader';
 
@@ -24,7 +24,7 @@ const ReelsList = ({
   refetch,
 }) => {
   return (
-    <FlashList
+    <FlatList
       data={filteredData}
       extraData={extraData}
       keyExtractor={keyExtractor}
@@ -63,7 +63,9 @@ const ReelsList = ({
       onEndReachedThreshold={0.4}
       onEndReached={hasNextPage ? fetchNextPage : null}
       ListFooterComponent={
-        isFetchingNextPage && <ActivityIndicator size={'large'} />
+        isFetchingNextPage && (
+          <ActivityIndicator size={'large'} color={'#FF4D67'} />
+        )
       }
     />
   );

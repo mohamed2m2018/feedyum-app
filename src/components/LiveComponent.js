@@ -11,20 +11,22 @@ import ZText from '../components/common/ZText';
 import {styles} from '../themes';
 import {ImageBackground} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
-import {TabNav} from '../navigation/NavigationKeys';
+import {StackNav} from '../navigation/NavigationKeys';
 
 export default function LiveComponent({
   reelUrl = '',
   user = '',
   userName = '',
   id,
+  userId,
 }) {
   const colors = useSelector(state => state.theme.theme);
   const navigation = useNavigation();
 
   const onPressReel = () =>
-    navigation.navigate(TabNav.ForYou, {
+    navigation.navigate(StackNav.reelsOne, {
       storyId: id,
+      profile: {_id: userId},
     });
 
   return (

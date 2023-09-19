@@ -17,7 +17,7 @@ import images from '../assets/images';
 import {getHeight, moderateScale} from '../common/constants';
 import ZText from '../components/common/ZText';
 import {styles} from '../themes';
-import {StackNav, TabNav} from '../navigation/NavigationKeys';
+import {StackNav} from '../navigation/NavigationKeys';
 import request from '../api/request';
 import {useQueryClient} from 'react-query';
 import strings from '../i18n/strings';
@@ -28,6 +28,7 @@ export default function ReelComponent({
   reelUrl = '',
   style,
   id,
+  profileId,
   item = {},
   isDeleteAllowed = false,
   setisLoadingSomething,
@@ -69,8 +70,9 @@ export default function ReelComponent({
   };
 
   const onPressReel = () => {
-    navigation.navigate(TabNav.ForYou, {
+    navigation.navigate(StackNav.reelsOne, {
       storyId: id,
+      profile: profileId,
     });
   };
 

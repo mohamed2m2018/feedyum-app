@@ -25,12 +25,12 @@ export default function Search() {
 
   const searchCategoryData = [
     {
-      id: 0,
-      title: strings.user,
-    },
-    {
       id: 1,
       title: strings.video,
+    },
+    {
+      id: 0,
+      title: strings.user,
     },
   ];
 
@@ -86,7 +86,7 @@ export default function Search() {
     isFetchingNextPage,
   } = useInfiniteQuery(['search_story', debouncedSearch], searchStory, {
     keepPreviousData: true,
-    enabled: isSelect === 1 && !!user,
+    enabled: isSelect === 0 && !!user,
     getNextPageParam: (lastPage, allPages) => {
       const nextPage =
         lastPage?.data?.currentPage < lastPage?.data?.totalPages
@@ -113,7 +113,7 @@ export default function Search() {
     isFetchingNextPage: isFetchingNextPageUsers,
   } = useInfiniteQuery(['search_user', debouncedSearch], searchUser, {
     keepPreviousData: true,
-    enabled: isSelect === 0 && !!user?._id,
+    enabled: isSelect === 1 && !!user?._id,
     getNextPageParam: (lastPage, allPages) => {
       const nextPage =
         lastPage?.data?.currentPage < lastPage?.data?.totalPages
@@ -199,7 +199,7 @@ export default function Search() {
           />
         </View>
 
-        {isSelect === 0 && (
+        {isSelect === 1 && (
           <>
             <SearchUser
               users={isFetchingUser && !isFetchingNextPageUsers ? [] : users}
@@ -213,7 +213,7 @@ export default function Search() {
             )}
           </>
         )}
-        {isSelect === 1 && (
+        {isSelect === 0 && (
           <View style={{flex: 1}}>
             <SearchVideo
               stories={isFetchingsStories && !isFetchingNextPage ? [] : stories}

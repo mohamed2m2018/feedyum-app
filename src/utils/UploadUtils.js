@@ -6,7 +6,7 @@ export const convertVideoToMP4 = async inputPath => {
   const outputFile = `${RNFS.CachesDirectoryPath}/output.mp4`;
 
   await FFmpegKit.execute(
-    ` -y -i ${inputPath} -c:v libx264 -preset veryfast -crf 28 -c:a copy ${outputFile}`,
+    ` -y -i ${inputPath} -c:v libx264 -preset veryfast -crf 28 -c:a copy -movflags faststart ${outputFile}`,
   );
   return outputFile;
 };

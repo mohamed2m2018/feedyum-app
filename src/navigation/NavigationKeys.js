@@ -60,4 +60,5 @@ export const StackNav = {
   ReelsComponent: 'ReelsComponent',
   FindFriends: 'FindFriends',
   Live: 'Live',
+  reelsOne: 'reelsOne',
 };

@@ -164,6 +164,7 @@ export default function Profile({navigation}) {
             renderItem={({item}) => (
               <ReelComponent
                 data={item?.views}
+                profileId={user}
                 setisLoadingSomething={setisLoadingSomething}
                 reelUrl={
                   item?.avatarUri?.replace(

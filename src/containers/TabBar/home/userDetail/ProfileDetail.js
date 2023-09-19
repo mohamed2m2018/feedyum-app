@@ -252,6 +252,7 @@ export default function ProfileDetail({navigation, route}) {
           }
           renderItem={({item}) => (
             <ReelComponent
+              profileId={user}
               data={item?.views}
               item={item}
               reelUrl={

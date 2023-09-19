@@ -146,6 +146,10 @@ export default function StackNavigation() {
       />
       <Stack.Screen name={StackNav.Setting} component={StackRoute.Setting} />
       <Stack.Screen name={StackNav.Message} component={StackRoute.Message} />
+      <Stack.Screen
+        name={StackNav.reelsOne}
+        component={StackRoute.ReelsComponentOne}
+      />
       <Stack.Screen name={StackNav.Chat} component={StackRoute.Chat} />
       <Stack.Screen name={StackNav.Call} component={StackRoute.Call} />
       <Stack.Screen name={StackNav.Report} component={StackRoute.Report} />

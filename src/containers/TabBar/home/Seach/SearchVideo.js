@@ -46,6 +46,7 @@ export default function SearchVideo({
                 )
               }
               userName={item?.title}
+              userId={item?.author}
             />
           );
         }}

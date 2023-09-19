@@ -56,7 +56,6 @@ const ReelComponent = ({
   isFocused,
 }) => {
   const colors = useSelector(state => state.theme.theme);
-
   const onPressComment = () => {
     setSelectedPostId(item?._id);
     commentSheetRef.current?.show();
@@ -221,11 +220,9 @@ const ReelComponent = ({
 
   const handleOnLoad = ({duration: durationToBeSet}) => {
     setDurationInSeconds(durationToBeSet);
-    if (activeVideoIndex === index) {
+    if (activeVideoIndex === index && seekValue !== 0) {
       const val = seekValue;
       videoRef.current.seek(val);
-    } else {
-      videoRef.current.seek(0.1);
     }
   };
 
@@ -258,55 +255,54 @@ const ReelComponent = ({
                 resizeMode="contain"
                 style={imageStyles}
               />
-            ) : (
-              !!item?.uri && (
-                <Video
-                  source={{
-                    uri,
-                  }}
-                  ref={videoRef}
-                  // onLoadStart={() => {
-                  //   // setIsBuffering(true);
-                  // }}
-                  hideShutterView
-                  onLoad={handleOnLoad}
-                  onSeek={config => {
-                    // console.log('seeking', item?.title, config);
-                  }}
-                  onEnd={() => {
-                    if (activeVideoIndex === index && isFocused) {
-                      if (flatListRef.current) {
-                        flatListRef.current.scrollToIndex({
-                          animated: true,
-                          index: index + 1,
-                        });
-                        videoRef.current.seek(0);
-                      }
+            ) : !!item?.uri && activeVideoIndex === index && isFocused ? (
+              <Video
+                source={{
+                  uri,
+                }}
+                ref={videoRef}
+                hideShutterView
+                onLoad={handleOnLoad}
+                onEnd={() => {
+                  if (activeVideoIndex === index && isFocused) {
+                    if (flatListRef.current) {
+                      flatListRef.current.scrollToIndex({
+                        animated: true,
+                        index: index + 1,
+                      });
+                      videoRef.current.seek(0);
                     }
-                  }}
-                  style={[
-                    localStyles.imageContainer,
-                    {
-                      backgroundColor: colors.backgroundColor,
-                    },
-                  ]}
-                  poster={poster}
-                  posterResizeMode="cover"
-                  onProgress={debouncedOnProgress}
-                  resizeMode="cover"
-                  playInBackground={false}
-                  disableFocus={true}
-                  onError={err => console.log('hello', err)}
-                  seekColor={colors.primary}
-                  muted={!isFocused}
-                  paused={
-                    activeVideoIndex !== index ||
-                    !isFocused ||
-                    paused.paused ||
-                    paused.slider
                   }
-                />
-              )
+                }}
+                style={[
+                  localStyles.imageContainer,
+                  {
+                    backgroundColor: colors.backgroundColor,
+                  },
+                ]}
+                poster={poster}
+                posterResizeMode="cover"
+                onProgress={debouncedOnProgress}
+                resizeMode="cover"
+                playInBackground={false}
+                disableFocus={true}
+                onError={err => console.log('hello', err)}
+                seekColor={colors.primary}
+                muted={!isFocused}
+                paused={
+                  // activeVideoIndex !== index ||
+                  !isFocused || paused.paused || paused.slider
+                }
+              />
+            ) : (
+              <Image
+                source={{
+                  uri: poster,
+                }}
+                resizeMode="cover"
+                blurRadius={2}
+                style={imageStyles}
+              />
             )}
 
             <LinearGradient
@@ -319,8 +315,8 @@ const ReelComponent = ({
                     <Image
                       resizeMode="cover"
                       source={
-                        item?.author?.avatar
-                          ? {uri: item?.author?.avatar}
+                        item?.author?.avatar || data?.avatar
+                          ? {uri: item?.author?.avatar || data?.avatar}
                           : colors.dark
                           ? images.userDark
                           : images.userLight
@@ -345,7 +341,7 @@ const ReelComponent = ({
                         type="b15"
                         numberOfLines={1}
                         color={colors.white}>
-                        {item?.author?.fullName}
+                        {item?.author?.fullName || data?.fullName}
                       </ZText>
                       <View />
                     </TouchableOpacity>

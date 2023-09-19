@@ -205,9 +205,7 @@ export default function ReelsComponent() {
           return res?.data?.story?._id !== item?._id;
         });
         if (filtered.length) {
-          setFilteredData(
-            (filteredData.current = [res?.data?.story, ...filtered]),
-          );
+          setFilteredData([res?.data?.story, ...filtered]);
         }
         flatListRef.current?.scrollToOffset({offset: 0});
         updateViewsMutation.mutate(res?.data?.story?._id);
@@ -270,7 +268,7 @@ export default function ReelsComponent() {
           i={index}
           isFocused={isFocused}
           layoutHeight={layoutHeight || screenHeight}
-          data={data}
+          userId={data?.data?.user?._id}
           activeVideoIndex={activeVideoIndex}
           likeRef={likeRef}
           onPressAvailableLocation={onPressAvailableLocation}

@@ -52,6 +52,7 @@ import UserNetwork from '../containers/TabBar/home/userDetail/UserNetwork';
 import PostDetail from '../containers/TabBar/add/PostDetail';
 import PostSound from '../containers/TabBar/add/PostSound';
 import ReelsComponent from '../containers/TabBar/home/ReelsComponent';
+import ReelsComponentOne from '../containers/TabBar/home/ReelsComponentOne';
 import FindFriends from '../containers/TabBar/profile/FindFriends';
 import Live from '../containers/TabBar/home/Live';
 import ForYou from '../containers/TabBar/home/ForYou';
@@ -117,4 +118,5 @@ export const StackRoute = {
   ReelsComponent,
   FindFriends,
   Live,
+  ReelsComponentOne,
 };
