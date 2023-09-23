@@ -13,12 +13,8 @@ export default function StackNavigation() {
       <Stack.Navigator
         screenOptions={{
           headerShown: false,
-          detachPreviousScreen: false,
-          detachInactiveScreens: false,
         }}
-        initialRouteName={StackNav.Login}
-        detachPreviousScreen={false}
-        detachInactiveScreens={false}>
+        initialRouteName={StackNav.Login}>
         <Stack.Screen
           screenOptions={{
             headerShown: false,
@@ -66,12 +62,8 @@ export default function StackNavigation() {
       <Stack.Navigator
         screenOptions={{
           headerShown: false,
-          detachPreviousScreen: false,
-          detachInactiveScreens: false,
         }}
-        initialRouteName={StackNav.Register}
-        detachPreviousScreen={false}
-        detachInactiveScreens={false}>
+        initialRouteName={StackNav.Register}>
         <Stack.Screen
           screenOptions={{
             headerShown: false,
@@ -120,8 +112,6 @@ export default function StackNavigation() {
         headerShown: false,
         mode: 'modal',
         transparentCard: true,
-        detachPreviousScreen: false,
-        detachInactiveScreens: false,
       }}
       initialRouteName={StackNav.Splash}>
       <Stack.Screen

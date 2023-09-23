@@ -76,8 +76,6 @@ export default function TabBarNavigation({navigation}) {
       pagerStyle={{backgroundColor: colors.backgroundColor}}
       screenOptions={{
         headerShown: false,
-        detachPreviousScreen: false,
-        detachInactiveScreens: false,
         tabBarItemStyle: {height: 60},
         animationEnabled: false,
         tabBarLabelStyle: {fontSize: 12},
@@ -93,9 +91,7 @@ export default function TabBarNavigation({navigation}) {
         ],
         tabBarShowLabel: false,
       }}
-      detachPreviousScreen={false}
       freezeOnBlur={true}
-      detachInactiveScreens={false}
       initialRouteName={TabNav.ForYou}>
       <Tab.Screen
         name={TabNav.ForYou}

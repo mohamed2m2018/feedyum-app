@@ -205,7 +205,8 @@ const ReelComponent = ({
   const handleOnLoad = ({duration: durationToBeSet}) => {
     setDurationInSeconds(durationToBeSet);
     if (__DEV__) {
-      if (activeVideoIndex === index) {
+      if (activeVideoIndex === index && seekValue !== 0) {
+        videoRef.current.seek(seekValue);
         console.log('on load active video ', activeVideoIndex);
       } else {
         console.log('on load not active video ', index);
