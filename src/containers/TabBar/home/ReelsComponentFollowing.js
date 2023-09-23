@@ -121,6 +121,7 @@ export default function ReelsComponentFollowing() {
           isFocused={isFocused}
           layoutHeight={layoutHeight || screenHeight}
           data={data}
+          userId={data?.data?.user?._id}
           activeVideoIndex={activeVideoIndex}
           likeRef={likeRef}
           onPressAvailableLocation={onPressAvailableLocation}

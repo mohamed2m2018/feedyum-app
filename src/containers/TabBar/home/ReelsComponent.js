@@ -269,6 +269,7 @@ export default function ReelsComponent() {
           isFocused={isFocused}
           layoutHeight={layoutHeight || screenHeight}
           userId={data?.data?.user?._id}
+          data={data}
           activeVideoIndex={activeVideoIndex}
           likeRef={likeRef}
           onPressAvailableLocation={onPressAvailableLocation}

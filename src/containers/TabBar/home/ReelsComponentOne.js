@@ -19,12 +19,7 @@ import {
   screenHeight,
 } from '../../../common/constants';
 import {TabNav} from '../../../navigation/NavigationKeys';
-import {
-  QueryClient,
-  useInfiniteQuery,
-  useMutation,
-  useQuery,
-} from 'react-query';
+import {useInfiniteQuery, useMutation, useQuery} from 'react-query';
 import ReelComponent from './ReelComponent';
 import request from '../../../api/request';
 import {BannerAd, BannerAdSize, TestIds} from 'react-native-google-mobile-ads';
@@ -150,6 +145,7 @@ export default function ReelsComponentOne() {
           isFocused={isFocused}
           layoutHeight={layoutHeight || screenHeight}
           data={route?.params?.profile}
+          userId={route?.params?.profile?._id}
           activeVideoIndex={activeVideoIndex}
           likeRef={likeRef}
           onPressAvailableLocation={onPressAvailableLocation}
