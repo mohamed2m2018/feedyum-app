@@ -24,7 +24,7 @@ const ReelsList = ({
   refetch,
 }) => {
   return (
-    <FlatList
+    <FlashList
       data={filteredData}
       extraData={extraData}
       keyExtractor={keyExtractor}

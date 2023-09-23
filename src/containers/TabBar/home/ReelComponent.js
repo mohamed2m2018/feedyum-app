@@ -173,8 +173,8 @@ const ReelComponent = ({
     // } else {
     //   setIsBuffering(false);
     // }
-    if (!paused.slider || !paused.paused) {
-      setSeekValue(currentTime);
+    if ((!paused.slider || !paused.pause) && activeVideoIndex === index) {
+      // setSeekValue(currentTime);
     }
   };
 
@@ -290,9 +290,12 @@ const ReelComponent = ({
                 seekColor={colors.primary}
                 muted={!isFocused}
                 paused={
-                  // activeVideoIndex !== index ||
-                  !isFocused || paused.paused || paused.slider
+                  activeVideoIndex !== index ||
+                  !isFocused ||
+                  paused.paused ||
+                  paused.slider
                 }
+                useTextureView={true}
               />
             ) : (
               <Image

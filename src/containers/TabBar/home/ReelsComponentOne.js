@@ -31,6 +31,7 @@ import {BannerAd, BannerAdSize, TestIds} from 'react-native-google-mobile-ads';
 import ReelsList from './ReelsList';
 import strings from '../../../i18n/strings';
 import ZHeader from '../../../components/common/ZHeader';
+import {SafeAreaView} from 'react-native-safe-area-context';
 
 export default function ReelsComponentOne() {
   const [storyId, setStoryId] = useState();
@@ -186,80 +187,82 @@ export default function ReelsComponentOne() {
   const onSetLayout = e => setLayoutHeight(e.nativeEvent.layout.height);
 
   return (
-    <View style={{height: '100%'}}>
-      <View style={{marginTop: 5}}>
-        <ZHeader
-          title={'Reels'}
-          rightIcon={
-            <TouchableOpacity onPress={onPressSearch}>
-              <Ionicons
-                name="search-outline"
-                size={moderateScale(30)}
-                color={colors.white}
+    <SafeAreaView>
+      <View style={{height: '100%'}}>
+        <View style={{marginTop: 5}}>
+          <ZHeader
+            title={route?.params?.profile?.fullName}
+            rightIcon={
+              <TouchableOpacity onPress={onPressSearch}>
+                <Ionicons
+                  name="search-outline"
+                  size={moderateScale(30)}
+                  color={colors.white}
+                />
+              </TouchableOpacity>
+            }
+          />
+        </View>
+        <View
+          style={[localStyles.outerContainer, {color: colors.backgroundColor}]}>
+          {/* {isLoadingStory && <ZLoader absolute height={100} top={300} />} */}
+
+          <ReelsList
+            filteredData={filteredData}
+            extraData={extraData}
+            isRefetching={isRefetching}
+            refetch={refetch}
+            user={route.params?.profile}
+            keyExtractor={keyExtractor}
+            renderReelComponent={renderReelComponent}
+            viewConfig={viewConfig}
+            viewableItemsChanged={viewableItemsChanged}
+            layoutHeight={layoutHeight}
+            isLoading={isLoading || !filteredData.length}
+            onSetLayout={onSetLayout}
+            emptylistMessage={strings.noDishesYetForYou}
+            flatListRef={flatListRef}
+            isFetchingNextPage={isFetchingNextPage}
+            hasNextPage={hasNextPage}
+            fetchNextPage={fetchNextPage}
+          />
+
+          <Comment
+            SheetRef={commentSheetRef}
+            postId={selectedPostId}
+            currentUserId={route.params?._id}
+          />
+          <Description
+            SheetRef={descriptionSheetRef}
+            description={selectedDescription}
+          />
+          <Locations
+            SheetRef={locationSheetRef}
+            selectedAreas={selectedAreas}
+            selectedGov={selectedGov}
+          />
+          {!adFailedToLoad && (
+            <View style={localStyles.bannerContainer}>
+              <BannerAd
+                unitId={
+                  // __DEV__?
+                  TestIds.BANNER
+                  // : Platform.OS === 'android'
+                  // ? 'ca-app-pub-2374540952576524/7430114790'
+                  // : 'ca-app-pub-2374540952576524/7194173394'
+                }
+                size={BannerAdSize.BANNER}
+                onAdLoaded={() => setadFailedToLoad(false)}
+                onAdFailedToLoad={() => setadFailedToLoad(true)}
+                requestOptions={{
+                  requestNonPersonalizedAdsOnly: true,
+                }}
               />
-            </TouchableOpacity>
-          }
-        />
+            </View>
+          )}
+        </View>
       </View>
-      <View
-        style={[localStyles.outerContainer, {color: colors.backgroundColor}]}>
-        {/* {isLoadingStory && <ZLoader absolute height={100} top={300} />} */}
-
-        <ReelsList
-          filteredData={filteredData}
-          extraData={extraData}
-          isRefetching={isRefetching}
-          refetch={refetch}
-          user={route.params?.profile}
-          keyExtractor={keyExtractor}
-          renderReelComponent={renderReelComponent}
-          viewConfig={viewConfig}
-          viewableItemsChanged={viewableItemsChanged}
-          layoutHeight={layoutHeight}
-          isLoading={isLoading || !filteredData.length}
-          onSetLayout={onSetLayout}
-          emptylistMessage={strings.noDishesYetForYou}
-          flatListRef={flatListRef}
-          isFetchingNextPage={isFetchingNextPage}
-          hasNextPage={hasNextPage}
-          fetchNextPage={fetchNextPage}
-        />
-
-        <Comment
-          SheetRef={commentSheetRef}
-          postId={selectedPostId}
-          currentUserId={route.params?._id}
-        />
-        <Description
-          SheetRef={descriptionSheetRef}
-          description={selectedDescription}
-        />
-        <Locations
-          SheetRef={locationSheetRef}
-          selectedAreas={selectedAreas}
-          selectedGov={selectedGov}
-        />
-        {!adFailedToLoad && (
-          <View style={localStyles.bannerContainer}>
-            <BannerAd
-              unitId={
-                // __DEV__?
-                TestIds.BANNER
-                // : Platform.OS === 'android'
-                // ? 'ca-app-pub-2374540952576524/7430114790'
-                // : 'ca-app-pub-2374540952576524/7194173394'
-              }
-              size={BannerAdSize.BANNER}
-              onAdLoaded={() => setadFailedToLoad(false)}
-              onAdFailedToLoad={() => setadFailedToLoad(true)}
-              requestOptions={{
-                requestNonPersonalizedAdsOnly: true,
-              }}
-            />
-          </View>
-        )}
-      </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
