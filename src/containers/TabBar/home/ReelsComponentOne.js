@@ -205,8 +205,6 @@ export default function ReelsComponentOne() {
         </View>
         <View
           style={[localStyles.outerContainer, {color: colors.backgroundColor}]}>
-          {/* {isLoadingStory && <ZLoader absolute height={100} top={300} />} */}
-
           <ReelsList
             filteredData={filteredData}
             extraData={extraData}

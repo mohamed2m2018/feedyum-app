@@ -295,7 +295,7 @@ export default function ReelsComponent() {
   const updateViewsMutation = useMutation(updateViews);
 
   const viewableItemsChanged = useRef(({viewableItems}) => {
-    if (viewableItems?.length) {
+    if (viewableItems?.length && activeVideoIndex !== viewableItems[0].index) {
       setActiveVideoIndex(viewableItems[0].index);
       updateViewsMutation.mutate(viewableItems[0]?.item?._id);
     }
@@ -329,6 +329,7 @@ export default function ReelsComponent() {
         viewableItemsChanged={viewableItemsChanged}
         layoutHeight={layoutHeight}
         isLoading={isLoading}
+        setActiveVideoIndex={setActiveVideoIndex}
         onSetLayout={onSetLayout}
         emptylistMessage={strings.noDishesYetForYou}
         flatListRef={flatListRef}

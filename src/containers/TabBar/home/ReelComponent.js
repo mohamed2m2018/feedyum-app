@@ -30,7 +30,7 @@ import request from '../../../api/request';
 import {useMutation, useQuery} from 'react-query';
 import millify from 'millify';
 import pluralize from 'pluralize';
-import Video from 'react-native-fast-video';
+import Video from 'react-native-video';
 import Slider from '@react-native-community/slider';
 import Share from 'react-native-share';
 import FastImage from 'react-native-fast-image';
@@ -109,11 +109,6 @@ const ReelComponent = ({
 
   const [paused, setpaused] = useState({slider: false, paused: false});
 
-  // useEffect(() => {
-  //   setExtraData(e => !e);
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [paused.slider, paused.paused, isLike, isFocused]);
-
   const generateDynamicLink = async postItem => {
     const link = await dynamicLinks().buildShortLink(
       {
@@ -167,17 +162,6 @@ const ReelComponent = ({
 
   const duration = item?.duration?.split(' ');
 
-  const debouncedOnProgress = ({currentTime, playableDuration}) => {
-    // if (playableDuration !== 0 && playableDuration < currentTime) {
-    //   setIsBuffering(true);
-    // } else {
-    //   setIsBuffering(false);
-    // }
-    if ((!paused.slider || !paused.pause) && activeVideoIndex === index) {
-      // setSeekValue(currentTime);
-    }
-  };
-
   useEffect(() => {
     let timeout;
 
@@ -220,15 +204,19 @@ const ReelComponent = ({
 
   const handleOnLoad = ({duration: durationToBeSet}) => {
     setDurationInSeconds(durationToBeSet);
-    if (activeVideoIndex === index && seekValue !== 0) {
-      const val = seekValue;
-      videoRef.current.seek(val);
+    if (__DEV__) {
+      if (activeVideoIndex === index) {
+        console.log('on load active video ', activeVideoIndex);
+      } else {
+        console.log('on load not active video ', index);
+      }
     }
   };
 
   const selected = governorates.filter(
     element => element.value === item?.governorate,
   )?.[0];
+
   return (
     <>
       {item?.type !== 'ad' && (
@@ -255,48 +243,53 @@ const ReelComponent = ({
                 resizeMode="contain"
                 style={imageStyles}
               />
-            ) : !!item?.uri && activeVideoIndex === index && isFocused ? (
-              <Video
-                source={{
-                  uri,
-                }}
-                ref={videoRef}
-                hideShutterView
-                onLoad={handleOnLoad}
-                onEnd={() => {
-                  if (activeVideoIndex === index && isFocused) {
-                    if (flatListRef.current) {
-                      flatListRef.current.scrollToIndex({
-                        animated: true,
-                        index: index + 1,
-                      });
-                      videoRef.current.seek(0);
+            ) : !!item?.uri &&
+              (activeVideoIndex === index ||
+                activeVideoIndex === index + 1 ||
+                activeVideoIndex === index - 1) &&
+              isFocused ? (
+              <>
+                <Video
+                  source={{
+                    uri,
+                  }}
+                  ref={videoRef}
+                  hideShutterView
+                  onLoad={handleOnLoad}
+                  onEnd={() => {
+                    if (activeVideoIndex === index && isFocused) {
+                      if (flatListRef.current) {
+                        flatListRef.current.scrollToIndex({
+                          animated: true,
+                          index: index + 1,
+                        });
+                        videoRef.current.seek(0);
+                      }
                     }
+                  }}
+                  style={[
+                    localStyles.imageContainer,
+                    {
+                      backgroundColor: colors.backgroundColor,
+                    },
+                  ]}
+                  poster={poster}
+                  posterResizeMode="cover"
+                  resizeMode="cover"
+                  playInBackground={false}
+                  disableFocus={true}
+                  onError={err => console.log('hello', err)}
+                  seekColor={colors.primary}
+                  muted={!isFocused}
+                  paused={
+                    activeVideoIndex !== index ||
+                    !isFocused ||
+                    paused.paused ||
+                    paused.slider
                   }
-                }}
-                style={[
-                  localStyles.imageContainer,
-                  {
-                    backgroundColor: colors.backgroundColor,
-                  },
-                ]}
-                poster={poster}
-                posterResizeMode="cover"
-                onProgress={debouncedOnProgress}
-                resizeMode="cover"
-                playInBackground={false}
-                disableFocus={true}
-                onError={err => console.log('hello', err)}
-                seekColor={colors.primary}
-                muted={!isFocused}
-                paused={
-                  activeVideoIndex !== index ||
-                  !isFocused ||
-                  paused.paused ||
-                  paused.slider
-                }
-                useTextureView={true}
-              />
+                  useTextureView={true}
+                />
+              </>
             ) : (
               <Image
                 source={{
