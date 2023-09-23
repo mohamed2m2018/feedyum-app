@@ -209,13 +209,13 @@ export default function ReelsComponent() {
         }
         flatListRef.current?.scrollToOffset({offset: 0});
         updateViewsMutation.mutate(res?.data?.story?._id);
+        setActiveVideoIndex(0);
         setStoryId(null);
       },
     },
   );
   useEffect(() => {
     setExtraData(e => !e);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeVideoIndex, isFocused, notificationReceived]);
 
   const onPressSearch = () => navigation.navigate(TabNav.Search);
@@ -380,6 +380,7 @@ const localStyles = StyleSheet.create({
   bannerContainer: {
     alignItems: 'center',
     backgroundColor: 'transparent',
+    height: 50,
   },
   outerContainer: {
     flex: 1,

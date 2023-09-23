@@ -355,7 +355,11 @@ export default function PostDetail() {
                     } ${strings.toDeliver} ${strings.optional}`}
                     keyboardType="number-pad"
                     textAlign={I18nManager.isRTL ? 'right' : 'left'}
-                    value={`${postedData?.duration?.split?.(' ')?.[0] || ''}`}
+                    value={`${
+                      postedData?.duration?.split?.(' ')?.[0] !== 'undefined'
+                        ? postedData?.duration?.split?.(' ')?.[0]
+                        : ''
+                    }`}
                     multiline={true}
                     onChangeText={input =>
                       setpostedData(currentState => ({

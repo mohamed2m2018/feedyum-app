@@ -56,11 +56,21 @@ const ReelComponent = ({
   isFocused,
 }) => {
   const colors = useSelector(state => state.theme.theme);
+  const [indexState] = useState(index);
+
+  useEffect(() => {
+    if (indexState !== index) {
+      setSeekValueClick(0);
+      setIsLike(false);
+    }
+  }, [indexState, index]);
+
   const onPressComment = () => {
     setSelectedPostId(item?._id);
     commentSheetRef.current?.show();
   };
 
+  const [seekValueClick, setSeekValueClick] = useState(0);
   const onPressMore = description => {
     setselectedDescription(description);
     descriptionSheetRef.current?.show();
@@ -103,7 +113,6 @@ const ReelComponent = ({
     }
   };
 
-  const [seekValue, setSeekValue] = useState(0);
   const videoRef = useRef();
   const [durationInSeconds, setDurationInSeconds] = useState(0); // Added state for durationInSeconds
 
@@ -137,10 +146,7 @@ const ReelComponent = ({
 
     const shareOptions = {
       title: 'Share via',
-      // message: 'hi',
       url: link,
-      // social: Share.Social.WHATSAPP,
-      // whatsAppNumber: '9199999999', // country code + phone number
     };
 
     Share.open(shareOptions).catch(err => {
@@ -204,13 +210,17 @@ const ReelComponent = ({
 
   const handleOnLoad = ({duration: durationToBeSet}) => {
     setDurationInSeconds(durationToBeSet);
-    if (__DEV__) {
-      if (activeVideoIndex === index && seekValue !== 0) {
-        videoRef.current.seek(seekValue);
-        console.log('on load active video ', activeVideoIndex);
-      } else {
-        console.log('on load not active video ', index);
-      }
+    if (activeVideoIndex === index) {
+      // console.log('on load active video ', index);
+      videoRef.current.seek(seekValueClick);
+    } else {
+      // console.log('on load not active video ', index);
+    }
+  };
+
+  const onProgress = ({currentTime}) => {
+    if ((!paused.slider || !paused.pause) && activeVideoIndex === index) {
+      setSeekValueClick(currentTime);
     }
   };
 
@@ -254,7 +264,11 @@ const ReelComponent = ({
                   source={{
                     uri,
                   }}
+                  onSeek={({currentTime}) => {
+                    setSeekValueClick(currentTime);
+                  }}
                   ref={videoRef}
+                  onProgress={onProgress}
                   hideShutterView
                   onLoad={handleOnLoad}
                   onEnd={() => {
@@ -424,24 +438,14 @@ const ReelComponent = ({
                       minimumValue={0}
                       tapToSeek
                       maximumValue={durationInSeconds}
-                      value={seekValue}
+                      value={seekValueClick}
                       minimumTrackTintColor={colors.primary}
                       maximumTrackTintColor={colors.grey}
                       thumbTintColor={colors.primary}
-                      onSlidingStart={() => {
-                        if (activeVideoIndex === index) {
-                          setpaused({slider: true, paused: false});
-                          // setIsBuffering(true);
-                        }
-                      }}
                       onSlidingComplete={value => {
                         if (activeVideoIndex === index) {
                           videoRef?.current?.seek?.(value);
-                          setSeekValue(value);
-                          setTimeout(() => {
-                            setpaused({slider: false, paused: false});
-                            // setIsBuffering(false);
-                          }, 400);
+                          setSeekValueClick(value);
                         }
                       }}
                     />

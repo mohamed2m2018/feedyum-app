@@ -59,7 +59,7 @@ export default function ReelsComponentOne() {
     hasNextPage,
     fetchNextPage,
     isFetchingNextPage,
-    isLoading,
+    isFetching: isLoading,
     refetch,
     isRefetching,
   } = useInfiniteQuery(
@@ -96,7 +96,7 @@ export default function ReelsComponentOne() {
     },
   );
 
-  const {refetch: refetchStory, isLoading: isLoadingStory} = useQuery(
+  useQuery(
     ['storyById', storyId],
     () =>
       request.get(`/story/${storyId}`, {
@@ -110,10 +110,9 @@ export default function ReelsComponentOne() {
         const filtered = filteredDataNotSeen?.filter(item => {
           return res?.data?.story?._id !== item?._id;
         });
-        if (filtered.length) {
+        if (filtered.length && !filteredData.length) {
           setFilteredData([res?.data?.story, ...filtered]);
         }
-        flatListRef.current?.scrollToOffset({offset: 0});
         updateViewsMutation.mutate(res?.data?.story?._id);
       },
       onError: err => console.log('err ', err),
