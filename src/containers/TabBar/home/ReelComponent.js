@@ -62,6 +62,7 @@ const ReelComponent = ({
     if (indexState !== index) {
       setSeekValueClick(0);
       setIsLike(false);
+      setpaused({slider: false, paused: false});
     }
   }, [indexState, index]);
 
