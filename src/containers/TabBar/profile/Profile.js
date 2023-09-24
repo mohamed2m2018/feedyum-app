@@ -118,11 +118,12 @@ export default function Profile({navigation}) {
     },
   });
 
-  const onPressEditProfile = isEditBio =>
+  const onPressEditProfile = isEditBio => {
     navigation.navigate(StackNav.SetUpProfile, {
       title: strings.editProfile,
       isEditBio,
     });
+  };
 
   const onPressSetting = () => navigation.navigate(StackNav.Setting);
 
@@ -223,7 +224,7 @@ export default function Profile({navigation}) {
                 </View>
                 <View style={styles.itemsCenter}>
                   <TouchableOpacity
-                    onPress={onPressEditProfile}
+                    onPress={() => onPressEditProfile(false)}
                     style={styles.mt40}>
                     <Image
                       source={
@@ -281,7 +282,7 @@ export default function Profile({navigation}) {
                 </View>
                 <ZButton
                   title={strings.editProfile}
-                  onPress={onPressEditProfile}
+                  onPress={() => onPressEditProfile(false)}
                   color={colors.primary}
                   textType="b18"
                   style={styles.ml10}

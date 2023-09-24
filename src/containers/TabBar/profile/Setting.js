@@ -38,8 +38,9 @@ export default Setting = ({navigation}) => {
     {
       id: 1,
       title: strings.editProfile,
+      header: strings.editProfile,
       icon: 'person-outline',
-      route: StackNav.EditProfile,
+      route: StackNav.SetUpProfile,
     },
     // {
     //   id: 2,
