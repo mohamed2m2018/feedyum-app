@@ -338,7 +338,7 @@ const ReelComponent = ({
                   <View style={[styles.m10, styles.flex]}>
                     <TouchableOpacity
                       style={{
-                        maxWidth: moderateScale(100),
+                        maxWidth: moderateScale(200),
                       }}
                       onPress={() =>
                         onPressProfile(
