@@ -59,7 +59,7 @@ const ReelsList = ({
         )
       }
       ref={flatListRef}
-      estimatedItemSize={1}
+      estimatedItemSize={8}
       onEndReachedThreshold={0.4}
       onEndReached={hasNextPage ? fetchNextPage : null}
       ListFooterComponent={

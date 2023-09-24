@@ -166,28 +166,12 @@ export default function Search() {
     );
   });
 
-  const textRef = useRef(null);
-
-  useFocusEffect(
-    useCallback(() => {
-      // When the screen is focused
-      const focus = () => {
-        setTimeout(() => {
-          textRef?.current?.focus();
-        }, 1);
-      };
-      focus();
-      return focus; // cleanup
-    }, []),
-  );
-
   return (
     <ZSafeAreaView>
       <View style={{flex: 1, margin: 10}}>
         <ZInput
           placeHolder={strings.search}
           _value={search}
-          fieldRef={textRef}
           keyBoardType={'default'}
           autoCapitalize={'none'}
           insideLeftIcon={() => <SearchIcon />}

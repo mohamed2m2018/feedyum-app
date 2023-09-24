@@ -346,7 +346,7 @@ const SetUpProfile = props => {
               // eslint-disable-next-line react-native/no-inline-styles
               style={{
                 position: 'relative',
-                top: -20,
+                top: -18,
               }}
               name="info-with-circle"
               size={moderateScale(20)}

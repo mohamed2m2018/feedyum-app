@@ -66,6 +66,7 @@ export default ZInput = props => {
         ) : null}
         <TextInput
           ref={fieldRef}
+          textAlignVertical={multiline && 'top'}
           secureTextEntry={_isSecure}
           value={_value}
           textAlign={I18nManager.isRTL ? 'right' : 'left'}
