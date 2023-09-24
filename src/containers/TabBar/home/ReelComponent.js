@@ -278,7 +278,9 @@ const ReelComponent = ({
                           animated: true,
                           index: index + 1,
                         });
-                        videoRef.current.seek(0);
+                        setTimeout(() => {
+                          videoRef.current.seek(0);
+                        }, 100);
                       }
                     }
                   }}
