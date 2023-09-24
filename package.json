@@ -23,6 +23,7 @@
     "@react-navigation/native-stack": "^6.9.10",
     "@shopify/flash-list": "^1.4.1",
     "axios": "^1.4.0",
+    "babel-plugin-transform-remove-console": "^6.9.4",
     "debounce": "^1.2.1",
     "esbuild": "^0.18.17",
     "ffmpeg-kit-react-native": "^5.1.0",

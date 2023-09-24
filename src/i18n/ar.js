@@ -204,6 +204,7 @@ export default {
   areYouSure: 'هل أنت متأكد من مسح المنشور',
   Delete: 'مسح',
   phoneNumberStarts: 'لابد ان يبدأ رقم الهاتف ب 01 بالارقام الانجليزية',
+  addBio: 'من فضلك قم باضافة نبذة عنك',
   error: 'حدث خطأ',
   pleaseProvideCorrectNo: 'من فضلك اكتب رقم مصري صحيح',
   postDishImage: 'نشر صورة طبق',

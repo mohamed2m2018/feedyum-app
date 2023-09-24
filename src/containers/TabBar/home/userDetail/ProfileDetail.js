@@ -207,6 +207,15 @@ export default function ProfileDetail({navigation, route}) {
             <ZText type="m14" align={'center'} style={styles.mt10}>
               {user?.email}
             </ZText>
+            {user?.bio && (
+              <ZText
+                type={user?.bio ? 'm16' : 'm14'}
+                align={'center'}
+                color={user?.bio ? colors.textColor : colors.background}
+                style={[styles.mt10, localStyles.bioIcon]}>
+                {user?.bio}
+              </ZText>
+            )}
           </View>
         </View>
         <View style={[styles.flexRow, styles.justifyEvenly]}>
@@ -298,6 +307,10 @@ const localStyles = StyleSheet.create({
     ...styles.alignCenter,
     ...styles.justifyBetween,
     ...styles.mt20,
+  },
+  bioIcon: {
+    maxWidth: 260,
+    marginRight: 5,
   },
   userImage: {
     width: moderateScale(100),

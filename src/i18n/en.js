@@ -214,6 +214,7 @@ export default {
   areYouSure: 'Are you sure you want to delete this Post?',
   Delete: 'Delete',
   phoneNumberStarts: 'Phone number must start with 01....',
+  addBio: 'Add Bio about you',
   error: 'Error',
   pleaseProvideCorrectNo: 'Please provide a correct egyptian phone number',
   postDishImage: 'Post a dish image',

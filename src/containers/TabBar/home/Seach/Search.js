@@ -1,6 +1,6 @@
 // Library import
 import {FlatList, StyleSheet, TouchableOpacity, View} from 'react-native';
-import React, {memo, useEffect, useState} from 'react';
+import React, {memo, useCallback, useEffect, useRef, useState} from 'react';
 import {useSelector} from 'react-redux';
 import Feather from 'react-native-vector-icons/Feather';
 import debounce from 'debounce';
@@ -15,7 +15,7 @@ import SearchUser from './SearchUser';
 import SearchVideo from './SearchVideo';
 import {useInfiniteQuery, useQuery} from 'react-query';
 import request from '../../../../api/request';
-import {useIsFocused} from '@react-navigation/native';
+import {useFocusEffect, useIsFocused} from '@react-navigation/native';
 import {useScreen} from '../../../../navigation/screenContext';
 import {TabNav} from '../../../../navigation/NavigationKeys';
 import ZLoader from '../../../../components/common/ZLoader';
@@ -166,12 +166,28 @@ export default function Search() {
     );
   });
 
+  const textRef = useRef(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      // When the screen is focused
+      const focus = () => {
+        setTimeout(() => {
+          textRef?.current?.focus();
+        }, 1);
+      };
+      focus();
+      return focus; // cleanup
+    }, []),
+  );
+
   return (
     <ZSafeAreaView>
       <View style={{flex: 1, margin: 10}}>
         <ZInput
           placeHolder={strings.search}
           _value={search}
+          fieldRef={textRef}
           keyBoardType={'default'}
           autoCapitalize={'none'}
           insideLeftIcon={() => <SearchIcon />}

@@ -80,6 +80,7 @@ const SetUpProfile = props => {
       setFullName(undefined);
       setGender(undefined);
       setPhoneNo(undefined);
+      setBio(undefined);
     }
   }, [isEdit]);
 
@@ -89,8 +90,10 @@ const SetUpProfile = props => {
 
   const [phoneNo, setPhoneNo] = useState(editUser?.data?.user?.phone || '');
   const [gender, setGender] = useState(editUser?.data?.user?.gender || '');
+  const [bio, setBio] = useState(editUser?.data?.user?.bio || '');
   const [fullNameInputStyle, setFullNameInputStyle] = useState(BlurredStyle);
   const [phoneNoInputStyle, setPhoneNoInputStyle] = useState(BlurredStyle);
+  const [bioStyle, setBioStyle] = useState(BlurredStyle);
   const [selectImage, setSelectImage] = useState(editUser?.data?.user?.avatar);
   const [isPhotoUploading, setisPhotoUploading] = useState(false);
 
@@ -105,8 +108,13 @@ const SetUpProfile = props => {
   const onBlurFullName = () => onBlurInput(setFullNameInputStyle);
   const onBlurPhoneNo = () => onBlurInput(setPhoneNoInputStyle);
 
+  const onFocusBio = () => onFocusInput(setBioStyle);
+
+  const onBlurBio = () => onBlurInput(setBioStyle);
+
   const onChangedFullName = text => setFullName(text);
   const onChangedPhoneNo = text => setPhoneNo(text);
+  const onChangedSetBio = text => setBio(text);
   const onChangedGender = text => setGender(text.value.toLowerCase());
 
   const queryClient = useQueryClient();
@@ -132,6 +140,7 @@ const SetUpProfile = props => {
         password,
         type,
         avatar: selectImage,
+        bio,
         // categories,
       })
       .then(async res => {
@@ -204,12 +213,13 @@ const SetUpProfile = props => {
     });
   };
 
+  // eslint-disable-next-line react/no-unstable-nested-components
   const PhoneIcon = () => {
     return (
       <Ionicons
         name="phone"
         size={moderateScale(20)}
-        color={colors.grayScale5}
+        color={colors.textColor}
       />
     );
   };
@@ -219,6 +229,7 @@ const SetUpProfile = props => {
 
     if (fullName) data.fullName = fullName;
     if (phoneNo) data.phone = phoneNo;
+    if (bio) data.bio = bio;
     if (gender) data.gender = gender;
     if (email) data.email = email;
     if (password) data.password = password;
@@ -287,7 +298,14 @@ const SetUpProfile = props => {
 
         <ZInput
           placeHolder={strings.fullName}
-          keyBoardType={'email-address'}
+          keyboard
+          insideLeftIcon={() => (
+            <Ionicons
+              name="text"
+              size={moderateScale(20)}
+              color={colors.textColor}
+            />
+          )}
           _value={fullName}
           autoCapitalize={'none'}
           toGetTextFieldValue={onChangedFullName}
@@ -314,6 +332,34 @@ const SetUpProfile = props => {
           ]}
           _onFocus={onFocusPhoneNo}
           _onBlur={onBlurPhoneNo}
+        />
+
+        <ZInput
+          placeHolder={strings.addBio}
+          _value={bio}
+          multiline
+          _autoFocus={props.route.params.isEditBio}
+          toGetTextFieldValue={onChangedSetBio}
+          // eslint-disable-next-line react/no-unstable-nested-components
+          insideLeftIcon={() => (
+            <Ionicons
+              // eslint-disable-next-line react-native/no-inline-styles
+              style={{
+                position: 'relative',
+                top: -20,
+              }}
+              name="info-with-circle"
+              size={moderateScale(20)}
+              color={colors.textColor}
+            />
+          )}
+          inputContainerStyle={[
+            {backgroundColor: colors.inputBg},
+            localStyles.inputContainerStyle2,
+            bioStyle,
+          ]}
+          _onFocus={onFocusBio}
+          _onBlur={onBlurBio}
         />
 
         {type === 'user' && (
@@ -375,6 +421,7 @@ const SetUpProfile = props => {
               !fullName ||
               !phoneNo ||
               (!gender && type === 'user') ||
+              (!bio && type !== 'user') ||
               !email ||
               !password ||
               !type ||
@@ -411,6 +458,12 @@ const localStyles = StyleSheet.create({
   },
   inputContainerStyle: {
     height: getHeight(60),
+    borderRadius: moderateScale(12),
+    borderWidth: moderateScale(1),
+    ...styles.ph15,
+  },
+  inputContainerStyle2: {
+    height: getHeight(120),
     borderRadius: moderateScale(12),
     borderWidth: moderateScale(1),
     ...styles.ph15,

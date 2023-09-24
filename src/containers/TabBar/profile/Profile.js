@@ -118,8 +118,11 @@ export default function Profile({navigation}) {
     },
   });
 
-  const onPressEditProfile = () =>
-    navigation.navigate(StackNav.EditProfile, {user});
+  const onPressEditProfile = isEditBio =>
+    navigation.navigate(StackNav.SetUpProfile, {
+      title: strings.editProfile,
+      isEditBio,
+    });
 
   const onPressSetting = () => navigation.navigate(StackNav.Setting);
 
@@ -149,6 +152,7 @@ export default function Profile({navigation}) {
       }
       updateCurrentScreen(TabNav.Profile);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isFocused]);
 
   return (
@@ -245,6 +249,24 @@ export default function Profile({navigation}) {
                     <ZText type="m14" align={'center'} style={styles.mt10}>
                       {user?.email}
                     </ZText>
+                    <TouchableOpacity
+                      activeOpacity={0.8}
+                      onPress={() => onPressEditProfile(true)}
+                      style={localStyles.bioContainer}>
+                      <ZText
+                        type={user?.bio ? 'm16' : 'm14'}
+                        align={'center'}
+                        color={user?.bio ? colors.textColor : colors.background}
+                        style={[styles.mt10, localStyles.bioText]}>
+                        {user?.bio ?? strings.addBio}
+                      </ZText>
+                      <MaterialIcon
+                        name="pencil-box"
+                        size={moderateScale(25)}
+                        style={localStyles.bioIcon}
+                        color={colors.primary}
+                      />
+                    </TouchableOpacity>
                   </View>
                 </View>
                 <View style={[styles.flexRow, styles.justifyEvenly]}>
@@ -309,12 +331,29 @@ const localStyles = StyleSheet.create({
     bottom: 0,
     right: 0,
   },
+  editIcon2: {
+    position: 'absolute',
+    bottom: 15,
+    right: -33,
+  },
   buttonContainer: {
     ...styles.mt15,
     height: getHeight(45),
     borderRadius: moderateScale(22),
     borderWidth: moderateScale(1),
     ...styles.mb15,
+  },
+  bioContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bioText: {
+    maxWidth: 260,
+    marginRight: 5,
+  },
+  bioIcon: {
+    marginTop: 7,
   },
   mainContainer: {
     ...styles.flexRow,
