@@ -4,7 +4,7 @@ import {getAsyncStorageData} from '../utils/helpers';
 
 const client = axios.create();
 
-const BASE_URL = 'http://192.168.1.5:4800/api';
+const BASE_URL = 'https://thefoodtok.com/api';
 
 client.defaults.baseURL = BASE_URL;
 
