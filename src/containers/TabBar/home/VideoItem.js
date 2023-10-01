@@ -27,7 +27,7 @@ export const VideoItem = ({
     if (handleAuthToast()) {
       return;
     }
-    if (isLiked === true) {
+    if (isLiked?._id || isLiked) {
       setisLiked(false);
       setlikesNoLocally(number => number - 1);
     } else {
