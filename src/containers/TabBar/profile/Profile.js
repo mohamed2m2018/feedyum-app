@@ -268,6 +268,16 @@ export default function Profile({navigation}) {
                         color={colors.primary}
                       />
                     </TouchableOpacity>
+                    <ZButton
+                      containerStyle={{
+                        height: 40,
+                        marginTop: 10,
+                        padding: 10,
+                        alignSelf: 'center',
+                      }}
+                      onPress={() => onPressEditProfile(false)}
+                      title={'Your Branches'}
+                    />
                   </View>
                 </View>
                 <View style={[styles.flexRow, styles.justifyEvenly]}>

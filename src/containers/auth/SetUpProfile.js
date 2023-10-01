@@ -39,6 +39,8 @@ import {ALERT_TYPE, Toast} from 'react-native-alert-notification';
 import {useQuery, useQueryClient} from 'react-query';
 import OneSignal from 'react-native-onesignal';
 import {RNS3} from 'react-native-aws3';
+import ZText from '../../components/common/ZText';
+import Location from '../../components/models/location';
 
 const SetUpProfile = props => {
   const {navigation} = props;
@@ -48,6 +50,7 @@ const SetUpProfile = props => {
 
   const colors = useSelector(state => state.theme.theme);
   const ProfilePictureSheetRef = createRef();
+  const locationSheetRef = createRef();
 
   const BlurredStyle = {
     backgroundColor: colors.inputBg,
@@ -75,6 +78,23 @@ const SetUpProfile = props => {
     },
   });
 
+  const {data: locationsData} = useQuery(
+    'location' + editUser?.data?.user?._id,
+    () =>
+      request.get('/user/location', {
+        params: {
+          id: editUser?.data?.user?._id,
+        },
+      }),
+    {
+      retry: 0,
+      enabled: !!editUser?.data?.user?._id,
+      refetchOnMount: true,
+      onSuccess: res => setLocations(res?.data?.locations),
+      onError: err => console.log('err ', err),
+    },
+  );
+
   useEffect(() => {
     if (!isEdit) {
       setFullName(undefined);
@@ -86,6 +106,10 @@ const SetUpProfile = props => {
 
   const [fullName, setFullName] = useState(
     editUser?.data?.user?.fullName || '',
+  );
+
+  const [locations, setLocations] = useState(
+    locationsData?.data?.locations || [],
   );
 
   const [phoneNo, setPhoneNo] = useState(editUser?.data?.user?.phone || '');
@@ -141,6 +165,7 @@ const SetUpProfile = props => {
         type,
         avatar: selectImage,
         bio,
+        locations,
         // categories,
       })
       .then(async res => {
@@ -235,7 +260,7 @@ const SetUpProfile = props => {
     if (password) data.password = password;
     if (type) data.type = type;
     if (selectImage) data.avatar = selectImage;
-
+    if (locations) data.locations = locations;
     setisUpdating(true);
 
     request
@@ -244,6 +269,10 @@ const SetUpProfile = props => {
       })
       .then(async () => {
         await queryClient.invalidateQueries({queryKey: 'user'});
+        await queryClient.invalidateQueries({
+          queryKey: 'location' + editUser?.data?.user?._id,
+        });
+
         navigation.navigate(TabNav.ForYou);
         setisUpdating(false);
       })
@@ -261,9 +290,17 @@ const SetUpProfile = props => {
     handleSubmit();
   };
 
-  // const onPressSkip = () => navigation.navigate(StackNav.SetPin);
+  const [locationIndexToEdit, setlocationIndexToEdit] = useState();
 
   const onPressProfilePic = () => ProfilePictureSheetRef?.current.show();
+  const onPressLocation = () => locationSheetRef?.current.show();
+  const onEditLocation = index => {
+    locationSheetRef?.current.show();
+    setlocationIndexToEdit(index);
+  };
+  const onDeleteLocation = indexToDelete => {
+    setLocations(l => l.filter((_, index) => index !== indexToDelete));
+  };
 
   return (
     <ZSafeAreaView>
@@ -361,7 +398,53 @@ const SetUpProfile = props => {
           _onFocus={onFocusBio}
           _onBlur={onBlurBio}
         />
-
+        {type !== 'user' && (
+          <>
+            <ZText style={{marginVertical: 5}} type={'B20'}>
+              Branches
+            </ZText>
+            {(locations?.length === 0 || !locations) && (
+              <View style={{flexDirection: 'row'}}>
+                <ZText style={{marginVertical: 5, width: '70%'}}>
+                  You don't have branches, click on plus icon to add one.
+                </ZText>
+                <MaterialIcon
+                  name="plus"
+                  onPress={onPressLocation}
+                  size={moderateScale(25)}
+                  color={colors.primary}
+                />
+              </View>
+            )}
+            {locations?.map?.((item, index) => (
+              <View style={{flexDirection: 'row'}}>
+                <ZText style={{marginVertical: 5, width: '70%'}}>
+                  {index + 1}- {item.description}
+                </ZText>
+                <MaterialIcon
+                  name="pencil-box"
+                  size={moderateScale(25)}
+                  onPress={() => onEditLocation(index)}
+                  color={colors.primary}
+                />
+                <MaterialIcon
+                  name="delete"
+                  onPress={() => onDeleteLocation(index)}
+                  size={moderateScale(25)}
+                  color={colors.primary}
+                />
+                {index === locations.length - 1 && (
+                  <MaterialIcon
+                    name="plus"
+                    onPress={onPressLocation}
+                    size={moderateScale(25)}
+                    color={colors.primary}
+                  />
+                )}
+              </View>
+            ))}
+          </>
+        )}
         {type === 'user' && (
           <Dropdown
             style={[
@@ -414,6 +497,7 @@ const SetUpProfile = props => {
         />
       ) : (
         <View style={localStyles.btnContainer}>
+          {console.log('kss', !locations.length && type !== 'user')}
           <ZButton
             title={strings.continue}
             textType={'b18'}
@@ -425,6 +509,7 @@ const SetUpProfile = props => {
               !email ||
               !password ||
               !type ||
+              (!locations.length && type !== 'user') ||
               isPhotoUploading
             }
             color={colors.white}
@@ -438,6 +523,13 @@ const SetUpProfile = props => {
         onPressCamera={onPressCamera}
         onPressGallery={onPressGallery}
         SheetRef={ProfilePictureSheetRef}
+      />
+      <Location
+        locationIndexToEdit={locationIndexToEdit}
+        setlocationIndexToEdit={setlocationIndexToEdit}
+        setLocations={setLocations}
+        SheetRef={locationSheetRef}
+        locations={locations}
       />
     </ZSafeAreaView>
   );

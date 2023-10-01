@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import React, {useEffect, useState} from 'react';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {useSelector} from 'react-redux';
@@ -36,6 +37,8 @@ import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import {Dropdown} from 'react-native-element-dropdown';
 import {useBackgroundUpload} from '../../../providers/BackgroundUploadProvider';
 import {useScreen} from '../../../navigation/screenContext';
+import {createRef} from 'react';
+import Location from '../../../components/models/location';
 
 export default function PostDetail() {
   const Duration = [
@@ -107,9 +110,30 @@ export default function PostDetail() {
 
   const user = queryResult?.data?.user;
 
+  const {data: locationsData} = useQuery(
+    'location' + user?._id,
+    () =>
+      request.get('/user/location', {
+        params: {
+          id: user?._id,
+        },
+      }),
+    {
+      retry: 0,
+      enabled: !!user?._id,
+      refetchOnMount: true,
+      onSuccess: res => {
+        console.log('rr', res.data);
+        setLocations(res?.data?.locations);
+      },
+      onError: err => console.log('err ', err),
+    },
+  );
+
   const [isPhotoUploading, setisPhotoUploading] = useState(false);
   const [localUri, setlocalUri] = useState('');
   const [phone, setPhone] = useState();
+  const [locations, setLocations] = useState(locationsData?.data?.locations);
 
   const handleUpload = async (response, isImage) => {
     uploadData(
@@ -123,12 +147,8 @@ export default function PostDetail() {
 
   const onPressHome = async () => {
     const validationChef =
-      !postedData?.title ||
-      !postedData?.caption ||
-      // !postedData?.uri ||
-      !postedData.governorate ||
-      // || !postedData.areas.length
-      (!user?.phone && !phone);
+      !postedData?.title || !postedData?.caption || (!user?.phone && !phone);
+
     const validationUser = !postedData?.title || !postedData?.caption;
     const validation = user?.type === 'chef' ? validationChef : validationUser;
     if (validation) {
@@ -169,7 +189,7 @@ export default function PostDetail() {
           mediaIsEdited: postDataToBeEdited?.title && mediaIsEdited,
         };
     handleDataToBeSent(dataToBeSent);
-    handleEditUser(phone);
+    handleEditUser(phone, locations);
     setisFormFilled(true);
 
     setTimeout(() => {
@@ -193,6 +213,18 @@ export default function PostDetail() {
     } else {
       handleUpload(value, true);
     }
+  };
+
+  const locationSheetRef = createRef();
+  const [locationIndexToEdit, setlocationIndexToEdit] = useState();
+
+  const onPressLocation = () => locationSheetRef?.current.show();
+  const onEditLocation = index => {
+    locationSheetRef?.current.show();
+    setlocationIndexToEdit(index);
+  };
+  const onDeleteLocation = indexToDelete => {
+    setLocations(l => l.filter((_, index) => index !== indexToDelete));
   };
 
   const handleCaptureVideo = () =>
@@ -357,7 +389,8 @@ export default function PostDetail() {
                     textAlign={I18nManager.isRTL ? 'right' : 'left'}
                     value={`${
                       postedData?.duration?.split?.(' ')?.[0] !== 'undefined'
-                        ? postedData?.duration?.split?.(' ')?.[0]
+                        ? // postedData?.duration?.split?.(' ')?.[0] !== undefined
+                          postedData?.duration?.split?.(' ')?.[0]
                         : ''
                     }`}
                     multiline={true}
@@ -437,7 +470,7 @@ export default function PostDetail() {
                         borderColor: colors.bColor,
                         color: colors.textColor,
                       },
-                      // localStyles.smallInputContainerStyle,
+                      localStyles.smallInputContainerStyle,
                     ]}
                     inputBoxStyle={localStyles.inputBoxStyle}
                   />
@@ -464,10 +497,50 @@ export default function PostDetail() {
                   ]}
                   inputBoxStyle={localStyles.inputBoxStyle}
                 />
-                <DropdownGovr
-                  setpostedData={setpostedData}
-                  postedData={postedData}
-                />
+
+                <ZText style={{marginVertical: 5}} type={'B20'}>
+                  Branches
+                </ZText>
+                {(locations?.length === 0 || !locations) && (
+                  <View style={{flexDirection: 'row'}}>
+                    <ZText style={{marginVertical: 5, width: '70%'}}>
+                      You don't have branches, click on plus icon to add one.
+                    </ZText>
+                    <MaterialIcon
+                      name="plus"
+                      onPress={onPressLocation}
+                      size={moderateScale(25)}
+                      color={colors.primary}
+                    />
+                  </View>
+                )}
+                {locations?.map?.((item, index) => (
+                  <View style={{flexDirection: 'row'}}>
+                    <ZText style={{marginVertical: 5, width: '70%'}}>
+                      {index + 1}- {item.description}
+                    </ZText>
+                    <MaterialIcon
+                      name="pencil-box"
+                      size={moderateScale(25)}
+                      onPress={() => onEditLocation(index)}
+                      color={colors.primary}
+                    />
+                    <MaterialIcon
+                      name="delete"
+                      onPress={() => onDeleteLocation(index)}
+                      size={moderateScale(25)}
+                      color={colors.primary}
+                    />
+                    {index === locations.length - 1 && (
+                      <MaterialIcon
+                        name="plus"
+                        onPress={onPressLocation}
+                        size={moderateScale(25)}
+                        color={colors.primary}
+                      />
+                    )}
+                  </View>
+                ))}
               </>
             )}
           </>
@@ -535,6 +608,13 @@ export default function PostDetail() {
           )}
         </View>
       </KeyboardAwareScrollView>
+      <Location
+        locationIndexToEdit={locationIndexToEdit}
+        setlocationIndexToEdit={setlocationIndexToEdit}
+        setLocations={setLocations}
+        SheetRef={locationSheetRef}
+        locations={locations}
+      />
     </ZSafeAreaView>
   );
 }

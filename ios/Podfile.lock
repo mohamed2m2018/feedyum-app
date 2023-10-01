@@ -438,6 +438,8 @@ PODS:
     - React-Core
   - react-native-create-thumbnail (1.6.4):
     - React-Core
+  - react-native-geolocation (3.1.0):
+    - React-Core
   - react-native-onesignal (4.5.1):
     - OneSignalXCFramework (= 3.12.4)
     - React (< 1.0.0, >= 0.13.0)
@@ -538,6 +540,8 @@ PODS:
     - React-jsi (= 0.71.3)
     - React-logger (= 0.71.3)
     - React-perflogger (= 0.71.3)
+  - ReactNativeGetLocation (4.0.0):
+    - React-Core
   - ReactNativeLocalization (2.3.2):
     - React-Core
   - RNCAsyncStorage (1.19.1):
@@ -657,6 +661,7 @@ DEPENDENCIES:
   - "react-native-blur (from `../node_modules/@react-native-community/blur`)"
   - react-native-compressor (from `../node_modules/react-native-compressor`)
   - react-native-create-thumbnail (from `../node_modules/react-native-create-thumbnail`)
+  - "react-native-geolocation (from `../node_modules/@react-native-community/geolocation`)"
   - react-native-onesignal (from `../node_modules/react-native-onesignal`)
   - react-native-pager-view (from `../node_modules/react-native-pager-view`)
   - react-native-restart (from `../node_modules/react-native-restart`)
@@ -677,6 +682,7 @@ DEPENDENCIES:
   - React-RCTVibration (from `../node_modules/react-native/Libraries/Vibration`)
   - React-runtimeexecutor (from `../node_modules/react-native/ReactCommon/runtimeexecutor`)
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
+  - ReactNativeGetLocation (from `../node_modules/react-native-get-location`)
   - ReactNativeLocalization (from `../node_modules/react-native-localization`)
   - "RNCAsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
   - RNFastImage (from `../node_modules/react-native-fast-image`)
@@ -796,6 +802,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-compressor"
   react-native-create-thumbnail:
     :path: "../node_modules/react-native-create-thumbnail"
+  react-native-geolocation:
+    :path: "../node_modules/@react-native-community/geolocation"
   react-native-onesignal:
     :path: "../node_modules/react-native-onesignal"
   react-native-pager-view:
@@ -836,6 +844,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/runtimeexecutor"
   ReactCommon:
     :path: "../node_modules/react-native/ReactCommon"
+  ReactNativeGetLocation:
+    :path: "../node_modules/react-native-get-location"
   ReactNativeLocalization:
     :path: "../node_modules/react-native-localization"
   RNCAsyncStorage:
@@ -934,6 +944,7 @@ SPEC CHECKSUMS:
   react-native-blur: cfdad7b3c01d725ab62a8a729f42ea463998afa2
   react-native-compressor: 20af48e04a9b4c82992bcebd6e02dc04ab6be073
   react-native-create-thumbnail: e022bcdcba8a0b4529a50d3fa1a832ec921be39d
+  react-native-geolocation: ef66fb798d96284c6043f0b16c15d9d1d4955db4
   react-native-onesignal: 7bd44dbd031d8d57110c0203836ffc37ddead526
   react-native-pager-view: 0ccb8bf60e2ebd38b1f3669fa3650ecce81db2df
   react-native-restart: 7595693413fe3ca15893702f2c8306c62a708162
@@ -954,6 +965,7 @@ SPEC CHECKSUMS:
   React-RCTVibration: 5199a180d04873366a83855de55ac33ce60fe4d5
   React-runtimeexecutor: 7bf0dafc7b727d93c8cb94eb00a9d3753c446c3e
   ReactCommon: 5768a505f0bc7b798dc2becdd3ee6442224f796c
+  ReactNativeGetLocation: 87f83bee4dfecc88772de04afd076d9ae265cc42
   ReactNativeLocalization: fb171138cdc80d5d0d4f20243d2fc82c2b3cc48f
   RNCAsyncStorage: f47fe18526970a69c34b548883e1aeceb115e3e1
   RNFastImage: 5c9c9fed9c076e521b3f509fe79e790418a544e8

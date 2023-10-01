@@ -33,6 +33,7 @@ import strings from '../../../i18n/strings';
 import OneSignal from 'react-native-onesignal';
 import {ALERT_TYPE, Toast} from 'react-native-alert-notification';
 import ZLoader from '../../../components/common/ZLoader';
+import {useLocation} from '../../../navigation/locationContext';
 
 export default function ReelsComponent() {
   const [storyId, setStoryId] = useState();
@@ -56,6 +57,8 @@ export default function ReelsComponent() {
   const [selectedAreas, setSelectedAreas] = useState([]);
   const [selectedGov, setselectedGov] = useState('');
   const [queryClient] = React.useState(() => new QueryClient());
+
+  const location = useLocation();
 
   const {data} = useQuery('user', () => request.get('/user'), {retry: 1});
 
@@ -147,7 +150,7 @@ export default function ReelsComponent() {
 
   const fetchReels = page =>
     request.get(
-      `/story/stories?limit=10&page=${page}&userId=${data?.data?.user?._id}`,
+      `/story/stories?limit=10&page=${page}&userId=${data?.data?.user?._id}&lat=${location?.latitude}&long=${location?.longitude}`,
     );
   const {
     hasNextPage,
@@ -254,9 +257,8 @@ export default function ReelsComponent() {
     setStoryId(route.params?.storyId);
   }, [route.params]);
 
-  const onPressAvailableLocation = (gov, areas) => {
-    setSelectedAreas(areas);
-    setselectedGov(gov);
+  const onPressAvailableLocation = locations => {
+    setselectedGov(locations);
     locationSheetRef.current?.show();
   };
 

@@ -410,25 +410,20 @@ const ReelComponent = ({
                     </ZText>
                   </TouchableOpacity>
                 )}
-                {!!item?.governorate && (
-                  <TouchableOpacity
-                    onPress={() =>
-                      onPressAvailableLocation(item?.governorate, item?.areas)
-                    }
-                    style={styles.button}>
-                    <ZText
-                      type="m14"
-                      color={colors.primary}
-                      style={styles.mb10}>
-                      {/* {strings.checkLocations} */}
-                      {strings.dishAvailableIn}
-                      {''}
-                      {I18nManager.isRTL
-                        ? selected?.arabicValue
-                        : selected?.value}
-                    </ZText>
-                  </TouchableOpacity>
-                )}
+                <TouchableOpacity
+                  onPress={() => {
+                    onPressAvailableLocation(item?.author?.locations);
+                  }}
+                  style={styles.button}>
+                  <ZText type="m14" color={colors.primary} style={styles.mb10}>
+                    {/* {strings.checkLocations} */}
+                    {item?.kmAway
+                      ? 'Nearest branch ' +
+                        item?.kmAway?.toFixed(2) +
+                        ' KM away from you \nclick to see all branches'
+                      : 'Click to see all branches'}
+                  </ZText>
+                </TouchableOpacity>
                 {!item.avatarUri && (
                   <View
                     style={{

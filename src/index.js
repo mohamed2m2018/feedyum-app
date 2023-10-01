@@ -7,6 +7,7 @@ import {
   LogBox,
   I18nManager,
 } from 'react-native';
+import GetLocation from 'react-native-get-location';
 import strings from './i18n/strings';
 import {ScreenProvider} from './navigation/screenContext';
 import {useSelector} from 'react-redux';
@@ -20,6 +21,7 @@ import en from 'javascript-time-ago/locale/en';
 import ar from 'javascript-time-ago/locale/ar';
 import firebase from '@react-native-firebase/app';
 import {getAsyncStorageData} from './utils/helpers';
+import {LocationProvider} from './navigation/locationContext';
 
 const firebaseConfig = {
   apiKey:
@@ -75,6 +77,7 @@ const App = () => {
       });
     }
   };
+
   return (
     <View style={styles.flex}>
       <StatusBar
@@ -82,9 +85,11 @@ const App = () => {
       />
       <AlertNotificationRoot>
         <SheetProvider>
-          <ScreenProvider>
-            <AppNavigator />
-          </ScreenProvider>
+          <LocationProvider>
+            <ScreenProvider>
+              <AppNavigator />
+            </ScreenProvider>
+          </LocationProvider>
         </SheetProvider>
       </AlertNotificationRoot>
     </View>

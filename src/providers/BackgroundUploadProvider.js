@@ -140,10 +140,11 @@ export function BackgroundUploadProvider({children}) {
     seteditedData(data);
   };
 
-  const handleEditUser = phone => {
+  const handleEditUser = (phone, locations) => {
     request
       .patch('/user', {
         phone,
+        locations,
       })
       .then(async () => {
         await queryClient.invalidateQueries({queryKey: 'user'});
