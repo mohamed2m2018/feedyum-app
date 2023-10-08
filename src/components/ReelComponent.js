@@ -22,7 +22,7 @@ import request from '../api/request';
 import {useQueryClient} from 'react-query';
 import strings from '../i18n/strings';
 
-export default function ReelComponent({
+const ReelComponent = ({
   data = 0,
   isPlay = false,
   reelUrl = '',
@@ -32,7 +32,7 @@ export default function ReelComponent({
   item = {},
   isDeleteAllowed = false,
   setisLoadingSomething,
-}) {
+}) => {
   const colors = useSelector(state => state.theme.theme);
   const navigation = useNavigation();
   const queryClient = useQueryClient();
@@ -74,6 +74,8 @@ export default function ReelComponent({
       storyId: id,
       profile: profileId,
     });
+    queryClient.invalidateQueries('stories');
+    queryClient.invalidateQueries({queryKey: 'stories_following'});
   };
 
   return (
@@ -171,7 +173,9 @@ export default function ReelComponent({
       </View>
     </TouchableOpacity>
   );
-}
+};
+
+export default React.memo(ReelComponent);
 
 const localStyles = StyleSheet.create({
   postContainer: {

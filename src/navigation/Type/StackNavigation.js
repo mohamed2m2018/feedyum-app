@@ -1,46 +1,52 @@
 /* eslint-disable react/no-unstable-nested-components */
 import React from 'react';
+import {createStackNavigator, TransitionPresets} from '@react-navigation/stack';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {StackRoute} from '../NavigationRoutes';
 import {StackNav} from '../NavigationKeys';
+import {isAndroid} from '../../common/constants';
 
-const Stack = createNativeStackNavigator();
+const Stack = createStackNavigator();
+const AuthStack = createNativeStackNavigator();
 
 export default function StackNavigation() {
   // Auth Stack
   function AuthNavigation() {
     return (
-      <Stack.Navigator
+      <AuthStack.Navigator
         screenOptions={{
           headerShown: false,
         }}
         initialRouteName={StackNav.Login}>
-        <Stack.Screen
+        <AuthStack.Screen
           screenOptions={{
             headerShown: false,
           }}
           name={StackNav.Login}
           component={StackRoute.Login}
         />
-        <Stack.Screen
+        <AuthStack.Screen
           name={StackNav.Register}
           component={StackRoute.Register}
         />
-        <Stack.Screen
+        <AuthStack.Screen
           name={StackNav.SelectInterest}
           component={StackRoute.SelectInterest}
         />
 
-        <Stack.Screen name={StackNav.Gender} component={StackRoute.Gender} />
-        <Stack.Screen
+        <AuthStack.Screen
+          name={StackNav.Gender}
+          component={StackRoute.Gender}
+        />
+        <AuthStack.Screen
           name={StackNav.SetUpProfile}
           component={StackRoute.SetUpProfile}
         />
-        <Stack.Screen
+        <AuthStack.Screen
           name={StackNav.SetSecure}
           component={StackRoute.SetSecure}
         />
-        <Stack.Screen
+        <AuthStack.Screen
           name={StackNav.ForgotPassword}
           component={StackRoute.ForgotPassword}
         />
@@ -48,48 +54,51 @@ export default function StackNavigation() {
           name={StackNav.ForgotPasswordOtp}
           component={StackRoute.ForgotPasswordOtp}
         /> */}
-        <Stack.Screen
+        <AuthStack.Screen
           name={StackNav.CreateNewPassword}
           component={StackRoute.CreateNewPassword}
         />
-      </Stack.Navigator>
+      </AuthStack.Navigator>
     );
   }
 
   // Auth Stack
   function AuthNavigation2() {
     return (
-      <Stack.Navigator
+      <AuthStack.Navigator
         screenOptions={{
           headerShown: false,
         }}
         initialRouteName={StackNav.Register}>
-        <Stack.Screen
+        <AuthStack.Screen
           screenOptions={{
             headerShown: false,
           }}
           name={StackNav.Login}
           component={StackRoute.Login}
         />
-        <Stack.Screen
+        <AuthStack.Screen
           name={StackNav.Register}
           component={StackRoute.Register}
         />
-        <Stack.Screen
+        <AuthStack.Screen
           name={StackNav.SelectInterest}
           component={StackRoute.SelectInterest}
         />
 
-        <Stack.Screen name={StackNav.Gender} component={StackRoute.Gender} />
-        <Stack.Screen
+        <AuthStack.Screen
+          name={StackNav.Gender}
+          component={StackRoute.Gender}
+        />
+        <AuthStack.Screen
           name={StackNav.SetUpProfile}
           component={StackRoute.SetUpProfile}
         />
-        <Stack.Screen
+        <AuthStack.Screen
           name={StackNav.SetSecure}
           component={StackRoute.SetSecure}
         />
-        <Stack.Screen
+        <AuthStack.Screen
           name={StackNav.ForgotPassword}
           component={StackRoute.ForgotPassword}
         />
@@ -97,11 +106,11 @@ export default function StackNavigation() {
             name={StackNav.ForgotPasswordOtp}
             component={StackRoute.ForgotPasswordOtp}
           /> */}
-        <Stack.Screen
+        <AuthStack.Screen
           name={StackNav.CreateNewPassword}
           component={StackRoute.CreateNewPassword}
         />
-      </Stack.Navigator>
+      </AuthStack.Navigator>
     );
   }
 
@@ -110,7 +119,7 @@ export default function StackNavigation() {
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
-        mode: 'modal',
+        // mode: 'modal',
         transparentCard: true,
       }}
       initialRouteName={StackNav.Splash}>
@@ -144,6 +153,18 @@ export default function StackNavigation() {
       <Stack.Screen name={StackNav.Call} component={StackRoute.Call} />
       <Stack.Screen name={StackNav.Report} component={StackRoute.Report} />
       <Stack.Screen name={StackNav.Sound} component={StackRoute.Sound} />
+      <Stack.Group
+        screenOptions={{
+          presentation: 'modal',
+          gestureEnabled: true,
+          ...(isAndroid && TransitionPresets.ModalPresentationIOS),
+        }}>
+        <Stack.Screen
+          name={StackNav.locations}
+          component={StackRoute.Location}
+        />
+      </Stack.Group>
+
       <Stack.Screen
         name={StackNav.ManageAccount}
         component={StackRoute.ManageAccount}

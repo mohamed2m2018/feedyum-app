@@ -57,6 +57,7 @@ import FindFriends from '../containers/TabBar/profile/FindFriends';
 import Live from '../containers/TabBar/home/Live';
 import ForYou from '../containers/TabBar/home/ForYou';
 import FollowingTab from '../containers/TabBar/home/Following';
+import Location from '../components/models/location'
 
 export const TabRoute = {
   ForYou: ForYou,
@@ -94,6 +95,7 @@ export const StackRoute = {
   Chat,
   Call,
   Sound,
+  Location,
   Report,
   ProfileDetail,
   Suggested,

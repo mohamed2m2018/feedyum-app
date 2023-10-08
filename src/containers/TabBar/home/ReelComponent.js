@@ -38,7 +38,6 @@ import {useNavigation} from '@react-navigation/native';
 import {StackNav, TabNav} from '../../../navigation/NavigationKeys';
 import {AdView} from './ads/AdView';
 import DoubleClick from 'react-native-double-tap';
-import {governorates} from './DropDownGovr';
 
 const ReelComponent = ({
   item,
@@ -46,6 +45,7 @@ const ReelComponent = ({
   i: index,
   data,
   activeVideoIndex,
+  isloading,
   likeRef,
   onPressAvailableLocation,
   flatListRef,
@@ -212,7 +212,6 @@ const ReelComponent = ({
   const handleOnLoad = ({duration: durationToBeSet}) => {
     setDurationInSeconds(durationToBeSet);
     if (activeVideoIndex === index) {
-      // console.log('on load active video ', index);
       videoRef.current.seek(seekValueClick);
     } else {
       // console.log('on load not active video ', index);
@@ -224,10 +223,6 @@ const ReelComponent = ({
       setSeekValueClick(currentTime);
     }
   };
-
-  const selected = governorates.filter(
-    element => element.value === item?.governorate,
-  )?.[0];
 
   return (
     <>
@@ -303,7 +298,8 @@ const ReelComponent = ({
                     activeVideoIndex !== index ||
                     !isFocused ||
                     paused.paused ||
-                    paused.slider
+                    paused.slider ||
+                    isloading
                   }
                   useTextureView={true}
                 />
@@ -416,12 +412,11 @@ const ReelComponent = ({
                   }}
                   style={styles.button}>
                   <ZText type="m14" color={colors.primary} style={styles.mb10}>
-                    {/* {strings.checkLocations} */}
                     {item?.kmAway
-                      ? 'Nearest branch ' +
+                      ? strings.nearestBranch +
                         item?.kmAway?.toFixed(2) +
-                        ' KM away from you \nclick to see all branches'
-                      : 'Click to see all branches'}
+                        strings.kmAway
+                      : strings.clickbranches}
                   </ZText>
                 </TouchableOpacity>
                 {!item.avatarUri && (

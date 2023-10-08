@@ -3,6 +3,7 @@ import {NavigationContainer} from '@react-navigation/native';
 import StackNavigation from './Type/StackNavigation';
 import {useSelector} from 'react-redux';
 import {BackgroundUploadProvider} from '../providers/BackgroundUploadProvider';
+import {LocationProvider} from './locationContext';
 
 export default function pAppNavigator() {
   const color = useSelector(state => state.theme.theme);
@@ -13,7 +14,9 @@ export default function pAppNavigator() {
   return (
     <NavigationContainer theme={colors}>
       <BackgroundUploadProvider>
-        <StackNavigation />
+        <LocationProvider>
+          <StackNavigation />
+        </LocationProvider>
       </BackgroundUploadProvider>
     </NavigationContainer>
   );

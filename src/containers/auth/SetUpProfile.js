@@ -272,8 +272,10 @@ const SetUpProfile = props => {
         await queryClient.invalidateQueries({
           queryKey: 'location' + editUser?.data?.user?._id,
         });
+        queryClient.invalidateQueries({queryKey: 'stories_following'});
+        queryClient.invalidateQueries({queryKey: 'stories'});
 
-        navigation.navigate(TabNav.ForYou);
+        navigation.navigate(TabNav.Profile);
         setisUpdating(false);
       })
       .catch(err => {
@@ -293,10 +295,22 @@ const SetUpProfile = props => {
   const [locationIndexToEdit, setlocationIndexToEdit] = useState();
 
   const onPressProfilePic = () => ProfilePictureSheetRef?.current.show();
-  const onPressLocation = () => locationSheetRef?.current.show();
+  const onPressLocation = () => {
+    navigation.navigate(StackNav.locations, {
+      locationIndexToEdit,
+      setlocationIndexToEdit,
+      setLocations,
+      locations: locations,
+    });
+  };
   const onEditLocation = index => {
-    locationSheetRef?.current.show();
     setlocationIndexToEdit(index);
+    navigation.navigate(StackNav.locations, {
+      locationIndexToEdit: index,
+      setlocationIndexToEdit,
+      setLocations,
+      locations: locations,
+    });
   };
   const onDeleteLocation = indexToDelete => {
     setLocations(l => l.filter((_, index) => index !== indexToDelete));
@@ -401,12 +415,12 @@ const SetUpProfile = props => {
         {type !== 'user' && (
           <>
             <ZText style={{marginVertical: 5}} type={'B20'}>
-              Branches
+              {strings.branches}
             </ZText>
             {(locations?.length === 0 || !locations) && (
               <View style={{flexDirection: 'row'}}>
                 <ZText style={{marginVertical: 5, width: '70%'}}>
-                  You don't have branches, click on plus icon to add one.
+                  {strings.dontHaveBranches}
                 </ZText>
                 <MaterialIcon
                   name="plus"
@@ -417,9 +431,10 @@ const SetUpProfile = props => {
               </View>
             )}
             {locations?.map?.((item, index) => (
-              <View style={{flexDirection: 'row'}}>
-                <ZText style={{marginVertical: 5, width: '70%'}}>
-                  {index + 1}- {item.description}
+              <View key={index} style={{flexDirection: 'row'}}>
+                <ZText style={{marginVertical: 5}}>{index + 1}- </ZText>
+                <ZText style={{marginVertical: 5, width: '65%'}}>
+                  {item.description}
                 </ZText>
                 <MaterialIcon
                   name="pencil-box"
@@ -497,7 +512,6 @@ const SetUpProfile = props => {
         />
       ) : (
         <View style={localStyles.btnContainer}>
-          {console.log('kss', !locations.length && type !== 'user')}
           <ZButton
             title={strings.continue}
             textType={'b18'}
@@ -523,13 +537,6 @@ const SetUpProfile = props => {
         onPressCamera={onPressCamera}
         onPressGallery={onPressGallery}
         SheetRef={ProfilePictureSheetRef}
-      />
-      <Location
-        locationIndexToEdit={locationIndexToEdit}
-        setlocationIndexToEdit={setlocationIndexToEdit}
-        setLocations={setLocations}
-        SheetRef={locationSheetRef}
-        locations={locations}
       />
     </ZSafeAreaView>
   );

@@ -1,24 +1,25 @@
 // Library import
-import {StyleSheet, View} from 'react-native';
+import {BackHandler, StyleSheet, View} from 'react-native';
 import React from 'react';
 import {useSelector} from 'react-redux';
-import ActionSheet from 'react-native-actions-sheet';
 import {GooglePlacesAutocomplete} from 'react-native-google-places-autocomplete';
 
 // Custom import
 import {moderateScale} from '../../common/constants';
 import {styles} from '../../themes';
 import ZText from '../common/ZText';
-import ZButton from '../common/ZButton';
+import strings from '../../i18n/strings';
+import {
+  useFocusEffect,
+  useNavigation,
+  useRoute,
+} from '@react-navigation/native';
 
-const Location = props => {
-  const {
-    SheetRef,
-    setLocations,
-    locationIndexToEdit,
-    setlocationIndexToEdit,
-    locations,
-  } = props;
+const Location = () => {
+  const {params} = useRoute();
+  const {goBack} = useNavigation();
+  const {setLocations, locationIndexToEdit, setlocationIndexToEdit, locations} =
+    params;
   const colors = useSelector(state => state.theme.theme);
 
   const handleLocations = (data, details = null) => {
@@ -46,56 +47,80 @@ const Location = props => {
       setLocations(tempLocations);
       setlocationIndexToEdit(undefined);
     }
-    SheetRef.current.hide();
+    goBack();
   };
 
+  useFocusEffect(
+    React.useCallback(() => {
+      const onBackPress = () => {
+        setlocationIndexToEdit(undefined);
+      };
+
+      const subscription = BackHandler.addEventListener(
+        'hardwareBackPress',
+        onBackPress,
+      );
+
+      return () => subscription.remove();
+    }, [setlocationIndexToEdit]),
+  );
+
   return (
-    <ActionSheet
-      ref={SheetRef}
-      gestureEnabled={true}
-      indicatorStyle={{width: moderateScale(100)}}
-      containerStyle={[
-        localStyles.actionSheetContainer,
-        {backgroundColor: colors.backgroundColor},
-      ]}>
-      <ZText>{!locationIndexToEdit ? 'Add Location' : 'Edit Location'}</ZText>
+    <View
+      style={{
+        flex: 1,
+        alignItems: 'center',
+      }}>
+      <ZText type={'B26'} style={{marginTop: 5}} color={colors.textColor}>
+        {locationIndexToEdit === undefined
+          ? strings.addLocation
+          : strings.editLocation}
+      </ZText>
       <View style={localStyles.bottomContainer}>
         <GooglePlacesAutocomplete
-          placeholder="Search"
+          placeholder={strings.search}
           fetchDetails
-          styles={{width: '120%'}}
+          styles={{
+            textInput: {
+              color: 'black',
+            },
+            description: {color: 'black'},
+          }}
+          listUnderlayColor={'black'}
+          textInputProps={{
+            cursorColor: colors.primary,
+            autoFocus: true,
+          }}
           onPress={handleLocations}
           query={{
             key: '***REMOVED***',
             language: 'ar',
             components: 'country:eg',
+            type: ['address', 'region'],
           }}
         />
-        <ZButton onPress={() => SheetRef.current.hide()} title={'Submit'} />
       </View>
-    </ActionSheet>
+    </View>
   );
 };
 
 const localStyles = StyleSheet.create({
   actionSheetContainer: {
-    ...styles.p25,
-    height: 300,
+    backgroundColor: 'black',
+    flex: 1,
   },
   contextContainer: {
     ...styles.flexRow,
     ...styles.itemsCenter,
-    ...styles.mt20,
-    ...styles.p15,
+    backgroundColor: 'black',
     borderWidth: moderateScale(1),
     borderRadius: moderateScale(15),
   },
   bottomContainer: {
-    width: '120%',
     ...styles.selfCenter,
-    flex: 1,
-    paddingHorizontal: moderateScale(40),
     ...styles.mv30,
+    width: '90%',
+    flex: 1,
   },
 });
 

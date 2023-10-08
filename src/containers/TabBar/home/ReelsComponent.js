@@ -54,7 +54,6 @@ export default function ReelsComponent() {
   const flatListRef = useRef(null);
   const likeRef = useRef([]);
   const [selectedDescription, setselectedDescription] = useState('');
-  const [selectedAreas, setSelectedAreas] = useState([]);
   const [selectedGov, setselectedGov] = useState('');
   const [queryClient] = React.useState(() => new QueryClient());
 
@@ -350,11 +349,7 @@ export default function ReelsComponent() {
         SheetRef={descriptionSheetRef}
         description={selectedDescription}
       />
-      <Locations
-        SheetRef={locationSheetRef}
-        selectedAreas={selectedAreas}
-        selectedGov={selectedGov}
-      />
+      <Locations SheetRef={locationSheetRef} selectedGov={selectedGov} />
       {!adFailedToLoad && (
         <View style={localStyles.bannerContainer}>
           <BannerAd

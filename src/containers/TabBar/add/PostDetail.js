@@ -27,7 +27,7 @@ import {
   useNavigation,
   useRoute,
 } from '@react-navigation/native';
-import {TabNav} from '../../../navigation/NavigationKeys';
+import {StackNav, TabNav} from '../../../navigation/NavigationKeys';
 import {useQuery} from 'react-query';
 import request from '../../../api/request';
 import {ALERT_TYPE, Toast} from 'react-native-alert-notification';
@@ -145,6 +145,15 @@ export default function PostDetail() {
     );
   };
 
+  const onPressLocation = () => {
+    navigation.navigate(StackNav.locations, {
+      locationIndexToEdit,
+      setlocationIndexToEdit,
+      setLocations,
+      locations: locations,
+    });
+  };
+
   const onPressHome = async () => {
     const validationChef =
       !postedData?.title || !postedData?.caption || (!user?.phone && !phone);
@@ -215,13 +224,16 @@ export default function PostDetail() {
     }
   };
 
-  const locationSheetRef = createRef();
   const [locationIndexToEdit, setlocationIndexToEdit] = useState();
 
-  const onPressLocation = () => locationSheetRef?.current.show();
   const onEditLocation = index => {
-    locationSheetRef?.current.show();
     setlocationIndexToEdit(index);
+    navigation.navigate(StackNav.locations, {
+      locationIndexToEdit: index,
+      setlocationIndexToEdit,
+      setLocations,
+      locations: locations,
+    });
   };
   const onDeleteLocation = indexToDelete => {
     setLocations(l => l.filter((_, index) => index !== indexToDelete));
@@ -498,49 +510,53 @@ export default function PostDetail() {
                   inputBoxStyle={localStyles.inputBoxStyle}
                 />
 
-                <ZText style={{marginVertical: 5}} type={'B20'}>
-                  Branches
-                </ZText>
-                {(locations?.length === 0 || !locations) && (
-                  <View style={{flexDirection: 'row'}}>
-                    <ZText style={{marginVertical: 5, width: '70%'}}>
-                      You don't have branches, click on plus icon to add one.
+                {user?.type === 'chef' && (
+                  <>
+                    <ZText style={{marginVertical: 5}} type={'B20'}>
+                      {strings.branches}
                     </ZText>
-                    <MaterialIcon
-                      name="plus"
-                      onPress={onPressLocation}
-                      size={moderateScale(25)}
-                      color={colors.primary}
-                    />
-                  </View>
-                )}
-                {locations?.map?.((item, index) => (
-                  <View style={{flexDirection: 'row'}}>
-                    <ZText style={{marginVertical: 5, width: '70%'}}>
-                      {index + 1}- {item.description}
-                    </ZText>
-                    <MaterialIcon
-                      name="pencil-box"
-                      size={moderateScale(25)}
-                      onPress={() => onEditLocation(index)}
-                      color={colors.primary}
-                    />
-                    <MaterialIcon
-                      name="delete"
-                      onPress={() => onDeleteLocation(index)}
-                      size={moderateScale(25)}
-                      color={colors.primary}
-                    />
-                    {index === locations.length - 1 && (
-                      <MaterialIcon
-                        name="plus"
-                        onPress={onPressLocation}
-                        size={moderateScale(25)}
-                        color={colors.primary}
-                      />
+                    {(locations?.length === 0 || !locations) && (
+                      <View style={{flexDirection: 'row'}}>
+                        <ZText style={{marginVertical: 5, width: '70%'}}>
+                          {strings.dontHaveBranches}
+                        </ZText>
+                        <MaterialIcon
+                          name="plus"
+                          onPress={onPressLocation}
+                          size={moderateScale(25)}
+                          color={colors.primary}
+                        />
+                      </View>
                     )}
-                  </View>
-                ))}
+                    {locations?.map?.((item, index) => (
+                      <View style={{flexDirection: 'row'}}>
+                        <ZText style={{marginVertical: 5, width: '70%'}}>
+                          {index + 1}- {item.description}
+                        </ZText>
+                        <MaterialIcon
+                          name="pencil-box"
+                          size={moderateScale(25)}
+                          onPress={() => onEditLocation(index)}
+                          color={colors.primary}
+                        />
+                        <MaterialIcon
+                          name="delete"
+                          onPress={() => onDeleteLocation(index)}
+                          size={moderateScale(25)}
+                          color={colors.primary}
+                        />
+                        {index === locations.length - 1 && (
+                          <MaterialIcon
+                            name="plus"
+                            onPress={onPressLocation}
+                            size={moderateScale(25)}
+                            color={colors.primary}
+                          />
+                        )}
+                      </View>
+                    ))}
+                  </>
+                )}
               </>
             )}
           </>
@@ -608,13 +624,6 @@ export default function PostDetail() {
           )}
         </View>
       </KeyboardAwareScrollView>
-      <Location
-        locationIndexToEdit={locationIndexToEdit}
-        setlocationIndexToEdit={setlocationIndexToEdit}
-        setLocations={setLocations}
-        SheetRef={locationSheetRef}
-        locations={locations}
-      />
     </ZSafeAreaView>
   );
 }

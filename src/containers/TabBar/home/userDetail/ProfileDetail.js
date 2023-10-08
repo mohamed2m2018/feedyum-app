@@ -1,12 +1,14 @@
 // Library import
 import {
+  ActivityIndicator,
   FlatList,
   Image,
   StyleSheet,
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useState} from 'react';
+import Locations from '../../../../components/models/Locations';
+import React, {useRef, useState} from 'react';
 import {useSelector} from 'react-redux';
 import ZLoader from '../../../../components/common/ZLoader';
 
@@ -38,6 +40,9 @@ export default function ProfileDetail({navigation, route}) {
   const colors = useSelector(state => state.theme.theme);
   const queryClient = useQueryClient();
   const [modalVisible, setModalVisible] = useState(false);
+  const locationSheetRef = useRef('');
+  const [selectedGov, setselectedGov] = useState('');
+
   const {data: currentUserQuery} = useQuery(
     'user',
     () => request.get('/user'),
@@ -183,6 +188,11 @@ export default function ProfileDetail({navigation, route}) {
   };
 
   const user = data?.data?.user;
+
+  const onPressAvailableLocation = () => {
+    setselectedGov(data?.data?.user?.locations);
+    locationSheetRef.current?.show();
+  };
   return (
     <ZSafeAreaView>
       <ZHeader />
@@ -218,6 +228,23 @@ export default function ProfileDetail({navigation, route}) {
             )}
           </View>
         </View>
+        {user?.type === 'chef' && (
+          <ZButton
+            containerStyle={{
+              height: 40,
+              paddingHorizontal: 10,
+              alignSelf: 'center',
+              borderColor: colors.primary,
+              borderWidth: 1,
+              borderRadius: 10,
+            }}
+            bgColor={colors.tranparent}
+            textType={'m14'}
+            color={colors.primary}
+            onPress={onPressAvailableLocation}
+            title={strings.branches}
+          />
+        )}
         <View style={[styles.flexRow, styles.justifyEvenly]}>
           {UserDetailCategory(
             user?.postsNo || 0,
@@ -229,7 +256,7 @@ export default function ProfileDetail({navigation, route}) {
             <RenderUserDetail item={item} key={index} />
           ))}
         </View>
-        {!isLoading && !isFetchingUserDetailsFollowed && (
+        {!isLoading && !isFetchingUserDetailsFollowed ? (
           <View style={localStyles.editProfileContainer}>
             <ZButton
               title={!isFollow ? strings.follow : strings.unfollow}
@@ -245,6 +272,8 @@ export default function ProfileDetail({navigation, route}) {
               bgColor={colors.primary}
             />
           </View>
+        ) : (
+          <ActivityIndicator style={{margin: 5}} color={colors.primary} />
         )}
 
         <FlatList
@@ -291,6 +320,7 @@ export default function ProfileDetail({navigation, route}) {
         itemImage={<LikeIconModal style={styles.selfCenter} />}
         btnText={'Ok'}
       />
+      <Locations SheetRef={locationSheetRef} selectedGov={selectedGov} />
     </ZSafeAreaView>
   );
 }

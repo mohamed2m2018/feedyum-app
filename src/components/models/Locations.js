@@ -16,18 +16,19 @@ export default function Description({SheetRef, selectedGov}) {
         localStyles.actionSheetContainer,
         {backgroundColor: colors.backgroundColor},
       ]}
+      gestureEnabled
       overlayColor="transparent">
       <GestureHandlerRootView>
         <View style={localStyles.contentContainer}>
           <ScrollView
             showsVerticalScrollIndicator={false}
             contentContainerStyle={localStyles.content}>
-            <ZText style={{marginVertical: 5}} type="b18" align="center">
-              Branches
+            <ZText style={{marginBottom: 20}} type="b26" align="center">
+              {strings.branches}
             </ZText>
             <ZText type="b18" align="center" style={styles.mb20}>
               {(selectedGov?.length === 0 || !selectedGov) && (
-                <ZText>No Branches found!</ZText>
+                <ZText>{strings.nobranchesFound}</ZText>
               )}
               {selectedGov?.map?.(area => (
                 <>

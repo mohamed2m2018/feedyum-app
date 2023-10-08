@@ -122,6 +122,7 @@ export default function Profile({navigation}) {
     navigation.navigate(StackNav.SetUpProfile, {
       title: strings.editProfile,
       isEditBio,
+      type: user?.type
     });
   };
 
@@ -268,16 +269,6 @@ export default function Profile({navigation}) {
                         color={colors.primary}
                       />
                     </TouchableOpacity>
-                    <ZButton
-                      containerStyle={{
-                        height: 40,
-                        marginTop: 10,
-                        padding: 10,
-                        alignSelf: 'center',
-                      }}
-                      onPress={() => onPressEditProfile(false)}
-                      title={'Your Branches'}
-                    />
                   </View>
                 </View>
                 <View style={[styles.flexRow, styles.justifyEvenly]}>
@@ -303,15 +294,9 @@ export default function Profile({navigation}) {
                   bgColor={colors.tranparent}
                   frontIcon={<Inbox_Dark />}
                 />
-                {/* <View style={localStyles.mainContainer}>
-                {categoryData.map((item, index) => (
-                  <HeaderCategory item={item} key={index} />
-                ))}
-              </View> */}
               </>
             }
           />
-          {/* <SwitchAccont SheetRef={switchAccountRef} /> */}
         </View>
       )}
     </ZSafeAreaView>
