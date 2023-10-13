@@ -138,23 +138,25 @@ export default function ReelsComponentOne() {
   const renderReelComponent = useCallback(
     ({item, index}) => {
       return (
-        <ReelComponent
-          item={item}
-          i={index}
-          isFocused={isFocused}
-          layoutHeight={layoutHeight || screenHeight}
-          data={route?.params?.profile}
-          userId={route?.params?.profile?._id}
-          activeVideoIndex={activeVideoIndex}
-          likeRef={likeRef}
-          onPressAvailableLocation={onPressAvailableLocation}
-          flatListRef={flatListRef}
-          setExtraData={setExtraData}
-          setSelectedPostId={setSelectedPostId}
-          commentSheetRef={commentSheetRef}
-          setselectedDescription={setselectedDescription}
-          descriptionSheetRef={descriptionSheetRef}
-        />
+        <View style={{height: layoutHeight}}>
+          <ReelComponent
+            item={item}
+            i={index}
+            isFocused={isFocused}
+            layoutHeight={layoutHeight || screenHeight}
+            data={route?.params?.profile}
+            userId={route?.params?.profile?._id}
+            activeVideoIndex={activeVideoIndex}
+            likeRef={likeRef}
+            onPressAvailableLocation={onPressAvailableLocation}
+            flatListRef={flatListRef}
+            setExtraData={setExtraData}
+            setSelectedPostId={setSelectedPostId}
+            commentSheetRef={commentSheetRef}
+            setselectedDescription={setselectedDescription}
+            descriptionSheetRef={descriptionSheetRef}
+          />
+        </View>
       );
     },
     [layoutHeight, route?.params?.profile._id, activeVideoIndex, isFocused],

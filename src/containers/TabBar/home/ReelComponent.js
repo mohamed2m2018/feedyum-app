@@ -8,7 +8,7 @@ import {
   View,
 } from 'react-native';
 import strings from '../../../i18n/strings';
-import React, {useEffect, useMemo, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import dynamicLinks from '@react-native-firebase/dynamic-links';
 import {Image} from 'react-native';
 import {
@@ -117,7 +117,18 @@ const ReelComponent = ({
   const videoRef = useRef();
   const [durationInSeconds, setDurationInSeconds] = useState(0); // Added state for durationInSeconds
 
-  const [paused, setpaused] = useState({slider: false, paused: false});
+  const [paused, setpaused] = useState({slider: true, paused: true});
+
+  useEffect(() => {
+    if (layoutHeight) {
+      setTimeout(() => {
+        setpaused({
+          slider: false,
+          paused: false,
+        });
+      }, 1000);
+    }
+  }, [layoutHeight]);
 
   const generateDynamicLink = async postItem => {
     const link = await dynamicLinks().buildShortLink(
@@ -181,7 +192,7 @@ const ReelComponent = ({
       }, 10000); // 0.5 minute
       return () => clearTimeout(timeout);
     }
-  }, [isFocused, index, activeVideoIndex, flatListRef]);
+  }, [isFocused, index, activeVideoIndex, flatListRef, item.avatarUri]);
 
   const handlePressProfile = () =>
     onPressProfile(item?.channelName, item?.avatarUri, item?.author?._id);
@@ -209,14 +220,17 @@ const ReelComponent = ({
       'https://d1wfcrbbkg3bzd.cloudfront.net',
     );
 
-  const handleOnLoad = ({duration: durationToBeSet}) => {
-    setDurationInSeconds(durationToBeSet);
-    if (activeVideoIndex === index) {
-      videoRef.current.seek(seekValueClick);
-    } else {
-      // console.log('on load not active video ', index);
-    }
-  };
+  const handleOnLoad = useCallback(
+    ({duration: durationToBeSet}) => {
+      setDurationInSeconds(durationToBeSet);
+      if (activeVideoIndex === index) {
+        videoRef.current.seek(seekValueClick);
+      } else {
+        // console.log('on load not active video ', index);
+      }
+    },
+    [activeVideoIndex, index, seekValueClick],
+  );
 
   const onProgress = ({currentTime}) => {
     if ((!paused.slider || !paused.pause) && activeVideoIndex === index) {
@@ -229,7 +243,7 @@ const ReelComponent = ({
       {item?.type !== 'ad' && (
         <View
           style={{
-            height: layoutHeight,
+            flex: 1,
             backgroundColor: colors.backgroundColor,
           }}>
           <DoubleClick
@@ -365,21 +379,24 @@ const ReelComponent = ({
                     </ZText>
                   </View>
                 </View>
-                {duration[0] !== 'undefined' && (
+                {duration?.[0] !== 'undefined' && (
                   <ZText type="m12" color={colors.white}>
                     {`${
                       strings.canBeReceivedIn +
-                      duration[0] +
+                      duration?.[0] +
                       ' ' +
                       (I18nManager.isRTL
-                        ? duration[1] === 'Hours'
-                          ? duration[0] > 1
+                        ? duration?.[1] === 'Hours'
+                          ? duration?.[0] > 1
                             ? 'ساعات'
                             : 'ساعة'
-                          : duration[0] > 1
+                          : duration?.[0] > 1
                           ? 'ايام'
                           : 'يوم'
-                        : pluralize(duration[1], Number(duration[0])))
+                        : pluralize?.(
+                            duration?.[1] || '',
+                            Number(duration?.[0]),
+                          ))
                     }`}
                   </ZText>
                 )}
@@ -527,22 +544,17 @@ const ReelComponent = ({
                 />
               )}
             </View>
-            {/* {isBuffering && (
-              <View style={localStyles.bufferingIndicator}>
-                <ActivityIndicator size="large" color="gray" />
-              </View>
-            )} */}
           </DoubleClick>
         </View>
       )}
-      {item?.type === 'ad' && (
+      {/* {item?.type === 'ad' && (
         <AdView
           loadOnMount={false}
           layoutHeight={layoutHeight}
           type="video"
           media
         />
-      )}
+      )} */}
     </>
   );
 };

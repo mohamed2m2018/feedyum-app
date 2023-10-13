@@ -264,23 +264,25 @@ export default function ReelsComponent() {
   const renderReelComponent = useCallback(
     ({item, index}) => {
       return (
-        <ReelComponent
-          item={item}
-          i={index}
-          isFocused={isFocused}
-          layoutHeight={layoutHeight || screenHeight}
-          userId={data?.data?.user?._id}
-          data={data}
-          activeVideoIndex={activeVideoIndex}
-          likeRef={likeRef}
-          onPressAvailableLocation={onPressAvailableLocation}
-          flatListRef={flatListRef}
-          setExtraData={setExtraData}
-          setSelectedPostId={setSelectedPostId}
-          commentSheetRef={commentSheetRef}
-          setselectedDescription={setselectedDescription}
-          descriptionSheetRef={descriptionSheetRef}
-        />
+        <View style={{height: layoutHeight}}>
+          <ReelComponent
+            item={item}
+            i={index}
+            isFocused={isFocused}
+            layoutHeight={layoutHeight}
+            userId={data?.data?.user?._id}
+            data={data}
+            activeVideoIndex={activeVideoIndex}
+            likeRef={likeRef}
+            onPressAvailableLocation={onPressAvailableLocation}
+            flatListRef={flatListRef}
+            setExtraData={setExtraData}
+            setSelectedPostId={setSelectedPostId}
+            commentSheetRef={commentSheetRef}
+            setselectedDescription={setselectedDescription}
+            descriptionSheetRef={descriptionSheetRef}
+          />
+        </View>
       );
     },
     [layoutHeight, data, activeVideoIndex, isFocused],
@@ -342,7 +344,7 @@ export default function ReelsComponent() {
 
       <Comment
         SheetRef={commentSheetRef}
-        postId={selectedPostId}
+        postId={selectedPostId || filteredData?.[0]?._id}
         currentUserId={data?.data?.user?._id}
       />
       <Description

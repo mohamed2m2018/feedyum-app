@@ -1,8 +1,8 @@
-import {FlashList} from '@shopify/flash-list';
 import React from 'react';
-import {ActivityIndicator, FlatList, Platform, RefreshControl} from 'react-native';
+import {ActivityIndicator, Platform, RefreshControl} from 'react-native';
 import ZText from '../../../components/common/ZText';
 import ZLoader from '../../../components/common/ZLoader';
+import {FlashList} from '@shopify/flash-list';
 
 const ReelsList = ({
   filteredData,
@@ -24,7 +24,7 @@ const ReelsList = ({
   refetch,
 }) => {
   return (
-    <FlatList
+    <FlashList
       data={filteredData}
       extraData={extraData}
       keyExtractor={keyExtractor}
@@ -59,7 +59,7 @@ const ReelsList = ({
         )
       }
       ref={flatListRef}
-      estimatedItemSize={8}
+      estimatedItemSize={11}
       onEndReachedThreshold={0.4}
       onEndReached={hasNextPage ? fetchNextPage : null}
       ListFooterComponent={

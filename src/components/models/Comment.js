@@ -115,7 +115,7 @@ export default function Comment({SheetRef, postId}) {
     ['comments', postId],
     ({pageParam = 1}) => fetchCommentsByPostId(pageParam),
     {
-      skip: postId === undefined,
+      skip: !postId?.length,
       retry: false,
       getNextPageParam: (lastPage, allPages) => {
         const nextPage =

@@ -1,4 +1,4 @@
-import {StyleSheet, View, I18nManager} from 'react-native';
+import {StyleSheet, View} from 'react-native';
 import React from 'react';
 import ActionSheet from 'react-native-actions-sheet';
 import {useSelector} from 'react-redux';
@@ -6,7 +6,7 @@ import ZText from '../common/ZText';
 import {GestureHandlerRootView, ScrollView} from 'react-native-gesture-handler';
 import strings from '../../i18n/strings';
 
-export default function Description({SheetRef, selectedGov}) {
+export default function Locations({SheetRef, selectedGov}) {
   const colors = useSelector(state => state.theme.theme);
 
   return (
@@ -26,18 +26,15 @@ export default function Description({SheetRef, selectedGov}) {
             <ZText style={{marginBottom: 20}} type="b26" align="center">
               {strings.branches}
             </ZText>
-            <ZText type="b18" align="center" style={styles.mb20}>
+            <ZText type="b18" align="center">
               {(selectedGov?.length === 0 || !selectedGov) && (
                 <ZText>{strings.nobranchesFound}</ZText>
               )}
-              {selectedGov?.map?.(area => (
-                <>
-                  {/* <ZText>{index + 1}- </ZText> */}
-                  <ZText align={'left'} key={area?._id}>
-                    {area?.description}
-                    {'\n'} {'\n'}
-                  </ZText>
-                </>
+              {selectedGov?.map?.((area, index) => (
+                <ZText key={index} align={'left'}>
+                  {area?.description}
+                  {'\n'} {'\n'}
+                </ZText>
               ))}
             </ZText>
           </ScrollView>

@@ -1,12 +1,13 @@
 // Libraries import
-import {StyleSheet, TouchableOpacity, View, Platform} from 'react-native';
+import {StyleSheet, TouchableOpacity, View} from 'react-native';
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import Description from '../../../components/models/Descriptions';
 import Locations from '../../../components/models/Locations';
 import Comment from '../../../components/models/Comment';
 import {useSelector} from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {useIsFocused, useNavigation} from '@react-navigation/native';
+import dynamicLinks from '@react-native-firebase/dynamic-links';
+import {useIsFocused, useNavigation, useRoute} from '@react-navigation/native';
 
 // Local import
 import {styles} from '../../../themes';
@@ -15,50 +16,65 @@ import {
   isAndroid,
   moderateScale,
   screenFullHeight,
-  screenHeight,
 } from '../../../common/constants';
 import {TabNav} from '../../../navigation/NavigationKeys';
-import {useInfiniteQuery, useMutation, useQuery} from 'react-query';
+import {
+  QueryClient,
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+} from 'react-query';
 import ReelComponent from './ReelComponent';
 import request from '../../../api/request';
 import {BannerAd, BannerAdSize, TestIds} from 'react-native-google-mobile-ads';
 import ReelsList from './ReelsList';
 import strings from '../../../i18n/strings';
+import ZLoader from '../../../components/common/ZLoader';
+import {useLocation} from '../../../navigation/locationContext';
 
-export default function ReelsComponentFollowing() {
+export default function ReelsComponent() {
+  const [storyId, setStoryId] = useState();
   const colors = useSelector(state => state.theme.theme);
+  const isFocused = useIsFocused();
   const commentSheetRef = useRef('');
   const descriptionSheetRef = useRef('');
+  const [notificationReceived, setnotificationReceived] = useState(false);
   const [adFailedToLoad, setadFailedToLoad] = useState(false);
   const locationSheetRef = useRef('');
   const navigation = useNavigation();
+  const route = useRoute();
   const [activeVideoIndex, setActiveVideoIndex] = useState(0);
+  const [selectedPostId, setSelectedPostId] = useState();
   const [layoutHeight, setLayoutHeight] = useState(0);
   const [extraData, setExtraData] = useState(true);
-  const isFocused = useIsFocused();
-  const [filteredDataFollowing, setFilteredDataFollowing] = useState([]);
-  const flatListRefFollowing = useRef(null);
+  const [filteredData, setFilteredData] = useState([]);
+  const flatListRef = useRef(null);
   const likeRef = useRef([]);
   const [selectedDescription, setselectedDescription] = useState('');
-  const [selectedAreas, setSelectedAreas] = useState([]);
   const [selectedGov, setselectedGov] = useState('');
+  const [queryClient] = React.useState(() => new QueryClient());
+
+  const location = useLocation();
 
   const {data} = useQuery('user', () => request.get('/user'), {retry: 1});
+
+
   const fetchReelsFollowing = page =>
     request.get(
       `/story/following?limit=10&page=${page}&userId=${data?.data?.user?._id}`,
     );
   const {
-    hasNextPage: hasNextPageFollowin,
-    fetchNextPage: fetchNextPageFollowing,
-    isFetchingNextPage: isFetchingNextPageFollowing,
-    isLoading: isLoadingFollowing,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+    isLoading,
     refetch,
     isRefetching,
   } = useInfiniteQuery(
     ['stories_following', data?.data?.user?._id],
     ({pageParam = 1}) => fetchReelsFollowing(pageParam),
     {
+      retry: 0,
       getNextPageParam: (lastPage, allPages) => {
         const nextPage =
           lastPage?.data?.currentPage < lastPage?.data?.totalPages
@@ -66,72 +82,119 @@ export default function ReelsComponentFollowing() {
             : undefined;
         return nextPage;
       },
-      retry: 0,
       onSuccess: res => {
         if (res?.pageParams?.length === 1) {
-          flatListRefFollowing.current?.scrollToOffset({offset: 0});
+          flatListRef.current?.scrollToOffset({offset: 0});
         }
-        const result = res?.pages.flatMap(page =>
-          page.data?.stories?.length
-            ? [
-                ...(page.data?.stories || []),
-                {
-                  _id: 'ad' + page.data?.stories[-1]?._id + 1,
-                  type: 'ad',
-                },
-              ]
-            : [],
-        );
+        const result = res?.pages.flatMap(page => [
+          ...(page.data?.stories || []),
+          {
+            _id: 'ad' + page.data?.stories[-1]?._id + 1,
+            type: 'ad',
+          },
+        ]);
         if (result.length) {
-          setFilteredDataFollowing(result);
-        } else if (res?.pageParams?.length === 1) {
-          setFilteredDataFollowing([]);
+          setFilteredData(result);
         }
       },
-      onError: error =>
-        error?.nostories ? setFilteredDataFollowing([]) : null,
       refetchOnWindowFocus: false,
       refetchOnMount: false,
       enabled: !!data?.data?.user?._id,
-      refetchOnReconnect: true,
+      refetchOnReconnect: false,
     },
   );
 
+  const {refetch: refetchStory, isLoading: isLoadingStory} = useQuery(
+    ['storyById', storyId],
+    () =>
+      request.get(`/story/${storyId}`, {
+        params: {
+          userId: data?.data?.user?._id,
+        },
+      }),
+    {
+      enabled: !!storyId && !!filteredData?.length,
+      onSuccess: res => {
+        const filtered = filteredData?.filter(item => {
+          return res?.data?.story?._id !== item?._id;
+        });
+        if (filtered.length) {
+          setFilteredData([res?.data?.story, ...filtered]);
+        }
+        flatListRef.current?.scrollToOffset({offset: 0});
+        updateViewsMutation.mutate(res?.data?.story?._id);
+        setActiveVideoIndex(0);
+        setStoryId(null);
+      },
+    },
+  );
   useEffect(() => {
-    setExtraData(!extraData);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeVideoIndex, isFocused]);
+    setExtraData(e => !e);
+  }, [activeVideoIndex, isFocused, notificationReceived]);
 
   const onPressSearch = () => navigation.navigate(TabNav.Search);
 
-  const [selectedPostId, setSelectedPostId] = useState();
+  const handleDeepLink = link => {
+    // Handle dynamic link inside your own application
+    navigation.navigate(TabNav.ForYou);
+    const postId = link?.url?.split?.('/')?.pop();
+    setStoryId(postId);
 
-  const onPressAvailableLocation = (gov, areas) => {
-    setSelectedAreas(areas);
-    setselectedGov(gov);
+    queryClient.invalidateQueries({queryKey: 'user'});
+    queryClient.invalidateQueries({queryKey: 'profile-stories'});
+
+    setnotificationReceived(true);
+  };
+
+  useEffect(() => {
+    dynamicLinks()
+      .getInitialLink()
+      .then(link => {
+        handleDeepLink(link);
+      });
+  }, []);
+
+  const handleDynamicLink = link => {
+    handleDeepLink(link);
+  };
+
+  useEffect(() => {
+    const unsubscribe = dynamicLinks().onLink(handleDynamicLink);
+    // When the component is unmounted, remove the listener
+    return () => unsubscribe();
+  }, []);
+
+  React.useEffect(() => {
+    setStoryId(route.params?.storyId);
+  }, [route.params]);
+
+  const onPressAvailableLocation = locations => {
+    setselectedGov(locations);
     locationSheetRef.current?.show();
   };
 
   const renderReelComponent = useCallback(
     ({item, index}) => {
       return (
-        <ReelComponent
-          item={item}
-          i={index}
-          isFocused={isFocused}
-          layoutHeight={layoutHeight || screenHeight}
-          data={data}
-          userId={data?.data?.user?._id}
-          activeVideoIndex={activeVideoIndex}
-          likeRef={likeRef}
-          onPressAvailableLocation={onPressAvailableLocation}
-          flatListRef={flatListRefFollowing}
-          setExtraData={setExtraData}
-          setSelectedPostId={setSelectedPostId}
-          commentSheetRef={commentSheetRef}
-          setselectedDescription={setselectedDescription}
-          descriptionSheetRef={descriptionSheetRef}
-        />
+        <View style={{height: layoutHeight}}>
+          <ReelComponent
+            item={item}
+            i={index}
+            isFocused={isFocused}
+            layoutHeight={layoutHeight}
+            userId={data?.data?.user?._id}
+            data={data}
+            activeVideoIndex={activeVideoIndex}
+            likeRef={likeRef}
+            onPressAvailableLocation={onPressAvailableLocation}
+            flatListRef={flatListRef}
+            setExtraData={setExtraData}
+            setSelectedPostId={setSelectedPostId}
+            commentSheetRef={commentSheetRef}
+            setselectedDescription={setselectedDescription}
+            descriptionSheetRef={descriptionSheetRef}
+          />
+        </View>
       );
     },
     [layoutHeight, data, activeVideoIndex, isFocused],
@@ -139,28 +202,28 @@ export default function ReelsComponentFollowing() {
 
   const viewConfig = useRef({viewAreaCoveragePercentThreshold: 50}).current;
 
-  const updateViews = async storyId => {
+  const updateViews = async s =>
     request.post('/views', {
-      storyId,
+      storyId: s,
       userId: data?.data?.user?._id,
     });
-  };
 
   const updateViewsMutation = useMutation(updateViews);
 
   const viewableItemsChanged = useRef(({viewableItems}) => {
-    if (viewableItems?.length) {
+    if (viewableItems?.length && activeVideoIndex !== viewableItems[0].index) {
       setActiveVideoIndex(viewableItems[0].index);
       updateViewsMutation.mutate(viewableItems[0]?.item?._id);
     }
   }).current;
 
-  const keyExtractor = item => 'item-Following' + item?._id;
+  const keyExtractor = (item, index) => 'item-Following' + item?._id + index;
 
   const onSetLayout = e => setLayoutHeight(e.nativeEvent.layout.height);
 
   return (
     <View style={[localStyles.outerContainer, {color: colors.backgroundColor}]}>
+      {isLoadingStory && <ZLoader absolute height={100} top={300} />}
       <View style={localStyles.headerContainer}>
         <TouchableOpacity onPress={onPressSearch}>
           <Ionicons
@@ -171,39 +234,36 @@ export default function ReelsComponentFollowing() {
         </TouchableOpacity>
       </View>
       <ReelsList
-        filteredData={filteredDataFollowing}
+        filteredData={filteredData}
         extraData={extraData}
-        emptylistMessage={strings.noDishesYetFollow}
+        isRefetching={isRefetching}
+        refetch={refetch}
         user={data?.data?.user}
         keyExtractor={keyExtractor}
         renderReelComponent={renderReelComponent}
         viewConfig={viewConfig}
-        isRefetching={isRefetching}
-        refetch={refetch}
         viewableItemsChanged={viewableItemsChanged}
         layoutHeight={layoutHeight}
-        isLoading={isLoadingFollowing}
+        isLoading={isLoading}
+        setActiveVideoIndex={setActiveVideoIndex}
         onSetLayout={onSetLayout}
-        flatListRef={flatListRefFollowing}
-        isFetchingNextPage={isFetchingNextPageFollowing}
-        hasNextPage={hasNextPageFollowin}
-        fetchNextPage={fetchNextPageFollowing}
+        emptylistMessage={strings.noDishesYetForYou}
+        flatListRef={flatListRef}
+        isFetchingNextPage={isFetchingNextPage}
+        hasNextPage={hasNextPage}
+        fetchNextPage={fetchNextPage}
       />
 
       <Comment
         SheetRef={commentSheetRef}
-        postId={selectedPostId}
+        postId={selectedPostId || filteredData?.[0]?._id}
         currentUserId={data?.data?.user?._id}
       />
       <Description
         SheetRef={descriptionSheetRef}
         description={selectedDescription}
       />
-      <Locations
-        SheetRef={locationSheetRef}
-        selectedAreas={selectedAreas}
-        selectedGov={selectedGov}
-      />
+      <Locations SheetRef={locationSheetRef} selectedGov={selectedGov} />
       {!adFailedToLoad && (
         <View style={localStyles.bannerContainer}>
           <BannerAd
@@ -231,6 +291,7 @@ const localStyles = StyleSheet.create({
   bannerContainer: {
     alignItems: 'center',
     backgroundColor: 'transparent',
+    height: 50,
   },
   outerContainer: {
     flex: 1,
@@ -254,8 +315,8 @@ const localStyles = StyleSheet.create({
   headerContainer: {
     position: 'absolute',
     top: moderateScale(35),
-    right: 10,
     zIndex: 1,
+    right: 10,
     ...styles.ph20,
     // ...styles.flex,
     // marginTop: moderateScale(60),
