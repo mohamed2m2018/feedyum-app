@@ -224,7 +224,7 @@ const ReelComponent = ({
     ({duration: durationToBeSet}) => {
       setDurationInSeconds(durationToBeSet);
       if (activeVideoIndex === index) {
-        videoRef.current.seek(seekValueClick);
+        videoRef?.current?.seek?.(seekValueClick);
       } else {
         // console.log('on load not active video ', index);
       }
@@ -289,7 +289,7 @@ const ReelComponent = ({
                           index: index + 1,
                         });
                         setTimeout(() => {
-                          videoRef.current.seek(0);
+                          videoRef?.current?.seek?.(0);
                         }, 100);
                       }
                     }
