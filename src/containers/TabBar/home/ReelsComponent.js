@@ -297,7 +297,7 @@ export default function ReelsComponent() {
   const updateViewsMutation = useMutation(updateViews);
 
   const viewableItemsChanged = useRef(({viewableItems}) => {
-    if (viewableItems?.length && activeVideoIndex !== viewableItems[0].index) {
+    if (viewableItems?.length) {
       setActiveVideoIndex(viewableItems[0].index);
       updateViewsMutation.mutate(viewableItems[0]?.item?._id);
     }
