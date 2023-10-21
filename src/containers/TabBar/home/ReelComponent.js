@@ -547,14 +547,14 @@ const ReelComponent = ({
           </DoubleClick>
         </View>
       )}
-      {/* {item?.type === 'ad' && (
+      {item?.type === 'ad' && (
         <AdView
           loadOnMount={false}
           layoutHeight={layoutHeight}
           type="video"
           media
         />
-      )} */}
+      )}
     </>
   );
 };

@@ -16,7 +16,7 @@ import {MediaView} from './MediaView';
 import {Logger} from './utils';
 import {useSelector} from 'react-redux';
 import Typography from '../../../../themes/typography';
-import {getHeight, moderateScale} from '../../../../common/constants';
+import {getHeight, moderateScale, screenHeight} from '../../../../common/constants';
 
 export const AdView = React.memo(
   ({index, media, type, loadOnMount = true, layoutHeight}) => {
