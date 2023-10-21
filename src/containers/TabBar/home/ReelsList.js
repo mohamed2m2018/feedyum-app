@@ -3,6 +3,7 @@ import {ActivityIndicator, Platform, RefreshControl} from 'react-native';
 import ZText from '../../../components/common/ZText';
 import ZLoader from '../../../components/common/ZLoader';
 import {FlashList} from '@shopify/flash-list';
+import { screenHeight } from '../../../common/constants';
 
 const ReelsList = ({
   filteredData,
@@ -59,7 +60,7 @@ const ReelsList = ({
         )
       }
       ref={flatListRef}
-      estimatedItemSize={11}
+      estimatedItemSize={layoutHeight || screenHeight}
       onEndReachedThreshold={0.4}
       onEndReached={hasNextPage ? fetchNextPage : null}
       ListFooterComponent={

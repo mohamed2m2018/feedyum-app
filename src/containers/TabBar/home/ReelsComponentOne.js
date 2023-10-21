@@ -138,7 +138,6 @@ export default function ReelsComponentOne() {
   const renderReelComponent = useCallback(
     ({item, index}) => {
       return (
-        <View style={{height: layoutHeight}}>
           <ReelComponent
             item={item}
             i={index}
@@ -156,7 +155,6 @@ export default function ReelsComponentOne() {
             setselectedDescription={setselectedDescription}
             descriptionSheetRef={descriptionSheetRef}
           />
-        </View>
       );
     },
     [layoutHeight, route?.params?.profile._id, activeVideoIndex, isFocused],

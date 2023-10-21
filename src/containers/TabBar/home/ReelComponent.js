@@ -243,7 +243,7 @@ const ReelComponent = ({
       {item?.type !== 'ad' && (
         <View
           style={{
-            flex: 1,
+            height: layoutHeight,
             backgroundColor: colors.backgroundColor,
           }}>
           <DoubleClick
