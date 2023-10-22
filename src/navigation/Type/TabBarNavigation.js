@@ -69,6 +69,7 @@ export default function TabBarNavigation({navigation}) {
   return (
     <Tab.Navigator
       tabBarPosition="bottom"
+      
       sceneContainerStyle={{backgroundColor: colors.backgroundColor}}
       style={{
         backgroundColor: colors.backgroundColor,
@@ -90,6 +91,7 @@ export default function TabBarNavigation({navigation}) {
           },
         ],
         tabBarShowLabel: false,
+        
       }}
       freezeOnBlur={true}
       initialRouteName={TabNav.ForYou}>

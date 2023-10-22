@@ -149,7 +149,7 @@ export default function ReelsComponent() {
 
   const fetchReels = page =>
     request.get(
-      `/story/stories?limit=10&page=${page}&userId=${data?.data?.user?._id}&lat=${location?.latitude}&long=${location?.longitude}`,
+      `/story/stories?limit=5&page=${page}&userId=${data?.data?.user?._id}&lat=${location?.latitude}&long=${location?.longitude}`,
     );
   const {
     hasNextPage,
@@ -264,23 +264,23 @@ export default function ReelsComponent() {
   const renderReelComponent = useCallback(
     ({item, index}) => {
       return (
-          <ReelComponent
-            item={item}
-            i={index}
-            isFocused={isFocused}
-            layoutHeight={layoutHeight}
-            userId={data?.data?.user?._id}
-            data={data}
-            activeVideoIndex={activeVideoIndex}
-            likeRef={likeRef}
-            onPressAvailableLocation={onPressAvailableLocation}
-            flatListRef={flatListRef}
-            setExtraData={setExtraData}
-            setSelectedPostId={setSelectedPostId}
-            commentSheetRef={commentSheetRef}
-            setselectedDescription={setselectedDescription}
-            descriptionSheetRef={descriptionSheetRef}
-          />
+        <ReelComponent
+          item={item}
+          i={index}
+          isFocused={isFocused}
+          layoutHeight={layoutHeight}
+          userId={data?.data?.user?._id}
+          data={data}
+          activeVideoIndex={activeVideoIndex}
+          likeRef={likeRef}
+          onPressAvailableLocation={onPressAvailableLocation}
+          flatListRef={flatListRef}
+          setExtraData={setExtraData}
+          setSelectedPostId={setSelectedPostId}
+          commentSheetRef={commentSheetRef}
+          setselectedDescription={setselectedDescription}
+          descriptionSheetRef={descriptionSheetRef}
+        />
       );
     },
     [layoutHeight, data, activeVideoIndex, isFocused],
@@ -299,6 +299,8 @@ export default function ReelsComponent() {
   const viewableItemsChanged = useRef(({viewableItems}) => {
     if (viewableItems?.length) {
       setActiveVideoIndex(viewableItems[0].index);
+    }
+    if (viewableItems?.[0]?.index === activeVideoIndex) {
       updateViewsMutation.mutate(viewableItems[0]?.item?._id);
     }
   }).current;
@@ -331,6 +333,7 @@ export default function ReelsComponent() {
         viewableItemsChanged={viewableItemsChanged}
         layoutHeight={layoutHeight}
         isLoading={isLoading}
+        activeVideoIndex={activeVideoIndex}
         setActiveVideoIndex={setActiveVideoIndex}
         onSetLayout={onSetLayout}
         emptylistMessage={strings.noDishesYetForYou}

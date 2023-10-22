@@ -174,7 +174,7 @@ const ReelComponent = ({
     ['commentsCount' + item?._id],
     () => fetchCommentsCount(item?._id),
     {
-      skip: item?._id === undefined,
+      enabled: item?._id !== undefined && index === activeVideoIndex,
     },
   );
 

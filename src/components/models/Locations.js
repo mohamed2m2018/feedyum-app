@@ -33,6 +33,8 @@ export default function Locations({SheetRef, selectedGov}) {
               {selectedGov?.map?.((area, index) => (
                 <ZText key={index} align={'left'}>
                   {area?.description}
+                  {index !== selectedGov.length - 1 &&
+                    '\n' + '_____________________'}
                   {'\n'} {'\n'}
                 </ZText>
               ))}

@@ -3,7 +3,6 @@ import {ActivityIndicator, Platform, RefreshControl} from 'react-native';
 import ZText from '../../../components/common/ZText';
 import ZLoader from '../../../components/common/ZLoader';
 import {FlashList} from '@shopify/flash-list';
-import { screenHeight } from '../../../common/constants';
 
 const ReelsList = ({
   filteredData,
@@ -23,6 +22,7 @@ const ReelsList = ({
   emptylistMessage,
   isRefetching,
   refetch,
+  activeVideoIndex,
 }) => {
   return (
     <FlashList
@@ -62,7 +62,15 @@ const ReelsList = ({
       ref={flatListRef}
       estimatedItemSize={6}
       onEndReachedThreshold={0.4}
-      onEndReached={hasNextPage ? fetchNextPage : null}
+      onMomentumScrollBegin={
+        hasNextPage &&
+        !isLoading &&
+        !isRefetching &&
+        activeVideoIndex % 4 === 0 &&
+        activeVideoIndex !== 0
+          ? fetchNextPage
+          : null
+      }
       ListFooterComponent={
         isFetchingNextPage && (
           <ActivityIndicator size={'large'} color={'#FF4D67'} />

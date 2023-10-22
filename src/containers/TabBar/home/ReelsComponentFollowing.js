@@ -61,7 +61,7 @@ export default function ReelsComponent() {
 
   const fetchReelsFollowing = page =>
     request.get(
-      `/story/following?limit=10&page=${page}&userId=${data?.data?.user?._id}`,
+      `/story/following?limit=5&page=${page}&userId=${data?.data?.user?._id}`,
     );
   const {
     hasNextPage,
@@ -93,6 +93,9 @@ export default function ReelsComponent() {
             type: 'ad',
           },
         ]);
+        if(result.length === 1 && result[0]?._id?.includes("ad")){
+          return;
+        }
         if (result.length) {
           setFilteredData(result);
         }

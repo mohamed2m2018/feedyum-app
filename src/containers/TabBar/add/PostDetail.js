@@ -510,7 +510,7 @@ export default function PostDetail() {
                   inputBoxStyle={localStyles.inputBoxStyle}
                 />
 
-                {user?.type === 'chef' && (
+                {user?.type === 'chef' && !locationsData?.data?.locations?.length (
                   <>
                     <ZText style={{marginVertical: 5}} type={'B20'}>
                       {strings.branches}
