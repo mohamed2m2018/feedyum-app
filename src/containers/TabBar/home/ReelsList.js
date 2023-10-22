@@ -66,7 +66,7 @@ const ReelsList = ({
         hasNextPage &&
         !isLoading &&
         !isRefetching &&
-        activeVideoIndex % 4 === 0 &&
+        activeVideoIndex % 9 === 0 &&
         activeVideoIndex !== 0
           ? fetchNextPage
           : null

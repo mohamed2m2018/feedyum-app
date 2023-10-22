@@ -16,6 +16,7 @@ import {
   isAndroid,
   moderateScale,
   screenFullHeight,
+  screenHeight,
 } from '../../../common/constants';
 import ZButton from '../../../components/common/ZButton';
 import {useSelector} from 'react-redux';
@@ -239,11 +240,11 @@ const ReelComponent = ({
   };
 
   return (
-    <>
-      {item?.type !== 'ad' && (
+    <View>
+      {item?.type !== 'ad' ? (
         <View
           style={{
-            height: layoutHeight,
+            height: layoutHeight || screenHeight,
             backgroundColor: colors.backgroundColor,
           }}>
           <DoubleClick
@@ -546,16 +547,21 @@ const ReelComponent = ({
             </View>
           </DoubleClick>
         </View>
+      ) : (
+        <>
+          {item?.type === 'ad' &&
+            activeVideoIndex !== 0 &&
+            activeVideoIndex !== undefined && (
+              <AdView
+                loadOnMount={false}
+                layoutHeight={layoutHeight || screenHeight}
+                type="video"
+                media
+              />
+            )}
+        </>
       )}
-      {item?.type === 'ad' && (
-        <AdView
-          loadOnMount={false}
-          layoutHeight={layoutHeight}
-          type="video"
-          media
-        />
-      )}
-    </>
+    </View>
   );
 };
 

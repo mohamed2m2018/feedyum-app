@@ -149,7 +149,7 @@ export default function ReelsComponent() {
 
   const fetchReels = page =>
     request.get(
-      `/story/stories?limit=5&page=${page}&userId=${data?.data?.user?._id}&lat=${location?.latitude}&long=${location?.longitude}`,
+      `/story/stories?limit=10&page=${page}&userId=${data?.data?.user?._id}&lat=${location?.latitude}&long=${location?.longitude}`,
     );
   const {
     hasNextPage,

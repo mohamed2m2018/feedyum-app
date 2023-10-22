@@ -53,15 +53,11 @@ export default function ReelsComponent() {
   const [selectedDescription, setselectedDescription] = useState('');
   const [selectedGov, setselectedGov] = useState('');
   const [queryClient] = React.useState(() => new QueryClient());
-
-  const location = useLocation();
-
   const {data} = useQuery('user', () => request.get('/user'), {retry: 1});
-
 
   const fetchReelsFollowing = page =>
     request.get(
-      `/story/following?limit=5&page=${page}&userId=${data?.data?.user?._id}`,
+      `/story/following?limit=10s&page=${page}&userId=${data?.data?.user?._id}`,
     );
   const {
     hasNextPage,
@@ -93,7 +89,7 @@ export default function ReelsComponent() {
             type: 'ad',
           },
         ]);
-        if(result.length === 1 && result[0]?._id?.includes("ad")){
+        if (result.length === 1 && result[0]?._id?.includes('ad')) {
           return;
         }
         if (result.length) {
@@ -179,23 +175,23 @@ export default function ReelsComponent() {
   const renderReelComponent = useCallback(
     ({item, index}) => {
       return (
-          <ReelComponent
-            item={item}
-            i={index}
-            isFocused={isFocused}
-            layoutHeight={layoutHeight}
-            userId={data?.data?.user?._id}
-            data={data}
-            activeVideoIndex={activeVideoIndex}
-            likeRef={likeRef}
-            onPressAvailableLocation={onPressAvailableLocation}
-            flatListRef={flatListRef}
-            setExtraData={setExtraData}
-            setSelectedPostId={setSelectedPostId}
-            commentSheetRef={commentSheetRef}
-            setselectedDescription={setselectedDescription}
-            descriptionSheetRef={descriptionSheetRef}
-          />
+        <ReelComponent
+          item={item}
+          i={index}
+          isFocused={isFocused}
+          layoutHeight={layoutHeight}
+          userId={data?.data?.user?._id}
+          data={data}
+          activeVideoIndex={activeVideoIndex}
+          likeRef={likeRef}
+          onPressAvailableLocation={onPressAvailableLocation}
+          flatListRef={flatListRef}
+          setExtraData={setExtraData}
+          setSelectedPostId={setSelectedPostId}
+          commentSheetRef={commentSheetRef}
+          setselectedDescription={setselectedDescription}
+          descriptionSheetRef={descriptionSheetRef}
+        />
       );
     },
     [layoutHeight, data, activeVideoIndex, isFocused],
