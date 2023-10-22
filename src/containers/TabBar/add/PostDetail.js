@@ -400,7 +400,8 @@ export default function PostDetail() {
                     keyboardType="number-pad"
                     textAlign={I18nManager.isRTL ? 'right' : 'left'}
                     value={`${
-                      postedData?.duration?.split?.(' ')?.[0] !== 'undefined'
+                      postedData?.duration?.split?.(' ')?.[0] !== 'undefined' &&
+                      !!postedData?.duration?.split?.(' ')?.[0]
                         ? // postedData?.duration?.split?.(' ')?.[0] !== undefined
                           postedData?.duration?.split?.(' ')?.[0]
                         : ''
@@ -510,53 +511,54 @@ export default function PostDetail() {
                   inputBoxStyle={localStyles.inputBoxStyle}
                 />
 
-                {user?.type === 'chef' && !locationsData?.data?.locations?.length (
-                  <>
-                    <ZText style={{marginVertical: 5}} type={'B20'}>
-                      {strings.branches}
-                    </ZText>
-                    {(locations?.length === 0 || !locations) && (
-                      <View style={{flexDirection: 'row'}}>
-                        <ZText style={{marginVertical: 5, width: '70%'}}>
-                          {strings.dontHaveBranches}
-                        </ZText>
-                        <MaterialIcon
-                          name="plus"
-                          onPress={onPressLocation}
-                          size={moderateScale(25)}
-                          color={colors.primary}
-                        />
-                      </View>
-                    )}
-                    {locations?.map?.((item, index) => (
-                      <View style={{flexDirection: 'row'}}>
-                        <ZText style={{marginVertical: 5, width: '70%'}}>
-                          {index + 1}- {item.description}
-                        </ZText>
-                        <MaterialIcon
-                          name="pencil-box"
-                          size={moderateScale(25)}
-                          onPress={() => onEditLocation(index)}
-                          color={colors.primary}
-                        />
-                        <MaterialIcon
-                          name="delete"
-                          onPress={() => onDeleteLocation(index)}
-                          size={moderateScale(25)}
-                          color={colors.primary}
-                        />
-                        {index === locations.length - 1 && (
+                {user?.type === 'chef' &&
+                  !locationsData?.data?.locations?.length && (
+                    <>
+                      <ZText style={{marginVertical: 5}} type={'B20'}>
+                        {strings.branches}
+                      </ZText>
+                      {(locations?.length === 0 || !locations) && (
+                        <View style={{flexDirection: 'row'}}>
+                          <ZText style={{marginVertical: 5, width: '70%'}}>
+                            {strings.dontHaveBranches}
+                          </ZText>
                           <MaterialIcon
                             name="plus"
                             onPress={onPressLocation}
                             size={moderateScale(25)}
                             color={colors.primary}
                           />
-                        )}
-                      </View>
-                    ))}
-                  </>
-                )}
+                        </View>
+                      )}
+                      {locations?.map?.((item, index) => (
+                        <View style={{flexDirection: 'row'}}>
+                          <ZText style={{marginVertical: 5, width: '70%'}}>
+                            {index + 1}- {item.description}
+                          </ZText>
+                          <MaterialIcon
+                            name="pencil-box"
+                            size={moderateScale(25)}
+                            onPress={() => onEditLocation(index)}
+                            color={colors.primary}
+                          />
+                          <MaterialIcon
+                            name="delete"
+                            onPress={() => onDeleteLocation(index)}
+                            size={moderateScale(25)}
+                            color={colors.primary}
+                          />
+                          {index === locations.length - 1 && (
+                            <MaterialIcon
+                              name="plus"
+                              onPress={onPressLocation}
+                              size={moderateScale(25)}
+                              color={colors.primary}
+                            />
+                          )}
+                        </View>
+                      ))}
+                    </>
+                  )}
               </>
             )}
           </>
