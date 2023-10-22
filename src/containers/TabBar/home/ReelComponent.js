@@ -28,7 +28,7 @@ import images from '../../../assets/images';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Entypo from 'react-native-vector-icons/Entypo';
 import request from '../../../api/request';
-import {useMutation, useQuery} from 'react-query';
+import {useMutation, useQuery, useQueryClient} from 'react-query';
 import millify from 'millify';
 import pluralize from 'pluralize';
 import Video from 'react-native-video';
@@ -50,6 +50,7 @@ const ReelComponent = ({
   likeRef,
   onPressAvailableLocation,
   flatListRef,
+  isFromReelsOne,
   setSelectedPostId,
   commentSheetRef,
   setselectedDescription,
@@ -58,6 +59,7 @@ const ReelComponent = ({
 }) => {
   const colors = useSelector(state => state.theme.theme);
   const [indexState] = useState(index);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (indexState !== index) {
@@ -98,6 +100,10 @@ const ReelComponent = ({
       addLikeMutation.mutate(id);
     } else {
       removeLikeMutation.mutate(id);
+    }
+    if (isFromReelsOne) {
+      queryClient.invalidateQueries({queryKey: 'stories'});
+      queryClient.invalidateQueries({queryKey: 'stories_following'});
     }
   };
   const navigation = useNavigation();
