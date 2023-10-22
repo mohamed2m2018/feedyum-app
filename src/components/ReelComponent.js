@@ -74,8 +74,8 @@ const ReelComponent = ({
       storyId: id,
       profile: profileId,
     });
-    // queryClient.invalidateQueries('stories');
-    // queryClient.invalidateQueries({queryKey: 'stories_following'});
+    queryClient.invalidateQueries('stories');
+    queryClient.invalidateQueries({queryKey: 'stories_following'});
   };
 
   return (

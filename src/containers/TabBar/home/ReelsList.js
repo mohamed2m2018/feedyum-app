@@ -60,7 +60,7 @@ const ReelsList = ({
         )
       }
       ref={flatListRef}
-      estimatedItemSize={6}
+      estimatedItemSize={100}
       onEndReachedThreshold={0.4}
       onMomentumScrollBegin={
         hasNextPage &&

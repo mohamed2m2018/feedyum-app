@@ -12,6 +12,7 @@ import {styles} from '../themes';
 import {ImageBackground} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {StackNav} from '../navigation/NavigationKeys';
+import {useQueryClient} from 'react-query';
 
 export default function LiveComponent({
   reelUrl = '',
@@ -23,11 +24,16 @@ export default function LiveComponent({
   const colors = useSelector(state => state.theme.theme);
   const navigation = useNavigation();
 
-  const onPressReel = () =>
+  const queryClient = useQueryClient();
+
+  const onPressReel = () => {
     navigation.navigate(StackNav.reelsOne, {
       storyId: id,
       profile: userId,
     });
+    queryClient.invalidateQueries('stories');
+    queryClient.invalidateQueries({queryKey: 'stories_following'});
+  };
 
   return (
     <View style={localStyles.postContainer}>
