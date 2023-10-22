@@ -60,16 +60,10 @@ const ReelsList = ({
         )
       }
       ref={flatListRef}
-      estimatedItemSize={1000}
-      onEndReachedThreshold={0.4}
-      onMomentumScrollBegin={
-        hasNextPage &&
-        !isLoading &&
-        !isRefetching &&
-        activeVideoIndex % 9 === 0 &&
-        activeVideoIndex !== 0
-          ? fetchNextPage
-          : null
+      estimatedItemSize={700}
+      onEndReachedThreshold={0.8}
+      onEndReached={
+        hasNextPage && !isLoading && !isRefetching ? fetchNextPage : null
       }
       ListFooterComponent={
         isFetchingNextPage && (
