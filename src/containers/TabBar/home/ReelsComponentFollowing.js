@@ -133,36 +133,6 @@ export default function ReelsComponent() {
 
   const onPressSearch = () => navigation.navigate(TabNav.Search);
 
-  const handleDeepLink = link => {
-    // Handle dynamic link inside your own application
-    navigation.navigate(TabNav.ForYou);
-    const postId = link?.url?.split?.('/')?.pop();
-    setStoryId(postId);
-
-    queryClient.invalidateQueries({queryKey: 'user'});
-    queryClient.invalidateQueries({queryKey: 'profile-stories'});
-
-    setnotificationReceived(true);
-  };
-
-  useEffect(() => {
-    dynamicLinks()
-      .getInitialLink()
-      .then(link => {
-        handleDeepLink(link);
-      });
-  }, []);
-
-  const handleDynamicLink = link => {
-    handleDeepLink(link);
-  };
-
-  useEffect(() => {
-    const unsubscribe = dynamicLinks().onLink(handleDynamicLink);
-    // When the component is unmounted, remove the listener
-    return () => unsubscribe();
-  }, []);
-
   React.useEffect(() => {
     setStoryId(route.params?.storyId);
   }, [route.params]);
