@@ -123,7 +123,6 @@ export default function PostDetail() {
       enabled: !!user?._id,
       refetchOnMount: true,
       onSuccess: res => {
-        console.log('rr', res.data);
         setLocations(res?.data?.locations);
       },
       onError: err => console.log('err ', err),
