@@ -6,7 +6,6 @@ import Locations from '../../../components/models/Locations';
 import Comment from '../../../components/models/Comment';
 import {useSelector} from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import dynamicLinks from '@react-native-firebase/dynamic-links';
 import {useIsFocused, useNavigation, useRoute} from '@react-navigation/native';
 
 // Local import
