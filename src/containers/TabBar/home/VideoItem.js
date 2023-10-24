@@ -33,7 +33,7 @@ export const VideoItem = ({
     } else {
       setisLiked(true);
       setlikesNoLocally(number => {
-        return (number ? number : 0) + 1;
+        return (number ? Number(number) : 0) + 1;
       });
     }
     onPress(id, isLiked);
