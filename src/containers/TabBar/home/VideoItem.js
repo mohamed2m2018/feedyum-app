@@ -29,7 +29,7 @@ export const VideoItem = ({
     }
     if (isLiked?._id || isLiked) {
       setisLiked(false);
-      setlikesNoLocally(number => number - 1);
+      setlikesNoLocally(number => Number(number) - 1);
     } else {
       setisLiked(true);
       setlikesNoLocally(number => {
