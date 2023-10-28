@@ -346,8 +346,8 @@ const ReelComponent = ({
                     <Image
                       resizeMode="cover"
                       source={
-                        item?.author?.avatar || data?.avatar
-                          ? {uri: item?.author?.avatar || data?.avatar}
+                        item?.author?.avatar
+                          ? {uri: item?.author?.avatar}
                           : colors.dark
                           ? images.userDark
                           : images.userLight

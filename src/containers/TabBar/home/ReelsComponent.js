@@ -16,7 +16,6 @@ import {
   isAndroid,
   moderateScale,
   screenFullHeight,
-  screenHeight,
 } from '../../../common/constants';
 import {TabNav} from '../../../navigation/NavigationKeys';
 import {
@@ -34,6 +33,7 @@ import OneSignal from 'react-native-onesignal';
 import {ALERT_TYPE, Toast} from 'react-native-alert-notification';
 import ZLoader from '../../../components/common/ZLoader';
 import {useLocation} from '../../../navigation/locationContext';
+import {getAsyncStorageData} from '../../../utils/helpers';
 
 export default function ReelsComponent() {
   const [storyId, setStoryId] = useState();
@@ -56,10 +56,19 @@ export default function ReelsComponent() {
   const [selectedDescription, setselectedDescription] = useState('');
   const [selectedGov, setselectedGov] = useState('');
   const [queryClient] = React.useState(() => new QueryClient());
+  const [user, setUser] = useState();
+  const getItem = async () => {
+    const storedUser = await getAsyncStorageData('user');
+    setUser(storedUser);
+  };
+
+  useEffect(() => {
+    if (!user) {
+      getItem();
+    }
+  }, [user]);
 
   const location = useLocation();
-
-  const {data} = useQuery('user', () => request.get('/user'), {retry: 1});
 
   React.useEffect(() => {
     // Handle notifications received while the app is in the foreground
@@ -149,7 +158,7 @@ export default function ReelsComponent() {
 
   const fetchReels = page =>
     request.get(
-      `/story/stories?limit=10&page=${page}&userId=${data?.data?.user?._id}&lat=${location?.latitude}&long=${location?.longitude}`,
+      `/story/stories?limit=10&page=${page}&userId=${user?._id}&lat=${location?.latitude}&long=${location?.longitude}`,
     );
   const {
     hasNextPage,
@@ -159,7 +168,7 @@ export default function ReelsComponent() {
     refetch,
     isRefetching,
   } = useInfiniteQuery(
-    ['stories', data?.data?.user?._id],
+    ['stories', user?._id],
     ({pageParam = 1}) => fetchReels(pageParam),
     {
       retry: 0,
@@ -187,7 +196,7 @@ export default function ReelsComponent() {
       },
       refetchOnWindowFocus: false,
       refetchOnMount: false,
-      enabled: !!data?.data?.user?._id,
+      enabled: !!user?._id,
       refetchOnReconnect: false,
     },
   );
@@ -197,7 +206,7 @@ export default function ReelsComponent() {
     () =>
       request.get(`/story/${storyId}`, {
         params: {
-          userId: data?.data?.user?._id,
+          userId: user?._id,
         },
       }),
     {
@@ -269,8 +278,8 @@ export default function ReelsComponent() {
           i={index}
           isFocused={isFocused}
           layoutHeight={layoutHeight}
-          userId={data?.data?.user?._id}
-          data={data}
+          userId={user?._id}
+          data={user}
           activeVideoIndex={activeVideoIndex}
           likeRef={likeRef}
           onPressAvailableLocation={onPressAvailableLocation}
@@ -283,7 +292,7 @@ export default function ReelsComponent() {
         />
       );
     },
-    [layoutHeight, data, activeVideoIndex, isFocused],
+    [layoutHeight, user, activeVideoIndex, isFocused],
   );
 
   const viewConfig = useRef({viewAreaCoveragePercentThreshold: 50}).current;
@@ -291,7 +300,7 @@ export default function ReelsComponent() {
   const updateViews = async s =>
     request.post('/views', {
       storyId: s,
-      userId: data?.data?.user?._id,
+      userId: user?._id,
     });
 
   const updateViewsMutation = useMutation(updateViews);
@@ -326,7 +335,7 @@ export default function ReelsComponent() {
         extraData={extraData}
         isRefetching={isRefetching}
         refetch={refetch}
-        user={data?.data?.user}
+        user={user}
         keyExtractor={keyExtractor}
         renderReelComponent={renderReelComponent}
         viewConfig={viewConfig}
@@ -346,7 +355,7 @@ export default function ReelsComponent() {
       <Comment
         SheetRef={commentSheetRef}
         postId={selectedPostId || filteredData?.[0]?._id}
-        currentUserId={data?.data?.user?._id}
+        currentUserId={user?._id}
       />
       <Description
         SheetRef={descriptionSheetRef}

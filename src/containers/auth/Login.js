@@ -67,6 +67,7 @@ const Login = ({navigation}) => {
         {
           onSuccess: async res => {
             await setAsyncStorageData(ACCESS_TOKEN, res?.data?.token);
+            await setAsyncStorageData('user', res?.data?.user);
             if (!request.defaults.headers.common.Authorization) {
               request.defaults.headers.common.Authorization = res?.data?.token;
             }
@@ -244,6 +245,7 @@ const Login = ({navigation}) => {
       {
         onSuccess: async res => {
           await setAsyncStorageData(ACCESS_TOKEN, res?.data?.token);
+          await setAsyncStorageData('user', res?.data?.user);
           if (!request.defaults.headers.common.Authorization) {
             request.defaults.headers.common.Authorization = res?.data?.token;
           }
