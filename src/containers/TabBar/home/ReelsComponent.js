@@ -76,7 +76,9 @@ export default function ReelsComponent() {
     OneSignal.setNotificationOpenedHandler(async notifReceivedEvent => {
       // Display or handle the notification as needed
       navigation.navigate(TabNav.ForYou);
-      setStoryId(notifReceivedEvent?.notification?.additionalData?._id);
+      setTimeout(() => {
+        setStoryId(notifReceivedEvent?.notification?.additionalData?._id);
+      }, 300);
 
       queryClient.invalidateQueries({queryKey: 'user'});
       queryClient.invalidateQueries({queryKey: 'profile-stories'});
