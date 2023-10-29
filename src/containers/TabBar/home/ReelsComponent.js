@@ -191,16 +191,18 @@ export default function ReelsComponent() {
         if (res?.pageParams?.length === 1) {
           flatListRef.current?.scrollToOffset({offset: 0});
         }
-        if (res?.pages?.[0]?.data === undefined) {
+        if (!res?.pages?.[0]?.data) {
           return;
         }
         const result = res?.pages.flatMap(page => [
           ...(page.data?.stories || []),
-          {
-            _id: 'ad' + page.data?.stories[-1]?._id + 1,
-            type: 'ad',
-          },
         ]);
+        if (result?.[-1]?.type !== 'ad') {
+          result.push({
+            _id: 'ad' + result[-1]?._id + 1,
+            type: 'ad',
+          });
+        }
         if (result.length > 1) {
           setFilteredData(result);
         }
@@ -489,7 +491,7 @@ const localStyles = StyleSheet.create({
     position: 'absolute',
     top: moderateScale(35),
     zIndex: 1,
-    left: -10,
+    left: -5,
     ...styles.ph20,
     // ...styles.flex,
     // marginTop: moderateScale(60),
