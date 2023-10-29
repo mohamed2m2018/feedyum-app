@@ -52,6 +52,6 @@ const localStyles = StyleSheet.create({
     ...styles.center,
   },
   titleText: {
-    width: moderateScale(200),
+    width: moderateScale(300),
   },
 });

@@ -216,11 +216,14 @@ export default function ReelsComponent() {
   const {refetch: refetchStory, isLoading: isLoadingStory} = useQuery(
     ['storyById', storyId],
     () =>
-      request.get(`/story/${storyId}`, {
-        params: {
-          userId: user?._id,
+      request.get(
+        `/story/${storyId}?lat=${location?.latitude}&long=${location?.longitude}`,
+        {
+          params: {
+            userId: user?._id,
+          },
         },
-      }),
+      ),
     {
       enabled: !!storyId && !!filteredData?.length,
       onSuccess: res => {

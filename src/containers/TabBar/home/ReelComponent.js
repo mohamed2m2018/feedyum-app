@@ -430,19 +430,7 @@ const ReelComponent = ({
                     </ZText>
                   </TouchableOpacity>
                 )}
-                <TouchableOpacity
-                  onPress={() => {
-                    onPressAvailableLocation(item?.author?.locations);
-                  }}
-                  style={styles.button}>
-                  <ZText type="m14" color={colors.primary} style={styles.mb10}>
-                    {item?.kmAway
-                      ? strings.nearestBranch +
-                        item?.kmAway?.toFixed(2) +
-                        strings.kmAway
-                      : strings.clickbranches}
-                  </ZText>
-                </TouchableOpacity>
+
                 {!item.avatarUri && (
                   <View
                     style={{

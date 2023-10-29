@@ -27,6 +27,8 @@ import ReelsList from './ReelsList';
 import strings from '../../../i18n/strings';
 import ZHeader from '../../../components/common/ZHeader';
 import {SafeAreaView} from 'react-native-safe-area-context';
+import {useLocation} from '../../../navigation/locationContext';
+import ZButton from '../../../components/common/ZButton';
 
 export default function ReelsComponentOne() {
   const [storyId, setStoryId] = useState();
@@ -44,6 +46,7 @@ export default function ReelsComponentOne() {
   const [extraData, setExtraData] = useState(true);
   const [filteredData, setFilteredData] = useState([]);
   const [filteredDataNotSeen, setFilteredDataNotSeen] = useState([]);
+  const location = useLocation();
 
   const flatListRef = useRef(null);
   const likeRef = useRef([]);
@@ -53,7 +56,7 @@ export default function ReelsComponentOne() {
 
   const fetchReels = page =>
     request.get(
-      `/story/author?limit=10&page=${page}&id=${route.params?.profile?._id}`,
+      `/story/author?limit=10&page=${page}&id=${route.params?.profile?._id}&&lat=${location?.latitude}&long=${location?.longitude}`,
     );
   const {
     hasNextPage,
@@ -99,11 +102,14 @@ export default function ReelsComponentOne() {
   useQuery(
     ['storyById', storyId],
     () =>
-      request.get(`/story/${storyId}`, {
-        params: {
-          userId: route.params?.profile._id,
+      request.get(
+        `/story/${storyId}?lat=${location?.latitude}&long=${location?.longitude}`,
+        {
+          params: {
+            userId: route.params?.profile._id,
+          },
         },
-      }),
+      ),
     {
       enabled: !!filteredDataNotSeen?.length && !!storyId,
       onSuccess: res => {
@@ -199,6 +205,25 @@ export default function ReelsComponentOne() {
             }
           />
         </View>
+        {filteredData?.[activeVideoIndex]?.type !== 'ad' && (
+          <View style={localStyles.headerContainer3}>
+            <ZButton
+              onPress={() => {
+                onPressAvailableLocation(
+                  filteredData?.[activeVideoIndex]?.author?.locations,
+                );
+              }}
+              type="m14"
+              containerStyle={localStyles.buttonTag}
+              title={
+                filteredData?.[activeVideoIndex]?.kmAway
+                  ? filteredData?.[activeVideoIndex]?.kmAway?.toFixed(2) +
+                    strings.kmAway
+                  : strings.clickbranches
+              }
+            />
+          </View>
+        )}
         <View
           style={[localStyles.outerContainer, {color: colors.backgroundColor}]}>
           <ReelsList
@@ -289,6 +314,16 @@ const localStyles = StyleSheet.create({
     top: moderateScale(35),
     zIndex: 1,
     right: 10,
+    ...styles.ph20,
+    // ...styles.flex,
+    // marginTop: moderateScale(60),
+    ...styles.rowSpaceBetween,
+  },
+  headerContainer3: {
+    position: 'absolute',
+    top: moderateScale(65),
+    zIndex: 1,
+    right: -10,
     ...styles.ph20,
     // ...styles.flex,
     // marginTop: moderateScale(60),
@@ -388,6 +423,10 @@ const localStyles = StyleSheet.create({
     borderWidth: moderateScale(1),
     width: '100%',
     alignSelf: 'center',
+  },
+  buttonTag: {
+    height: 30,
+    paddingHorizontal: 10,
   },
   button: {
     backgroundColor: 'blue',
