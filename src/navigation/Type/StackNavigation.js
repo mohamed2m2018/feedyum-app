@@ -128,6 +128,17 @@ export default function StackNavigation() {
         options={{animation: 'none'}}
         component={StackRoute.Splash}
       />
+      <Stack.Group
+        screenOptions={{
+          presentation: 'modal',
+          gestureEnabled: true,
+          ...(isAndroid && TransitionPresets.ModalPresentationIOS),
+        }}>
+        <Stack.Screen
+          name={StackNav.SelectCategory}
+          component={StackRoute.SelectCategory}
+        />
+      </Stack.Group>
       <Stack.Screen
         name={StackNav.onBoarding}
         component={StackRoute.OnBoarding}

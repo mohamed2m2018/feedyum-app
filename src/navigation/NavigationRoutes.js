@@ -57,7 +57,8 @@ import FindFriends from '../containers/TabBar/profile/FindFriends';
 import Live from '../containers/TabBar/home/Live';
 import ForYou from '../containers/TabBar/home/ForYou';
 import FollowingTab from '../containers/TabBar/home/Following';
-import Location from '../components/models/location'
+import Location from '../components/models/location';
+import SelectCategory from '../containers/auth/selectCategory';
 
 export const TabRoute = {
   ForYou: ForYou,
@@ -121,4 +122,5 @@ export const StackRoute = {
   FindFriends,
   Live,
   ReelsComponentOne,
+  SelectCategory,
 };

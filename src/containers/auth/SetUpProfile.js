@@ -166,7 +166,6 @@ const SetUpProfile = props => {
         avatar: selectImage,
         bio,
         locations,
-        // categories,
       })
       .then(async res => {
         await setAsyncStorageData(ACCESS_TOKEN, res?.data?.token);

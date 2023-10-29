@@ -272,7 +272,6 @@ export function BackgroundUploadProvider({children}) {
               ...(isImage
                 ? {
                     avatarUri: secureUrlImage,
-                    category: 'Fast Food',
                     isImage: true,
                   }
                 : {
@@ -340,7 +339,6 @@ export function BackgroundUploadProvider({children}) {
                 ...prevData,
                 isImage,
                 uri: link,
-                category: 'Fast Food',
                 ...(isImage && imagePoster),
               }));
             });

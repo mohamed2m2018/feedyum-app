@@ -36,8 +36,8 @@ export default {
   validatePassword:
     'يجب أن تحتوي كلمة المرور على 8-40 حرفًا، وحرف كبير (A-Z) وحرف صغير (a-z) ورقم (0-9)، وحرف خاص ما عدا المسافة.',
   confirmPassValidString: 'كلمة المرور غير متطابقة.',
-  selectInterestDescription: 'اختر اهتماماتك واحصل على أفضل توصيات الفيديو.',
-  selectInterest: 'اختر الاهتمامات',
+  selectInterestDescription: 'اختر تصنيفات الاكل التي تحبذها',
+  selectInterest: 'اختر تصنيفات الاكل',
   tellUsYourSelf: 'أخبرنا عن نفسك',
   tellUsYourSelfDesc: 'اختر هويتك وساعدنا في العثور على محتوى دقيق لك.',
   whenIsYourBirthday: 'متى يوم ميلادك؟',
@@ -332,4 +332,6 @@ export default {
   inquireDish: 'الاستفسار حول هذا الطبق',
   editLocation: 'تعديل المكان',
   addLocation: 'اضافة مكان',
+  addCategory: 'اضافة تصنيف',
+  editCategory: 'تعديل تصنيف',
 };

@@ -29,9 +29,8 @@ export default {
   validatePassword:
     'Password must contain 8-40 characters,  1 Uppercase(A-Z), 1 lowercase (a-z), 1 number (0-9), and a special character except space.',
   confirmPassValidString: 'Password does not match.',
-  selectInterestDescription:
-    'Choose your interests and get the best video recommendations.',
-  selectInterest: 'Select Interest',
+  selectInterestDescription: 'Filter by categories you prefer',
+  selectInterest: 'Select Categories',
   tellUsYourSelf: 'Tell Us About Yourself',
   tellUsYourSelfDesc:
     'Choose your identity & help us to find accurate content for you.',
@@ -314,7 +313,7 @@ export default {
   errorOccured: 'Sorry, an error has occured',
   descriptionTooShort: 'Description is too short!',
   tooLargeTitle: 'The max number of letters for meal name is 30 characters',
-  pleaseFillAllInputs: 'Please fill all inputs',
+  pleaseFillAllInputs: 'Please fill all required inputs',
   dearGuest: 'Our Dear Guest',
   pleaseSignUp: 'Please signup or login to be able to take all actions',
   goToAuth: 'Register',
@@ -336,4 +335,6 @@ export default {
   userSwitchAccount: 'user account',
   chefSwitchAccount: 'chef account',
   inquireDish: 'Inquire About This Dish',
+  addCategory: 'Add Category',
+  editCategory: 'Edit Category',
 };

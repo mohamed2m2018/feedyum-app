@@ -32,13 +32,10 @@ import {useQuery} from 'react-query';
 import request from '../../../api/request';
 import {ALERT_TYPE, Toast} from 'react-native-alert-notification';
 import images from '../../../assets/images';
-import DropdownGovr from '../home/DropDownGovr';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import {Dropdown} from 'react-native-element-dropdown';
 import {useBackgroundUpload} from '../../../providers/BackgroundUploadProvider';
 import {useScreen} from '../../../navigation/screenContext';
-import {createRef} from 'react';
-import Location from '../../../components/models/location';
 
 export default function PostDetail() {
   const Duration = [
@@ -133,6 +130,27 @@ export default function PostDetail() {
   const [localUri, setlocalUri] = useState('');
   const [phone, setPhone] = useState();
   const [locations, setLocations] = useState(locationsData?.data?.locations);
+  const [categoryIds, setcategoryIds] = useState(
+    route.params?.postDataToBeEdited?.category?.map(item => item._id) || [],
+  );
+  const [categoryNames, setCategoryNames] = useState(
+    route.params?.postDataToBeEdited.category?.map(item => item.name) || [],
+  );
+  const onPressCategory = () => {
+    navigation.navigate(StackNav.SelectCategory, {
+      setcategoryIds,
+      categoryIds,
+      setCategoryNames,
+      categoryNames,
+    });
+  };
+
+  useEffect(() => {
+    setpostedData(currentState => ({
+      ...currentState,
+      category: categoryIds,
+    }));
+  }, [categoryIds]);
 
   const handleUpload = async (response, isImage) => {
     uploadData(
@@ -155,9 +173,14 @@ export default function PostDetail() {
 
   const onPressHome = async () => {
     const validationChef =
-      !postedData?.title || !postedData?.caption || (!user?.phone && !phone);
+      !postedData?.title ||
+      !postedData?.caption ||
+      (!user?.phone && !phone) ||
+      !locations.length ||
+      !postedData.category.length;
 
-    const validationUser = !postedData?.title || !postedData?.caption;
+    const validationUser =
+      !postedData?.title || !postedData?.caption || !postedData.category.length;
     const validation = user?.type === 'chef' ? validationChef : validationUser;
     if (validation) {
       Toast.show({
@@ -180,6 +203,15 @@ export default function PostDetail() {
         type: ALERT_TYPE.DANGER,
         title: strings.error,
         textBody: strings.tooLargeTitle,
+      });
+      return;
+    }
+
+    if (postedData.category?.length < 1) {
+      Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: strings.error,
+        textBody: 'Please select at least one category',
       });
       return;
     }
@@ -513,9 +545,10 @@ export default function PostDetail() {
                 {user?.type === 'chef' &&
                   !locationsData?.data?.locations?.length && (
                     <>
-                      <ZText style={{marginVertical: 5}} type={'B20'}>
+                      <ZText style={{marginVertical: 10}} type={'B20'}>
                         {strings.branches}
                       </ZText>
+
                       {(locations?.length === 0 || !locations) && (
                         <View style={{flexDirection: 'row'}}>
                           <ZText style={{marginVertical: 5, width: '70%'}}>
@@ -560,6 +593,35 @@ export default function PostDetail() {
                   )}
               </>
             )}
+            <View style={{flexDirection: 'row', marginVertical: 15}}>
+              <ZText type={'B20'}>
+                {categoryNames.length
+                  ? strings.editCategory
+                  : strings.addCategory}
+              </ZText>
+              {categoryNames.length ? (
+                <MaterialIcon
+                  name="pencil"
+                  onPress={onPressCategory}
+                  size={moderateScale(25)}
+                  color={colors.primary}
+                />
+              ) : (
+                <MaterialIcon
+                  name="plus"
+                  onPress={onPressCategory}
+                  size={moderateScale(25)}
+                  color={colors.primary}
+                />
+              )}
+            </View>
+            <View style={{flexDirection: 'row'}}>
+              {categoryNames.map((item, index) => (
+                <ZText key={item}>
+                  {index !== categoryNames.length - 1 ? item + ', ' : item}
+                </ZText>
+              ))}
+            </View>
           </>
         )}
         <View style={localStyles.btnContainer}>

@@ -6,6 +6,8 @@ import Locations from '../../../components/models/Locations';
 import Comment from '../../../components/models/Comment';
 import {useSelector} from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import AntDesign from 'react-native-vector-icons/AntDesign';
+
 import dynamicLinks from '@react-native-firebase/dynamic-links';
 import {useIsFocused, useNavigation, useRoute} from '@react-navigation/native';
 
@@ -17,7 +19,7 @@ import {
   moderateScale,
   screenFullHeight,
 } from '../../../common/constants';
-import {TabNav} from '../../../navigation/NavigationKeys';
+import {StackNav, TabNav} from '../../../navigation/NavigationKeys';
 import {
   QueryClient,
   useInfiniteQuery,
@@ -34,6 +36,7 @@ import {ALERT_TYPE, Toast} from 'react-native-alert-notification';
 import ZLoader from '../../../components/common/ZLoader';
 import {useLocation} from '../../../navigation/locationContext';
 import {getAsyncStorageData} from '../../../utils/helpers';
+import ZButton from '../../../components/common/ZButton';
 
 export default function ReelsComponent() {
   const [storyId, setStoryId] = useState();
@@ -56,6 +59,7 @@ export default function ReelsComponent() {
   const [selectedDescription, setselectedDescription] = useState('');
   const [selectedGov, setselectedGov] = useState('');
   const [queryClient] = React.useState(() => new QueryClient());
+  const [categoryIds, setcategoryIds] = useState([]);
   const [user, setUser] = useState();
   const getItem = async () => {
     const storedUser = await getAsyncStorageData('user');
@@ -160,8 +164,9 @@ export default function ReelsComponent() {
 
   const fetchReels = page =>
     request.get(
-      `/story/stories?limit=10&page=${page}&userId=${user?._id}&lat=${location?.latitude}&long=${location?.longitude}`,
+      `/story/stories?limit=10&page=${page}&userId=${user?._id}&lat=${location?.latitude}&long=${location?.longitude}&categoryIds=${categoryIds}`,
     );
+
   const {
     hasNextPage,
     fetchNextPage,
@@ -169,8 +174,9 @@ export default function ReelsComponent() {
     isLoading,
     refetch,
     isRefetching,
+    isFetching,
   } = useInfiniteQuery(
-    ['stories', user?._id],
+    ['stories', user?._id, categoryIds?.toLocaleString()],
     ({pageParam = 1}) => fetchReels(pageParam),
     {
       retry: 0,
@@ -185,6 +191,9 @@ export default function ReelsComponent() {
         if (res?.pageParams?.length === 1) {
           flatListRef.current?.scrollToOffset({offset: 0});
         }
+        if (res?.pages?.[0]?.data === undefined) {
+          return;
+        }
         const result = res?.pages.flatMap(page => [
           ...(page.data?.stories || []),
           {
@@ -192,12 +201,13 @@ export default function ReelsComponent() {
             type: 'ad',
           },
         ]);
-        if (result.length) {
+        if (result.length > 1) {
           setFilteredData(result);
         }
       },
       refetchOnWindowFocus: false,
       refetchOnMount: false,
+      // cacheTime: 0,
       enabled: !!user?._id,
       refetchOnReconnect: false,
     },
@@ -332,10 +342,27 @@ export default function ReelsComponent() {
           />
         </TouchableOpacity>
       </View>
+      <TouchableOpacity
+        onPress={() => {
+          navigation.navigate(StackNav.SelectCategory, {
+            setcategoryIds,
+            categoryIds,
+            setFilteredData: setFilteredData,
+          });
+        }}
+        style={localStyles.headerContainer2}>
+        <AntDesign
+          name="filter"
+          size={moderateScale(30)}
+          color={colors.white}
+        />
+      </TouchableOpacity>
+
       <ReelsList
         filteredData={filteredData}
         extraData={extraData}
         isRefetching={isRefetching}
+        isFetching={isFetching}
         refetch={refetch}
         user={user}
         keyExtractor={keyExtractor}
@@ -420,6 +447,13 @@ const localStyles = StyleSheet.create({
     ...styles.ph20,
     // ...styles.flex,
     // marginTop: moderateScale(60),
+    ...styles.rowSpaceBetween,
+  },
+  headerContainer2: {
+    position: 'absolute',
+    top: moderateScale(80),
+    zIndex: 1,
+    right: 30,
     ...styles.rowSpaceBetween,
   },
   headerInnerContainer: {
@@ -511,10 +545,11 @@ const localStyles = StyleSheet.create({
   }, // Style for the blur overlay
 
   buttonContainer: {
-    height: getHeight(50),
-    borderRadius: moderateScale(20),
+    height: getHeight(30),
+    borderRadius: moderateScale(10),
     borderWidth: moderateScale(1),
-    width: '100%',
+    paddingHorizontal: 8,
+    borderColor: 'transparent',
     alignSelf: 'center',
   },
   button: {

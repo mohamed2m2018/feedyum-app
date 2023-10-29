@@ -62,4 +62,5 @@ export const StackNav = {
   Live: 'Live',
   reelsOne: 'reelsOne',
   locations: 'locations',
+  SelectCategory: 'SelectCategory',
 };

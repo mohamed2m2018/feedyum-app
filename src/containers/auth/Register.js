@@ -275,7 +275,8 @@ const Register = ({navigation, route}) => {
       type: ALERT_TYPE.WARNING,
       onPressButtonOne: () => {
         Dialog.hide();
-        navigation.navigate(StackNav.SelectInterest, {
+        navigation.navigate(StackNav.SetUpProfile, {
+          title: strings.fillYourProfile,
           email,
           password,
           type: 'chef',
@@ -283,7 +284,8 @@ const Register = ({navigation, route}) => {
       },
       onPressButtonTwo: () => {
         Dialog.hide();
-        navigation.navigate(StackNav.SelectInterest, {
+        navigation.navigate(StackNav.SetUpProfile, {
+          title: strings.fillYourProfile,
           email,
           password,
           type: 'user',

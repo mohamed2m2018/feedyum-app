@@ -1,6 +1,11 @@
 // Library Imports
-import {StyleSheet, TouchableOpacity, View} from 'react-native';
-import React, {useState, useEffect} from 'react';
+import {
+  ActivityIndicator,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import React, {useState} from 'react';
 import {useSelector} from 'react-redux';
 
 // Local Imports
@@ -15,23 +20,27 @@ import ZButton from '../../components/common/ZButton';
 import {useRoute} from '@react-navigation/native';
 import request from '../../api/request';
 import {useQuery} from 'react-query';
-import Spinner from 'react-native-loading-spinner-overlay/lib';
 
 const SelectInterest = ({navigation}) => {
   const colors = useSelector(state => state.theme.theme);
   const [selectedChips, setSelectedChips] = useState([]);
   const [chips, setchips] = useState([]);
   const route = useRoute();
-  const {email, password, type} = route.params;
+  const {
+    email = '',
+    password = '',
+    type = '',
+  } = route.params || {email: '', password: '', type: ''};
 
   const {isLoading} = useQuery(
-    'user',
+    'categories',
     () => request.get('/categories').then(res => setchips(res.data)),
     {
       retry: 0,
     },
   );
 
+  // eslint-disable-next-line react/no-unstable-nested-components
   const RenderChips = ({item}) => {
     return (
       <TouchableOpacity
@@ -58,15 +67,7 @@ const SelectInterest = ({navigation}) => {
     }
   };
 
-  const onPressContinue = () => {
-    navigation.navigate(StackNav.SetUpProfile, {
-      title: strings.fillYourProfile,
-      email,
-      password,
-      type,
-      categories: selectedChips,
-    });
-  };
+  const onPressContinue = () => {};
 
   const InterestChips = () => {
     return chips.map(item => {
@@ -85,7 +86,7 @@ const SelectInterest = ({navigation}) => {
           <InterestChips />
         </View>
       </View>
-      <Spinner visible={isLoading} color={colors.primary} />
+      {isLoading && <ActivityIndicator color={colors.primary} />}
 
       <View style={localStyles.btnContainer}>
         <ZButton
