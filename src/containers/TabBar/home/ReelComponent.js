@@ -422,7 +422,7 @@ const ReelComponent = ({
                 {item?.caption?.length > 50 && (
                   <TouchableOpacity
                     onPress={() => onPressMore(item?.caption)}
-                    style={styles.button}>
+                    style={localStyles.button}>
                     <ZText type="m14" color={colors.primary}>
                       {item?.caption?.length < 50
                         ? ''
@@ -640,10 +640,8 @@ const localStyles = StyleSheet.create({
     alignSelf: 'center',
   },
   button: {
-    backgroundColor: 'blue',
-    padding: 10,
+    paddingBottom: 8,
     borderRadius: 5,
-    alignItems: 'center',
     justifyContent: 'center',
   },
   bold: {
