@@ -134,7 +134,9 @@ export default function PostDetail() {
     route.params?.postDataToBeEdited?.category?.map(item => item._id) || [],
   );
   const [categoryNames, setCategoryNames] = useState(
-    route.params?.postDataToBeEdited.category?.map(item => item.name) || [],
+    route.params?.postDataToBeEdited?.category?.map(item =>
+      I18nManager?.isRTL ? item?.nameArabic : item.name,
+    ) || [],
   );
   const onPressCategory = () => {
     navigation.navigate(StackNav.SelectCategory, {
