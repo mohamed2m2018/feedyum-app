@@ -333,6 +333,35 @@ export default function ReelsComponent() {
   return (
     <View style={[localStyles.outerContainer, {color: colors.backgroundColor}]}>
       {isLoadingStory && <ZLoader absolute height={100} top={300} />}
+      {filteredData?.[activeVideoIndex]?.type !== 'ad' && (
+        <View style={localStyles.headerContainer3}>
+          <ZButton
+            onPress={() => {
+              onPressAvailableLocation(
+                filteredData?.[activeVideoIndex]?.author?.locations,
+              );
+            }}
+            type="m14"
+            containerStyle={localStyles.buttonTag}
+            title={
+              filteredData?.[activeVideoIndex]?.kmAway
+                ? filteredData?.[activeVideoIndex]?.kmAway?.toFixed(2) +
+                  strings.kmAway
+                : strings.clickbranches
+            }
+          />
+        </View>
+      )}
+      {/* {filteredData?.[activeVideoIndex]?.type !== 'ad' && (
+        <View style={localStyles.headerContainer4}>
+          <ZButton
+            disabled={true}
+            type="m14"
+            containerStyle={localStyles.buttonTag}
+            title={filteredData?.[activeVideoIndex]?.category?.[0]?.name}
+          />
+        </View>
+      )} */}
       <View style={localStyles.headerContainer}>
         <TouchableOpacity onPress={onPressSearch}>
           <Ionicons
@@ -439,11 +468,35 @@ const localStyles = StyleSheet.create({
     ...styles.pr10,
     ...styles.pt15,
   },
+  buttonTag: {
+    height: 30,
+    paddingHorizontal: 10,
+  },
   headerContainer: {
     position: 'absolute',
     top: moderateScale(35),
     zIndex: 1,
     right: 10,
+    ...styles.ph20,
+    // ...styles.flex,
+    // marginTop: moderateScale(60),
+    ...styles.rowSpaceBetween,
+  },
+  headerContainer3: {
+    position: 'absolute',
+    top: moderateScale(35),
+    zIndex: 1,
+    left: -10,
+    ...styles.ph20,
+    // ...styles.flex,
+    // marginTop: moderateScale(60),
+    ...styles.rowSpaceBetween,
+  },
+  headerContainer4: {
+    position: 'absolute',
+    top: moderateScale(80),
+    zIndex: 1,
+    left: -10,
     ...styles.ph20,
     // ...styles.flex,
     // marginTop: moderateScale(60),

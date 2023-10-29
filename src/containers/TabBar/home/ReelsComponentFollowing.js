@@ -6,6 +6,7 @@ import Locations from '../../../components/models/Locations';
 import Comment from '../../../components/models/Comment';
 import {useSelector} from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import AntDesign from 'react-native-vector-icons/AntDesign';
 import {useIsFocused, useNavigation, useRoute} from '@react-navigation/native';
 
 // Local import
@@ -16,32 +17,25 @@ import {
   moderateScale,
   screenFullHeight,
 } from '../../../common/constants';
-import {TabNav} from '../../../navigation/NavigationKeys';
-import {
-  QueryClient,
-  useInfiniteQuery,
-  useMutation,
-  useQuery,
-} from 'react-query';
+import {StackNav, TabNav} from '../../../navigation/NavigationKeys';
+import {QueryClient, useInfiniteQuery, useMutation} from 'react-query';
 import ReelComponent from './ReelComponent';
 import request from '../../../api/request';
 import {BannerAd, BannerAdSize, TestIds} from 'react-native-google-mobile-ads';
 import ReelsList from './ReelsList';
 import strings from '../../../i18n/strings';
-import ZLoader from '../../../components/common/ZLoader';
 import {useLocation} from '../../../navigation/locationContext';
+import {getAsyncStorageData} from '../../../utils/helpers';
+import ZButton from '../../../components/common/ZButton';
 
 export default function ReelsComponent() {
-  const [storyId, setStoryId] = useState();
   const colors = useSelector(state => state.theme.theme);
   const isFocused = useIsFocused();
   const commentSheetRef = useRef('');
   const descriptionSheetRef = useRef('');
-  const [notificationReceived, setnotificationReceived] = useState(false);
   const [adFailedToLoad, setadFailedToLoad] = useState(false);
   const locationSheetRef = useRef('');
   const navigation = useNavigation();
-  const route = useRoute();
   const [activeVideoIndex, setActiveVideoIndex] = useState(0);
   const [selectedPostId, setSelectedPostId] = useState();
   const [layoutHeight, setLayoutHeight] = useState(0);
@@ -51,13 +45,26 @@ export default function ReelsComponent() {
   const likeRef = useRef([]);
   const [selectedDescription, setselectedDescription] = useState('');
   const [selectedGov, setselectedGov] = useState('');
-  const [queryClient] = React.useState(() => new QueryClient());
-  const {data} = useQuery('user', () => request.get('/user'), {retry: 1});
+  const [categoryIds, setcategoryIds] = useState([]);
+  const [user, setUser] = useState();
+  const getItem = async () => {
+    const storedUser = await getAsyncStorageData('user');
+    setUser(storedUser);
+  };
+
+  useEffect(() => {
+    if (!user) {
+      getItem();
+    }
+  }, [user]);
+
+  const location = useLocation();
 
   const fetchReelsFollowing = page =>
     request.get(
-      `/story/following?limit=10s&page=${page}&userId=${data?.data?.user?._id}`,
+      `/story/following?limit=10&page=${page}&userId=${user?._id}&lat=${location?.latitude}&long=${location?.longitude}&categoryIds=${categoryIds}`,
     );
+
   const {
     hasNextPage,
     fetchNextPage,
@@ -65,8 +72,9 @@ export default function ReelsComponent() {
     isLoading,
     refetch,
     isRefetching,
+    isFetching,
   } = useInfiniteQuery(
-    ['stories_following', data?.data?.user?._id],
+    ['stories_following', user?._id, categoryIds?.toLocaleString()],
     ({pageParam = 1}) => fetchReelsFollowing(pageParam),
     {
       retry: 0,
@@ -81,6 +89,9 @@ export default function ReelsComponent() {
         if (res?.pageParams?.length === 1) {
           flatListRef.current?.scrollToOffset({offset: 0});
         }
+        if (res?.pages?.[0]?.data === undefined) {
+          return;
+        }
         const result = res?.pages.flatMap(page => [
           ...(page.data?.stories || []),
           {
@@ -88,53 +99,22 @@ export default function ReelsComponent() {
             type: 'ad',
           },
         ]);
-        if (result.length === 1 && result[0]?._id?.includes('ad')) {
-          return;
-        }
-        if (result.length) {
+        if (result.length > 1) {
           setFilteredData(result);
         }
       },
       refetchOnWindowFocus: false,
       refetchOnMount: false,
-      enabled: !!data?.data?.user?._id,
+      enabled: !!user?._id,
       refetchOnReconnect: false,
     },
   );
 
-  const {refetch: refetchStory, isLoading: isLoadingStory} = useQuery(
-    ['storyById', storyId],
-    () =>
-      request.get(`/story/${storyId}`, {
-        params: {
-          userId: data?.data?.user?._id,
-        },
-      }),
-    {
-      enabled: !!storyId && !!filteredData?.length,
-      onSuccess: res => {
-        const filtered = filteredData?.filter(item => {
-          return res?.data?.story?._id !== item?._id;
-        });
-        if (filtered.length) {
-          setFilteredData([res?.data?.story, ...filtered]);
-        }
-        flatListRef.current?.scrollToOffset({offset: 0});
-        updateViewsMutation.mutate(res?.data?.story?._id);
-        setActiveVideoIndex(0);
-        setStoryId(null);
-      },
-    },
-  );
   useEffect(() => {
     setExtraData(e => !e);
-  }, [activeVideoIndex, isFocused, notificationReceived]);
+  }, [activeVideoIndex, isFocused]);
 
   const onPressSearch = () => navigation.navigate(TabNav.Search);
-
-  React.useEffect(() => {
-    setStoryId(route.params?.storyId);
-  }, [route.params]);
 
   const onPressAvailableLocation = locations => {
     setselectedGov(locations);
@@ -149,8 +129,8 @@ export default function ReelsComponent() {
           i={index}
           isFocused={isFocused}
           layoutHeight={layoutHeight}
-          userId={data?.data?.user?._id}
-          data={data}
+          userId={user?._id}
+          data={user}
           activeVideoIndex={activeVideoIndex}
           likeRef={likeRef}
           onPressAvailableLocation={onPressAvailableLocation}
@@ -163,7 +143,7 @@ export default function ReelsComponent() {
         />
       );
     },
-    [layoutHeight, data, activeVideoIndex, isFocused],
+    [layoutHeight, user, activeVideoIndex, isFocused],
   );
 
   const viewConfig = useRef({viewAreaCoveragePercentThreshold: 50}).current;
@@ -171,7 +151,7 @@ export default function ReelsComponent() {
   const updateViews = async s =>
     request.post('/views', {
       storyId: s,
-      userId: data?.data?.user?._id,
+      userId: user?._id,
     });
 
   const updateViewsMutation = useMutation(updateViews);
@@ -179,6 +159,8 @@ export default function ReelsComponent() {
   const viewableItemsChanged = useRef(({viewableItems}) => {
     if (viewableItems?.length) {
       setActiveVideoIndex(viewableItems[0].index);
+    }
+    if (viewableItems?.[0]?.index === activeVideoIndex) {
       updateViewsMutation.mutate(viewableItems[0]?.item?._id);
     }
   }).current;
@@ -189,7 +171,35 @@ export default function ReelsComponent() {
 
   return (
     <View style={[localStyles.outerContainer, {color: colors.backgroundColor}]}>
-      {isLoadingStory && <ZLoader absolute height={100} top={300} />}
+      {filteredData?.[activeVideoIndex]?.type !== 'ad' && (
+        <View style={localStyles.headerContainer3}>
+          <ZButton
+            onPress={() => {
+              onPressAvailableLocation(
+                filteredData?.[activeVideoIndex]?.author?.locations,
+              );
+            }}
+            type="m14"
+            containerStyle={localStyles.buttonTag}
+            title={
+              filteredData?.[activeVideoIndex]?.kmAway
+                ? filteredData?.[activeVideoIndex]?.kmAway?.toFixed(2) +
+                  strings.kmAway
+                : strings.clickbranches
+            }
+          />
+        </View>
+      )}
+      {/* {filteredData?.[activeVideoIndex]?.type !== 'ad' && (
+        <View style={localStyles.headerContainer4}>
+          <ZButton
+            disabled={true}
+            type="m14"
+            containerStyle={localStyles.buttonTag}
+            title={filteredData?.[activeVideoIndex]?.category?.[0]?.name}
+          />
+        </View>
+      )} */}
       <View style={localStyles.headerContainer}>
         <TouchableOpacity onPress={onPressSearch}>
           <Ionicons
@@ -199,18 +209,36 @@ export default function ReelsComponent() {
           />
         </TouchableOpacity>
       </View>
+      <TouchableOpacity
+        onPress={() => {
+          navigation.navigate(StackNav.SelectCategory, {
+            setcategoryIds,
+            categoryIds,
+            setFilteredData: setFilteredData,
+          });
+        }}
+        style={localStyles.headerContainer2}>
+        <AntDesign
+          name="filter"
+          size={moderateScale(30)}
+          color={colors.white}
+        />
+      </TouchableOpacity>
+
       <ReelsList
         filteredData={filteredData}
         extraData={extraData}
         isRefetching={isRefetching}
+        isFetching={isFetching}
         refetch={refetch}
-        user={data?.data?.user}
+        user={user}
         keyExtractor={keyExtractor}
         renderReelComponent={renderReelComponent}
         viewConfig={viewConfig}
         viewableItemsChanged={viewableItemsChanged}
         layoutHeight={layoutHeight}
         isLoading={isLoading}
+        activeVideoIndex={activeVideoIndex}
         setActiveVideoIndex={setActiveVideoIndex}
         onSetLayout={onSetLayout}
         emptylistMessage={strings.noDishesYetForYou}
@@ -223,7 +251,7 @@ export default function ReelsComponent() {
       <Comment
         SheetRef={commentSheetRef}
         postId={selectedPostId || filteredData?.[0]?._id}
-        currentUserId={data?.data?.user?._id}
+        currentUserId={user?._id}
       />
       <Description
         SheetRef={descriptionSheetRef}
@@ -278,6 +306,10 @@ const localStyles = StyleSheet.create({
     ...styles.pr10,
     ...styles.pt15,
   },
+  buttonTag: {
+    height: 30,
+    paddingHorizontal: 10,
+  },
   headerContainer: {
     position: 'absolute',
     top: moderateScale(35),
@@ -286,6 +318,33 @@ const localStyles = StyleSheet.create({
     ...styles.ph20,
     // ...styles.flex,
     // marginTop: moderateScale(60),
+    ...styles.rowSpaceBetween,
+  },
+  headerContainer3: {
+    position: 'absolute',
+    top: moderateScale(35),
+    zIndex: 1,
+    left: -10,
+    ...styles.ph20,
+    // ...styles.flex,
+    // marginTop: moderateScale(60),
+    ...styles.rowSpaceBetween,
+  },
+  headerContainer4: {
+    position: 'absolute',
+    top: moderateScale(80),
+    zIndex: 1,
+    left: -10,
+    ...styles.ph20,
+    // ...styles.flex,
+    // marginTop: moderateScale(60),
+    ...styles.rowSpaceBetween,
+  },
+  headerContainer2: {
+    position: 'absolute',
+    top: moderateScale(80),
+    zIndex: 1,
+    right: 30,
     ...styles.rowSpaceBetween,
   },
   headerInnerContainer: {
@@ -377,10 +436,11 @@ const localStyles = StyleSheet.create({
   }, // Style for the blur overlay
 
   buttonContainer: {
-    height: getHeight(50),
-    borderRadius: moderateScale(20),
+    height: getHeight(30),
+    borderRadius: moderateScale(10),
     borderWidth: moderateScale(1),
-    width: '100%',
+    paddingHorizontal: 8,
+    borderColor: 'transparent',
     alignSelf: 'center',
   },
   button: {
