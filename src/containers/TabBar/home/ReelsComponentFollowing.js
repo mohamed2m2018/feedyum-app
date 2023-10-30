@@ -92,6 +92,10 @@ export default function ReelsComponent() {
         if (res?.pages?.[0]?.data === undefined) {
           return;
         }
+        if (res?.pages?.[0]?.data?.stories?.length === 0) {
+          setFilteredData([]);
+          return;
+        }
         const result = res?.pages.flatMap(page => [
           ...(page.data?.stories || []),
           {

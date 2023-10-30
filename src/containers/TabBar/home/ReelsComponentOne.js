@@ -321,9 +321,9 @@ const localStyles = StyleSheet.create({
   },
   headerContainer3: {
     position: 'absolute',
-    top: moderateScale(65),
+    top: moderateScale(68),
     zIndex: 1,
-    right: -5,
+    left: 0,
     ...styles.ph20,
     // ...styles.flex,
     // marginTop: moderateScale(60),

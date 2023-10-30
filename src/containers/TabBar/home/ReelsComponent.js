@@ -197,6 +197,10 @@ export default function ReelsComponent() {
         const result = res?.pages.flatMap(page => [
           ...(page.data?.stories || []),
         ]);
+        if (res?.pages?.[0]?.data?.stories?.length === 0) {
+          setFilteredData([]);
+          return;
+        }
         if (result?.[-1]?.type !== 'ad') {
           result.push({
             _id: 'ad' + result[-1]?._id + 1,
