@@ -6,8 +6,8 @@ import Locations from '../../../components/models/Locations';
 import Comment from '../../../components/models/Comment';
 import {useSelector} from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import AntDesign from 'react-native-vector-icons/AntDesign';
-import {useIsFocused, useNavigation, useRoute} from '@react-navigation/native';
+import MaterialCommunityIcons from 'react-native-vector-icons/AntDesign';
+import {useIsFocused, useNavigation} from '@react-navigation/native';
 
 // Local import
 import {styles} from '../../../themes';
@@ -212,10 +212,10 @@ export default function ReelsComponent() {
           });
         }}
         style={localStyles.headerContainer2}>
-        <AntDesign
-          name="filter"
+        <MaterialCommunityIcons
+          name={categoryIds?.length ? 'filter-plus' : 'filter-outline'}
           size={moderateScale(30)}
-          color={colors.white}
+          color={categoryIds?.length ? colors.primary : colors.white}
         />
       </TouchableOpacity>
 
