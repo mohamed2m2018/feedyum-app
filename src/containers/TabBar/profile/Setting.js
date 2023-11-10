@@ -130,6 +130,7 @@ export default Setting = ({navigation}) => {
   const queryClient = useQueryClient();
   const {handleAuthToast} = useHandleAuth();
   const [_, setTheme] = useStorage(THEME);
+  const [__, setToken] = useStorage(ACCESS_TOKEN);
 
   const [isEnabled, setIsEnabled] = useState(!!color.dark);
 
@@ -172,7 +173,7 @@ export default Setting = ({navigation}) => {
 
   const onPressYesLogOut = async () => {
     try {
-      await AsyncStorage.removeItem(ACCESS_TOKEN);
+      setToken();
       LogOutSheetRef?.current?.hide();
       await queryClient.removeQueries();
       delete request.defaults.headers.common.Authorization;
