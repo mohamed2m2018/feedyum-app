@@ -35,8 +35,8 @@ import OneSignal from 'react-native-onesignal';
 import {ALERT_TYPE, Toast} from 'react-native-alert-notification';
 import ZLoader from '../../../components/common/ZLoader';
 import {useLocation} from '../../../navigation/locationContext';
-import {getAsyncStorageData} from '../../../utils/helpers';
 import ZButton from '../../../components/common/ZButton';
+import {useStorage} from '../../../utils/useStorage';
 
 export default function ReelsComponent() {
   const [storyId, setStoryId] = useState();
@@ -60,17 +60,7 @@ export default function ReelsComponent() {
   const [selectedGov, setselectedGov] = useState('');
   const [queryClient] = React.useState(() => new QueryClient());
   const [categoryIds, setcategoryIds] = useState([]);
-  const [user, setUser] = useState();
-  const getItem = async () => {
-    const storedUser = await getAsyncStorageData('user');
-    setUser(storedUser);
-  };
-
-  useEffect(() => {
-    if (!user) {
-      getItem();
-    }
-  }, [user]);
+  const [user] = useStorage('user');
 
   const location = useLocation();
 

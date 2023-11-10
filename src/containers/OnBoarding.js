@@ -16,12 +16,13 @@ import {
   moderateScale,
 } from '../common/constants';
 import {StackNav} from '../navigation/NavigationKeys';
-import {setAsyncStorageData} from '../utils/helpers';
 import ZButton from '../components/common/ZButton';
 import strings from '../i18n/strings';
+import {useStorage} from '../utils/useStorage';
 
 const OnBoarding = ({navigation}) => {
   const colors = useSelector(state => state.theme.theme);
+  const [_, setAppOpen] = useStorage(APP_OPEN_FIRST_TIME);
 
   const OnBoardingData = {
     tutorialText1: {
@@ -78,7 +79,7 @@ const OnBoarding = ({navigation}) => {
   };
 
   const onPressGetStarted = async () => {
-    await setAsyncStorageData(APP_OPEN_FIRST_TIME, 'firstTimeOpen');
+    setAppOpen('firstTimeOpen');
     navigation.reset({
       index: 0,
       routes: [{name: StackNav.Auth}],

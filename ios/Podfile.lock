@@ -180,6 +180,9 @@ PODS:
   - lottie-react-native (6.3.1):
     - lottie-ios (~> 4.3.0)
     - React-Core
+  - MMKV (1.2.13):
+    - MMKVCore (~> 1.2.13)
+  - MMKVCore (1.2.16)
   - nanopb (2.30909.0):
     - nanopb/decode (= 2.30909.0)
     - nanopb/encode (= 2.30909.0)
@@ -440,6 +443,9 @@ PODS:
     - React-Core
   - react-native-geolocation (3.1.0):
     - React-Core
+  - react-native-mmkv-storage (0.9.1):
+    - MMKV (= 1.2.13)
+    - React-Core
   - react-native-onesignal (4.5.1):
     - OneSignalXCFramework (= 3.12.4)
     - React (< 1.0.0, >= 0.13.0)
@@ -662,6 +668,7 @@ DEPENDENCIES:
   - react-native-compressor (from `../node_modules/react-native-compressor`)
   - react-native-create-thumbnail (from `../node_modules/react-native-create-thumbnail`)
   - "react-native-geolocation (from `../node_modules/@react-native-community/geolocation`)"
+  - react-native-mmkv-storage (from `../node_modules/react-native-mmkv-storage`)
   - react-native-onesignal (from `../node_modules/react-native-onesignal`)
   - react-native-pager-view (from `../node_modules/react-native-pager-view`)
   - react-native-restart (from `../node_modules/react-native-restart`)
@@ -729,6 +736,8 @@ SPEC REPOS:
     - GTMSessionFetcher
     - libevent
     - libwebp
+    - MMKV
+    - MMKVCore
     - nanopb
     - NextLevelSessionExporter
     - OneSignalXCFramework
@@ -804,6 +813,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-create-thumbnail"
   react-native-geolocation:
     :path: "../node_modules/@react-native-community/geolocation"
+  react-native-mmkv-storage:
+    :path: "../node_modules/react-native-mmkv-storage"
   react-native-onesignal:
     :path: "../node_modules/react-native-onesignal"
   react-native-pager-view:
@@ -917,6 +928,8 @@ SPEC CHECKSUMS:
   libwebp: 1786c9f4ff8a279e4dac1e8f385004d5fc253009
   lottie-ios: 6279047f1cc31b395e11f1fc24f3dab68cbf0df2
   lottie-react-native: c9f1db4f4124dcce9f8159e65d8dc6e8bcb11fb4
+  MMKV: aac95d817a100479445633f2b3ed8961b4ac5043
+  MMKVCore: 9cfef4c48c6c46f66226fc2e4634d78490206a48
   nanopb: b552cce312b6c8484180ef47159bc0f65a1f0431
   NextLevelSessionExporter: 4d8aa5e617f1c709724f2453efe5d4628480f65a
   OneSignalXCFramework: 087934ab0d4d7445fcf1c015c7c782359e26c020
@@ -945,6 +958,7 @@ SPEC CHECKSUMS:
   react-native-compressor: 20af48e04a9b4c82992bcebd6e02dc04ab6be073
   react-native-create-thumbnail: e022bcdcba8a0b4529a50d3fa1a832ec921be39d
   react-native-geolocation: ef66fb798d96284c6043f0b16c15d9d1d4955db4
+  react-native-mmkv-storage: cfb6854594cfdc5f7383a9e464bb025417d1721c
   react-native-onesignal: 7bd44dbd031d8d57110c0203836ffc37ddead526
   react-native-pager-view: 0ccb8bf60e2ebd38b1f3669fa3650ecce81db2df
   react-native-restart: 7595693413fe3ca15893702f2c8306c62a708162

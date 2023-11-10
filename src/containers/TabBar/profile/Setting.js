@@ -20,7 +20,6 @@ import {colors, styles} from '../../../themes';
 import {ACCESS_TOKEN, moderateScale, THEME} from '../../../common/constants';
 import ZText from '../../../components/common/ZText';
 import {changeThemeAction} from '../../../redux/action/themeAction';
-import {setAsyncStorageData} from '../../../utils/helpers';
 import {StackNav, TabNav} from '../../../navigation/NavigationKeys';
 import LogOut from '../../../components/models/LogOut';
 import {useQuery, useQueryClient} from 'react-query';
@@ -29,6 +28,7 @@ import {GoogleSignin} from '@react-native-google-signin/google-signin';
 import {useHandleAuth} from '../../../utils/useHandleAuth';
 import OneSignal from 'react-native-onesignal';
 import {ALERT_TYPE, Toast} from 'react-native-alert-notification';
+import {useStorage} from '../../../utils/useStorage';
 
 export default Setting = ({navigation}) => {
   const {data: user} = useQuery('user', () => request.get('/user'));
@@ -129,16 +129,17 @@ export default Setting = ({navigation}) => {
   const dispatch = useDispatch();
   const queryClient = useQueryClient();
   const {handleAuthToast} = useHandleAuth();
+  const [_, setTheme] = useStorage(THEME);
 
   const [isEnabled, setIsEnabled] = useState(!!color.dark);
 
   const onPressLightTheme = async () => {
-    await setAsyncStorageData(THEME, 'light');
+    setTheme('light');
     dispatch(changeThemeAction(colors.light));
   };
 
   const onPressDarkTheme = async () => {
-    await setAsyncStorageData(THEME, 'dark');
+    setTheme('dark');
     dispatch(changeThemeAction(colors.dark));
   };
 

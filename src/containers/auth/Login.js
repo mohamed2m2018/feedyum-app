@@ -17,7 +17,6 @@ import {StackNav} from '../../navigation/NavigationKeys';
 import ZInput from '../../components/common/ZInput';
 import {validateEmail, validatePassword} from '../../utils/validators';
 import ZKeyBoardAvoidWrapper from '../../components/common/ZKeyBoardAvoidWrapper';
-import {setAsyncStorageData} from '../../utils/helpers';
 import ZButton from '../../components/common/ZButton';
 import {useMutation} from 'react-query';
 import request from '../../api/request';
@@ -28,6 +27,7 @@ import {
   statusCodes,
 } from '@react-native-google-signin/google-signin';
 import ZHeader from '../../components/common/ZHeader';
+import {useStorage} from '../../utils/useStorage';
 
 const RenderSocialBtn = memo(({item, index}) => {
   return (
@@ -52,6 +52,9 @@ const RenderSocialBtn = memo(({item, index}) => {
 
 const Login = ({navigation}) => {
   const colors = useSelector(state => state.theme.theme);
+  const [_, setAccessToken] = useStorage(ACCESS_TOKEN);
+  const [__, setUser] = useStorage('user');
+  const [___, setLanguage] = useStorage('language');
 
   const onPressSignInWithGoogle = async () => {
     try {
@@ -66,8 +69,8 @@ const Login = ({navigation}) => {
         },
         {
           onSuccess: async res => {
-            await setAsyncStorageData(ACCESS_TOKEN, res?.data?.token);
-            await setAsyncStorageData('user', res?.data?.user);
+            setAccessToken(res?.data?.token);
+            setUser(res?.data?.user);
             if (!request.defaults.headers.common.Authorization) {
               request.defaults.headers.common.Authorization = res?.data?.token;
             }
@@ -244,8 +247,8 @@ const Login = ({navigation}) => {
       },
       {
         onSuccess: async res => {
-          await setAsyncStorageData(ACCESS_TOKEN, res?.data?.token);
-          await setAsyncStorageData('user', res?.data?.user);
+          setAccessToken(res?.data?.token);
+          setUser(res?.data?.user);
           if (!request.defaults.headers.common.Authorization) {
             request.defaults.headers.common.Authorization = res?.data?.token;
           }
@@ -259,13 +262,13 @@ const Login = ({navigation}) => {
   };
   const onPressPasswordEyeIcon = () => setIsPasswordVisible(!isPasswordVisible);
   const onPressEnglish = async () => {
-    await setAsyncStorageData('language', 'en');
+    setLanguage('en');
     await I18nManager.allowRTL(false);
     await I18nManager.forceRTL(false);
     RNRestart.restart();
   };
   const onPressArabic = async () => {
-    await setAsyncStorageData('language', 'ar');
+    setLanguage('ar');
     I18nManager.allowRTL(true);
     I18nManager.forceRTL(true);
     RNRestart.restart();

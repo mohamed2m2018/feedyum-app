@@ -19,10 +19,12 @@ import ZText from '../../../components/common/ZText';
 import {styles} from '../../../themes';
 import {moderateScale} from '../../../common/constants';
 import {changeLanguageAction} from '../../../redux/action/profileAction';
-import {getAsyncStorageData, setAsyncStorageData} from '../../../utils/helpers';
+import {useStorage} from '../../../utils/useStorage';
 
 const Language = ({navigation}) => {
   const colors = useSelector(state => state.theme.theme);
+  const [language, setLanguage] = useStorage('language');
+
   const dispatch = useDispatch();
   const [lang, setlang] = useState('en');
   const [isSelected, setIsSelected] = React.useState(
@@ -55,12 +57,12 @@ const Language = ({navigation}) => {
     dispatch(changeLanguageAction(item));
     setIsSelected(item);
     if (item === 'English') {
-      await setAsyncStorageData('language', 'en');
+      setLanguage('en');
       await I18nManager.allowRTL(false);
       await I18nManager.forceRTL(false);
       RNRestart.restart();
     } else {
-      await setAsyncStorageData('language', 'ar');
+      setLanguage('ar');
       I18nManager.allowRTL(true);
       I18nManager.forceRTL(true);
       RNRestart.restart();
@@ -69,12 +71,12 @@ const Language = ({navigation}) => {
 
   useEffect(() => {
     const getLanguage = async () => {
-      const l = await getAsyncStorageData('language');
+      const l = language;
       setlang(l);
       setIsSelected(l === 'en' || !l ? 'English' : 'العربية');
     };
     getLanguage();
-  }, []);
+  }, [language]);
 
   const RenderData = ({item}) => {
     return (

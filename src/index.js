@@ -11,7 +11,7 @@ import TimeAgo from 'javascript-time-ago';
 import en from 'javascript-time-ago/locale/en';
 import ar from 'javascript-time-ago/locale/ar';
 import firebase from '@react-native-firebase/app';
-import {getAsyncStorageData} from './utils/helpers';
+import {useStorage} from './utils/useStorage';
 
 const firebaseConfig = {
   apiKey:
@@ -35,11 +35,11 @@ const App = () => {
   } else {
     TimeAgo.addDefaultLocale(en);
   }
+  const [language] = useStorage('language');
 
   LogBox.ignoreAllLogs(true);
   useEffect(() => {
     const handleLanguage = async () => {
-      const language = await getAsyncStorageData('language');
       strings.setLanguage(language || 'en');
     };
     handleLanguage();

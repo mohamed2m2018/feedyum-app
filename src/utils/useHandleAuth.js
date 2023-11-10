@@ -6,11 +6,13 @@ import request from '../api/request';
 import {useNavigation} from '@react-navigation/native';
 import {useQuery, useQueryClient} from 'react-query';
 import strings from '../i18n/strings';
+import {useStorage} from './useStorage';
 
 export const useHandleAuth = () => {
   const navigation = useNavigation();
 
   const queryClient = useQueryClient();
+  const [_, setToken] = useStorage(ACCESS_TOKEN);
   const {data: user} = useQuery('user', () => request.get('/user'), {
     retry: 1,
   });
@@ -25,7 +27,7 @@ export const useHandleAuth = () => {
           textBody: strings.pleaseSignUp,
           buttonOne: strings.goToAuth,
           onPressButtonOne: async () => {
-            await AsyncStorage.removeItem(ACCESS_TOKEN);
+            setToken();
             await queryClient.removeQueries();
             delete request.defaults.headers.common.Authorization;
             setTimeout(() => {

@@ -29,9 +29,9 @@ import {
 } from '@react-native-google-signin/google-signin';
 import axios from 'axios';
 import request from '../../api/request';
-import {setAsyncStorageData} from '../../utils/helpers';
 import OneSignal from 'react-native-onesignal';
 import {ALERT_TYPE, Dialog, Toast} from 'react-native-alert-notification';
+import {useStorage} from '../../utils/useStorage';
 
 GoogleSignin.configure({
   // Add your web client ID here
@@ -144,7 +144,7 @@ const Register = ({navigation, route}) => {
         // categories,
       })
       .then(async res => {
-        await setAsyncStorageData(ACCESS_TOKEN, res?.data?.token);
+        setAccessToken(res?.data?.token);
         OneSignal.setExternalUserId(res?.data?.user?._id);
         request.defaults.headers.common.Authorization = res?.data?.token;
         setisLoading(false);
@@ -231,7 +231,7 @@ const Register = ({navigation, route}) => {
   const [passwordIcon, setPasswordIcon] = React.useState(BlurredIconStyle);
   const [isSubmitDisabled, setIsSubmitDisabled] = React.useState(true);
   const [emailInputStyle, setEmailInputStyle] = React.useState(BlurredStyle);
-
+  const [_, setAccessToken] = useStorage(ACCESS_TOKEN);
   const [passwordInputStyle, setPasswordInputStyle] =
     React.useState(BlurredStyle);
   const [isPasswordVisible, setIsPasswordVisible] = React.useState(false);

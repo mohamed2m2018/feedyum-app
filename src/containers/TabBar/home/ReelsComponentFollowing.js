@@ -18,15 +18,15 @@ import {
   screenFullHeight,
 } from '../../../common/constants';
 import {StackNav, TabNav} from '../../../navigation/NavigationKeys';
-import {QueryClient, useInfiniteQuery, useMutation} from 'react-query';
+import {useInfiniteQuery, useMutation} from 'react-query';
 import ReelComponent from './ReelComponent';
 import request from '../../../api/request';
 import {BannerAd, BannerAdSize, TestIds} from 'react-native-google-mobile-ads';
 import ReelsList from './ReelsList';
 import strings from '../../../i18n/strings';
 import {useLocation} from '../../../navigation/locationContext';
-import {getAsyncStorageData} from '../../../utils/helpers';
 import ZButton from '../../../components/common/ZButton';
+import {useStorage} from '../../../utils/useStorage';
 
 export default function ReelsComponent() {
   const colors = useSelector(state => state.theme.theme);
@@ -46,17 +46,7 @@ export default function ReelsComponent() {
   const [selectedDescription, setselectedDescription] = useState('');
   const [selectedGov, setselectedGov] = useState('');
   const [categoryIds, setcategoryIds] = useState([]);
-  const [user, setUser] = useState();
-  const getItem = async () => {
-    const storedUser = await getAsyncStorageData('user');
-    setUser(storedUser);
-  };
-
-  useEffect(() => {
-    if (!user) {
-      getItem();
-    }
-  }, [user]);
+  const [user] = useStorage('user');
 
   const location = useLocation();
 

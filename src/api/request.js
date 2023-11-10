@@ -1,15 +1,17 @@
 import axios from 'axios';
 import {ACCESS_TOKEN} from '../common/constants';
-import {getAsyncStorageData} from '../utils/helpers';
+import {MMKVLoader} from 'react-native-mmkv-storage';
 
 const client = axios.create();
+
+const MMKV = new MMKVLoader().initialize();
 
 const BASE_URL = 'https://thefoodtok.com/api';
 
 client.defaults.baseURL = BASE_URL;
 
-getAsyncStorageData(ACCESS_TOKEN).then(res => {
-  client.defaults.headers.common.Authorization = res;
+MMKV.getString(ACCESS_TOKEN, (error, result) => {
+  client.defaults.headers.common.Authorization = result;
 });
 
 const onSuccess = function (response) {

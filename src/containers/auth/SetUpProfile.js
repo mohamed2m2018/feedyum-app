@@ -33,14 +33,13 @@ import ZKeyBoardAvoidWrapper from '../../components/common/ZKeyBoardAvoidWrapper
 import {StackNav, TabNav} from '../../navigation/NavigationKeys';
 import ProfilePicture from '../../components/models/ProfilePicture';
 import ZButton from '../../components/common/ZButton';
-import {setAsyncStorageData} from '../../utils/helpers';
 import request from '../../api/request';
 import {ALERT_TYPE, Toast} from 'react-native-alert-notification';
 import {useQuery, useQueryClient} from 'react-query';
 import OneSignal from 'react-native-onesignal';
 import {RNS3} from 'react-native-aws3';
 import ZText from '../../components/common/ZText';
-import Location from '../../components/models/location';
+import {useStorage} from '../../utils/useStorage';
 
 const SetUpProfile = props => {
   const {navigation} = props;
@@ -50,7 +49,6 @@ const SetUpProfile = props => {
 
   const colors = useSelector(state => state.theme.theme);
   const ProfilePictureSheetRef = createRef();
-  const locationSheetRef = createRef();
 
   const BlurredStyle = {
     backgroundColor: colors.inputBg,
@@ -140,7 +138,7 @@ const SetUpProfile = props => {
   const onChangedPhoneNo = text => setPhoneNo(text);
   const onChangedSetBio = text => setBio(text);
   const onChangedGender = text => setGender(text.value.toLowerCase());
-
+  const [_, setAccessToken] = useStorage(ACCESS_TOKEN);
   const queryClient = useQueryClient();
   const validatePhoneNumber = input => {
     const pattern = /^01[0125][0-9]{8}$/;
@@ -168,7 +166,7 @@ const SetUpProfile = props => {
         locations,
       })
       .then(async res => {
-        await setAsyncStorageData(ACCESS_TOKEN, res?.data?.token);
+        setAccessToken(res?.data?.token);
         OneSignal.setExternalUserId(res?.data?.user?._id);
         request.defaults.headers.common.Authorization = res?.data?.token;
         navigation.reset({
