@@ -318,6 +318,7 @@ export default {
   zeroFee: 'لا رسوم عليك، مجانًا وسيظل مجانًا',
   next: 'التالي',
   seeMoreDescription: 'اضغط للمزيد من الوصف',
+  seeLessDescription: 'اضغط لاختصار الوصف',
   sponsored: 'اعلان ممول',
   notsignedInWithGoogle: 'ليس لديك حساب سوف نقوم بانشاء واحد. انتظر لثواني',
   yes: 'نعم',

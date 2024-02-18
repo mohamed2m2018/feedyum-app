@@ -86,13 +86,16 @@ export default function ReelsComponent() {
           setFilteredData([]);
           return;
         }
-        const result = res?.pages.flatMap(page => [
-          ...(page.data?.stories || []),
-          {
-            _id: 'ad' + page.data?.stories[-1]?._id + 1,
-            type: 'ad',
-          },
-        ]);
+        const result = res?.pages.flatMap((page, index) => {
+          const stories = [
+            ...page.data?.stories,
+            {
+              _id: 'ad' + index + 1,
+              type: 'ad',
+            },
+          ];
+          return [...(stories || [])];
+        });
         if (result.length > 1) {
           setFilteredData(result);
         }

@@ -325,6 +325,7 @@ export default {
   zeroFee: 'We take 0% from you. Free and will remain free',
   next: 'Next',
   seeMoreDescription: 'See More Description',
+  seeLessDescription: 'See Less Description',
   yes: 'Yes',
   noo: 'No',
   chefOrResutaurantMessage:

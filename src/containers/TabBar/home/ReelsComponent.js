@@ -184,18 +184,20 @@ export default function ReelsComponent() {
         if (!res?.pages?.[0]?.data) {
           return;
         }
-        const result = res?.pages.flatMap(page => [
-          ...(page.data?.stories || []),
-        ]);
+
+        const result = res?.pages.flatMap((page, index) => {
+          const stories = [
+            ...page.data?.stories,
+            {
+              _id: 'ad' + index + 1,
+              type: 'ad',
+            },
+          ];
+          return [...(stories || [])];
+        });
         if (res?.pages?.[0]?.data?.stories?.length === 0) {
           setFilteredData([]);
           return;
-        }
-        if (result?.[-1]?.type !== 'ad') {
-          result.push({
-            _id: 'ad' + result[-1]?._id + 1,
-            type: 'ad',
-          });
         }
         if (result.length > 1) {
           setFilteredData(result);

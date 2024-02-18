@@ -48,7 +48,6 @@ const ReelComponent = ({
   activeVideoIndex,
   isloading,
   likeRef,
-  onPressAvailableLocation,
   flatListRef,
   isFromReelsOne,
   setSelectedPostId,
@@ -60,11 +59,13 @@ const ReelComponent = ({
   const colors = useSelector(state => state.theme.theme);
   const [indexState] = useState(index);
   const queryClient = useQueryClient();
+  const [isMoreDescriptionSeen, setIsMoreDescriptionSeen] = useState(false);
 
   useEffect(() => {
     if (indexState !== index) {
       setSeekValueClick(0);
       setIsLike(false);
+      setIsMoreDescriptionSeen(false);
       setpaused({slider: false, paused: false});
     }
   }, [indexState, index]);
@@ -75,9 +76,11 @@ const ReelComponent = ({
   };
 
   const [seekValueClick, setSeekValueClick] = useState(0);
-  const onPressMore = description => {
-    setselectedDescription(description);
-    descriptionSheetRef.current?.show();
+  const onPressMore = () => {
+    setIsMoreDescriptionSeen(true);
+  };
+  const onPressLess = () => {
+    setIsMoreDescriptionSeen(false);
   };
 
   const addLikeMutation = useMutation(postId =>
@@ -415,17 +418,19 @@ const ReelComponent = ({
                   {item.title}
                 </ZText>
                 <ZText type="m13" color={colors.white} style={styles.mv10}>
-                  {item?.caption?.length < 50
+                  {item?.caption?.length < 50 || isMoreDescriptionSeen
                     ? item?.caption
                     : item?.caption?.slice(0, 50) + '...'}
                 </ZText>
                 {item?.caption?.length > 50 && (
                   <TouchableOpacity
-                    onPress={() => onPressMore(item?.caption)}
+                    onPress={isMoreDescriptionSeen ? onPressLess : onPressMore}
                     style={localStyles.button}>
                     <ZText type="m14" color={colors.primary}>
                       {item?.caption?.length < 50
                         ? ''
+                        : isMoreDescriptionSeen
+                        ? strings.seeLessDescription
                         : strings.seeMoreDescription}
                     </ZText>
                   </TouchableOpacity>
