@@ -342,9 +342,9 @@ const localStyles = StyleSheet.create({
     marginRight: 5,
   },
   userImage: {
-    width: moderateScale(150),
-    height: moderateScale(150),
-    borderRadius: moderateScale(75),
+    width: moderateScale(100),
+    height: moderateScale(100),
+    borderRadius: moderateScale(50),
   },
   editProfileContainer: {
     ...styles.flexRow,

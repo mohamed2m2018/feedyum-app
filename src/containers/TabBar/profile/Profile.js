@@ -316,9 +316,9 @@ const localStyles = StyleSheet.create({
     ...styles.mt20,
   },
   userImage: {
-    width: moderateScale(150),
-    height: moderateScale(150),
-    borderRadius: moderateScale(75),
+    width: moderateScale(100),
+    height: moderateScale(100),
+    borderRadius: moderateScale(50),
   },
   editIcon: {
     position: 'absolute',
