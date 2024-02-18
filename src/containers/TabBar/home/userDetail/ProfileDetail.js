@@ -171,6 +171,8 @@ export default function ProfileDetail({navigation, route}) {
       page,
       isOther: true,
     });
+
+  // const onPressProfile = () => setModalVisible(true);
   const onPressModalClose = () => setModalVisible(false);
 
   // eslint-disable-next-line react/no-unstable-nested-components
@@ -198,18 +200,16 @@ export default function ProfileDetail({navigation, route}) {
       <ZHeader />
       <View style={{flex: 1}}>
         <View style={styles.itemsCenter}>
-          <TouchableOpacity onPress={onPressEditProfile} style={styles.mt25}>
-            <Image
-              source={
-                user?.avatar
-                  ? {uri: user?.avatar}
-                  : colors.dark
-                  ? images.userDark
-                  : images.userLight
-              }
-              style={localStyles.userImage}
-            />
-          </TouchableOpacity>
+          <Image
+            source={
+              user?.avatar
+                ? {uri: user?.avatar}
+                : colors.dark
+                ? images.userDark
+                : images.userLight
+            }
+            style={localStyles.userImage}
+          />
           <View style={styles.mv20}>
             <ZText type="b24" align={'center'}>
               {user?.fullName}
@@ -318,7 +318,6 @@ export default function ProfileDetail({navigation, route}) {
         headerTitle={'27M Total Likes'}
         subTitle={'jenny_wilson received a total of 27M likes from all videos.'}
         itemImage={<LikeIconModal style={styles.selfCenter} />}
-        btnText={'Ok'}
       />
       <Locations SheetRef={locationSheetRef} selectedGov={selectedGov} />
     </ZSafeAreaView>
@@ -343,9 +342,9 @@ const localStyles = StyleSheet.create({
     marginRight: 5,
   },
   userImage: {
-    width: moderateScale(100),
-    height: moderateScale(100),
-    borderRadius: moderateScale(50),
+    width: moderateScale(150),
+    height: moderateScale(150),
+    borderRadius: moderateScale(75),
   },
   editProfileContainer: {
     ...styles.flexRow,

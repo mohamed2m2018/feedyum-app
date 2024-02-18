@@ -122,7 +122,7 @@ export default function Profile({navigation}) {
     navigation.navigate(StackNav.SetUpProfile, {
       title: strings.editProfile,
       isEditBio,
-      type: user?.type
+      type: user?.type,
     });
   };
 
@@ -224,9 +224,7 @@ export default function Profile({navigation}) {
                   </TouchableOpacity>
                 </View>
                 <View style={styles.itemsCenter}>
-                  <TouchableOpacity
-                    onPress={() => onPressEditProfile(false)}
-                    style={styles.mt40}>
+                  <TouchableOpacity onPress={() => onPressEditProfile(false)}>
                     <Image
                       source={
                         user?.avatar
@@ -318,9 +316,9 @@ const localStyles = StyleSheet.create({
     ...styles.mt20,
   },
   userImage: {
-    width: moderateScale(100),
-    height: moderateScale(100),
-    borderRadius: moderateScale(50),
+    width: moderateScale(150),
+    height: moderateScale(150),
+    borderRadius: moderateScale(75),
   },
   editIcon: {
     position: 'absolute',

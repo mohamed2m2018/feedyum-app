@@ -135,9 +135,9 @@ const localStyles = StyleSheet.create({
     ...styles.p20,
   },
   userImage: {
-    width: moderateScale(100),
-    height: moderateScale(100),
-    borderRadius: moderateScale(50),
+    width: moderateScale(150),
+    height: moderateScale(150),
+    borderRadius: moderateScale(75),
   },
   editProfileContainer: {
     ...styles.flexRow,
