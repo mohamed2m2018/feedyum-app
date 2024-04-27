@@ -1,5 +1,5 @@
 // Libraries import
-import {StyleSheet, TouchableOpacity, View} from 'react-native';
+import {Platform, StyleSheet, TouchableOpacity, View} from 'react-native';
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import Description from '../../../components/models/Descriptions';
 import Locations from '../../../components/models/Locations';
@@ -28,7 +28,7 @@ import {
 } from 'react-query';
 import ReelComponent from './ReelComponent';
 import request from '../../../api/request';
-import {BannerAd, BannerAdSize, TestIds} from 'react-native-google-mobile-ads';
+import {BannerAd, BannerAdSize} from 'react-native-google-mobile-ads';
 import ReelsList from './ReelsList';
 import strings from '../../../i18n/strings';
 import OneSignal from 'react-native-onesignal';
@@ -37,6 +37,7 @@ import ZLoader from '../../../components/common/ZLoader';
 import {useLocation} from '../../../navigation/locationContext';
 import ZButton from '../../../components/common/ZButton';
 import {useStorage} from '../../../utils/useStorage';
+import { TestIds } from 'react-native-admob-native-ads';
 
 export default function ReelsComponent() {
   const [storyId, setStoryId] = useState();
@@ -425,11 +426,11 @@ export default function ReelsComponent() {
         <View style={localStyles.bannerContainer}>
           <BannerAd
             unitId={
-              // __DEV__?
-              TestIds.BANNER
-              // : Platform.OS === 'android'
-              // ? 'ca-app-pub-2374540952576524/7430114790'
-              // : 'ca-app-pub-2374540952576524/7194173394'
+              __DEV__
+                ? TestIds.BANNER
+                : Platform.OS === 'android'
+                ? 'ca-app-pub-2374540952576524/2502355239'
+                : 'ca-app-pub-2374540952576524/7194173394'
             }
             size={BannerAdSize.BANNER}
             onAdLoaded={() => setadFailedToLoad(false)}

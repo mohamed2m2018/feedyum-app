@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-/* eslint-disable no-undef */
+
 import React, {useEffect, useRef, useState} from 'react';
 import {ActivityIndicator, Platform, View} from 'react-native';
 import NativeAdView, {
@@ -120,10 +120,9 @@ export const AdView = React.memo(
           nativeBanner: true,
         }}
         adUnitID={
-          // Platform.OS === 'android'
-          //   ? 'ca-app-pub-2374540952576524/6063023777'
-          //   :
-          TestIds.Video
+          Platform.OS === 'android'
+            ? 'ca-app-pub-2374540952576524/8305679395'
+            : TestIds.Video
         } // REPLACE WITH NATIVE_AD_VIDEO_ID for video ads.
         // repository={type === 'image' ? 'imageAd' : 'videoAd'}
       >

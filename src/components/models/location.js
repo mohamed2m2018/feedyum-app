@@ -85,6 +85,9 @@ const Location = () => {
               color: 'black',
             },
             description: {color: 'black'},
+            predefinedPlacesDescription: {
+              color: 'black',
+            },
           }}
           listUnderlayColor={'black'}
           textInputProps={{

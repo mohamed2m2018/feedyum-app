@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 // Libraries import
-import {StyleSheet, TouchableOpacity, View} from 'react-native';
+import {StyleSheet, TouchableOpacity, View, Platform} from 'react-native';
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import Description from '../../../components/models/Descriptions';
 import Locations from '../../../components/models/Locations';
@@ -126,7 +126,6 @@ export default function ReelsComponentOne() {
   );
   useEffect(() => {
     setExtraData(e => !e);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeVideoIndex, isFocused]);
 
   const onPressSearch = () => navigation.navigate(TabNav.Search);
@@ -264,11 +263,11 @@ export default function ReelsComponentOne() {
             <View style={localStyles.bannerContainer}>
               <BannerAd
                 unitId={
-                  // __DEV__?
-                  TestIds.BANNER
-                  // : Platform.OS === 'android'
-                  // ? 'ca-app-pub-2374540952576524/7430114790'
-                  // : 'ca-app-pub-2374540952576524/7194173394'
+                  __DEV__
+                    ? TestIds.BANNER
+                    : Platform.OS === 'android'
+                    ? 'ca-app-pub-2374540952576524/2502355239'
+                    : 'ca-app-pub-2374540952576524/7194173394'
                 }
                 size={BannerAdSize.BANNER}
                 onAdLoaded={() => setadFailedToLoad(false)}

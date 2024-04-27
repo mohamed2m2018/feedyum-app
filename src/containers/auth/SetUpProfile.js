@@ -6,6 +6,7 @@ import {
   Image,
   TouchableOpacity,
   ActivityIndicator,
+  I18nManager,
 } from 'react-native';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import React, {createRef, useEffect, useState} from 'react';
@@ -429,7 +430,9 @@ const SetUpProfile = props => {
             )}
             {locations?.map?.((item, index) => (
               <View key={index} style={{flexDirection: 'row'}}>
-                <ZText style={{marginVertical: 5}}>{index + 1}- </ZText>
+                <ZText style={{marginVertical: 5}}>
+                  {!I18nManager.isRTL ? '* ' : ' *'}
+                </ZText>
                 <ZText style={{marginVertical: 5, width: '65%'}}>
                   {item.description}
                 </ZText>
