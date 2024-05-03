@@ -219,9 +219,9 @@ export default function ProfileDetail({navigation, route}) {
                 {strings?.unofficial}
               </ZText>
             )}
-            <ZText type="m14" align={'center'} style={styles.mt10}>
+            {/* <ZText type="m14" align={'center'} style={styles.mt10}>
               {user?.email}
-            </ZText>
+            </ZText> */}
             {user?.bio && (
               <ZText
                 type={user?.bio ? 'm16' : 'm14'}
