@@ -216,6 +216,7 @@ export default {
   loginWithGoogle: 'Login with Google',
   reigsterWithGoogle: 'Register with Google',
   chefOrResutaurant: 'Are you a Chef/Restaurant?',
+  unofficial: 'Unofficial account',
   continueGuest: 'Continue as guest',
   deletePost: 'Delete Post',
   areYouSure: 'Are you sure you want to delete this Post?',

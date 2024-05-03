@@ -214,6 +214,11 @@ export default function ProfileDetail({navigation, route}) {
             <ZText type="b24" align={'center'}>
               {user?.fullName}
             </ZText>
+            {user?.profileCompleted && (
+              <ZText align={'center'} type="m10">
+                {strings?.unofficial}
+              </ZText>
+            )}
             <ZText type="m14" align={'center'} style={styles.mt10}>
               {user?.email}
             </ZText>

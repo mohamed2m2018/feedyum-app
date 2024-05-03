@@ -28,7 +28,7 @@ import {
 } from 'react-query';
 import ReelComponent from './ReelComponent';
 import request from '../../../api/request';
-import {BannerAd, BannerAdSize} from 'react-native-google-mobile-ads';
+import {BannerAd, BannerAdSize, TestIds} from 'react-native-google-mobile-ads';
 import ReelsList from './ReelsList';
 import strings from '../../../i18n/strings';
 import OneSignal from 'react-native-onesignal';
@@ -37,7 +37,6 @@ import ZLoader from '../../../components/common/ZLoader';
 import {useLocation} from '../../../navigation/locationContext';
 import ZButton from '../../../components/common/ZButton';
 import {useStorage} from '../../../utils/useStorage';
-import { TestIds } from 'react-native-admob-native-ads';
 
 export default function ReelsComponent() {
   const [storyId, setStoryId] = useState();

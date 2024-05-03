@@ -335,4 +335,5 @@ export default {
   addLocation: 'اضافة مكان',
   addCategory: 'اضافة تصنيف',
   editCategory: 'تعديل تصنيف',
+  unofficial: 'حساب غير رسمي',
 };

@@ -24,6 +24,10 @@ const ZText = ({type, style, align = 'left', color, children, ...props}) => {
 
   const fontSize = () => {
     switch (type.slice(1)) {
+      case '8':
+        return Typography.fontSizes.f8;
+      case '10':
+        return Typography.fontSizes.f10;
       case '12':
         return Typography.fontSizes.f12;
       case '14':

@@ -18,6 +18,7 @@ import {
   screenFullHeight,
   screenHeight,
 } from '../../../common/constants';
+import analytics from '@react-native-firebase/analytics';
 import ZButton from '../../../components/common/ZButton';
 import {useSelector} from 'react-redux';
 import {VideoItem} from './VideoItem';
@@ -175,6 +176,35 @@ const ReelComponent = ({
       err && console.log(err);
     });
   };
+
+  const handleContactPress = async () => {
+    const link = await generateDynamicLink(item);
+    await analytics().logEvent('contactButton', {
+      userId: data?.data?.user?._id,
+      itemId: item?._id,
+      title: item?.title,
+      description: item?.description,
+      link: item?.linkToGo,
+    });
+    item?.linkToGo
+      ? Linking.openURL(
+          item?.linkToGo?.includes('http') ||
+            item?.linkToGo?.toLocaleLowerCase()?.includes('wwww')
+            ? item?.linkToGo
+            : 'https://' + item?.linkToGo,
+        )
+      : Linking.openURL(
+          'whatsapp://send?text=' +
+            'Hi, I am redirected from <a href="https://example.com/foodtok">FoodTok</a> app, and I want to ask about: ' +
+            item.title +
+            '\n' +
+            link +
+            '\n' +
+            '&phone=2' +
+            item?.author?.phone,
+        );
+  };
+
   const fetchCommentsCount = async () => {
     const response = await request.get(`/comment/count?post_id=${item?._id}`);
     return response.data;
@@ -377,6 +407,9 @@ const ReelComponent = ({
                         color={colors.white}>
                         {item?.author?.fullName || data?.fullName}
                       </ZText>
+                      {item?.author?.profileCompleted && (
+                        <ZText type="m8">{strings?.unofficial}</ZText>
+                      )}
                       <View />
                     </TouchableOpacity>
 
@@ -472,27 +505,7 @@ const ReelComponent = ({
                       textType={'b18'}
                       color={colors.white}
                       containerStyle={localStyles.buttonContainer}
-                      onPress={async () => {
-                        const link = await generateDynamicLink(item);
-                        item?.linkToGo
-                          ? Linking.openURL(
-                              item?.linkToGo?.includes('http') ||
-                                item?.linkToGo
-                                  ?.toLocaleLowerCase()
-                                  ?.includes('wwww')
-                                ? item?.linkToGo
-                                : 'https://' + item?.linkToGo,
-                            )
-                          : Linking.openURL(
-                              'whatsapp://send?text=' +
-                                'Hi, I came from FoodTok app, and I want to buy this dish: ' +
-                                item.title +
-                                '\n' +
-                                link +
-                                '&phone=2' +
-                                item?.author?.phone,
-                            );
-                      }}
+                      onPress={handleContactPress}
                     />
                   )}
               </View>
