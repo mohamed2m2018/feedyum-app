@@ -201,7 +201,7 @@ export default {
   name: 'الاسم',
   dishAvailableIn: 'متاح في ',
   buyThisFor: 'اشتري الطبق بـ',
-  EGP: 'جنية مصري',
+  EGP: 'جنية',
   Views: 'مشاهدات',
   loginWithGoogle: 'تسجيل الدخول بجوجل',
   reigsterWithGoogle: 'التسجيل بجوجل',
