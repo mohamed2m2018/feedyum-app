@@ -205,7 +205,7 @@ export default {
   days: 'Days',
   toDeliver: 'to deliver this order',
   aboutYou: 'About You',
-  name: 'Name',
+  name: 'Name or Restaurant Name',
   dishAvailableIn: 'Available in ',
   sponsored: 'Sponsored Ad',
   notsignedInWithGoogle:
@@ -327,8 +327,8 @@ export default {
   next: 'Next',
   seeMoreDescription: 'See More Description',
   seeLessDescription: 'See Less Description',
-  yes: 'Yes',
-  noo: 'No',
+  yes: 'Chef',
+  noo: 'User',
   chefOrResutaurantMessage:
     'Chefs/Restaurants can share more dish info and receive user inquiries through whatsapp or custom links.',
   optional: '(optional)',

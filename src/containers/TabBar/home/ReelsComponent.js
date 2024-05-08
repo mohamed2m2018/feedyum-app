@@ -154,7 +154,7 @@ export default function ReelsComponent() {
 
   const fetchReels = page =>
     request.get(
-      `/story/stories?limit=10&page=${page}&userId=${user?._id}&lat=${location?.latitude}&long=${location?.longitude}&categoryIds=${categoryIds}`,
+      `/story/stories?limit=5&page=${page}&userId=${user?._id}&lat=${location?.latitude}&long=${location?.longitude}&categoryIds=${categoryIds}`,
     );
 
   const {
@@ -421,7 +421,7 @@ export default function ReelsComponent() {
         description={selectedDescription}
       />
       <Locations SheetRef={locationSheetRef} selectedGov={selectedGov} />
-      {!adFailedToLoad && (
+      {/* {!adFailedToLoad && (
         <View style={localStyles.bannerContainer}>
           <BannerAd
             unitId={
@@ -439,7 +439,7 @@ export default function ReelsComponent() {
             }}
           />
         </View>
-      )}
+      )} */}
     </View>
   );
 }

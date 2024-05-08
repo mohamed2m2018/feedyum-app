@@ -56,7 +56,7 @@ export default function ReelsComponentOne() {
 
   const fetchReels = page =>
     request.get(
-      `/story/author?limit=10&page=${page}&id=${route.params?.profile?._id}&&lat=${location?.latitude}&long=${location?.longitude}`,
+      `/story/author?limit=5&page=${page}&id=${route.params?.profile?._id}&&lat=${location?.latitude}&long=${location?.longitude}`,
     );
   const {
     hasNextPage,

@@ -195,7 +195,7 @@ const ReelComponent = ({
         )
       : Linking.openURL(
           'whatsapp://send?text=' +
-            'Hi, I am redirected from <a href="https://example.com/foodtok">FoodTok</a> app, and I want to ask about: ' +
+            'Hi, I am redirected from thefoodtok.com, and I want to ask about: ' +
             item.title +
             '\n' +
             link +
