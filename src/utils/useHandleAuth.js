@@ -1,7 +1,6 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import {ALERT_TYPE, Dialog} from 'react-native-alert-notification';
 import {ACCESS_TOKEN} from '../common/constants';
-import {StackNav, TabNav} from '../navigation/NavigationKeys';
+import {StackNav} from '../navigation/NavigationKeys';
 import request from '../api/request';
 import {useNavigation} from '@react-navigation/native';
 import {useQuery, useQueryClient} from 'react-query';
@@ -28,7 +27,7 @@ export const useHandleAuth = () => {
           buttonOne: strings.goToAuth,
           onPressButtonOne: async () => {
             setToken();
-            await queryClient.removeQueries();
+            await queryClient.clear();
             delete request.defaults.headers.common.Authorization;
             setTimeout(() => {
               Dialog.hide();
