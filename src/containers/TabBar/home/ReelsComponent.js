@@ -210,7 +210,11 @@ export default function ReelsComponent() {
     },
   );
 
-  const {refetch: refetchStory, isLoading: isLoadingStory} = useQuery(
+  const {
+    refetch: refetchStory,
+    isLoading: isLoadingStory,
+    isFetching: isFetchingStory,
+  } = useQuery(
     ['storyById', storyId],
     () =>
       request.get(
@@ -244,10 +248,9 @@ export default function ReelsComponent() {
   const onPressSearch = () => navigation.navigate(TabNav.Search);
 
   const handleDeepLink = link => {
+    // Handle dynamic link inside your own application
     if (link) {
-      // Handle dynamic link inside your own application
       navigation.navigate(TabNav.ForYou);
-
       const postId = link?.url?.split?.('/')?.pop();
       setStoryId(postId);
       setTimeout(() => {
@@ -275,6 +278,7 @@ export default function ReelsComponent() {
 
   useEffect(() => {
     const unsubscribe = dynamicLinks().onLink(handleDynamicLink);
+    dynamicLinks().getInitialLink().then(handleDynamicLink); // Handle initial links
     return () => unsubscribe();
   }, []); // Empty dependency array ensures this runs only once
 
@@ -397,6 +401,7 @@ export default function ReelsComponent() {
         extraData={extraData}
         isRefetching={isRefetching}
         isFetching={isFetching}
+        isFetchingStory={isFetchingStory}
         refetch={refetch}
         user={user}
         keyExtractor={keyExtractor}

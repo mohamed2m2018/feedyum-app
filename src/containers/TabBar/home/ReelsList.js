@@ -23,6 +23,7 @@ const ReelsList = ({
   isRefetching,
   isFetching,
   refetch,
+  isFetchingStory,
 }) => {
   return (
     <FlashList
@@ -48,7 +49,7 @@ const ReelsList = ({
       }
       disableIntervalMomentum
       ListEmptyComponent={
-        isLoading || isRefetching || !user || isFetching ? (
+        (isLoading || isRefetching || !user || isFetching) && !isFetchingStory ? (
           <ZLoader height={150} top={300} />
         ) : (
           <ZText
