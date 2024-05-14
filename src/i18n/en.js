@@ -339,4 +339,6 @@ export default {
   inquireDish: 'Inquire About This Dish',
   addCategory: 'Add Category',
   editCategory: 'Edit Category',
+  percentOff: '% off ',
+  max: 'max',
 };

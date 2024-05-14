@@ -336,4 +336,7 @@ export default {
   addCategory: 'اضافة تصنيف',
   editCategory: 'تعديل تصنيف',
   unofficial: 'حساب غير رسمي',
+  percentOff: '٪ خصم  ',
+  max: 'بحد اقصي',
+
 };

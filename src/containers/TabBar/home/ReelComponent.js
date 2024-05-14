@@ -18,7 +18,6 @@ import {
   screenFullHeight,
   screenHeight,
 } from '../../../common/constants';
-import analytics from '@react-native-firebase/analytics';
 import ZButton from '../../../components/common/ZButton';
 import {useSelector} from 'react-redux';
 import {VideoItem} from './VideoItem';
@@ -40,6 +39,7 @@ import {useNavigation} from '@react-navigation/native';
 import {StackNav, TabNav} from '../../../navigation/NavigationKeys';
 import {AdView} from './ads/AdView';
 import DoubleClick from 'react-native-double-tap';
+import {useAnalytics} from '@segment/analytics-react-native';
 
 const ReelComponent = ({
   item,
@@ -61,6 +61,7 @@ const ReelComponent = ({
   const [indexState] = useState(index);
   const queryClient = useQueryClient();
   const [isMoreDescriptionSeen, setIsMoreDescriptionSeen] = useState(false);
+  const {track} = useAnalytics();
 
   useEffect(() => {
     if (indexState !== index) {
@@ -179,13 +180,20 @@ const ReelComponent = ({
 
   const handleContactPress = async () => {
     const link = await generateDynamicLink(item);
-    await analytics().logEvent('contactButton', {
+    const withCoupon = item?.author?.discount
+      ? 'with coupon ' + item?.author?.discount?.coupon
+      : '';
+
+    console.log('item', item)
+
+    track('contactButton', {
       userId: data?.data?.user?._id,
       itemId: item?._id,
       title: item?.title,
-      description: item?.description,
-      link: item?.linkToGo,
-    });
+      description: item?.caption,
+      link: item?.linkToGo || item?.author?.phone,
+    }).then(res=>console.log(res)).catch(e=>console.log(e))
+
     item?.linkToGo
       ? Linking.openURL(
           item?.linkToGo?.includes('http') ||
@@ -197,6 +205,8 @@ const ReelComponent = ({
           'whatsapp://send?text=' +
             'Hi, I am redirected from thefoodtok.com, and I want to ask about: ' +
             item.title +
+            ' ' +
+            withCoupon +
             '\n' +
             link +
             '\n' +
@@ -277,6 +287,10 @@ const ReelComponent = ({
       setSeekValueClick(currentTime);
     }
   };
+
+  const maxDiscount = item?.author?.discount?.maxAmount
+    ? strings.max + ' ' + item?.author?.discount?.maxAmount + ' ' + strings.EGP
+    : '';
 
   return (
     <View>
@@ -422,6 +436,17 @@ const ReelComponent = ({
                     </ZText>
                   </View>
                 </View>
+                {item?.author?.discount?.percentageAmount && (
+                  <ZText
+                    type="b14"
+                    style={styles.mb5}
+                    numberOfLines={1}
+                    color={colors.yellow}>
+                    {item?.author?.discount?.percentageAmount +
+                      strings.percentOff +
+                      maxDiscount}
+                  </ZText>
+                )}
                 {duration?.[0] !== 'undefined' && (
                   <ZText type="m12" color={colors.white}>
                     {`${
