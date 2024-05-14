@@ -21,6 +21,7 @@
 				<category android:name="android.intent.category.DEFAULT" />
 				<category android:name="android.intent.category.BROWSABLE" />
 				<data android:scheme="http" android:host="thefoodtok.com/" />
+				<data android:scheme="https" android:host="thefoodtok.com/" />
 			</intent-filter>
 		</activity>
 	</application>

@@ -56,8 +56,9 @@ export default function ReelsComponentOne() {
 
   const fetchReels = page =>
     request.get(
-      `/story/author?limit=5&page=${page}&id=${route.params?.profile?._id}&&lat=${location?.latitude}&long=${location?.longitude}`,
+      `/story/author?limit=15&page=${page}&id=${route.params?.profile?._id}&&lat=${location?.latitude}&long=${location?.longitude}`,
     );
+
   const {
     hasNextPage,
     fetchNextPage,
@@ -81,16 +82,30 @@ export default function ReelsComponentOne() {
         if (res?.pageParams?.length === 1) {
           flatListRef.current?.scrollToOffset({offset: 0});
         }
-        const result = res?.pages.flatMap(page => [
-          ...(page.data?.stories || []),
-          {
-            _id: 'ad' + page.data?.stories[-1]?._id + 1,
-            type: 'ad',
-          },
-        ]);
-        if (result.length) {
-          setFilteredDataNotSeen(result);
+        if (!res?.pages?.[0]?.data) {
+          // Check if data exists
+          return;
         }
+
+        const allStoriesWithAds = [];
+        let storyCounter = 0;
+        for (const page of res.pages) {
+          for (const story of page.data.stories) {
+            allStoriesWithAds.push(story);
+            storyCounter++;
+
+            if (storyCounter % 5 === 0) {
+              allStoriesWithAds.push({_id: `ad-${storyCounter}`, type: 'ad'});
+            }
+          }
+        }
+
+        // Ensure at least one ad even for less than 5 stories
+        if (allStoriesWithAds.length > 0 && storyCounter < 5) {
+          allStoriesWithAds.push({_id: 'ad-end', type: 'ad'});
+        }
+
+        setFilteredDataNotSeen(allStoriesWithAds);
       },
       refetchOnWindowFocus: true,
       refetchOnMount: true,

@@ -52,7 +52,7 @@ export default function ReelsComponent() {
 
   const fetchReelsFollowing = page =>
     request.get(
-      `/story/following?limit=5&page=${page}&userId=${user?._id}&lat=${location?.latitude}&long=${location?.longitude}&categoryIds=${categoryIds}`,
+      `/story/following?limit=15&page=${page}&userId=${user?._id}&lat=${location?.latitude}&long=${location?.longitude}&categoryIds=${categoryIds}`,
     );
 
   const {
@@ -79,25 +79,33 @@ export default function ReelsComponent() {
         if (res?.pageParams?.length === 1) {
           flatListRef.current?.scrollToOffset({offset: 0});
         }
-        if (res?.pages?.[0]?.data === undefined) {
+        if (!res?.pages?.[0]?.data) {
+          // Check if data exists
           return;
         }
-        if (res?.pages?.[0]?.data?.stories?.length === 0) {
+
+        const allStoriesWithAds = [];
+        let storyCounter = 0;
+        for (const page of res.pages) {
+          for (const story of page.data.stories) {
+            allStoriesWithAds.push(story);
+            storyCounter++;
+
+            if (storyCounter % 5 === 0) {
+              allStoriesWithAds.push({_id: `ad-${storyCounter}`, type: 'ad'});
+            }
+          }
+        }
+
+        // Ensure at least one ad even for less than 5 stories
+        if (allStoriesWithAds.length > 0 && storyCounter < 5) {
+          allStoriesWithAds.push({_id: 'ad-end', type: 'ad'});
+        }
+
+        if (allStoriesWithAds.length > 1) {
+          setFilteredData(allStoriesWithAds);
+        } else if (res?.pages?.[0]?.data?.stories?.length === 0) {
           setFilteredData([]);
-          return;
-        }
-        const result = res?.pages.flatMap((page, index) => {
-          const stories = [
-            ...page.data?.stories,
-            {
-              _id: 'ad' + index + 1,
-              type: 'ad',
-            },
-          ];
-          return [...(stories || [])];
-        });
-        if (result.length > 1) {
-          setFilteredData(result);
         }
       },
       refetchOnWindowFocus: false,

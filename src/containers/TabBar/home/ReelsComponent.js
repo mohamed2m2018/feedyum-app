@@ -1,5 +1,5 @@
 // Libraries import
-import {Platform, StyleSheet, TouchableOpacity, View} from 'react-native';
+import {StyleSheet, TouchableOpacity, View} from 'react-native';
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import Description from '../../../components/models/Descriptions';
 import Locations from '../../../components/models/Locations';
@@ -154,7 +154,7 @@ export default function ReelsComponent() {
 
   const fetchReels = page =>
     request.get(
-      `/story/stories?limit=5&page=${page}&userId=${user?._id}&lat=${location?.latitude}&long=${location?.longitude}&categoryIds=${categoryIds}`,
+      `/story/stories?limit=15&page=${page}&userId=${user?._id}&lat=${location?.latitude}&long=${location?.longitude}&categoryIds=${categoryIds}`,
     );
 
   const {
@@ -171,11 +171,9 @@ export default function ReelsComponent() {
     {
       retry: 0,
       getNextPageParam: (lastPage, allPages) => {
-        const nextPage =
-          lastPage?.data?.currentPage < lastPage?.data?.totalPages
-            ? allPages.length + 1
-            : undefined;
-        return nextPage;
+        return lastPage?.data?.currentPage < lastPage?.data?.totalPages
+          ? allPages.length + 1
+          : undefined;
       },
       onSuccess: res => {
         if (res?.pageParams?.length === 1) {
@@ -185,27 +183,28 @@ export default function ReelsComponent() {
           return;
         }
 
-        const result = res?.pages.flatMap((page, index) => {
-          const stories = [
-            ...page.data?.stories,
-            {
-              _id: 'ad' + index + 1,
-              type: 'ad',
-            },
-          ];
-          return [...(stories || [])];
-        });
-        if (res?.pages?.[0]?.data?.stories?.length === 0) {
-          setFilteredData([]);
-          return;
+        const allStoriesWithAds = [];
+        let storyCounter = 0;
+        for (const page of res.pages) {
+          for (const story of page.data.stories) {
+            allStoriesWithAds.push(story);
+            storyCounter++;
+
+            if (storyCounter % 5 === 0) {
+              allStoriesWithAds.push({_id: `ad-${storyCounter}`, type: 'ad'});
+            }
+          }
         }
-        if (result.length > 1) {
-          setFilteredData(result);
+
+        // Ensure at least one ad even for less than 5 stories
+        if (allStoriesWithAds.length > 0 && storyCounter < 5) {
+          allStoriesWithAds.push({_id: 'ad-end', type: 'ad'});
         }
+
+        setFilteredData(allStoriesWithAds);
       },
       refetchOnWindowFocus: false,
       refetchOnMount: false,
-      // cacheTime: 0,
       enabled: !!user?._id,
       refetchOnReconnect: false,
     },
@@ -245,15 +244,21 @@ export default function ReelsComponent() {
   const onPressSearch = () => navigation.navigate(TabNav.Search);
 
   const handleDeepLink = link => {
-    // Handle dynamic link inside your own application
-    navigation.navigate(TabNav.ForYou);
-    const postId = link?.url?.split?.('/')?.pop();
-    setStoryId(postId);
+    if (link) {
+      // Handle dynamic link inside your own application
+      navigation.navigate(TabNav.ForYou);
 
-    queryClient.invalidateQueries({queryKey: 'user'});
-    queryClient.invalidateQueries({queryKey: 'profile-stories'});
+      const postId = link?.url?.split?.('/')?.pop();
+      setStoryId(postId);
+      setTimeout(() => {
+        refetchStory();
+      }, 500);
 
-    setnotificationReceived(true);
+      queryClient.invalidateQueries({queryKey: 'user'});
+      queryClient.invalidateQueries({queryKey: 'profile-stories'});
+
+      setnotificationReceived(true);
+    }
   };
 
   useEffect(() => {
@@ -270,9 +275,8 @@ export default function ReelsComponent() {
 
   useEffect(() => {
     const unsubscribe = dynamicLinks().onLink(handleDynamicLink);
-    // When the component is unmounted, remove the listener
     return () => unsubscribe();
-  }, []);
+  }, []); // Empty dependency array ensures this runs only once
 
   React.useEffect(() => {
     setStoryId(route.params?.storyId);
