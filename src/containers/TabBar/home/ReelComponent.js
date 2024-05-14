@@ -184,15 +184,13 @@ const ReelComponent = ({
       ? 'with coupon ' + item?.author?.discount?.coupon
       : '';
 
-    console.log('item', item)
-
-    track('contactButton', {
+    await track('contactButton', {
       userId: data?.data?.user?._id,
       itemId: item?._id,
       title: item?.title,
       description: item?.caption,
       link: item?.linkToGo || item?.author?.phone,
-    }).then(res=>console.log(res)).catch(e=>console.log(e))
+    });
 
     item?.linkToGo
       ? Linking.openURL(
