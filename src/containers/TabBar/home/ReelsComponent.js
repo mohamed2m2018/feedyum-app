@@ -210,7 +210,7 @@ export default function ReelsComponent() {
     },
   );
 
-  const {refetch: refetchStory, isLoading: isLoadingStory} = useQuery(
+  const {refetch: refetchStory, isLoading: isLoadingStory, isFetching: isFetchingStory} = useQuery(
     ['storyById', storyId],
     () =>
       request.get(
@@ -245,17 +245,19 @@ export default function ReelsComponent() {
 
   const handleDeepLink = link => {
     // Handle dynamic link inside your own application
-    navigation.navigate(TabNav.ForYou);
-    const postId = link?.url?.split?.('/')?.pop();
-    setStoryId(postId);
-    setTimeout(() => {
-      refetchStory();
-    }, 500);
+    if(link){
+      navigation.navigate(TabNav.ForYou);
+      const postId = link?.url?.split?.('/')?.pop();
+      setStoryId(postId);
+      setTimeout(() => {
+        refetchStory();
+      }, 500);
 
-    queryClient.invalidateQueries({queryKey: 'user'});
-    queryClient.invalidateQueries({queryKey: 'profile-stories'});
+      queryClient.invalidateQueries({queryKey: 'user'});
+      queryClient.invalidateQueries({queryKey: 'profile-stories'});
 
-    setnotificationReceived(true);
+      setnotificationReceived(true);
+    }
   };
 
   useEffect(() => {
@@ -395,6 +397,7 @@ export default function ReelsComponent() {
         extraData={extraData}
         isRefetching={isRefetching}
         isFetching={isFetching}
+        isFetchingStory={isFetchingStory}
         refetch={refetch}
         user={user}
         keyExtractor={keyExtractor}
