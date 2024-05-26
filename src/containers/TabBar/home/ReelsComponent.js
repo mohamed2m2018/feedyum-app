@@ -28,7 +28,6 @@ import {
 } from 'react-query';
 import ReelComponent from './ReelComponent';
 import request from '../../../api/request';
-import {BannerAd, BannerAdSize, TestIds} from 'react-native-google-mobile-ads';
 import ReelsList from './ReelsList';
 import strings from '../../../i18n/strings';
 import OneSignal from 'react-native-onesignal';
@@ -69,7 +68,7 @@ export default function ReelsComponent() {
 
     OneSignal.setNotificationOpenedHandler(async notifReceivedEvent => {
       // Display or handle the notification as needed
-      navigation.navigate(TabNav.ForYou);
+      navigation.navigate(TabNav.FollowingTab);
       setTimeout(() => {
         setStoryId(notifReceivedEvent?.notification?.additionalData?._id);
       }, 300);
@@ -91,6 +90,7 @@ export default function ReelsComponent() {
     OneSignal.setNotificationWillShowInForegroundHandler(
       async notifReceivedEvent => {
         // Display or handle the notification as needed
+        navigation.navigate(TabNav.FollowingTab);
         const notification = await notifReceivedEvent.getNotification();
         Toast.show({
           type: ALERT_TYPE.SUCCESS,
@@ -250,7 +250,7 @@ export default function ReelsComponent() {
   const handleDeepLink = link => {
     // Handle dynamic link inside your own application
     if (link) {
-      navigation.navigate(TabNav.ForYou);
+      navigation.navigate(TabNav.FollowingTab);
       const postId = link?.url?.split?.('/')?.pop();
       setStoryId(postId);
       setTimeout(() => {

@@ -1,58 +1,150 @@
-// Library import
+import React, { useEffect, useState, useRef } from 'react';
 import {
-  FlatList,
   KeyboardAvoidingView,
   StyleSheet,
   TouchableOpacity,
   View,
   Image,
+  Platform,
+  Keyboard,
+  ActivityIndicator,
 } from 'react-native';
-import React, {memo, useEffect, useState} from 'react';
-import Feather from 'react-native-vector-icons/Feather';
+import { GiftedChat, Send, Bubble, InputToolbar, Composer } from 'react-native-gifted-chat';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {useSelector} from 'react-redux';
-
-// Local import
+import Feather from 'react-native-vector-icons/Feather';
+import { useSelector } from 'react-redux';
+import io from 'socket.io-client';
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
+import { styles } from '../../../themes';
+import { moderateScale } from '../../../common/constants';
+import { StackNav } from '../../../navigation/NavigationKeys';
+import { useStorage } from '../../../utils/useStorage';
 import ZHeader from '../../../components/common/ZHeader';
-import {styles} from '../../../themes';
-import {getHeight, moderateScale} from '../../../common/constants';
-import ZText from '../../../components/common/ZText';
-import ZInput from '../../../components/common/ZInput';
-import {StackNav} from '../../../navigation/NavigationKeys';
-import {checkPlatform} from '../../../utils/helpers';
-import {chatData} from '../../../api/constant';
 
-export default function Chat({navigation, route}) {
+export default function Chat({ navigation, route }) {
   const userName = route.params?.userName;
   const userImage = route.params?.userImage;
+  const chatUserId = route.params?.chatUserId || "64f48d3b6b45e8f937a49bc0"; // Ensure you get chatUserId from route
   const colors = useSelector(state => state.theme.theme);
-  const BlurredStyle = {
-    backgroundColor: colors.inputBg,
-    borderColor: colors.btnColor1,
-  };
-  const FocusedStyle = {
-    backgroundColor: colors.inputFocusColor,
-    borderColor: colors.primary,
-  };
-
-  const [addChat, setAddChat] = useState('');
-  const [chatStyle, setChatStyle] = useState(BlurredStyle);
-  const [isDisable, setIsDisable] = useState(true);
+  const [messages, setMessages] = useState([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+  const [text, setText] = useState('');
+  const textInputRef = useRef(null);
+  const messageContainerRef = useRef(null);
+  const socketRef = useRef(null); // Ref to store the socket instance
+  const userId = useStorage('user')?.[0]?._id;
 
   useEffect(() => {
-    if (addChat.length > 0) {
-      setIsDisable(false);
-    } else {
-      setIsDisable(true);
+    // Initialize socket only once
+    if (!socketRef.current) {
+      const socketUrl = Platform.OS === 'android' ? 'http://10.0.2.2:4800' : 'http://localhost:4800';
+      socketRef.current = io(socketUrl); // Ensure the URL is correct
+
+      socketRef.current.on('connect', () => {
+        console.log('Connected to socket.io server');
+        loadMessages(page);
+      });
+
+      socketRef.current.on('disconnect', () => {
+        console.log('Disconnected from socket.io server');
+      });
+
+      socketRef.current.on('chatHistory', (data) => {
+        const messages = data.messages.map(msg => ({
+          _id: msg._id,
+          text: msg.content,
+          createdAt: new Date(msg.timestamp),
+          user: {
+            _id: msg.sender._id,
+            name: msg.sender.username,
+            avatar: msg.sender.avatar, // Assuming avatar field is available
+          },
+        }));
+        setMessages(previousMessages => GiftedChat.prepend(previousMessages, messages));
+        setTotalPages(data.totalPages);
+        setLoading(false);
+      });
+
+      socketRef.current.on('newMessage', (message) => {
+        const newMessage = {
+          _id: message._id,
+          text: message.content,
+          createdAt: new Date(message.timestamp),
+          user: {
+            _id: message.sender._id,
+            name: message.sender.username,
+            avatar: message.sender.avatar, // Assuming avatar field is available
+          },
+        };
+        setMessages(previousMessages => GiftedChat.append(previousMessages, newMessage));
+      });
     }
-  }, [addChat]);
 
-  const onFocusInput = () => setChatStyle(FocusedStyle);
+    // Clean up event listeners on unmount
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.off('chatHistory');
+        socketRef.current.off('newMessage');
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
+    };
+  }, [userId, chatUserId, page]);
 
-  const onBlurInput = () => setChatStyle(BlurredStyle);
+  const loadMessages = (pageNumber) => {
+    if (socketRef.current && !loading && pageNumber <= totalPages) {
+      setLoading(true);
+      socketRef.current.emit('join', { userId, chatUserId, page: pageNumber });
+    }
+  };
 
-  const onchangeComment = text => setAddChat(text);
+  const handleLoadMore = () => {
+    const nextPage = page + 1;
+    if (nextPage <= totalPages) {
+      setPage(nextPage);
+      loadMessages(nextPage);
+    }
+  };
+
+  const onSend = (newMessages = []) => {
+    newMessages.forEach(message => {
+      const messageData = {
+        senderId: userId,
+        receiverId: chatUserId,
+        content: message.text,
+      };
+
+      socketRef.current.emit('sendMessage', messageData, (response) => {
+        if (response.error) {
+          console.error('Message not sent:', response.error);
+        }
+      });
+    });
+
+    setMessages(previousMessages => GiftedChat.append(previousMessages, newMessages));
+    Keyboard.dismiss(); // Dismiss the keyboard on send
+  };
+
+  const onPressProfile = () => {
+    navigation.navigate(StackNav.ProfileDetail, {
+      userName: userName,
+      userImage: userImage,
+    });
+  };
+
+  const UserProfile = () => {
+    return (
+      <TouchableOpacity onPress={onPressProfile}>
+        <Image
+          source={{ uri: userImage }}
+          style={localStyles.avatar}
+        />
+      </TouchableOpacity>
+    );
+  };
 
   const onPressCall = () =>
     navigation.navigate(StackNav.Call, {
@@ -81,67 +173,70 @@ export default function Chat({navigation, route}) {
     );
   };
 
-  // This is show Day like today or tomorrow
-  const RenderTimeList = ({title}) => {
-    return (
-      <View
-        style={[
-          localStyles.timeContainer,
-          {
-            backgroundColor: colors.lightGray,
-          },
-        ]}>
-        <ZText color={colors.grayScale6} type="r14">
-          {title}
-        </ZText>
+  const renderSend = (props) => (
+    <Send {...props}>
+      <View style={localStyles.sendButton}>
+        <Feather name="send" size={moderateScale(24)} color={colors.primary} />
       </View>
-    );
-  };
+    </Send>
+  );
 
-  const SenderMessage = memo(({item, index}) => {
-    return (
-      <View
-        style={[
-          localStyles.senderContainer,
-          {
-            backgroundColor:
-              item.type == 'sender'
-                ? colors.primary
-                : colors.dark
-                ? colors.dark3
-                : colors.grayScale1,
-            alignSelf: item.type == 'sender' ? 'flex-end' : 'flex-start',
-          },
-        ]}>
-        <ZText style={styles.flex} color={colors.grayScale6} type="m16">
-          {item.message}
-        </ZText>
-        <ZText color={colors.grayScale6} style={styles.pl10} type="r12">
-          {item.time}
-        </ZText>
-      </View>
-    );
-  });
+  const renderBubble = (props) => (
+    <Bubble
+      {...props}
+      wrapperStyle={{
+        left: { 
+          backgroundColor: colors.grayScale1, 
+          borderRadius: 12, 
+          padding: 10,
+          marginLeft: 0, // Adjust to reduce left space
+        },
+        right: { 
+          backgroundColor: colors.primary, 
+          borderRadius: 12, 
+          padding: 10,
+          marginRight: 0, // Adjust to reduce right space if necessary
+        },
+      }}
+      textStyle={{
+        left: { color: colors.black },
+        right: { color: colors.white },
+      }}
+    />
+  );
 
-  const onPressProfile = () => {
-    navigation.navigate(StackNav.ProfileDetail, {
-      userName: userName,
-      userImage: userImage,
-    });
-  };
+  const renderInputToolbar = (props) => (
+    <InputToolbar
+      {...props}
+      containerStyle={{
+        backgroundColor: colors.inputBg,
+        borderTopColor: colors.btnColor1,
+        borderTopWidth: 1,
+        borderRadius: 20,
+        marginHorizontal: 10,
+        marginBottom: Platform.OS === 'android' ? 10 : 5, // Add bottom margin
+      }}
+    />
+  );
 
-  const UserProfile = () => {
-    return (
-      <TouchableOpacity onPress={onPressProfile}>
-        <Image
-          source={{
-            uri: userImage,
-          }}
-          style={localStyles.avatar}
-        />
-      </TouchableOpacity>
-    );
-  };
+  const renderComposer = (props) => (
+    <Composer
+      {...props}
+      textInputStyle={{
+        color: colors.white,
+        backgroundColor: colors.inputBg,
+        borderRadius: 20,
+        paddingHorizontal: 10,
+      }}
+      placeholderTextColor={colors.grayScale4} // Adjust placeholder text color
+    />
+  );
+
+  const renderLoading = () => (
+    <View style={localStyles.loadingContainer}>
+      <ActivityIndicator size="large" color={colors.primary} />
+    </View>
+  );
 
   return (
     <ZSafeAreaView>
@@ -151,94 +246,53 @@ export default function Chat({navigation, route}) {
         rightIcon={<RightIcon />}
       />
       <KeyboardAvoidingView
-        keyboardVerticalOffset={
-          checkPlatform() === 'ios' ? moderateScale(10) : null
-        }
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? moderateScale(15) : 0} // Adjust the offset as needed
         style={styles.flex}
-        behavior={checkPlatform() === 'ios' ? 'padding' : null}>
-        <View style={styles.flex}>
-          <FlatList
-            data={chatData}
-            renderItem={({item, index}) => (
-              <SenderMessage item={item} index={index} />
-            )}
-            keyExtractor={(item, index) => index.toString()}
-            contentContainerStyle={styles.mh20}
-          />
-        </View>
-        <View style={styles.rowCenter}>
-          <ZInput
-            placeHolder={strings.message + '...'}
-            keyBoardType={'default'}
-            _value={addChat}
-            autoCapitalize={'none'}
-            toGetTextFieldValue={onchangeComment}
-            inputContainerStyle={[
-              {backgroundColor: colors.inputBg},
-              localStyles.inputContainerStyle,
-              chatStyle,
-            ]}
-            _onFocus={onFocusInput}
-            onBlur={onBlurInput}
-          />
-          <TouchableOpacity
-            disabled={isDisable}
-            style={[
-              localStyles.sendBtn,
-              {
-                backgroundColor: colors.primary,
-              },
-            ]}>
-            <Feather
-              name={isDisable ? 'mic' : 'send'}
-              size={moderateScale(24)}
-              color={colors.white}
-            />
-          </TouchableOpacity>
-        </View>
+      >
+        <GiftedChat
+          messages={messages}
+          onSend={messages => onSend(messages)}
+          user={{ _id: userId }}
+          renderSend={renderSend}
+          renderBubble={renderBubble}
+          renderInputToolbar={renderInputToolbar}
+          renderComposer={renderComposer}
+          renderLoading={renderLoading}
+          messagesContainerStyle={{ marginLeft: -30 }}
+          isKeyboardInternallyHandled={false}
+          alwaysShowSend
+          loadEarlier={page < totalPages}
+          onLoadEarlier={handleLoadMore}
+          isLoadingEarlier={loading}
+          text={text}
+          onInputTextChanged={setText}
+          textInputRef={textInputRef}
+          messageContainerRef={messageContainerRef}
+          placeholder="Type a message..."
+        />
       </KeyboardAvoidingView>
     </ZSafeAreaView>
   );
 }
 
 const localStyles = StyleSheet.create({
-  root: {
-    ...styles.flex,
-    ...styles.ph20,
-    ...styles.itemsCenter,
-  },
-  timeContainer: {
-    ...styles.pv10,
-    ...styles.mv15,
-    ...styles.ph15,
-    borderRadius: moderateScale(12),
-  },
-  senderContainer: {
-    ...styles.p15,
-    ...styles.flexRow,
-    borderRadius: moderateScale(12),
-    maxWidth: '80%',
-    ...styles.itemsEnd,
-    ...styles.mt10,
-  },
-  inputContainerStyle: {
-    height: getHeight(60),
-    borderRadius: moderateScale(20),
-    borderWidth: moderateScale(1),
-    ...styles.ph15,
-    width: moderateScale(300),
-  },
-  sendBtn: {
-    height: moderateScale(60),
-    width: moderateScale(60),
-    borderRadius: moderateScale(30),
-    ...styles.rowCenter,
-    ...styles.ml10,
-  },
   avatar: {
     height: moderateScale(40),
     width: moderateScale(40),
     borderRadius: moderateScale(20),
     ...styles.mh10,
+  },
+  sendButton: {
+    height: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+    marginBottom: 5,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

@@ -125,7 +125,7 @@ export default function TrendingSound({route}) {
           renderItem={({item, index}) => (
             <ReelComponent
               data={item?.views}
-              reelUrl={item?.avatarUri || item?.poster}
+              reelUrl={item?.poster}
               isPlay={true}
             />
           )}

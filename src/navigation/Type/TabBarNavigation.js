@@ -1,14 +1,14 @@
 // Library import
 import React from 'react';
-import {useSelector} from 'react-redux';
-import {StyleSheet, TouchableOpacity, View} from 'react-native';
-import {createMaterialTopTabNavigator} from '@react-navigation/material-top-tabs';
+import { useSelector } from 'react-redux';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 
 // Local import
-import {TabRoute} from '../NavigationRoutes';
-import {StackNav, TabNav} from '../NavigationKeys';
-import {checkPlatform} from '../../utils/helpers';
-import {getHeight, moderateScale} from '../../common/constants';
+import { TabRoute } from '../NavigationRoutes';
+import { TabNav } from '../NavigationKeys';
+import { checkPlatform } from '../../utils/helpers';
+import { getHeight, moderateScale } from '../../common/constants';
 import ZText from '../../components/common/ZText';
 import strings from '../../i18n/strings';
 import {
@@ -22,22 +22,26 @@ import {
   Search_Dark,
   Search_Light,
 } from '../../assets/svgs';
-import {styles} from '../../themes';
+import { styles } from '../../themes';
 import ProfilePicture from '../../components/models/ProfilePicture';
 import request from '../../api/request';
-import {useQuery} from 'react-query';
-import {useHandleAuth} from '../../utils/useHandleAuth';
+import { useQuery } from 'react-query';
+import { useHandleAuth } from '../../utils/useHandleAuth';
 import AddPost from '../../containers/TabBar/add/addPost';
-import {useScreen} from '../screenContext';
+import { useScreen } from '../screenContext';
 
-export default function TabBarNavigation({navigation}) {
+export default function TabBarNavigation({ route, navigation }) {
   const colors = useSelector(state => state.theme.theme);
   const Tab = createMaterialTopTabNavigator();
   const ProfilePictureSheetRef = React.createRef();
-  const {data} = useQuery('user', () => request.get('/user'), {retry: 1});
-  const {handleAuthToast} = useHandleAuth();
+  const { data } = useQuery('user', () => request.get('/user'), { retry: 1 });
+  const { handleAuthToast } = useHandleAuth();
+  const { currentScreen: previousScreen } = useScreen();
 
-  const TabText = ({text, focused, icon}) => (
+  // Extract initialTab from route params or default to Discover
+  const { initialTab = TabNav.Discover } = route.params || {};
+
+  const TabText = ({ text, focused, icon }) => (
     <View style={localStyles.tabViewContainer}>
       {icon}
       {!!text && (
@@ -61,49 +65,36 @@ export default function TabBarNavigation({navigation}) {
 
   const onPressPost = isImage => {
     ProfilePictureSheetRef?.current?.hide();
-    navigation.navigate(StackNav.PostDetail, {isImage});
+    navigation.navigate(StackNav.PostDetail, { isImage });
   };
-
-  const {currentScreen: previousScreen} = useScreen();
 
   return (
     <Tab.Navigator
       tabBarPosition="bottom"
-      
-      sceneContainerStyle={{backgroundColor: colors.backgroundColor}}
-      style={{
-        backgroundColor: colors.backgroundColor,
-      }}
-      pagerStyle={{backgroundColor: colors.backgroundColor}}
+      sceneContainerStyle={{ backgroundColor: colors.backgroundColor }}
+      style={{ backgroundColor: colors.backgroundColor }}
+      pagerStyle={{ backgroundColor: colors.backgroundColor }}
       screenOptions={{
         headerShown: false,
-        tabBarItemStyle: {height: 60},
+        tabBarItemStyle: { height: 60 },
         animationEnabled: false,
-        tabBarLabelStyle: {fontSize: 12},
+        tabBarLabelStyle: { fontSize: 12 },
         freezeOnBlur: true,
-        tabBarContentContainerStyle: {
-          backgroundColor: colors.backgroundColor,
-        },
-        tabBarStyle: [
-          localStyles.tabBarStyle,
-          {
-            backgroundColor: colors.backgroundColor,
-          },
-        ],
+        tabBarContentContainerStyle: { backgroundColor: colors.backgroundColor },
+        tabBarStyle: [localStyles.tabBarStyle, { backgroundColor: colors.backgroundColor }],
         tabBarShowLabel: false,
-        
       }}
       freezeOnBlur={true}
-      initialRouteName={TabNav.ForYou}>
+      initialRouteName={initialTab}>
       <Tab.Screen
-        name={TabNav.ForYou}
-        component={TabRoute.ForYou}
+        name={TabNav.Discover}
+        component={TabRoute.Discover}
         options={{
-          tabBarIcon: ({focused}) => (
+          tabBarIcon: ({ focused }) => (
             <TabText
-              text={strings.foryou}
+              text={strings.explore}
               focused={focused}
-              icon={focused ? <Home_Dark /> : <Home_Light />}
+              icon={focused ? <Discover_Dark /> : <Discover_Light />}
             />
           ),
         }}
@@ -112,13 +103,19 @@ export default function TabBarNavigation({navigation}) {
         name={TabNav.FollowingTab}
         component={TabRoute.Following}
         options={{
-          tabBarIcon: ({focused}) => (
+          tabBarIcon: ({ focused }) => (
             <TabText
-              text={strings.following}
+              text={strings.watch}
               focused={focused}
-              icon={focused ? <Discover_Dark /> : <Discover_Light />}
+              icon={focused ? <Home_Dark /> : <Home_Light />}
             />
           ),
+        }}
+        listeners={{
+          tabPress: (e) => {
+            // Additional work on tab press for FollowingTab
+            console.log('Following tab pressed');
+          },
         }}
       />
 
@@ -137,13 +134,11 @@ export default function TabBarNavigation({navigation}) {
               } else {
                 navigation.navigate(TabNav.FollowingTab);
               }
-              // return;
             }
           },
         }}
         options={{
-          // eslint-disable-next-line react/no-unstable-nested-components
-          tabBarIcon: ({focused}) => (
+          tabBarIcon: ({ focused }) => (
             <TouchableOpacity
               onPress={onPressAdd}
               style={localStyles.tabViewContainer}>
@@ -168,7 +163,7 @@ export default function TabBarNavigation({navigation}) {
         name={TabNav.Search}
         component={TabRoute.Search}
         options={{
-          tabBarIcon: ({focused}) => (
+          tabBarIcon: ({ focused }) => (
             <TabText
               text={strings.search}
               focused={focused}
@@ -177,34 +172,6 @@ export default function TabBarNavigation({navigation}) {
           ),
         }}
       />
-      {/* <Tab.Screen
-        name={"Orders"}
-        component={TabRoute.Discover}
-        listeners={{tabPress: e => setIndex(1)}}
-        options={{
-          tabBarIcon: ({focused}) => (
-            <TabText
-              text={"Orders"}
-              focused={focused}
-              icon={focused ? <Discover_Dark /> : <Discover_Light />}
-            />
-          ),
-        }}
-      /> */}
-      {/* <Tab.Screen
-        name={TabNav.Inbox}
-        component={TabRoute.Inbox}
-        listeners={{tabPress: e => setIndex(1)}}
-        options={{
-          tabBarIcon: ({focused}) => (
-            <TabText
-              text={strings.inbox}
-              focused={focused}
-              icon={focused ? <Inbox_Dark /> : <Inbox_Light />}
-            />
-          ),
-        }}
-      /> */}
       <Tab.Screen
         name={TabNav.Profile}
         component={TabRoute.Profile}
@@ -216,7 +183,7 @@ export default function TabBarNavigation({navigation}) {
           },
         }}
         options={{
-          tabBarIcon: ({focused}) => (
+          tabBarIcon: ({ focused }) => (
             <TabText
               text={strings.profile}
               focused={focused}

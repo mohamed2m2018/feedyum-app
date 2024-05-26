@@ -1,26 +1,64 @@
 // Library import
-import {FlatList, StyleSheet, TouchableOpacity, View} from 'react-native';
-import React, {useCallback} from 'react';
+import {
+  FlatList,
+  I18nManager,
+  Image,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import React, {useCallback, useState} from 'react';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useSelector} from 'react-redux';
 import {useNavigation} from '@react-navigation/native';
 
 // Local import
-import {
-  getHeight,
-  getVideoExtension,
-  moderateScale,
-} from '../../../common/constants';
+import {moderateScale} from '../../../common/constants';
 import ZText from '../../../components/common/ZText';
 import {styles} from '../../../themes';
 import ReelComponent from '../../../components/ReelComponent';
-import {StackNav} from '../../../navigation/NavigationKeys';
-import {hashtagTreandingData, videoData} from '../../../api/constant';
-import ZButton from '../../../components/common/ZButton';
+import {StackNav, TabNav} from '../../../navigation/NavigationKeys';
+import {useInfiniteQuery} from 'react-query';
+import request from '../../../api/request';
+import ZLoader from '../../../components/common/ZLoader';
+import { useStorage } from '../../../utils/useStorage';
 
-export default function HashtagCategory() {
+export default function HashtagCategory({selectedTag}) {
   const colors = useSelector(state => state.theme.theme);
   const navigation = useNavigation();
+  const [userPage, setUserPage] = useState(1);
+  const [limit] = useState(10);
+  const [user] = useStorage('user');
+  const {
+    isLoading: isLoadingUsers,
+    data: userPages,
+    fetchNextPage,
+    hasNextPage,
+  } = useInfiniteQuery(
+    ['users', selectedTag, userPage],
+    ({pageParam = 1}) =>
+      request
+        .get(`/user/tag/${selectedTag}`, {params: {page: pageParam, limit}})
+        .then(res => res.data),
+    {
+      getNextPageParam: lastPage => lastPage?.currentPage + 1,
+      enabled: !!selectedTag,
+    },
+  );
+
+
+  const onPressUser = (id, userName, userImage) => {
+    console.log('data ', id, userName,userImage )
+    if (user?._id === id) {
+      navigation.navigate(TabNav.Profile);
+    } else {
+      navigation.navigate(StackNav.ProfileDetail, {
+        userName,
+        userImage,
+        id,
+      });
+    }
+  };
 
   const onPressTrendingHashtag = item =>
     navigation.navigate(StackNav.TrendingHashtag, {item: item});
@@ -30,7 +68,7 @@ export default function HashtagCategory() {
       return (
         <View key={index} style={localStyles.hashtagContainer}>
           <TouchableOpacity
-            onPress={() => onPressTrendingHashtag(item)}
+            onPress={()=>onPressUser( item?._id, item?.fullName, item?.avatar)}
             style={localStyles.renderItemCoontainer}>
             <View
               style={[
@@ -39,20 +77,21 @@ export default function HashtagCategory() {
                   backgroundColor: colors.primaryTransparent,
                 },
               ]}>
-              <ZText type="s28" color={colors.primary} numberOfLines={1}>
-                {'#'}
-              </ZText>
+              <Image
+                style={localStyles.hashtagImgContainer}
+                source={{uri: item?.avatar}}
+              />
             </View>
             <View style={[styles.mh10, styles.flex]}>
               <ZText type="b18" numberOfLines={1}>
-                Order From صفاء للأكل البيتي
+                {item.fullName}
               </ZText>
               <ZText
                 type="m14"
                 numberOfLines={2}
                 color={colors.dark ? colors.grayScale3 : colors.grayScale7}
                 style={styles.mt5}>
-                Arrives Tomorrow
+                {item?.bio}
               </ZText>
             </View>
             <TouchableOpacity style={localStyles.rightContainer}>
@@ -60,60 +99,63 @@ export default function HashtagCategory() {
                 type="b14"
                 color={colors.dark ? colors.grayScale3 : colors.grayScale7}
                 style={styles.mr5}>
-                440EGP
+                {item.totalHashTag}
               </ZText>
               <Ionicons
-                name="chevron-forward-outline"
+                name={I18nManager.isRTL? "chevron-back-outline": "chevron-forward-outline"}
                 size={moderateScale(22)}
                 color={colors.primary}
               />
             </TouchableOpacity>
           </TouchableOpacity>
           <FlatList
-            data={videoData.slice(0, 3)}
-            ListFooterComponent={() => (
-              <ZButton
-                title={'Track Order'}
-                textType={'b18'}
-                color={colors.white}
-                containerStyle={{
-                  height: getHeight(50),
-                  borderRadius: moderateScale(20),
-                  borderWidth: moderateScale(1),
-                  width: '100%',
-                  marginTop: 20,
-                  alignSelf: 'center',
-                }}
-                onPress={() => {}}
-              />
-            )}
-            renderItem={({item, index}) => (
+            data={item.stories.slice(0, 3)} // Display the first 3 stories for each user
+            renderItem={({item: story, index}) => (
               <ReelComponent
-                data={item?.views}
-                reelUrl={item?.uri?.replace(
-                  getVideoExtension(item?.uri),
-                  'jpg',
-                )}
+                data={story?.views}
+                reelUrl={
+                  story?.avatarUri?.replace(
+                    'https://foodtokforever.s3.amazonaws.com',
+                    'https://d1wfcrbbkg3bzd.cloudfront.net',
+                  ) ||
+                  story?.poster?.replace(
+                    'https://foodtokforever.s3.amazonaws.com',
+                    'https://d1wfcrbbkg3bzd.cloudfront.net',
+                  )
+                }
+                id={story?._id}
+                profileId={item}
+                item={story}
+                isPlay={!story?.avatarUri}
               />
             )}
             numColumns={3}
-            keyExtractor={(item, index) => index.toString()}
+            keyExtractor={(story, index) => index.toString()}
           />
         </View>
       );
     },
-    [hashtagTreandingData],
+    [colors, navigation, styles],
   );
 
+  if (isLoadingUsers) {
+    return  <ZLoader absolute height={80} top={300} />
+  }
   return (
     <FlatList
-      data={hashtagTreandingData}
+      data={userPages?.pages?.flatMap(page => page.users)}
       renderItem={({item, index}) => (
         <RenderSoundsItem item={item} index={index} />
       )}
       showsVerticalScrollIndicator={false}
       bounces={false}
-      keyExtractor={(item, index) => index.toString()}
+      keyExtractor={(item, index) => item._id.toString()}
+      onEndReached={() => {
+        if (hasNextPage) {
+          fetchNextPage();
+        }
+      }}
+      onEndReachedThreshold={0.5}
     />
   );
 }

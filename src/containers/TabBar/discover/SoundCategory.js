@@ -1,7 +1,6 @@
 // Library import
 import {FlatList, StyleSheet, View} from 'react-native';
 import React, {useCallback} from 'react';
-import {useSelector} from 'react-redux';
 import {useNavigation} from '@react-navigation/native';
 
 // Local import
@@ -10,7 +9,6 @@ import ReelComponent from '../../../components/ReelComponent';
 import {StackNav} from '../../../navigation/NavigationKeys';
 import {soundTrendingData, videoData} from '../../../api/constant';
 import SoundComponent from '../../../components/SoundComponent';
-import {getVideoExtension} from '../../../common/constants';
 
 export default function SoundCategory() {
   const navigation = useNavigation();
@@ -34,17 +32,11 @@ export default function SoundCategory() {
           />
           <FlatList
             data={videoData.slice(0, 3)}
-            renderItem={({item}) => (
-              <ReelComponent
-                data={item?.views}
-                reelUrl={item?.uri?.replace(
-                  getVideoExtension(item?.uri),
-                  'jpg',
-                )}
-              />
+            renderItem={({item, index}) => (
+              <ReelComponent data={item?.views} reelUrl={item?.poster} />
             )}
             numColumns={3}
-            keyExtractor={(item, index) => item?._id}
+            keyExtractor={(item, index) => index.toString()}
             style={styles.mt25}
           />
         </View>

@@ -341,4 +341,5 @@ export default {
   editCategory: 'Edit Category',
   percentOff: '% off ',
   max: 'max',
+  watch: 'Watch',
 };

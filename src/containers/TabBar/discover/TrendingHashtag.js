@@ -39,7 +39,7 @@ export default function TrendingHashtag({route}) {
 
   return (
     <ZSafeAreaView>
-      <ZHeader title={'Order Details'} rightIcon={<RightIcon />} />
+      <ZHeader title={strings.trendingHashtags} rightIcon={<RightIcon />} />
       <ScrollView
         showsVerticalScrollIndicator={false}
         bounces={false}
@@ -58,20 +58,20 @@ export default function TrendingHashtag({route}) {
                 backgroundColor: colors.primaryTransparent,
               },
             ]}>
-            <ZText type="s18" align={'center'} color={colors.primary} numberOfLines={2}>
-              {'Arrives Tomorrow'}
+            <ZText type="s36" color={colors.primary} numberOfLines={1}>
+              {'#'}
             </ZText>
           </View>
           <View style={[styles.ml20, styles.flex]}>
             <ZText type="b24" numberOfLines={1}>
-             Order no #13998293
+              {item.title}
             </ZText>
             <ZText
               type="m14"
               numberOfLines={2}
               color={colors.dark ? colors.grayScale3 : colors.grayScale7}
               style={styles.mt10}>
-              440EGP
+              {item.totalHashTag + ' ' + strings.video}
             </ZText>
             <ZButton
               title={strings.AddFavorites}
@@ -94,14 +94,6 @@ export default function TrendingHashtag({route}) {
           </View>
         </View>
 
-        <ZText color={colors.redColor} type={"s18"}>Dishes Included:</ZText>
-        <ZText align={'right'} type={"m14"}> x2 طبق كباب مشكل</ZText>
-        <ZText align={'right'}> x2 طبق مكرونة بالباشميل </ZText>
-        <ZText align={'right'}> x1 طبق مكرونة بالباشميل </ZText>
-        <ZText align={'right'}> x1 طبق مكرونة بالباشميل </ZText>
-        <ZText align={'right'} style={{marginBottom: 20}}> x1 طبق مكرونة بالباشميل </ZText>
-
-
         <FlatList
           data={videoData}
           renderItem={({item, index}) => (
@@ -116,12 +108,17 @@ export default function TrendingHashtag({route}) {
         />
       </ScrollView>
       <ZButton
-        title={'Cancel this Order'}
+        title={strings.joinThisHashtag}
         textType="b16"
         style={styles.ml5}
         color={colors.white}
         containerStyle={localStyles.bottomBtnContainer}
         bgColor={colors.primary}
+        frontIcon={
+          <ZText type="s22" style={styles.mr5} color={colors.white}>
+            {'#'}
+          </ZText>
+        }
       />
     </ZSafeAreaView>
   );
