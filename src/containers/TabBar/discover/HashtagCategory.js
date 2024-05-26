@@ -22,6 +22,7 @@ import {useInfiniteQuery} from 'react-query';
 import request from '../../../api/request';
 import ZLoader from '../../../components/common/ZLoader';
 import { useStorage } from '../../../utils/useStorage';
+import images from '../../../assets/images';
 
 export default function HashtagCategory({selectedTag}) {
   const colors = useSelector(state => state.theme.theme);
@@ -48,7 +49,6 @@ export default function HashtagCategory({selectedTag}) {
 
 
   const onPressUser = (id, userName, userImage) => {
-    console.log('data ', id, userName,userImage )
     if (user?._id === id) {
       navigation.navigate(TabNav.Profile);
     } else {
@@ -62,7 +62,6 @@ export default function HashtagCategory({selectedTag}) {
 
   const onPressTrendingHashtag = item =>
     navigation.navigate(StackNav.TrendingHashtag, {item: item});
-
   const RenderSoundsItem = useCallback(
     ({item, index}) => {
       return (
@@ -79,7 +78,7 @@ export default function HashtagCategory({selectedTag}) {
               ]}>
               <Image
                 style={localStyles.hashtagImgContainer}
-                source={{uri: item?.avatar}}
+                source={item?.avatar? {uri: item?.avatar} : images.userDark}
               />
             </View>
             <View style={[styles.mh10, styles.flex]}>

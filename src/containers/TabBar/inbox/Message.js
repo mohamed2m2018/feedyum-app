@@ -93,6 +93,7 @@ export default function Message({navigation}) {
     );
   };
 
+  // eslint-disable-next-line react/no-unstable-nested-components
   const RenderStroyItem = memo(({item}) => {
     return (
       <TouchableOpacity
