@@ -109,7 +109,7 @@ export default function Discover({navigation}) {
           ref={scrollViewRef}
           horizontal
           showsHorizontalScrollIndicator={false}
-          style={{maxHeight: 40}}
+          // style={{maxHeight: 40}}
           contentContainerStyle={localStyles.scrollContainer}
           onContentSizeChange={onContentSizeChange}
           onLayout={handleScrollViewLayout}
@@ -140,8 +140,17 @@ export default function Discover({navigation}) {
   };
 
   const _renderScene = ({route}) => {
-    return <HashtagCategory selectedTag={routes?.find(item=> item.nameAr === route.title || item.nameEn === route.title).nameEn } />;
-  };
+
+    return (
+      <HashtagCategory 
+        selectedTag={
+          I18nManager.isRTL 
+            ? routes.find(item => item.nameAr === route.title).nameAr 
+            : routes.find(item => item.nameEn === route.title).nameEn 
+        } 
+      />
+    );
+    };
 
   const onPressSearch = () => {
     navigation.navigate(StackNav.Search);

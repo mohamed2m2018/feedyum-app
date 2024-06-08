@@ -338,5 +338,5 @@ export default {
   unofficial: 'حساب غير رسمي',
   percentOff: '٪ خصم  ',
   max: 'بحد اقصي',
-  watch: 'اتفرج'
+  watch: 'شاهد'
 };

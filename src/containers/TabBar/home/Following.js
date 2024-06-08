@@ -2,8 +2,6 @@
 import React, {useEffect, useState} from 'react';
 import { useWindowDimensions, StyleSheet} from 'react-native';
 import {TabView, SceneMap, TabBar} from 'react-native-tab-view';
-
-// Local import
 import ReelsComponent from './ReelsComponent';
 import ReelsComponentFollowing from './ReelsComponentFollowing';
 import {useIsFocused} from '@react-navigation/native';
@@ -19,38 +17,52 @@ export default function Following() {
   const {updateCurrentScreen} = useScreen();
   const layout = useWindowDimensions();
 
-  useEffect(() => {
-    if (isFocused) {
-      updateCurrentScreen(TabNav.FollowingTab);
-    }
-  }, [isFocused, updateCurrentScreen]);
-
   const [index, setIndex] = useState(0);
   const [routes] = useState([
     {key: 'forYou', title: strings.foryou},
     {key: 'following', title: strings.following},
   ]);
 
-  const renderScene = SceneMap({
-    forYou: ReelsComponent,
-    following: ReelsComponentFollowing,
-  });
+  const [focusedTab, setFocusedTab] = useState('forYou');
 
-  const renderTabBar = props => {
-    return (
-      <TabBar
-        {...props}
-        indicatorStyle={styles.indicator}
-        style={styles.tabBar}
-        renderLabel={({focused, route}) => (
-          <ZText style={focused ? styles.selectedLabel : styles.label}>
-            {route.title}
-          </ZText>
-        )}
-        labelStyle={styles.label}
-      />
-    );
+  useEffect(() => {
+    if (isFocused) {
+      updateCurrentScreen(TabNav.FollowingTab);
+    }
+  }, [isFocused, updateCurrentScreen]);
+
+  useEffect(() => {
+    if (index === 0) {
+      setFocusedTab('forYou');
+    } else {
+      setFocusedTab('following');
+    }
+  }, [index]);
+
+  const renderScene = ({ route }) => {
+    switch (route.key) {
+      case 'forYou':
+        return <ReelsComponent amIFocused={index === 0} />;
+      case 'following':
+        return <ReelsComponentFollowing amIFocused={focusedTab === 'following'} />;
+      default:
+        return null;
+    }
   };
+
+  const renderTabBar = props => (
+    <TabBar
+      {...props}
+      indicatorStyle={styles.indicator}
+      style={styles.tabBar}
+      renderLabel={({focused, route}) => (
+        <ZText style={focused ? styles.selectedLabel : styles.label}>
+          {route.title}
+        </ZText>
+      )}
+      labelStyle={styles.label}
+    />
+  );
 
   return (
     <ZSafeAreaView>
@@ -67,18 +79,18 @@ export default function Following() {
 
 const styles = StyleSheet.create({
   tabBar: {
-    backgroundColor: 'transparent', // Tab bar background color
+    backgroundColor: 'transparent',
   },
   indicator: {
-    backgroundColor: commonColor.primary, // Indicator color
-    height: 3, // Indicator height
+    backgroundColor: commonColor.primary,
+    height: 3,
   },
   label: {
-    color: commonColor.white, // Tab label color
-    fontWeight: 'bold', // Tab label font weight
+    color: commonColor.white,
+    fontWeight: 'bold',
   },
   selectedLabel: {
-    color: commonColor.primary, // Tab label color
-    fontWeight: 'bold', // Tab label font weight
+    color: commonColor.primary,
+    fontWeight: 'bold',
   },
 });

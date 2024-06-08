@@ -108,7 +108,7 @@ export default function HashtagCategory({selectedTag}) {
             </TouchableOpacity>
           </TouchableOpacity>
           <FlatList
-            data={item.stories.slice(0, 3)} // Display the first 3 stories for each user
+            data={item.stories} // Display the first 3 stories for each user
             renderItem={({item: story, index}) => (
               <ReelComponent
                 data={story?.views}

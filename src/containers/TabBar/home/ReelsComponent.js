@@ -37,10 +37,10 @@ import {useLocation} from '../../../navigation/locationContext';
 import ZButton from '../../../components/common/ZButton';
 import {useStorage} from '../../../utils/useStorage';
 
-export default function ReelsComponent() {
+export default function ReelsComponent({amIFocused}) {
   const [storyId, setStoryId] = useState();
   const colors = useSelector(state => state.theme.theme);
-  const isFocused = useIsFocused();
+  const isFocused = useIsFocused() && amIFocused;
   const commentSheetRef = useRef('');
   const descriptionSheetRef = useRef('');
   const [notificationReceived, setnotificationReceived] = useState(false);
