@@ -4,6 +4,10 @@ export const routes = [
     nameAr: 'الكوبونات',
   },
   {
+    nameEn: 'Homemade',
+    nameAr: 'اكل بيتي',
+  },
+  {
     nameEn: 'Desserts',
     nameAr: 'حلويات',
   },

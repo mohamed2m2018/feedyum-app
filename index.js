@@ -37,8 +37,8 @@ const RNRoot = () => {
 };
 
 const codePushOptions = {
-  checkFrequency: codePush.CheckFrequency.ON_APP_RESUME,
-  installMode: codePush.InstallMode.IMMEDIATE,
+  checkFrequency: codePush.CheckFrequency.ON_APP_START,
+  installMode: codePush.InstallMode.ON_NEXT_RESTART,
 };
 
 const CodePushedApp = codePush(codePushOptions)(RNRoot);
