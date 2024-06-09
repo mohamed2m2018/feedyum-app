@@ -60,7 +60,10 @@ const ReelComponent = ({
   const queryClient = useQueryClient();
   const [isMoreDescriptionSeen, setIsMoreDescriptionSeen] = useState(false);
   const {track} = useAnalytics();
-
+  const onPressComment = () => {
+    setSelectedPostId(item?._id);
+    commentSheetRef.current?.show();
+  };
   useEffect(() => {
     if (indexState !== index) {
       setSeekValueClick(0);
