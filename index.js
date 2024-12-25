@@ -5,7 +5,6 @@ import App from './src';
 import {name as appName} from './app.json';
 import store from './src/redux/store';
 import OneSignal from 'react-native-onesignal';
-import codePush from 'react-native-code-push';
 import {createClient, AnalyticsProvider} from '@segment/analytics-react-native';
 const queryClient = new QueryClient();
 
@@ -36,11 +35,5 @@ const RNRoot = () => {
   );
 };
 
-const codePushOptions = {
-  checkFrequency: codePush.CheckFrequency.ON_APP_START,
-  installMode: codePush.InstallMode.ON_NEXT_RESTART,
-};
 
-const CodePushedApp = codePush(codePushOptions)(RNRoot);
-
-AppRegistry.registerComponent(appName, () => CodePushedApp);
+AppRegistry.registerComponent(appName, () => RNRoot);

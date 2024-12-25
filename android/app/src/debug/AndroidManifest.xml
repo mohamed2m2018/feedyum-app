@@ -7,7 +7,7 @@
 				<action android:name="android.intent.action.VIEW" />
 				<category android:name="android.intent.category.DEFAULT" />
 				<category android:name="android.intent.category.BROWSABLE" />
-				<data android:scheme="http" android:host="thefoodtok.com/" />
+				<data android:scheme="http" android:host="food2k.com/" />
 			</intent-filter>
 		</activity>
 	</application>

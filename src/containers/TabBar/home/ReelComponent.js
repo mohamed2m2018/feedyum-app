@@ -45,7 +45,7 @@ const ReelComponent = ({
   i: index,
   data,
   activeVideoIndex,
-  isloading,
+  // isloading,
   likeRef,
   flatListRef,
   isFromReelsOne,
@@ -143,8 +143,8 @@ const ReelComponent = ({
   const generateDynamicLink = async postItem => {
     const link = await dynamicLinks().buildShortLink(
       {
-        link: `http://thefoodtok.com/post/${postItem?._id}`,
-        domainUriPrefix: 'https://foodtok.page.link',
+        link: `http://food2k.com/post/${postItem?._id}`,
+        domainUriPrefix: 'https://food2k.page.link',
         android: {
           packageName: 'com.foodtok',
         },
@@ -198,7 +198,7 @@ const ReelComponent = ({
         )
       : Linking.openURL(
           'whatsapp://send?text=' +
-            'Hi, I am redirected from thefoodtok.com, and I want to ask about: ' +
+            'Hi, I am redirected from food2k.com, and I want to ask about: ' +
             item.title +
             ' ' +
             withCoupon +
@@ -358,15 +358,27 @@ const ReelComponent = ({
                   resizeMode="cover"
                   playInBackground={false}
                   disableFocus={true}
-                  onError={err => console.log('hello', err)}
+                  onError={error => {
+                    console.log('Video Error:', {
+                      error,
+                      uri,
+                      poster,
+                      index,
+                      activeVideoIndex,
+                      isFocused,
+                      paused: paused.paused,
+                      sliderPaused: paused.slider,
+                      // isloading
+                    });
+                  }}
                   seekColor={colors.primary}
                   muted={!isFocused}
                   paused={
                     activeVideoIndex !== index ||
                     !isFocused ||
                     paused.paused ||
-                    paused.slider ||
-                    isloading
+                    paused.slider
+                    // isloading
                   }
                   useTextureView={true}
                 />
