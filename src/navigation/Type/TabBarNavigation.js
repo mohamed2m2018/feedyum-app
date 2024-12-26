@@ -6,11 +6,12 @@ import { createMaterialTopTabNavigator } from '@react-navigation/material-top-ta
 
 // Local import
 import { TabRoute } from '../NavigationRoutes';
-import { TabNav } from '../NavigationKeys';
+import { StackNav, TabNav } from '../NavigationKeys';
 import { checkPlatform } from '../../utils/helpers';
 import { getHeight, moderateScale } from '../../common/constants';
 import ZText from '../../components/common/ZText';
 import strings from '../../i18n/strings';
+
 import {
   Add_Icon,
   Home_Dark,
