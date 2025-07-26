@@ -214,7 +214,7 @@ export default Setting = ({navigation}) => {
               style={localStyles.settingsContainer}>
               <Ionicons
                 name={item.icon}
-                size={moderateScale(28)}
+                size={moderateScale(22)}
                 color={color.dark ? color.white : color.darkColor}
               />
               <ZText type="s18" style={styles.ml15}>
@@ -242,7 +242,7 @@ export default Setting = ({navigation}) => {
                     style={{
                       ...(I18nManager.isRTL && {transform: [{scaleX: -1}]}),
                     }}
-                    size={moderateScale(20)}
+                    size={moderateScale(16)}
                     color={color.textColor}
                   />
                 )}

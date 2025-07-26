@@ -167,7 +167,7 @@ export default {
   AddFavorites: 'Add to Favorites',
   playSong: 'Play Song',
   useThisSound: 'Use this Sound',
-  video: 'Dishes',
+  video: 'Posts',
   joinThisHashtag: 'Join this Hashtag',
   comments: 'Comments',
   top: 'Top',
@@ -243,7 +243,7 @@ export default {
   linkOptional:
     'Link (optional), if not provided user will contact you through whatsapp',
   selectGov: 'Select delivery governorates',
-  reply: 'Reply',
+
   followList: 'Follow List',
   noDishesYet: 'No Dishes matches your search term.',
   noUsersMatch: 'No users matches your search term',

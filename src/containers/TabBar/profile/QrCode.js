@@ -22,7 +22,7 @@ export default function QrCode() {
       <TouchableOpacity>
         <Ionicons
           name="navigate-circle-outline"
-          size={moderateScale(26)}
+          size={moderateScale(20)}
           color={colors.textColor}
         />
       </TouchableOpacity>
@@ -54,7 +54,7 @@ export default function QrCode() {
         frontIcon={
           <Ionicons
             name="scan-outline"
-            size={moderateScale(20)}
+            size={moderateScale(16)}
             color={colors.primary}
           />
         }

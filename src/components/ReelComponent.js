@@ -90,7 +90,7 @@ const ReelComponent = ({
           reelUrl
             ? {
                 uri:
-                  item.poster?.replace(
+                  item?.poster?.replace(
                     'https://foodtokforever.s3.amazonaws.com',
                     'https://d1wfcrbbkg3bzd.cloudfront.net',
                   ) ||
@@ -159,6 +159,36 @@ const ReelComponent = ({
           />
         </TouchableOpacity>
       )}
+
+      {/* Review Badge */}
+      {item?.reviewMode && (
+        <View style={localStyles.reviewBadge}>
+          <Ionicons
+            name="star"
+            size={moderateScale(12)}
+            color="#FFD700"
+          />
+          <ZText type="B10" color={colors.white} style={styles.ml4}>
+            REVIEW
+          </ZText>
+        </View>
+      )}
+
+      {/* Rating Badge for Reviews */}
+      {item?.reviewMode && item?.rating && (
+        <View style={localStyles.ratingBadge}>
+          <ZText type="B12" color={colors.white}>
+            {item.rating}
+          </ZText>
+          <Ionicons
+            name="star"
+            size={moderateScale(10)}
+            color="#FFD700"
+            style={styles.ml2}
+          />
+        </View>
+      )}
+
       <View style={styles.textContainer}>
         <ZText style={[localStyles.titleText, {color: colors.textColor}]}>
           {item?.title}
@@ -167,6 +197,18 @@ const ReelComponent = ({
           <ZText style={[localStyles.priceText, {color: colors.textColor}]}>
             {item?.price} LE
           </ZText>
+        )}
+        {item?.reviewMode && item?.rating && (
+          <View style={localStyles.ratingContainer}>
+            {[1, 2, 3, 4, 5].map((star) => (
+              <Ionicons
+                key={star}
+                name={star <= item.rating ? 'star' : 'star-outline'}
+                size={moderateScale(12)}
+                color={star <= item.rating ? '#FFD700' : colors.grayScale5}
+              />
+            ))}
+          </View>
         )}
       </View>
     </TouchableOpacity>
@@ -213,6 +255,30 @@ const localStyles = StyleSheet.create({
     top: moderateScale(50),
     right: moderateScale(10),
   },
+  reviewBadge: {
+    position: 'absolute',
+    top: moderateScale(10),
+    left: moderateScale(10),
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 77, 103, 0.9)',
+    paddingHorizontal: moderateScale(8),
+    paddingVertical: moderateScale(4),
+    borderRadius: moderateScale(12),
+    zIndex: 10,
+  },
+  ratingBadge: {
+    position: 'absolute',
+    top: moderateScale(10),
+    right: moderateScale(10),
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    paddingHorizontal: moderateScale(8),
+    paddingVertical: moderateScale(4),
+    borderRadius: moderateScale(12),
+    zIndex: 10,
+  },
   titleText: {
     fontSize: moderateScale(16),
     fontWeight: 'bold',
@@ -222,5 +288,10 @@ const localStyles = StyleSheet.create({
   priceText: {
     fontSize: moderateScale(14),
     textAlign: 'center',
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: moderateScale(4),
   },
 });

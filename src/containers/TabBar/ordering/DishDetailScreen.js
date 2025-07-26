@@ -1,0 +1,1245 @@
+import React, {useState, useEffect} from 'react';
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  Image,
+  TouchableOpacity,
+  Alert,
+  Animated,
+  Dimensions,
+} from 'react-native';
+import {useSelector, useDispatch} from 'react-redux';
+import {useQuery, useMutation, useQueryClient} from 'react-query';
+import {useNavigation, useRoute} from '@react-navigation/native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
+
+import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
+import ZText from '../../../components/common/ZText';
+import ZButton from '../../../components/common/ZButton';
+import ZLoader from '../../../components/common/ZLoader';
+import StarRating from '../../../components/StarRating';
+import ReviewsList from '../../../components/ReviewsList';
+import ReviewStoriesSection from '../../../components/ReviewStoriesSection';
+import {moderateScale} from '../../../common/constants';
+import {styles} from '../../../themes';
+import {StackNav} from '../../../navigation/NavigationKeys';
+import request from '../../../api/request';
+import images from '../../../assets/images';
+import {
+  addToCart,
+  selectCartItemCount,
+  selectCartError,
+  clearError,
+} from '../../../redux/reducer/cartSlice';
+
+const {width: screenWidth, height: screenHeight} = Dimensions.get('window');
+
+const DishDetailScreen = () => {
+  const colors = useSelector(state => state.theme.theme);
+  const dispatch = useDispatch();
+  const navigation = useNavigation();
+  const route = useRoute();
+  const queryClient = useQueryClient();
+
+  const {dishId, chefId} = route.params;
+
+  const [quantity, setQuantity] = useState(1);
+  const [selectedTab, setSelectedTab] = useState('reviews');
+  const [scrollY] = useState(new Animated.Value(0));
+  const [showFullDescription, setShowFullDescription] = useState(false);
+
+  // Cart selectors
+  const cartItemCount = useSelector(selectCartItemCount);
+  const cartError = useSelector(selectCartError);
+
+  // Fetch dish details
+  const {
+    data: dishData,
+    isLoading: dishLoading,
+    error: dishError,
+    refetch: refetchDish,
+  } = useQuery(
+    ['dishDetail', dishId],
+    async () => {
+      const response = await request.get(`/dishes/${dishId}`);
+      return response.data;
+    },
+    {
+      enabled: !!dishId,
+      retry: 2,
+    },
+  );
+
+  // Fetch dish reviews
+  const {
+    data: reviewsData,
+    isLoading: reviewsLoading,
+    refetch: refetchReviews,
+  } = useQuery(
+    ['dishReviews', dishId],
+    async () => {
+      const response = await request.get(`/reviews/dish/${dishId}`);
+      return response.data;
+    },
+    {
+      enabled: !!dishId && selectedTab === 'reviews',
+      retry: 2,
+    },
+  );
+
+  // Fetch review stories (reels) for this dish
+  const {
+    data: reviewStoriesData,
+    isLoading: reviewStoriesLoading,
+    refetch: refetchReviewStories,
+  } = useQuery(
+    ['dishReviewStories', dishId],
+    async () => {
+      const response = await request.get(`/story/reviews/dish/${dishId}`);
+      return response.data;
+    },
+    {
+      enabled: !!dishId && selectedTab === 'reviews',
+      retry: 2,
+    },
+  );
+
+  // Chef data comes from dish data, with fallback to separate fetch
+  const chefData = dishData?.chef;
+
+  // Fallback: fetch chef data separately if not included in dish data
+  const {data: fallbackChefData} = useQuery(
+    ['chefInfo', chefId],
+    async () => {
+      const response = await request.get(`/user/${chefId}`);
+      return response.data;
+    },
+    {
+      enabled: !!chefId && !chefData,
+      retry: 1,
+    },
+  );
+
+  // Use chef data from dish or fallback
+  const finalChefData = chefData || fallbackChefData;
+
+  // Add to favorites mutation
+  const addToFavoritesMutation = useMutation(
+    async () => {
+      const response = await request.post('/favorites/add', {
+        dishId: dishId,
+        type: 'dish',
+      });
+      return response.data;
+    },
+    {
+      onSuccess: () => {
+        Alert.alert(
+          '❤️ Added to Favorites!',
+          `${dishData?.name} has been added to your favorites`,
+          [
+            {
+              text: 'Great!',
+              style: 'default',
+            },
+          ],
+        );
+        queryClient.invalidateQueries(['dishDetail', dishId]);
+      },
+      onError: error => {
+        Alert.alert('Error', error.message || 'Failed to add to favorites');
+      },
+    },
+  );
+
+  // Remove from favorites mutation
+  const removeFromFavoritesMutation = useMutation(
+    async () => {
+      const response = await request.delete(`/favorites/remove/${dishId}`);
+      return response.data;
+    },
+    {
+      onSuccess: () => {
+        Alert.alert(
+          '💔 Removed from Favorites',
+          `${dishData?.name} has been removed from your favorites`,
+          [
+            {
+              text: 'OK',
+              style: 'default',
+            },
+          ],
+        );
+        queryClient.invalidateQueries(['dishDetail', dishId]);
+      },
+      onError: error => {
+        Alert.alert(
+          'Error',
+          error.message || 'Failed to remove from favorites',
+        );
+      },
+    },
+  );
+
+  const handleAddToCart = () => {
+    if (!dishData) return;
+
+    dispatch(
+      addToCart({
+        dish: dishData,
+        quantity,
+        chefId,
+        chefName: finalChefData?.fullName || chefName || 'Unknown Chef',
+      }),
+    );
+
+    Alert.alert(
+      'Added to Cart!',
+      `${quantity} x ${dishData.name} added to your cart`,
+      [
+        {text: 'Continue Shopping', style: 'cancel'},
+        {
+          text: 'View Cart',
+          onPress: () => navigation.navigate('ShoppingCart'),
+        },
+      ],
+    );
+  };
+
+  const handleQuantityChange = change => {
+    const newQuantity = Math.max(1, quantity + change);
+    setQuantity(newQuantity);
+  };
+
+  const handleToggleFavorite = () => {
+    if (dishData?.isFavorite) {
+      removeFromFavoritesMutation.mutate();
+    } else {
+      addToFavoritesMutation.mutate();
+    }
+  };
+
+  const handleBack = () => {
+    navigation.goBack();
+  };
+
+  // Handle cart errors
+  useEffect(() => {
+    if (cartError) {
+      Alert.alert('Cart Error', cartError, [
+        {
+          text: 'OK',
+          onPress: () => dispatch(clearError()),
+        },
+      ]);
+    }
+  }, [cartError, dispatch]);
+
+  const renderHeader = () => {
+    const headerOpacity = scrollY.interpolate({
+      inputRange: [0, 200],
+      outputRange: [0, 1],
+      extrapolate: 'clamp',
+    });
+
+    return (
+      <Animated.View
+        style={[
+          localStyles.animatedHeader,
+          {
+            backgroundColor: colors.backgroundColor,
+            opacity: headerOpacity,
+          },
+        ]}>
+        <TouchableOpacity
+          style={[localStyles.headerButton, {backgroundColor: colors.white}]}
+          onPress={handleBack}>
+          <Ionicons
+            name="arrow-back"
+            size={moderateScale(24)}
+            color="#1A1A1A"
+          />
+        </TouchableOpacity>
+
+        <ZText type="B18" color="#1A1A1A" numberOfLines={1}>
+          {dishData?.name}
+        </ZText>
+
+        <TouchableOpacity
+          style={[localStyles.headerButton, {backgroundColor: colors.white}]}
+          onPress={handleToggleFavorite}
+          disabled={
+            addToFavoritesMutation.isLoading ||
+            removeFromFavoritesMutation.isLoading
+          }>
+          <Ionicons
+            name={dishData?.isFavorite ? 'heart' : 'heart-outline'}
+            size={moderateScale(24)}
+            color={dishData?.isFavorite ? '#FF4D67' : '#1A1A1A'}
+          />
+        </TouchableOpacity>
+      </Animated.View>
+    );
+  };
+
+  const renderHeroSection = () => (
+    <View style={localStyles.heroSection}>
+      <Image
+        source={
+          dishData?.image ? {uri: dishData.image} : images.dishPlaceholder
+        }
+        style={localStyles.heroImage}
+        resizeMode="cover"
+      />
+
+      {/* Floating Action Buttons */}
+      <View style={localStyles.floatingActions}>
+        <TouchableOpacity
+          style={localStyles.floatingButton}
+          onPress={handleBack}>
+          <Ionicons
+            name="arrow-back"
+            size={moderateScale(24)}
+            color="#1A1A1A"
+          />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={localStyles.floatingButton}
+          onPress={handleToggleFavorite}
+          disabled={
+            addToFavoritesMutation.isLoading ||
+            removeFromFavoritesMutation.isLoading
+          }>
+          <Ionicons
+            name={dishData?.isFavorite ? 'heart' : 'heart-outline'}
+            size={moderateScale(24)}
+            color={dishData?.isFavorite ? '#FF4D67' : '#1A1A1A'}
+          />
+        </TouchableOpacity>
+      </View>
+
+      {/* Rating Badge */}
+      {dishData?.average_rating > 0 && (
+        <View style={localStyles.ratingBadge}>
+          <Ionicons name="star" size={moderateScale(16)} color="#FFD700" />
+          <ZText type="B14" color={colors.white} style={styles.ml5}>
+            {dishData.average_rating.toFixed(1)}
+          </ZText>
+        </View>
+      )}
+    </View>
+  );
+
+  const renderDishInfo = () => (
+    <View
+      style={[localStyles.dishInfoSection, {backgroundColor: colors.white}]}>
+      {/* Dish Name and Price */}
+      <View style={localStyles.dishHeader}>
+        <View style={localStyles.dishTitleSection}>
+          <ZText type="B24" color="#1A1A1A" style={localStyles.dishName}>
+            {dishData?.name}
+          </ZText>
+          <ZText type="B20" color="#FF4D67" style={localStyles.dishPrice}>
+            {dishData?.price} EGP
+          </ZText>
+        </View>
+
+        {/* Chef Info */}
+        <TouchableOpacity
+          style={localStyles.chefInfo}
+          onPress={() => navigation.navigate('ChefProfile', {chefId})}>
+          <Image
+            source={
+              finalChefData?.avatar
+                ? {uri: finalChefData.avatar}
+                : colors.dark
+                  ? images.userDark
+                  : images.userLight
+            }
+            style={localStyles.chefAvatar}
+          />
+          <View>
+            <ZText type="M12" color="#888888">
+              Chef
+            </ZText>
+            <ZText type="B14" color="#1A1A1A">
+              {finalChefData?.fullName || 'Unknown Chef'}
+            </ZText>
+          </View>
+        </TouchableOpacity>
+      </View>
+
+      {/* Description */}
+      <View style={localStyles.descriptionSection}>
+        <ZText
+          type="M16"
+          color="#555555"
+          style={localStyles.description}
+          numberOfLines={showFullDescription ? undefined : 3}>
+          {dishData?.description}
+        </ZText>
+
+        {dishData?.description && dishData.description.length > 100 && (
+          <TouchableOpacity
+            onPress={() => setShowFullDescription(!showFullDescription)}>
+            <ZText type="B14" color="#FF4D67" style={styles.mt5}>
+              {showFullDescription ? 'Show Less' : 'Read More'}
+            </ZText>
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {/* Tags */}
+      {dishData?.tags && dishData.tags.length > 0 && (
+        <View style={localStyles.tagsSection}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {dishData.tags.map((tag, index) => (
+              <View
+                key={index}
+                style={[localStyles.tag, {backgroundColor: '#FF4D67' + '15'}]}>
+                <ZText type="M12" color="#FF4D67">
+                  {tag}
+                </ZText>
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+      )}
+    </View>
+  );
+
+  const renderTabBar = () => (
+    <View style={[localStyles.tabBar, {backgroundColor: colors.white}]}>
+      <TouchableOpacity
+        style={[
+          localStyles.tab,
+          selectedTab === 'reviews' && {backgroundColor: colors.primary},
+        ]}
+        onPress={() => setSelectedTab('reviews')}>
+        <ZText
+          type="B14"
+          color={selectedTab === 'reviews' ? colors.white : '#666666'}>
+          Reviews ({reviewsData?.reviews?.length || 0})
+        </ZText>
+      </TouchableOpacity>
+
+      {dishData?.ingredients && dishData.ingredients.length > 0 && (
+        <TouchableOpacity
+          style={[
+            localStyles.tab,
+            selectedTab === 'ingredients' && {backgroundColor: colors.primary},
+          ]}
+          onPress={() => setSelectedTab('ingredients')}>
+          <ZText
+            type="B14"
+            color={selectedTab === 'ingredients' ? colors.white : '#666666'}>
+            Ingredients
+          </ZText>
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+
+  const renderTabContent = () => {
+    switch (selectedTab) {
+      case 'reviews':
+        return renderReviewsTab();
+      case 'ingredients':
+        return renderIngredientsTab();
+      default:
+        return renderReviewsTab();
+    }
+  };
+
+  const renderDetailsTab = () => (
+    <View style={[localStyles.tabContent, {backgroundColor: colors.white}]}>
+      {/* Nutritional Info */}
+      {dishData?.nutritionalInfo && (
+        <View style={localStyles.nutritionSection}>
+          <ZText type="B18" color="#1A1A1A" style={styles.mb15}>
+            Nutritional Information
+          </ZText>
+          <View style={localStyles.nutritionGrid}>
+            {Object.entries(dishData.nutritionalInfo).map(([key, value]) => (
+              <View key={key} style={localStyles.nutritionItem}>
+                <ZText type="M12" color="#888888">
+                  {key.charAt(0).toUpperCase() + key.slice(1)}
+                </ZText>
+                <ZText type="B14" color="#1A1A1A">
+                  {value}
+                </ZText>
+              </View>
+            ))}
+          </View>
+        </View>
+      )}
+
+      {/* Preparation Time */}
+      {dishData?.preparationTime && (
+        <View style={localStyles.infoRow}>
+          <MaterialIcon
+            name="clock-outline"
+            size={moderateScale(20)}
+            color={colors.primary}
+          />
+          <ZText type="M16" color="#1A1A1A" style={styles.ml10}>
+            Preparation time: {dishData.preparationTime} minutes
+          </ZText>
+        </View>
+      )}
+
+      {/* Dietary Info */}
+      {dishData?.dietaryInfo && dishData.dietaryInfo.length > 0 && (
+        <View style={localStyles.dietarySection}>
+          <ZText type="B16" color="#1A1A1A" style={styles.mb10}>
+            Dietary Information
+          </ZText>
+          {dishData.dietaryInfo.map((info, index) => (
+            <View key={index} style={localStyles.dietaryItem}>
+              <Ionicons
+                name="checkmark-circle"
+                size={moderateScale(16)}
+                color={colors.success}
+              />
+              <ZText type="M14" color="#1A1A1A" style={styles.ml8}>
+                {info}
+              </ZText>
+            </View>
+          ))}
+        </View>
+      )}
+    </View>
+  );
+
+  const renderReviewsTab = () => {
+    if (reviewsLoading && reviewStoriesLoading) {
+      return (
+        <View style={localStyles.loadingContainer}>
+          <ZLoader />
+        </View>
+      );
+    }
+
+    const reviewStories = reviewStoriesData?.reviewStories || [];
+    const displayedReviews = reviewStories.slice(0, 4);
+    const hasMoreReviews = reviewStories.length > 4;
+
+    return (
+      <View style={[localStyles.tabContent, {backgroundColor: colors.white}]}>
+        {/* Stunning Review Posts Section */}
+        <View style={localStyles.reviewPostsContainer}>
+          <View style={localStyles.reviewPostsHeader}>
+            <ZText type="B18" color={colors.textColor}>
+              Review Posts ({reviewStories.length})
+            </ZText>
+            <TouchableOpacity onPress={refetchReviewStories}>
+              <Ionicons name="refresh" size={moderateScale(20)} color={colors.primary} />
+            </TouchableOpacity>
+          </View>
+
+          {displayedReviews.length > 0 ? (
+            <View style={localStyles.reviewGrid}>
+              {displayedReviews.map((story, index) => (
+                <TouchableOpacity
+                  key={story._id}
+                  style={[localStyles.reviewPostCard, {backgroundColor: colors.backgroundColor}]}
+                  onPress={() => handleReviewStoryPress(story)}
+                >
+                  {/* Rating Badge */}
+                  <View style={[localStyles.ratingBadge, {backgroundColor: colors.primary}]}>
+                    <Ionicons name="star" size={moderateScale(12)} color={colors.white} />
+                    <ZText type="B12" color={colors.white} style={styles.ml4}>
+                      {story.rating}/5
+                    </ZText>
+                  </View>
+
+                  {/* Media */}
+                  <View style={localStyles.reviewMediaContainer}>
+                    {story.avatarUri || story.poster ? (
+                      <Image
+                        source={{ uri: story.avatarUri || story.poster }}
+                        style={localStyles.reviewMedia}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <View style={[localStyles.reviewMediaPlaceholder, {backgroundColor: colors.grayScale2}]}>
+                        <Ionicons name="image" size={moderateScale(32)} color={colors.grayScale5} />
+                      </View>
+                    )}
+                    
+                    {story.uri && (
+                      <View style={localStyles.playButton}>
+                        <Ionicons name="play" size={moderateScale(20)} color={colors.white} />
+                      </View>
+                    )}
+                  </View>
+
+                  {/* Author Info */}
+                  <View style={localStyles.reviewAuthor}>
+                    <Image
+                      source={
+                        story.author?.avatar
+                          ? { uri: story.author.avatar }
+                          : require('../../../assets/images/userLight.png')
+                      }
+                      style={localStyles.reviewAuthorAvatar}
+                    />
+                    <View style={localStyles.reviewAuthorInfo}>
+                      <ZText type="B14" color={colors.textColor} numberOfLines={1}>
+                        {story.author?.fullName || 'Anonymous'}
+                      </ZText>
+                      <View style={localStyles.starsContainer}>
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Ionicons
+                            key={star}
+                            name={star <= story.rating ? 'star' : 'star-outline'}
+                            size={moderateScale(12)}
+                            color={star <= story.rating ? '#FFD700' : colors.grayScale4}
+                          />
+                        ))}
+                      </View>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          ) : (
+            <View style={localStyles.emptyReviewsContainer}>
+              <Ionicons name="star-outline" size={moderateScale(64)} color={colors.grayScale4} />
+              <ZText type="B16" color={colors.grayScale5} style={styles.mt16}>
+                No review posts yet
+              </ZText>
+              <ZText type="M14" color={colors.grayScale5} style={styles.mt8}>
+                Be the first to share your experience!
+              </ZText>
+            </View>
+          )}
+
+          {hasMoreReviews && (
+            <TouchableOpacity 
+              style={[localStyles.seeMoreButton, {backgroundColor: colors.primary}]}
+              onPress={() => navigation.navigate(StackNav.ReviewReelDetail, { 
+                dishId, 
+                reviews: reviewStories 
+              })}
+            >
+              <ZText type="B16" color={colors.white}>
+                See More ({reviewStories.length - 4} more reviews)
+              </ZText>
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+    );
+  };
+
+  const renderIngredientsTab = () => (
+    <View style={[localStyles.tabContent, {backgroundColor: colors.white}]}>
+      {dishData?.ingredients && dishData.ingredients.length > 0 ? (
+        <View style={localStyles.ingredientsSection}>
+          <ZText type="B18" color="#1A1A1A" style={styles.mb15}>
+            Ingredients
+          </ZText>
+          {dishData.ingredients.map((ingredient, index) => (
+            <View key={index} style={localStyles.ingredientItem}>
+              <View style={localStyles.ingredientBullet} />
+              <ZText type="M16" color="#1A1A1A" style={styles.ml10}>
+                {ingredient}
+              </ZText>
+            </View>
+          ))}
+        </View>
+      ) : null}
+    </View>
+  );
+
+  const handleReviewStoryPress = (story) => {
+    navigation.navigate(StackNav.ReelsComponentOne, {
+      storyId: story._id,
+      stories: [story],
+    });
+  };
+
+  const handleCreateReviewReel = () => {
+    navigation.navigate('ReviewReelCreator', {
+      dishData,
+      reviewType: 'dish',
+    });
+  };
+
+  const renderBottomSection = () => (
+    <View style={[localStyles.bottomSection, {backgroundColor: colors.white}]}>
+
+
+      {/* Quantity Selector */}
+      <View style={localStyles.quantitySection}>
+        <ZText type="B16" color="#1A1A1A" style={styles.mb10}>
+          Quantity
+        </ZText>
+        <View style={localStyles.quantityControls}>
+          <TouchableOpacity
+            style={[
+              localStyles.quantityButton,
+              {backgroundColor: colors.inputBg},
+            ]}
+            onPress={() => handleQuantityChange(-1)}>
+            <Ionicons
+              name="remove"
+              size={moderateScale(20)}
+              color={colors.textColor}
+            />
+          </TouchableOpacity>
+
+          <View style={localStyles.quantityDisplay}>
+            <ZText type="B20" color={colors.primary}>
+              {quantity}
+            </ZText>
+          </View>
+
+          <TouchableOpacity
+            style={[
+              localStyles.quantityButton,
+              {backgroundColor: colors.primary},
+            ]}
+            onPress={() => handleQuantityChange(1)}>
+            <Ionicons
+              name="add"
+              size={moderateScale(20)}
+              color={colors.white}
+            />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Add to Cart Button */}
+      <ZButton
+        title={`Add to Cart - ${(dishData?.price * quantity).toFixed(0)} EGP`}
+        onPress={handleAddToCart}
+        containerStyle={localStyles.addToCartButton}
+        disabled={!dishData?.visible}
+      />
+    </View>
+  );
+
+  if (dishLoading) {
+    return (
+      <ZSafeAreaView>
+        {renderHeader()}
+        <ZLoader />
+      </ZSafeAreaView>
+    );
+  }
+
+  if (dishError || !dishData) {
+    return (
+      <ZSafeAreaView>
+        {renderHeader()}
+        <View style={localStyles.errorContainer}>
+          <MaterialIcon
+            name="food-off"
+            size={moderateScale(64)}
+            color={colors.grayScale7}
+          />
+          <ZText
+            type="B16"
+            align="center"
+            color={colors.error}
+            style={localStyles.errorTitle}>
+            Failed to load dish
+          </ZText>
+          <ZText
+            type="M14"
+            align="center"
+            color={colors.grayScale7}
+            style={localStyles.errorSubtitle}>
+            This dish might not be available or there was a connection issue.
+          </ZText>
+          <ZButton
+            title="Retry"
+            onPress={refetchDish}
+            containerStyle={localStyles.retryButton}
+          />
+        </View>
+      </ZSafeAreaView>
+    );
+  }
+
+  return (
+    <ZSafeAreaView>
+      {renderHeader()}
+
+      <Animated.ScrollView
+        style={localStyles.container}
+        showsVerticalScrollIndicator={false}
+        onScroll={Animated.event(
+          [{nativeEvent: {contentOffset: {y: scrollY}}}],
+          {useNativeDriver: false},
+        )}
+        scrollEventThrottle={16}>
+        {renderHeroSection()}
+        {renderDishInfo()}
+        {renderTabBar()}
+        {renderTabContent()}
+      </Animated.ScrollView>
+
+      {renderBottomSection()}
+    </ZSafeAreaView>
+  );
+};
+
+const localStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+
+  // Animated Header
+  animatedHeader: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: moderateScale(60),
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: moderateScale(16),
+    zIndex: 1000,
+    elevation: 10,
+  },
+
+  headerButton: {
+    width: moderateScale(40),
+    height: moderateScale(40),
+    borderRadius: moderateScale(20),
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+
+  // Hero Section
+  heroSection: {
+    position: 'relative',
+    height: moderateScale(300),
+  },
+
+  heroImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+
+  floatingActions: {
+    position: 'absolute',
+    top: moderateScale(16),
+    left: moderateScale(16),
+    right: moderateScale(16),
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    zIndex: 10,
+  },
+
+  floatingButton: {
+    width: moderateScale(44),
+    height: moderateScale(44),
+    borderRadius: moderateScale(22),
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 8,
+    zIndex: 11,
+  },
+
+  ratingBadge: {
+    position: 'absolute',
+    bottom: moderateScale(16),
+    right: moderateScale(16),
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    paddingHorizontal: moderateScale(12),
+    paddingVertical: moderateScale(8),
+    borderRadius: moderateScale(20),
+    zIndex: 10,
+  },
+
+  // Dish Info Section
+  dishInfoSection: {
+    padding: moderateScale(24),
+    borderTopLeftRadius: moderateScale(28),
+    borderTopRightRadius: moderateScale(28),
+    marginTop: moderateScale(-28),
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: -6,
+    },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 10,
+    backgroundColor: '#FFFFFF',
+  },
+
+  dishHeader: {
+    marginBottom: moderateScale(16),
+  },
+
+  dishTitleSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: moderateScale(12),
+  },
+
+  dishName: {
+    flex: 1,
+    marginRight: moderateScale(16),
+    lineHeight: moderateScale(30),
+    fontWeight: '800',
+    letterSpacing: -0.5,
+  },
+
+  dishPrice: {
+    textAlign: 'right',
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+
+  chefInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+
+  chefAvatar: {
+    width: moderateScale(40),
+    height: moderateScale(40),
+    borderRadius: moderateScale(20),
+    marginRight: moderateScale(12),
+  },
+
+  descriptionSection: {
+    marginBottom: moderateScale(16),
+  },
+
+  description: {
+    lineHeight: moderateScale(22),
+  },
+
+  tagsSection: {
+    marginBottom: moderateScale(8),
+  },
+
+  tag: {
+    paddingHorizontal: moderateScale(12),
+    paddingVertical: moderateScale(6),
+    borderRadius: moderateScale(16),
+    marginRight: moderateScale(8),
+  },
+
+  // Tab Bar
+  tabBar: {
+    flexDirection: 'row',
+    paddingHorizontal: moderateScale(20),
+    paddingVertical: moderateScale(16),
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+
+  tab: {
+    flex: 1,
+    paddingVertical: moderateScale(12),
+    paddingHorizontal: moderateScale(16),
+    borderRadius: moderateScale(20),
+    alignItems: 'center',
+    marginHorizontal: moderateScale(4),
+  },
+
+  // Tab Content
+  tabContent: {
+    padding: moderateScale(20),
+    minHeight: moderateScale(200),
+  },
+
+  nutritionSection: {
+    marginBottom: moderateScale(20),
+  },
+
+  nutritionGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+
+  nutritionItem: {
+    width: '48%',
+    padding: moderateScale(12),
+    backgroundColor: 'rgba(0,0,0,0.02)',
+    borderRadius: moderateScale(8),
+    marginBottom: moderateScale(8),
+    alignItems: 'center',
+  },
+
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: moderateScale(16),
+  },
+
+  dietarySection: {
+    marginBottom: moderateScale(20),
+  },
+
+  dietaryItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: moderateScale(8),
+  },
+
+  ingredientsSection: {
+    marginBottom: moderateScale(20),
+  },
+
+  ingredientItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: moderateScale(12),
+  },
+
+  ingredientBullet: {
+    width: moderateScale(6),
+    height: moderateScale(6),
+    borderRadius: moderateScale(3),
+    backgroundColor: '#FF4D67',
+  },
+
+  // Bottom Section
+  bottomSection: {
+    padding: moderateScale(20),
+    paddingBottom: moderateScale(30),
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: -4,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+
+  reviewReelButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: moderateScale(12),
+    paddingHorizontal: moderateScale(20),
+    borderWidth: 1.5,
+    borderRadius: moderateScale(12),
+    marginBottom: moderateScale(20),
+    backgroundColor: 'rgba(255, 77, 103, 0.05)',
+  },
+
+  quantitySection: {
+    marginBottom: moderateScale(20),
+  },
+
+  quantityControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  quantityButton: {
+    width: moderateScale(44),
+    height: moderateScale(44),
+    borderRadius: moderateScale(22),
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  quantityDisplay: {
+    marginHorizontal: moderateScale(24),
+    paddingHorizontal: moderateScale(20),
+    paddingVertical: moderateScale(12),
+    backgroundColor: 'rgba(255, 77, 103, 0.1)',
+    borderRadius: moderateScale(12),
+    minWidth: moderateScale(60),
+    alignItems: 'center',
+  },
+
+  addToCartButton: {
+    height: moderateScale(56),
+    borderRadius: moderateScale(16),
+  },
+
+  // Loading and Error States
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: moderateScale(40),
+  },
+
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: moderateScale(20),
+  },
+
+  errorTitle: {
+    marginTop: moderateScale(16),
+    marginBottom: moderateScale(8),
+  },
+
+  errorSubtitle: {
+    marginBottom: moderateScale(20),
+    lineHeight: moderateScale(20),
+  },
+
+  retryButton: {
+    marginTop: moderateScale(20),
+    height: moderateScale(40),
+    paddingHorizontal: moderateScale(30),
+  },
+
+  emptyState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: moderateScale(40),
+  },
+
+  // Review Posts Section Styles
+  reviewPostsContainer: {
+    padding: moderateScale(20),
+  },
+
+  reviewPostsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: moderateScale(20),
+  },
+
+  reviewGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+
+  reviewPostCard: {
+    width: '48%',
+    marginBottom: moderateScale(16),
+    borderRadius: moderateScale(16),
+    padding: moderateScale(12),
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+
+  ratingBadge: {
+    position: 'absolute',
+    top: moderateScale(8),
+    right: moderateScale(8),
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: moderateScale(8),
+    paddingVertical: moderateScale(4),
+    borderRadius: moderateScale(12),
+    zIndex: 1,
+  },
+
+  reviewMediaContainer: {
+    position: 'relative',
+    marginBottom: moderateScale(12),
+  },
+
+  reviewMedia: {
+    width: '100%',
+    height: moderateScale(120),
+    borderRadius: moderateScale(12),
+  },
+
+  reviewMediaPlaceholder: {
+    width: '100%',
+    height: moderateScale(120),
+    borderRadius: moderateScale(12),
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  playButton: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: [{ translateX: -16 }, { translateY: -16 }],
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    borderRadius: moderateScale(16),
+    width: moderateScale(32),
+    height: moderateScale(32),
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  reviewAuthor: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+
+  reviewAuthorAvatar: {
+    width: moderateScale(24),
+    height: moderateScale(24),
+    borderRadius: moderateScale(12),
+    marginRight: moderateScale(8),
+  },
+
+  reviewAuthorInfo: {
+    flex: 1,
+  },
+
+  starsContainer: {
+    flexDirection: 'row',
+    marginTop: moderateScale(4),
+  },
+
+  emptyReviewsContainer: {
+    alignItems: 'center',
+    paddingVertical: moderateScale(40),
+  },
+
+  seeMoreButton: {
+    marginTop: moderateScale(16),
+    paddingVertical: moderateScale(16),
+    borderRadius: moderateScale(12),
+    alignItems: 'center',
+  },
+});
+
+export default DishDetailScreen;

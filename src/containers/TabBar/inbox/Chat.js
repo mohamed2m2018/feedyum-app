@@ -20,10 +20,13 @@ import { moderateScale } from '../../../common/constants';
 import { StackNav } from '../../../navigation/NavigationKeys';
 import { useStorage } from '../../../utils/useStorage';
 import ZHeader from '../../../components/common/ZHeader';
+import AudioMessage from '../../../components/AudioMessage';
+import VoiceRecorder from '../../../components/VoiceRecorder';
 
 export default function Chat({ navigation, route }) {
   const userName = route.params?.userName;
   const userImage = route.params?.userImage;
+  const orderId = route.params?.orderId || null; // Get orderId if provided
   const chatUserId = route.params?.chatUserId || "64f48d3b6b45e8f937a49bc0"; // Ensure you get chatUserId from route
   const colors = useSelector(state => state.theme.theme);
   const [messages, setMessages] = useState([]);
@@ -32,6 +35,7 @@ export default function Chat({ navigation, route }) {
   const [loading, setLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [text, setText] = useState('');
+  const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
   const textInputRef = useRef(null);
   const messageContainerRef = useRef(null);
   const socketRef = useRef(null); // Ref to store the socket instance
@@ -62,6 +66,9 @@ export default function Chat({ navigation, route }) {
             name: msg.sender.username,
             avatar: msg.sender.avatar, // Assuming avatar field is available
           },
+          // Handle audio messages
+          audio: msg.audio ? msg.audio : undefined,
+          duration: msg.duration ? msg.duration : undefined,
         }));
         setMessages(previousMessages => GiftedChat.prepend(previousMessages, messages));
         setTotalPages(data.totalPages);
@@ -78,6 +85,9 @@ export default function Chat({ navigation, route }) {
             name: message.sender.username,
             avatar: message.sender.avatar, // Assuming avatar field is available
           },
+          // Handle audio messages
+          audio: message.audio ? message.audio : undefined,
+          duration: message.duration ? message.duration : undefined,
         };
         setMessages(previousMessages => GiftedChat.append(previousMessages, newMessage));
       });
@@ -97,7 +107,7 @@ export default function Chat({ navigation, route }) {
   const loadMessages = (pageNumber) => {
     if (socketRef.current && !loading && pageNumber <= totalPages) {
       setLoading(true);
-      socketRef.current.emit('join', { userId, chatUserId, page: pageNumber });
+      socketRef.current.emit('join', { userId, chatUserId, orderId, page: pageNumber });
     }
   };
 
@@ -115,6 +125,9 @@ export default function Chat({ navigation, route }) {
         senderId: userId,
         receiverId: chatUserId,
         content: message.text,
+        audio: message.audio || undefined,
+        duration: message.duration || undefined,
+        orderId: orderId || undefined,
       };
 
       socketRef.current.emit('sendMessage', messageData, (response) => {
@@ -126,6 +139,35 @@ export default function Chat({ navigation, route }) {
 
     setMessages(previousMessages => GiftedChat.append(previousMessages, newMessages));
     Keyboard.dismiss(); // Dismiss the keyboard on send
+  };
+
+  const handleSendAudio = (audioFile, duration) => {
+    const audioMessage = {
+      _id: Math.random().toString(36).substring(7),
+      text: '', // Audio messages don't have text
+      audio: audioFile,
+      duration: duration,
+      createdAt: new Date(),
+      user: { _id: userId },
+    };
+
+    onSend([audioMessage]);
+    setShowVoiceRecorder(false);
+  };
+
+  const handleTestAudio = () => {
+    // Test audio message with a simple, reliable audio URL
+    const testAudioMessage = {
+      _id: Math.random().toString(36).substring(7),
+      text: '',
+      audio: 'https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3', // Simple test audio
+      duration: 3,
+      createdAt: new Date(),
+      user: { _id: userId },
+    };
+    
+    console.log('Sending test audio message:', testAudioMessage);
+    onSend([testAudioMessage]);
   };
 
   const onPressProfile = () => {
@@ -155,17 +197,24 @@ export default function Chat({ navigation, route }) {
   const RightIcon = () => {
     return (
       <View style={styles.rowCenter}>
+        <TouchableOpacity onPress={handleTestAudio} style={styles.pr10}>
+          <Ionicons
+            name="musical-notes"
+            size={moderateScale(24)}
+            color={colors.primary}
+          />
+        </TouchableOpacity>
         <TouchableOpacity onPress={onPressCall} style={styles.pr10}>
           <Ionicons
             name="call-outline"
-            size={moderateScale(30)}
+            size={moderateScale(24)}
             color={colors.textColor}
           />
         </TouchableOpacity>
         <TouchableOpacity>
           <Ionicons
             name="ellipsis-horizontal-circle-outline"
-            size={moderateScale(30)}
+            size={moderateScale(24)}
             color={colors.textColor}
           />
         </TouchableOpacity>
@@ -173,51 +222,101 @@ export default function Chat({ navigation, route }) {
     );
   };
 
-  const renderSend = (props) => (
-    <Send {...props}>
-      <View style={localStyles.sendButton}>
-        <Feather name="send" size={moderateScale(24)} color={colors.primary} />
+  const renderSend = (props) => {
+    if (showVoiceRecorder) {
+      return null; // Hide send button when recording
+    }
+
+    return (
+      <Send {...props}>
+        <View style={localStyles.sendButton}>
+          <Feather name="send" size={moderateScale(20)} color={colors.primary} />
+        </View>
+      </Send>
+    );
+  };
+
+  const renderBubble = (props) => {
+    // If message has audio, render custom audio message
+    if (props.currentMessage.audio) {
+      return (
+        <View style={localStyles.audioBubbleContainer}>
+          <AudioMessage
+            audioUrl={props.currentMessage.audio}
+            duration={props.currentMessage.duration}
+            messageId={props.currentMessage._id}
+            isOwn={props.currentMessage.user._id === userId}
+          />
+        </View>
+      );
+    }
+
+    return (
+      <Bubble
+        {...props}
+        wrapperStyle={{
+          left: { 
+            backgroundColor: colors.grayScale1, 
+            borderRadius: 12, 
+            padding: 10,
+            marginLeft: 0, // Adjust to reduce left space
+          },
+          right: { 
+            backgroundColor: colors.primary, 
+            borderRadius: 12, 
+            padding: 10,
+            marginRight: 0, // Adjust to reduce right space if necessary
+          },
+        }}
+        textStyle={{
+          left: { color: colors.black },
+          right: { color: colors.white },
+        }}
+      />
+    );
+  };
+
+  const renderInputToolbar = (props) => {
+    if (showVoiceRecorder) {
+      return (
+        <View style={localStyles.voiceRecorderContainer}>
+          <VoiceRecorder 
+            onSendAudio={handleSendAudio}
+            onCancel={() => setShowVoiceRecorder(false)}
+          />
+        </View>
+      );
+    }
+
+    return (
+      <View style={localStyles.inputToolbarContainer}>
+        <InputToolbar
+          {...props}
+          containerStyle={{
+            backgroundColor: colors.inputBg,
+            borderTopColor: colors.btnColor1,
+            borderTopWidth: 1,
+            borderRadius: 20,
+            marginHorizontal: 10,
+            marginBottom: Platform.OS === 'android' ? 10 : 5, // Add bottom margin
+            flex: 1,
+          }}
+        />
+        {!text.trim() && (
+          <TouchableOpacity 
+            style={[localStyles.micButton, {backgroundColor: colors.primary}]}
+            onPress={() => setShowVoiceRecorder(true)}
+          >
+            <Ionicons
+              name="mic"
+              size={moderateScale(16)}
+              color={colors.white}
+            />
+          </TouchableOpacity>
+        )}
       </View>
-    </Send>
-  );
-
-  const renderBubble = (props) => (
-    <Bubble
-      {...props}
-      wrapperStyle={{
-        left: { 
-          backgroundColor: colors.grayScale1, 
-          borderRadius: 12, 
-          padding: 10,
-          marginLeft: 0, // Adjust to reduce left space
-        },
-        right: { 
-          backgroundColor: colors.primary, 
-          borderRadius: 12, 
-          padding: 10,
-          marginRight: 0, // Adjust to reduce right space if necessary
-        },
-      }}
-      textStyle={{
-        left: { color: colors.black },
-        right: { color: colors.white },
-      }}
-    />
-  );
-
-  const renderInputToolbar = (props) => (
-    <InputToolbar
-      {...props}
-      containerStyle={{
-        backgroundColor: colors.inputBg,
-        borderTopColor: colors.btnColor1,
-        borderTopWidth: 1,
-        borderRadius: 20,
-        marginHorizontal: 10,
-        marginBottom: Platform.OS === 'android' ? 10 : 5, // Add bottom margin
-      }}
-    />
-  );
+    );
+  };
 
   const renderComposer = (props) => (
     <Composer
@@ -294,5 +393,28 @@ const localStyles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  audioBubbleContainer: {
+    marginVertical: 5,
+    marginHorizontal: 10,
+  },
+  voiceRecorderContainer: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    backgroundColor: 'transparent',
+  },
+  inputToolbarContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    paddingRight: 10,
+  },
+  micButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 5,
+    marginBottom: Platform.OS === 'android' ? 10 : 5,
   },
 });

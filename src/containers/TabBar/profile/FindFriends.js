@@ -72,7 +72,7 @@ export default function FindFriends() {
       <TouchableOpacity onPress={onPressScanIcon}>
         <Ionicons
           name="scan-outline"
-          size={moderateScale(26)}
+          size={moderateScale(20)}
           color={colors.textColor}
         />
       </TouchableOpacity>
@@ -92,7 +92,7 @@ export default function FindFriends() {
             ]}>
             <Ionicons
               name={item?.icon}
-              size={moderateScale(24)}
+              size={moderateScale(20)}
               color={colors.grayScale5}
             />
           </View>

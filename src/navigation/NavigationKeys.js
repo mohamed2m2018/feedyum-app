@@ -63,4 +63,20 @@ export const StackNav = {
   reelsOne: 'reelsOne',
   locations: 'locations',
   SelectCategory: 'SelectCategory',
+  ChefDashboard: 'ChefDashboard',
+  MenuManagement: 'MenuManagement',
+  OrderManagement: 'OrderManagement',
+  Analytics: 'Analytics',
+  // Food Ordering System
+  ChefMenu: 'ChefMenu',
+  DishDetailScreen: 'DishDetailScreen',
+  MenuDetailScreen: 'MenuDetailScreen',
+  ShoppingCart: 'ShoppingCart',
+  OrderTracking: 'OrderTracking',
+  ChatScreen: 'ChatScreen',
+  ChatList: 'ChatList',
+  Wallet: 'Wallet',
+  // Review System
+  ReviewReelCreator: 'ReviewReelCreator',
+  ReviewReelDetail: 'ReviewReelDetail',
 };

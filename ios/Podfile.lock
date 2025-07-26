@@ -23,10 +23,6 @@ PODS:
     - React-Core (= 0.71.3)
     - React-jsi (= 0.71.3)
     - ReactCommon/turbomodule/core (= 0.71.3)
-  - ffmpeg-kit-ios-full-gpl (5.1)
-  - ffmpeg-kit-react-native/full-gpl (5.1.0):
-    - ffmpeg-kit-ios-full-gpl (= 5.1)
-    - React-Core
   - Firebase/CoreOnly (10.12.0):
     - FirebaseCore (= 10.12.0)
   - Firebase/DynamicLinks (10.12.0):
@@ -120,17 +116,17 @@ PODS:
   - GTMSessionFetcher/Core (3.5.0)
   - JWT (3.0.0-beta.14):
     - Base64 (~> 1.1.2)
-  - libwebp (1.3.2):
-    - libwebp/demux (= 1.3.2)
-    - libwebp/mux (= 1.3.2)
-    - libwebp/sharpyuv (= 1.3.2)
-    - libwebp/webp (= 1.3.2)
-  - libwebp/demux (1.3.2):
+  - libwebp (1.5.0):
+    - libwebp/demux (= 1.5.0)
+    - libwebp/mux (= 1.5.0)
+    - libwebp/sharpyuv (= 1.5.0)
+    - libwebp/webp (= 1.5.0)
+  - libwebp/demux (1.5.0):
     - libwebp/webp
-  - libwebp/mux (1.3.2):
+  - libwebp/mux (1.5.0):
     - libwebp/demux
-  - libwebp/sharpyuv (1.3.2)
-  - libwebp/webp (1.3.2):
+  - libwebp/sharpyuv (1.5.0)
+  - libwebp/webp (1.5.0):
     - libwebp/sharpyuv
   - lottie-ios (4.4.1)
   - lottie-react-native (6.7.2):
@@ -144,7 +140,7 @@ PODS:
     - nanopb/encode (= 2.30910.0)
   - nanopb/decode (2.30910.0)
   - nanopb/encode (2.30910.0)
-  - NextLevelSessionExporter (0.4.6)
+  - NextLevelSessionExporter (0.4.7)
   - OneSignalXCFramework (3.12.4):
     - OneSignalXCFramework/OneSignalCore (= 3.12.4)
     - OneSignalXCFramework/OneSignalExtension (= 3.12.4)
@@ -511,6 +507,8 @@ PODS:
     - React-Core
   - ReactNativeLocalization (2.3.1):
     - React-Core
+  - RNAudioRecord (0.2.2):
+    - React
   - RNCAsyncStorage (1.23.1):
     - React-Core
   - RNFastImage (8.6.3):
@@ -580,7 +578,6 @@ DEPENDENCIES:
   - DoubleConversion (from `../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec`)
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
   - FBReactNativeSpec (from `../node_modules/react-native/React/FBReactNativeSpec`)
-  - ffmpeg-kit-react-native/full-gpl (from `../node_modules/ffmpeg-kit-react-native/ffmpeg-kit-react-native.podspec`)
   - FirebaseCore
   - glog (from `../node_modules/react-native/third-party-podspecs/glog.podspec`)
   - GoogleUtilities
@@ -633,6 +630,7 @@ DEPENDENCIES:
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
   - ReactNativeGetLocation (from `../node_modules/react-native-get-location`)
   - ReactNativeLocalization (from `../node_modules/react-native-localization`)
+  - RNAudioRecord (from `../node_modules/react-native-audio-record`)
   - "RNCAsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
   - RNFastImage (from `../node_modules/react-native-fast-image`)
   - "RNFBApp (from `../node_modules/@react-native-firebase/app`)"
@@ -656,7 +654,6 @@ SPEC REPOS:
   trunk:
     - AppAuth
     - Base64
-    - ffmpeg-kit-ios-full-gpl
     - Firebase
     - FirebaseCore
     - FirebaseCoreInternal
@@ -696,8 +693,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/Libraries/FBLazyVector"
   FBReactNativeSpec:
     :path: "../node_modules/react-native/React/FBReactNativeSpec"
-  ffmpeg-kit-react-native:
-    :podspec: "../node_modules/ffmpeg-kit-react-native/ffmpeg-kit-react-native.podspec"
   glog:
     :podspec: "../node_modules/react-native/third-party-podspecs/glog.podspec"
   lottie-ios:
@@ -796,6 +791,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-get-location"
   ReactNativeLocalization:
     :path: "../node_modules/react-native-localization"
+  RNAudioRecord:
+    :path: "../node_modules/react-native-audio-record"
   RNCAsyncStorage:
     :path: "../node_modules/@react-native-async-storage/async-storage"
   RNFastImage:
@@ -842,8 +839,6 @@ SPEC CHECKSUMS:
   DoubleConversion: 5189b271737e1565bdce30deb4a08d647e3f5f54
   FBLazyVector: 60195509584153283780abdac5569feffb8f08cc
   FBReactNativeSpec: 9c191fb58d06dc05ab5559a5505fc32139e9e4a2
-  ffmpeg-kit-ios-full-gpl: 2682965e5b3e7f13a05836d46d302eafe6c5039e
-  ffmpeg-kit-react-native: 56ecfcd21536379dd123eade87c3b6fd55f12030
   Firebase: 07150e75d142fb9399f6777fa56a187b17f833a0
   FirebaseCore: f86a1394906b97ac445ae49c92552a9425831bed
   FirebaseCoreInternal: df84dd300b561c27d5571684f389bf60b0a5c934
@@ -858,13 +853,13 @@ SPEC CHECKSUMS:
   GTMAppAuth: f69bd07d68cd3b766125f7e072c45d7340dea0de
   GTMSessionFetcher: 5aea5ba6bd522a239e236100971f10cb71b96ab6
   JWT: ef71dfb03e1f842081e64dc42eef0e164f35d251
-  libwebp: 1786c9f4ff8a279e4dac1e8f385004d5fc253009
+  libwebp: 02b23773aedb6ff1fd38cec7a77b81414c6842a8
   lottie-ios: e047b1d2e6239b787cc5e9755b988869cf190494
   lottie-react-native: 17547b2f3c7034e2ae8672833fdb63262164d18a
   MMKV: aac95d817a100479445633f2b3ed8961b4ac5043
   MMKVCore: 9cfef4c48c6c46f66226fc2e4634d78490206a48
   nanopb: 438bc412db1928dac798aa6fd75726007be04262
-  NextLevelSessionExporter: 4d8aa5e617f1c709724f2453efe5d4628480f65a
+  NextLevelSessionExporter: 74231e7e347424c975f23f77e246a5d372d3fbc6
   OneSignalXCFramework: 087934ab0d4d7445fcf1c015c7c782359e26c020
   Permission-LocationAccuracy: 89f89db96efdf7d337918ba7845c6fc26781d288
   Permission-LocationWhenInUse: 100eaf457c8eede236e62af0d17b7e49c0292e62
@@ -914,6 +909,7 @@ SPEC CHECKSUMS:
   ReactCommon: 5768a505f0bc7b798dc2becdd3ee6442224f796c
   ReactNativeGetLocation: 87f83bee4dfecc88772de04afd076d9ae265cc42
   ReactNativeLocalization: 076497d7ca70341c751cd3b3e7c86187332a182d
+  RNAudioRecord: 162fee3b8fb628773ec704bf0333823125be2ed7
   RNCAsyncStorage: 826b603ae9c0f88b5ac4e956801f755109fa4d5c
   RNFastImage: 5c9c9fed9c076e521b3f509fe79e790418a544e8
   RNFBApp: 147c3274daa84d7410d457510548d5fb3b317e37
@@ -937,6 +933,6 @@ SPEC CHECKSUMS:
   TOCropViewController: 80b8985ad794298fb69d3341de183f33d1853654
   Yoga: 5ed1699acbba8863755998a4245daa200ff3817b
 
-PODFILE CHECKSUM: 67822279dda4fa4949468c227fc80b6ed4a31a7f
+PODFILE CHECKSUM: 4a9cb0e101a4ba3ab66e233412f437620044ed90
 
 COCOAPODS: 1.15.2

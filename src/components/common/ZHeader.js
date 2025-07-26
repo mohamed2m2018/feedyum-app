@@ -1,4 +1,4 @@
-import {I18nManager, StyleSheet, TouchableOpacity, View} from 'react-native';
+import {I18nManager, StyleSheet, TouchableOpacity, View, SafeAreaView} from 'react-native';
 import React from 'react';
 import {styles} from '../../themes';
 import {useNavigation} from '@react-navigation/native';
@@ -14,33 +14,37 @@ export default function ZHeader(props) {
 
   const goBack = () => navigation.goBack();
   return (
-    <View style={[localStyles.container, !!isHideBack && styles.pr10]}>
-      <View style={[styles.rowStart, styles.flex]}>
-        {!isHideBack && (
-          <TouchableOpacity style={styles.pr10} onPress={onPressBack || goBack}>
-            <Ionicons
-              name="arrow-back-outline"
-              size={moderateScale(26)}
-              style={I18nManager.isRTL && {transform: [{scaleX: -1}]}}
-              color={colors.textColor}
-            />
-          </TouchableOpacity>
-        )}
-        {!!isLeftIcon && isLeftIcon}
+    <SafeAreaView>
+      <View style={[localStyles.container, !!isHideBack && styles.pr10]}>
+        <View style={[styles.rowStart, styles.flex]}>
+          {!isHideBack && (
+            <TouchableOpacity style={styles.pr10} onPress={onPressBack || goBack}>
+              <Ionicons
+                name="arrow-back-outline"
+                size={moderateScale(26)}
+                style={I18nManager.isRTL && {transform: [{scaleX: -1}]}}
+                color={colors.textColor}
+              />
+            </TouchableOpacity>
+          )}
+          {!!isLeftIcon && isLeftIcon}
 
-        <ZText
-          numberOfLines={1}
-          style={[
-            styles.pr10,
-            styles.mr10,
-            !!rightIcon && localStyles.titleText,
-          ]}
-          type={'B24'}>
-          {title}
-        </ZText>
+          {!!title && (
+            <ZText
+              numberOfLines={1}
+              style={[
+                styles.pr10,
+                styles.mr10,
+                !!rightIcon && localStyles.titleText,
+              ]}
+              type={'B24'}>
+              {title}
+            </ZText>
+          )}
+        </View>
+        {!!rightIcon && rightIcon}
       </View>
-      {!!rightIcon && rightIcon}
-    </View>
+    </SafeAreaView>
   );
 }
 

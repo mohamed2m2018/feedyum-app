@@ -1,0 +1,958 @@
+import React, {useEffect, useState, useRef} from 'react';
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  RefreshControl,
+  Alert,
+  AppState,
+  Text,
+} from 'react-native';
+import {useSelector, useDispatch} from 'react-redux';
+import {useNavigation, useRoute} from '@react-navigation/native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import ZText from '../../../components/common/ZText';
+import ZHeader from '../../../components/common/ZHeader';
+import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
+import ZButton from '../../../components/common/ZButton';
+import ZLoader from '../../../components/common/ZLoader';
+import {moderateScale} from '../../../common/constants';
+import {styles} from '../../../themes';
+import {
+  fetchOrderById,
+  selectCurrentOrder,
+  selectOrderLoading,
+  selectOrderError,
+  clearError,
+  setCurrentOrder,
+  updateOrderStatus,
+} from '../../../redux/reducer/orderSlice';
+import {StackNav} from '../../../navigation/NavigationKeys';
+
+const OrderTracking = () => {
+  const colors = useSelector(state => state.theme.theme);
+  const dispatch = useDispatch();
+  const navigation = useNavigation();
+  const route = useRoute();
+  const {orderId} = route.params || {};
+
+  const currentOrder = useSelector(selectCurrentOrder);
+  const isLoading = useSelector(selectOrderLoading);
+  const error = useSelector(selectOrderError);
+
+  // Debug: Check if there's order data in route params
+  console.log('OrderTracking: Route params:', route.params);
+  console.log('OrderTracking: OrderId from params:', orderId);
+
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const intervalRef = useRef(null);
+  const appStateRef = useRef(AppState.currentState);
+
+  useEffect(() => {
+    // Use the passed orderId or fallback to a test order ID
+    const testOrderId = orderId || '686cc4025633d8b417f7b70e'; // Real order ID from database
+
+    if (testOrderId) {
+      console.log('OrderTracking: Fetching order with ID:', testOrderId);
+      dispatch(fetchOrderById(testOrderId))
+        .then(orderData => {
+          console.log('OrderTracking: Successfully fetched order:', orderData);
+          setLastUpdated(new Date());
+        })
+        .catch(error => {
+          console.error('OrderTracking: Failed to fetch order:', error);
+          console.error(
+            'OrderTracking: Error details:',
+            JSON.stringify(error, null, 2),
+          );
+        });
+    }
+  }, [orderId, dispatch]);
+
+  useEffect(() => {
+    console.log(
+      'OrderTracking: Current order data:',
+      JSON.stringify(currentOrder, null, 2),
+    );
+    console.log('OrderTracking: Loading state:', isLoading);
+    console.log('OrderTracking: Error state:', error);
+    console.log('OrderTracking: Route params:', route.params);
+    console.log('OrderTracking: OrderId from params:', orderId);
+  }, [currentOrder, isLoading, error, route.params, orderId]);
+
+  useEffect(() => {
+    if (error) {
+      Alert.alert('Error', error, [
+        {text: 'OK', onPress: () => dispatch(clearError())},
+      ]);
+    }
+  }, [error, dispatch]);
+
+  // Real-time order status updates
+  useEffect(() => {
+    const startPolling = () => {
+      if (
+        orderId &&
+        currentOrder &&
+        !['delivered', 'cancelled'].includes(currentOrder.status)
+      ) {
+        intervalRef.current = setInterval(async () => {
+          try {
+            console.log('OrderTracking: Polling for order updates...');
+            await dispatch(fetchOrderById(orderId));
+            setLastUpdated(new Date());
+          } catch (error) {
+            console.error('OrderTracking: Polling error:', error);
+          }
+        }, 30000); // Poll every 30 seconds
+      }
+    };
+
+    const stopPolling = () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+
+    // Start polling when order is active
+    if (
+      currentOrder &&
+      !['delivered', 'cancelled'].includes(currentOrder.status)
+    ) {
+      startPolling();
+    } else {
+      stopPolling();
+    }
+
+    // Handle app state changes
+    const handleAppStateChange = nextAppState => {
+      if (
+        appStateRef.current.match(/inactive|background/) &&
+        nextAppState === 'active'
+      ) {
+        // App came to foreground, refresh order data
+        if (orderId) {
+          dispatch(fetchOrderById(orderId));
+          setLastUpdated(new Date());
+        }
+        if (
+          currentOrder &&
+          !['delivered', 'cancelled'].includes(currentOrder.status)
+        ) {
+          startPolling();
+        }
+      } else if (nextAppState.match(/inactive|background/)) {
+        // App went to background, stop polling
+        stopPolling();
+      }
+      appStateRef.current = nextAppState;
+    };
+
+    const subscription = AppState.addEventListener(
+      'change',
+      handleAppStateChange,
+    );
+
+    return () => {
+      stopPolling();
+      subscription?.remove();
+    };
+  }, [orderId, currentOrder, dispatch]);
+
+  const handleRefresh = async () => {
+    if (orderId) {
+      setRefreshing(true);
+      try {
+        await dispatch(fetchOrderById(orderId));
+      } catch (err) {
+        // Error handled by useEffect above
+      } finally {
+        setRefreshing(false);
+      }
+    }
+  };
+
+  const handleChatWithChef = () => {
+    if (currentOrder) {
+      navigation.navigate(StackNav.ChatScreen, {
+        chefId: currentOrder.chef._id,
+        orderId: currentOrder._id,
+      });
+    }
+  };
+
+  const getStatusColor = status => {
+    switch (status) {
+      case 'pending':
+        return colors.warning || '#FF9800';
+      case 'chef_review':
+        return colors.info || '#2196F3';
+      case 'accepted':
+        return colors.success || '#4CAF50';
+      case 'preparing':
+        return colors.info || '#2196F3';
+      case 'ready':
+        return colors.success || '#4CAF50';
+      case 'delivered':
+        return colors.success || '#4CAF50';
+      case 'cancelled':
+        return colors.error || '#F44336';
+      default:
+        return colors.grayScale7;
+    }
+  };
+
+  const getStatusText = status => {
+    switch (status) {
+      case 'pending':
+        return 'Order Placed';
+      case 'chef_review':
+        return 'Chef Reviewing';
+      case 'accepted':
+        return 'Order Accepted';
+      case 'preparing':
+        return 'Preparing';
+      case 'ready':
+        return 'Ready for Pickup/Delivery';
+      case 'delivered':
+        return 'Delivered';
+      case 'cancelled':
+        return 'Cancelled';
+      default:
+        return status;
+    }
+  };
+
+  const getStatusTimestamp = status => {
+    if (!currentOrder) return null;
+
+    // Only show timestamp for pending (order creation) and current status
+    if (status === 'pending') {
+      return currentOrder.created_at;
+    }
+
+    // Show timestamp for current status only
+    if (status === currentOrder.status) {
+      return currentOrder.updated_at || currentOrder.created_at;
+    }
+
+    // Don't show timestamps for future statuses or fake completed statuses
+    return null;
+  };
+
+  const getEstimatedTime = (status, currentStatus) => {
+    // Provide estimated times for future statuses based on current status
+    const statusOrder = [
+      'pending',
+      'accepted',
+      'preparing',
+      'ready',
+      'delivered',
+    ];
+    const currentIndex = statusOrder.indexOf(currentStatus);
+    const statusIndex = statusOrder.indexOf(status);
+
+    if (statusIndex <= currentIndex) return null;
+
+    const now = new Date();
+    const estimatedMinutes = (statusIndex - currentIndex) * 15; // 15 minutes per status
+    const estimatedTime = new Date(now.getTime() + estimatedMinutes * 60000);
+
+    return estimatedTime;
+  };
+
+  const renderStatusTimeline = () => {
+    const statuses = ['pending', 'accepted', 'preparing', 'ready', 'delivered'];
+    const currentStatusIndex = statuses.indexOf(currentOrder?.status);
+
+    return (
+      <View style={localStyles.timelineContainer}>
+        <View style={localStyles.timelineHeader}>
+          <Text style={{fontSize: 16, fontWeight: 'bold', color: '#000000'}}>
+            Order Progress
+          </Text>
+          {lastUpdated && (
+            <Text style={{fontSize: 12, color: '#666666'}}>
+              Last updated: {lastUpdated.toLocaleTimeString()}
+            </Text>
+          )}
+        </View>
+
+        <View style={localStyles.timeline}>
+          {statuses.map((status, index) => {
+            const isCompleted = index < currentStatusIndex;
+            const isCurrent = index === currentStatusIndex;
+            const isFuture = index > currentStatusIndex;
+            const isActive = isCompleted || isCurrent;
+            const timestamp = getStatusTimestamp(status);
+
+            return (
+              <View key={status} style={localStyles.timelineItem}>
+                <View style={localStyles.timelineLeft}>
+                  <View
+                    style={[
+                      localStyles.timelineIcon,
+                      {
+                        backgroundColor: isActive
+                          ? getStatusColor(status)
+                          : '#E0E0E0',
+                        borderColor: isCurrent
+                          ? getStatusColor(status)
+                          : '#E0E0E0',
+                        borderWidth: isCurrent ? 3 : 2,
+                      },
+                    ]}>
+                    <Ionicons
+                      name={
+                        isCompleted
+                          ? 'checkmark'
+                          : isCurrent
+                            ? 'time'
+                            : 'ellipse'
+                      }
+                      size={moderateScale(16)}
+                      color={isActive ? '#FFFFFF' : '#BDBDBD'}
+                    />
+                  </View>
+                  {index < statuses.length - 1 && (
+                    <View
+                      style={[
+                        localStyles.timelineLine,
+                        {
+                          backgroundColor: isCompleted
+                            ? getStatusColor(status)
+                            : '#E0E0E0',
+                        },
+                      ]}
+                    />
+                  )}
+                </View>
+
+                <View style={localStyles.timelineRight}>
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: isCurrent ? 'bold' : 'normal',
+                      color: isCurrent
+                        ? '#FF4D67'
+                        : isActive
+                          ? '#000000'
+                          : '#666666',
+                    }}>
+                    {status === 'pending'
+                      ? 'Order Placed'
+                      : getStatusText(status)}
+                  </Text>
+
+                  {timestamp && (
+                    <Text
+                      style={{
+                        fontSize: 12,
+                        color: '#666666',
+                        marginTop: 2,
+                      }}>
+                      {new Date(timestamp).toLocaleString()}
+                    </Text>
+                  )}
+
+                  {isCurrent && (
+                    <Text
+                      style={{
+                        fontSize: 12,
+                        color: '#FF4D67',
+                        marginTop: 2,
+                        fontWeight: 'bold',
+                      }}>
+                      Current Status
+                    </Text>
+                  )}
+                </View>
+              </View>
+            );
+          })}
+        </View>
+      </View>
+    );
+  };
+
+  const renderOrderDetails = () => {
+    console.log('Rendering order details with data:', currentOrder);
+    console.log('currentOrder exists:', !!currentOrder);
+    console.log('currentOrder._id:', currentOrder?._id);
+    console.log('currentOrder.chef:', currentOrder?.chef);
+    console.log('currentOrder.user:', currentOrder?.user);
+
+    // If no order data, show loading state
+    if (!currentOrder) {
+      return (
+        <View style={[localStyles.section, {backgroundColor: '#FFFFFF'}]}>
+          <Text
+            style={{
+              fontSize: 16,
+              fontWeight: 'bold',
+              color: '#000000',
+              marginBottom: 16,
+            }}>
+            Order Details
+          </Text>
+          <View style={localStyles.loadingContainer}>
+            <Text style={{fontSize: 14, color: '#666666', textAlign: 'center'}}>
+              Loading order details...
+            </Text>
+          </View>
+        </View>
+      );
+    }
+
+    return (
+      <View style={[localStyles.section, {backgroundColor: '#FFFFFF'}]}>
+        <Text
+          style={{
+            fontSize: 16,
+            fontWeight: 'bold',
+            color: '#000000',
+            marginBottom: 16,
+          }}>
+          Order Details
+        </Text>
+
+        <View style={localStyles.orderInfo}>
+          <View style={localStyles.infoRow}>
+            <Text style={{color: '#666666', fontSize: 14}}>Order ID:</Text>
+            <Text
+              style={{
+                color: '#000000',
+                fontSize: 14,
+                fontWeight: 'bold',
+              }}>
+              #
+              {currentOrder._id
+                ? currentOrder._id.slice(-8)
+                : orderId
+                  ? orderId.slice(-8)
+                  : 'N/A'}
+            </Text>
+          </View>
+
+          <View style={localStyles.infoRow}>
+            <Text style={{color: '#666666', fontSize: 14}}>Chef:</Text>
+            <Text
+              style={{
+                color: '#000000',
+                fontSize: 14,
+                fontWeight: 'bold',
+              }}>
+              {currentOrder.chef
+                ? currentOrder.chef.fullName ||
+                  currentOrder.chef.username ||
+                  'Unknown Chef'
+                : 'Loading...'}
+            </Text>
+          </View>
+
+          <View style={localStyles.infoRow}>
+            <Text style={{color: '#666666', fontSize: 14}}>Customer:</Text>
+            <Text
+              style={{
+                color: '#000000',
+                fontSize: 14,
+                fontWeight: 'bold',
+              }}>
+              {currentOrder.user
+                ? currentOrder.user.fullName ||
+                  currentOrder.user.username ||
+                  'Unknown Customer'
+                : 'Loading...'}
+            </Text>
+          </View>
+
+          <View style={localStyles.infoRow}>
+            <Text style={{color: '#666666', fontSize: 14}}>Order Date:</Text>
+            <Text
+              style={{
+                color: '#000000',
+                fontSize: 14,
+                fontWeight: 'bold',
+              }}>
+              {currentOrder.created_at
+                ? new Date(currentOrder.created_at).toLocaleDateString()
+                : 'N/A'}
+            </Text>
+          </View>
+
+          <View style={localStyles.infoRow}>
+            <Text style={{color: '#666666', fontSize: 14}}>Order Time:</Text>
+            <Text
+              style={{
+                color: '#000000',
+                fontSize: 14,
+                fontWeight: 'bold',
+              }}>
+              {currentOrder.created_at
+                ? new Date(currentOrder.created_at).toLocaleTimeString()
+                : 'N/A'}
+            </Text>
+          </View>
+
+          <View style={localStyles.infoRow}>
+            <Text style={{color: '#666666', fontSize: 14}}>Status:</Text>
+            <Text style={{color: '#FB9400', fontSize: 14, fontWeight: 'bold'}}>
+              {getStatusText(currentOrder.status) || 'Unknown'}
+            </Text>
+          </View>
+        </View>
+      </View>
+    );
+  };
+
+  const renderOrderItems = () => {
+    if (!currentOrder) {
+      return (
+        <View style={[localStyles.section, {backgroundColor: '#FFFFFF'}]}>
+          <Text
+            style={{
+              fontSize: 16,
+              fontWeight: 'bold',
+              color: '#000000',
+              marginBottom: 16,
+            }}>
+            Order Items
+          </Text>
+          <View style={localStyles.loadingContainer}>
+            <Text style={{fontSize: 14, color: '#666666', textAlign: 'center'}}>
+              Loading order items...
+            </Text>
+          </View>
+        </View>
+      );
+    }
+
+    return (
+      <View style={[localStyles.section, {backgroundColor: '#FFFFFF'}]}>
+        <Text
+          style={{
+            fontSize: 16,
+            fontWeight: 'bold',
+            color: '#000000',
+            marginBottom: 16,
+          }}>
+          Order Items ({currentOrder.items?.length || 0})
+        </Text>
+
+        {currentOrder.items?.length > 0 ? (
+          currentOrder.items.map((item, index) => (
+            <View key={index} style={localStyles.orderItem}>
+              <View style={localStyles.itemInfo}>
+                <Text
+                  style={{fontSize: 14, fontWeight: 'bold', color: '#000000'}}>
+                  {item.dish?.name || 'Unknown Dish'}
+                </Text>
+                {item.dish?.description && (
+                  <Text
+                    style={{fontSize: 12, color: '#666666'}}
+                    numberOfLines={2}>
+                    {item.dish.description}
+                  </Text>
+                )}
+                <View style={localStyles.itemQuantityPrice}>
+                  <Text style={{fontSize: 12, color: '#666666'}}>
+                    Qty: {item.quantity || 1}
+                  </Text>
+                  <Text style={{fontSize: 12, color: '#666666'}}>
+                    ${(item.dish?.price || 0).toFixed(2)} each
+                  </Text>
+                </View>
+              </View>
+              <View style={localStyles.itemPriceContainer}>
+                <Text
+                  style={{fontSize: 14, fontWeight: 'bold', color: '#FF4D67'}}>
+                  ${((item.dish?.price || 0) * (item.quantity || 1)).toFixed(2)}
+                </Text>
+              </View>
+            </View>
+          ))
+        ) : (
+          <View style={localStyles.loadingContainer}>
+            <Text style={{fontSize: 14, color: '#666666', textAlign: 'center'}}>
+              No items found
+            </Text>
+          </View>
+        )}
+      </View>
+    );
+  };
+
+  const renderPricingSummary = () => {
+    if (!currentOrder) {
+      return (
+        <View style={[localStyles.section, {backgroundColor: '#FFFFFF'}]}>
+          <Text
+            style={{
+              fontSize: 16,
+              fontWeight: 'bold',
+              color: '#FF0000',
+              marginBottom: 16,
+            }}>
+            Pricing Summary
+          </Text>
+          <View style={localStyles.loadingContainer}>
+            <Text style={{fontSize: 14, color: '#666666', textAlign: 'center'}}>
+              Loading pricing information...
+            </Text>
+          </View>
+        </View>
+      );
+    }
+
+    return (
+      <View style={[localStyles.section, {backgroundColor: '#FFFFFF'}]}>
+        <Text
+          style={{
+            fontSize: 16,
+            fontWeight: 'bold',
+            color: '#FF0000',
+            marginBottom: 16,
+          }}>
+          Pricing Summary
+        </Text>
+
+        <View style={localStyles.pricingRow}>
+          <Text style={{fontSize: 14, color: '#000000'}}>Subtotal:</Text>
+          <Text style={{fontSize: 14, fontWeight: 'bold', color: '#000000'}}>
+            ${currentOrder.subtotal?.toFixed(2) || '0.00'}
+          </Text>
+        </View>
+
+        <View style={localStyles.pricingRow}>
+          <Text style={{fontSize: 14, color: '#000000'}}>Delivery Fee:</Text>
+          <Text style={{fontSize: 14, fontWeight: 'bold', color: '#000000'}}>
+            $
+            {currentOrder.deliveryFee
+              ? currentOrder.deliveryFee.toFixed(2)
+              : '0.00'}
+          </Text>
+        </View>
+
+        <View style={[localStyles.pricingRow, localStyles.totalRow]}>
+          <Text style={{fontSize: 16, fontWeight: 'bold', color: '#000000'}}>
+            Total:
+          </Text>
+          <Text style={{fontSize: 16, fontWeight: 'bold', color: '#FF4D67'}}>
+            ${currentOrder.totalPrice?.toFixed(2) || '0.00'}
+          </Text>
+        </View>
+      </View>
+    );
+  };
+
+  const renderDeliveryInfo = () => (
+    <View style={[localStyles.section, {backgroundColor: '#FFFFFF'}]}>
+      <Text
+        style={{
+          fontSize: 16,
+          fontWeight: 'bold',
+          color: '#000000',
+          marginBottom: 16,
+        }}>
+        Delivery Information
+      </Text>
+
+      {currentOrder?.deliveryAddress && (
+        <View style={localStyles.addressContainer}>
+          <Ionicons
+            name="location"
+            size={moderateScale(20)}
+            color={'#FF4D67'}
+          />
+          <View style={localStyles.addressText}>
+            {currentOrder.deliveryAddress.nameLine && (
+              <Text
+                style={{fontSize: 14, fontWeight: 'bold', color: '#000000'}}>
+                {currentOrder.deliveryAddress.nameLine}
+              </Text>
+            )}
+            {currentOrder.deliveryAddress.location && (
+              <Text style={{fontSize: 12, color: '#666666'}}>
+                Lat: {currentOrder.deliveryAddress.location.lat}, Long:{' '}
+                {currentOrder.deliveryAddress.location.long}
+              </Text>
+            )}
+            {currentOrder.deliveryAddress.isPrimary && (
+              <Text style={{fontSize: 12, color: '#FF4D67'}}>
+                Primary Address
+              </Text>
+            )}
+          </View>
+        </View>
+      )}
+
+      {!currentOrder?.deliveryAddress && (
+        <View style={localStyles.noAddressContainer}>
+          <Ionicons
+            name="location-outline"
+            size={moderateScale(20)}
+            color={'#666666'}
+          />
+          <Text style={{fontSize: 14, color: '#666666', marginLeft: 12}}>
+            No delivery address provided
+          </Text>
+        </View>
+      )}
+
+      {currentOrder?.specialInstructions &&
+        currentOrder.specialInstructions.trim() !== '' && (
+          <View style={localStyles.instructionsContainer}>
+            <Text style={{fontSize: 14, fontWeight: 'bold', color: '#000000'}}>
+              Special Instructions:
+            </Text>
+            <Text style={{fontSize: 14, color: '#666666', marginTop: 4}}>
+              {currentOrder.specialInstructions}
+            </Text>
+          </View>
+        )}
+
+      {(!currentOrder?.specialInstructions ||
+        currentOrder.specialInstructions.trim() === '') && (
+        <View style={localStyles.noInstructionsContainer}>
+          <Text style={{fontSize: 14, color: '#666666'}}>
+            No special instructions provided
+          </Text>
+        </View>
+      )}
+    </View>
+  );
+
+  if (isLoading && !currentOrder) {
+    return (
+      <ZSafeAreaView>
+        <ZHeader title="Order Tracking" showBack />
+        <ZLoader />
+      </ZSafeAreaView>
+    );
+  }
+
+  if (!currentOrder) {
+    return (
+      <ZSafeAreaView>
+        <ZHeader title="Order Tracking" showBack />
+        <View style={localStyles.errorContainer}>
+          <Text
+            style={{
+              fontSize: 16,
+              fontWeight: 'bold',
+              color: '#F44336',
+              textAlign: 'center',
+            }}>
+            Order not found
+          </Text>
+          <ZButton
+            title="Go Back"
+            onPress={() => navigation.goBack()}
+            containerStyle={localStyles.errorButton}
+          />
+        </View>
+      </ZSafeAreaView>
+    );
+  }
+
+  return (
+    <ZSafeAreaView>
+      <ZHeader title="Order Tracking" showBack />
+
+      <ScrollView
+        style={localStyles.container}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={'#FF4D67'}
+          />
+        }>
+        {renderStatusTimeline()}
+        {renderOrderDetails()}
+        {renderOrderItems()}
+        {renderPricingSummary()}
+        {renderDeliveryInfo()}
+
+        <ZButton
+          title="Chat with Chef"
+          textType="B16"
+          color={'#FFFFFF'}
+          containerStyle={[
+            localStyles.chatButton,
+            {backgroundColor: '#FF4D67'},
+          ]}
+          onPress={handleChatWithChef}
+        />
+      </ScrollView>
+    </ZSafeAreaView>
+  );
+};
+
+const localStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  section: {
+    margin: moderateScale(16),
+    padding: moderateScale(16),
+    borderRadius: moderateScale(12),
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  sectionTitle: {
+    marginBottom: moderateScale(16),
+  },
+  timelineContainer: {
+    margin: moderateScale(16),
+    padding: moderateScale(16),
+    backgroundColor: 'white',
+    borderRadius: moderateScale(12),
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  timelineHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: moderateScale(16),
+  },
+  timeline: {
+    paddingLeft: moderateScale(8),
+  },
+  timelineItem: {
+    flexDirection: 'row',
+    marginBottom: moderateScale(16),
+  },
+  timelineLeft: {
+    alignItems: 'center',
+    marginRight: moderateScale(16),
+  },
+  timelineIcon: {
+    width: moderateScale(32),
+    height: moderateScale(32),
+    borderRadius: moderateScale(16),
+    borderWidth: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  timelineLine: {
+    width: moderateScale(2),
+    height: moderateScale(24),
+    marginTop: moderateScale(4),
+  },
+  timelineRight: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  orderInfo: {
+    gap: moderateScale(12),
+  },
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  orderItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: moderateScale(8),
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.1)',
+  },
+  itemInfo: {
+    flex: 1,
+  },
+  itemQuantityPrice: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: moderateScale(4),
+  },
+  itemPriceContainer: {
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+  },
+  currentStatusText: {
+    marginTop: moderateScale(2),
+    fontWeight: 'bold',
+  },
+  pricingRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: moderateScale(8),
+  },
+  totalRow: {
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.1)',
+    paddingTop: moderateScale(12),
+    marginTop: moderateScale(8),
+  },
+  addressContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: moderateScale(12),
+  },
+  addressText: {
+    marginLeft: moderateScale(12),
+    flex: 1,
+  },
+  instructionsContainer: {
+    marginTop: moderateScale(12),
+    padding: moderateScale(12),
+    backgroundColor: 'rgba(0,0,0,0.05)',
+    borderRadius: moderateScale(8),
+  },
+  noAddressContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: moderateScale(12),
+  },
+  noAddressText: {
+    marginLeft: moderateScale(12),
+  },
+  noInstructionsContainer: {
+    marginTop: moderateScale(12),
+    padding: moderateScale(12),
+    backgroundColor: 'rgba(0,0,0,0.05)',
+    borderRadius: moderateScale(8),
+  },
+  chatButton: {
+    margin: moderateScale(16),
+    height: moderateScale(50),
+    borderRadius: moderateScale(25),
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: moderateScale(40),
+  },
+  errorButton: {
+    marginTop: moderateScale(20),
+    height: moderateScale(44),
+    paddingHorizontal: moderateScale(30),
+  },
+  loadingContainer: {
+    padding: moderateScale(20),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});
+
+export default OrderTracking;

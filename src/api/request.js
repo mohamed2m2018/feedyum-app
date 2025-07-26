@@ -6,7 +6,7 @@ const client = axios.create();
 
 const MMKV = new MMKVLoader().initialize();
 
-const BASE_URL = 'https://food2k.com/api';
+const BASE_URL = 'http://localhost:4800/api';
 
 client.defaults.baseURL = BASE_URL;
 

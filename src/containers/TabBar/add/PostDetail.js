@@ -1,4 +1,3 @@
-/* eslint-disable react-native/no-inline-styles */
 // Library import
 import {
   ActivityIndicator,
@@ -36,6 +35,7 @@ import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import {Dropdown} from 'react-native-element-dropdown';
 import {useBackgroundUpload} from '../../../providers/BackgroundUploadProvider';
 import {useScreen} from '../../../navigation/screenContext';
+import AttachedDishesComponent from './components/AttachedDishesComponent';
 
 export default function PostDetail() {
   const Duration = [
@@ -223,13 +223,20 @@ export default function PostDetail() {
           ...postedData,
           duration: postedData.duration + ' ' + toggleStatus,
           mediaIsEdited: postDataToBeEdited?.title && mediaIsEdited,
+          // Transform attachedDishes to dishes for backend compatibility
+          dishes: postedData?.attachedDishes?.map(dish => dish._id) || [],
         }
       : {
           ...postedData,
           duration: postedData.duration + ' ' + toggleStatus,
           phone: user?.phone || phone,
           mediaIsEdited: postDataToBeEdited?.title && mediaIsEdited,
+          // Transform attachedDishes to dishes for backend compatibility
+          dishes: postedData?.attachedDishes?.map(dish => dish._id) || [],
         };
+
+    // Remove attachedDishes from the data sent to backend since we're using dishes
+    delete dataToBeSent.attachedDishes;
     handleDataToBeSent(dataToBeSent);
     handleEditUser(phone, locations);
     setisFormFilled(true);
@@ -403,6 +410,29 @@ export default function PostDetail() {
 
             {user?.type === 'chef' && (
               <>
+                {/* Attach Dishes Section */}
+                <View style={localStyles.attachDishesSection}>
+                  <View style={localStyles.sectionHeader}>
+                    <ZText type="B18" color={colors.textColor}>
+                      Attach Dishes from Menu
+                    </ZText>
+                    <ZText type="M12" color={colors.grayScale7}>
+                      Showcase up to 3 dishes (optional)
+                    </ZText>
+                  </View>
+                  <AttachedDishesComponent
+                    colors={colors}
+                    userId={user?._id}
+                    attachedDishes={postedData?.attachedDishes || []}
+                    onDishesChange={dishes =>
+                      setpostedData(currentState => ({
+                        ...currentState,
+                        attachedDishes: dishes,
+                      }))
+                    }
+                  />
+                </View>
+
                 <TextInput
                   placeholder={strings.price + ' ' + strings.optional}
                   keyboardType="number-pad"
@@ -787,5 +817,12 @@ const localStyles = StyleSheet.create({
   },
   skipBtnContainer: {
     width: '45%',
+  },
+  attachDishesSection: {
+    marginVertical: moderateScale(20),
+    paddingHorizontal: moderateScale(5),
+  },
+  sectionHeader: {
+    marginBottom: moderateScale(12),
   },
 });

@@ -14,6 +14,7 @@ import {styles} from '../../../themes';
 import HashtagCategory from './HashtagCategory';
 import {StackNav} from '../../../navigation/NavigationKeys';
 import {routes} from './utils/routes';
+import strings from '../../../i18n/strings';
 
 export default function Discover({navigation}) {
   const colors = useSelector(state => state.theme.theme);

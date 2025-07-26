@@ -43,7 +43,7 @@ export default function EditProfile({navigation}) {
         <View style={styles.rowCenter}>
           <Ionicons
             name={item.icon}
-            size={moderateScale(26)}
+            size={moderateScale(20)}
             color={colors.textColor}
             style={[
               styles.mr10,
@@ -65,7 +65,7 @@ export default function EditProfile({navigation}) {
             style={{
               ...(I18nManager.isRTL && {transform: [{scaleX: -1}]}),
             }}
-            size={moderateScale(20)}
+            size={moderateScale(16)}
             color={colors.textColor}
           />
         </View>
@@ -98,7 +98,7 @@ export default function EditProfile({navigation}) {
             />
             <MaterialIcon
               name="pencil-box"
-              size={moderateScale(30)}
+              size={moderateScale(24)}
               color={colors.primary}
               style={localStyles.editIcon}
             />

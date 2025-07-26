@@ -101,7 +101,7 @@ export default function UserProfile(props) {
           frontIcon={
             <Ionicons
               name="person-add-outline"
-              size={moderateScale(18)}
+              size={moderateScale(16)}
               color={isFollow ? colors.white : colors.primary}
             />
           }
@@ -120,7 +120,7 @@ export default function UserProfile(props) {
           frontIcon={
             <Ionicons
               name="chatbubble-ellipses-outline"
-              size={moderateScale(18)}
+              size={moderateScale(16)}
               color={colors.primary}
             />
           }

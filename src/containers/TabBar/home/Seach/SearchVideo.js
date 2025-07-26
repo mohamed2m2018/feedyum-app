@@ -12,6 +12,7 @@ export default function SearchVideo({
   ...props
 }) {
   const colors = useSelector(state => state.theme.theme);
+  
   return (
     <View>
       <FlatList

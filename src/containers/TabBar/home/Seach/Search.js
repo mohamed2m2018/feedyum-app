@@ -13,6 +13,7 @@ import {styles} from '../../../../themes';
 import ZText from '../../../../components/common/ZText';
 import SearchUser from './SearchUser';
 import SearchVideo from './SearchVideo';
+import SearchDishes from './SearchDishes';
 import {useInfiniteQuery, useQuery} from 'react-query';
 import request from '../../../../api/request';
 import {useFocusEffect, useIsFocused} from '@react-navigation/native';
@@ -25,12 +26,20 @@ export default function Search() {
 
   const searchCategoryData = [
     {
-      id: 1,
-      title: strings.video,
-    },
-    {
       id: 0,
       title: strings.user,
+    },
+    {
+      id: 1,
+      title: 'Posts',
+    },
+    {
+      id: 2,
+      title: 'Reviews',
+    },
+    {
+      id: 3,
+      title: 'Dishes',
     },
   ];
 
@@ -75,7 +84,8 @@ export default function Search() {
   const searchStory = ({pageParam = 1}) =>
     request.get(`/story/search?page=${pageParam}`, {
       params: {
-        searchString: search,
+        searchString: debouncedSearch || '',
+        excludeReviews: 'true', // Only regular posts, exclude reviews
       },
     });
 
@@ -84,9 +94,39 @@ export default function Search() {
     fetchNextPage,
     isFetching: isFetchingsStories,
     isFetchingNextPage,
+    error: storiesError,
   } = useInfiniteQuery(['search_story', debouncedSearch], searchStory, {
     keepPreviousData: true,
-    enabled: isSelect === 0 && !!user,
+    enabled: isSelect === 1 && !!user,
+    getNextPageParam: (lastPage, allPages) => {
+      const nextPage =
+        lastPage?.data?.currentPage < lastPage?.data?.totalPages
+          ? allPages.length + 1
+          : undefined;
+      return nextPage;
+    },
+
+    select: res => res?.pages.flatMap(page => page.data?.stories || []),
+  });
+
+  // New search for review posts only
+  const searchReviews = ({pageParam = 1}) =>
+    request.get(`/story/search?page=${pageParam}`, {
+      params: {
+        searchString: debouncedSearch || '',
+        reviewsOnly: 'true', // Only review posts
+      },
+    });
+
+  const {
+    data: reviews,
+    fetchNextPage: fetchNextPageReviews,
+    isFetching: isFetchingReviews,
+    isFetchingNextPage: isFetchingNextPageReviews,
+    error: reviewsError,
+  } = useInfiniteQuery(['search_reviews', debouncedSearch], searchReviews, {
+    keepPreviousData: true,
+    enabled: isSelect === 2 && !!user,
     getNextPageParam: (lastPage, allPages) => {
       const nextPage =
         lastPage?.data?.currentPage < lastPage?.data?.totalPages
@@ -101,7 +141,7 @@ export default function Search() {
   const searchUser = ({pageParam = 1}) =>
     request.get(`/user/search?page=${pageParam}`, {
       params: {
-        searchString: search,
+        searchString: debouncedSearch || '',
         currentUserId: user?._id,
       },
     });
@@ -111,9 +151,10 @@ export default function Search() {
     fetchNextPage: fetchNextPageUsers,
     isFetching: isFetchingUser,
     isFetchingNextPage: isFetchingNextPageUsers,
+    error: usersError,
   } = useInfiniteQuery(['search_user', debouncedSearch], searchUser, {
     keepPreviousData: true,
-    enabled: isSelect === 1 && !!user?._id,
+    enabled: isSelect === 0 && !!user?._id,
     getNextPageParam: (lastPage, allPages) => {
       const nextPage =
         lastPage?.data?.currentPage < lastPage?.data?.totalPages
@@ -123,6 +164,33 @@ export default function Search() {
     },
 
     select: res => res?.pages.flatMap(page => page.data?.users || []),
+  });
+
+  const searchDishes = ({pageParam = 1}) =>
+    request.get(`/dishes/search?page=${pageParam}`, {
+      params: {
+        searchString: debouncedSearch || '', // Use debouncedSearch and allow empty string
+      },
+    });
+
+  const {
+    data: dishes,
+    fetchNextPage: fetchNextPageDishes,
+    isFetching: isFetchingDishes,
+    isFetchingNextPage: isFetchingNextPageDishes,
+    error: dishesError,
+  } = useInfiniteQuery(['search_dishes', debouncedSearch], searchDishes, {
+    keepPreviousData: true,
+    enabled: isSelect === 3 && !!user, // Changed from 2 to 3
+          getNextPageParam: (lastPage, allPages) => {
+        const nextPage =
+        lastPage?.data?.data?.pagination?.hasNextPage
+          ? allPages.length + 1
+          : undefined;
+      return nextPage;
+        },
+
+    select: res => res?.pages.flatMap(page => page.data?.data?.dishes || []),
   });
   const SearchIcon = () => {
     return (
@@ -199,7 +267,7 @@ export default function Search() {
           />
         </View>
 
-        {isSelect === 1 && (
+        {isSelect === 0 && (
           <>
             <SearchUser
               users={isFetchingUser && !isFetchingNextPageUsers ? [] : users}
@@ -213,7 +281,7 @@ export default function Search() {
             )}
           </>
         )}
-        {isSelect === 0 && (
+        {isSelect === 1 && (
           <View style={{flex: 1}}>
             <SearchVideo
               stories={isFetchingsStories && !isFetchingNextPage ? [] : stories}
@@ -223,6 +291,34 @@ export default function Search() {
               onMomentumScrollBegin={fetchNextPage}
             />
             {isFetchingsStories && !isFetchingNextPage && (
+              <ZLoader height={100} top={120} />
+            )}
+          </View>
+        )}
+        {isSelect === 2 && (
+          <View style={{flex: 1}}>
+            <SearchVideo
+              stories={isFetchingReviews && !isFetchingNextPageReviews ? [] : reviews}
+              onEndReachedThreshold={0.9}
+              isFetching={isFetchingReviews}
+              isFetchingNextPage={isFetchingNextPageReviews}
+              onMomentumScrollBegin={fetchNextPageReviews}
+            />
+            {isFetchingReviews && !isFetchingNextPageReviews && (
+              <ZLoader height={100} top={120} />
+            )}
+          </View>
+        )}
+        {isSelect === 3 && (
+          <View style={{flex: 1}}>
+            <SearchDishes
+              dishes={isFetchingDishes && !isFetchingNextPageDishes ? [] : dishes}
+              onEndReachedThreshold={0.9}
+              isFetching={isFetchingDishes}
+              isFetchingNextPage={isFetchingNextPageDishes}
+              onMomentumScrollBegin={fetchNextPageDishes}
+            />
+            {isFetchingDishes && !isFetchingNextPageDishes && (
               <ZLoader height={100} top={120} />
             )}
           </View>

@@ -75,7 +75,7 @@ const ProfilePicture = props => {
           }>
           <Ionicons
             name={post ? 'add-circle-outline' : 'ios-camera'}
-            size={moderateScale(26)}
+            size={moderateScale(20)}
             color={colors.textColor}
             style={styles.mr5}
           />
@@ -95,7 +95,7 @@ const ProfilePicture = props => {
             }}>
             <Ionicons
               name={'add-circle-outline'}
-              size={moderateScale(26)}
+              size={moderateScale(20)}
               color={colors.textColor}
               style={styles.mr5}
             />

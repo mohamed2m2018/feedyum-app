@@ -82,24 +82,59 @@ export default function HashtagCategory({selectedTag}) {
               />
             </View>
             <View style={[styles.mh10, styles.flex]}>
-              <ZText type="b18" numberOfLines={1}>
-                {item.fullName}
-              </ZText>
+              <View style={localStyles.chefNameContainer}>
+                <ZText type="b18" numberOfLines={1} style={styles.flex}>
+                  {item.fullName}
+                </ZText>
+                {/* Debug: Show user type */}
+                {console.log('User type:', item.type, 'for user:', item.fullName)}
+                {/* Visit Menu Button - Show for all users temporarily for testing */}
+                <TouchableOpacity
+                  style={[
+                    localStyles.visitMenuButton,
+                    {backgroundColor: colors.primary},
+                  ]}
+                  onPress={() => {
+                    console.log('Menu button pressed for:', item.fullName);
+                    navigation.navigate(StackNav.ChefMenu, {
+                      chefId: item._id,
+                      chefName: item.fullName,
+                    });
+                  }}
+                  activeOpacity={0.8}>
+                  <Ionicons
+                    name="restaurant-outline"
+                    size={moderateScale(14)}
+                    color={colors.white}
+                  />
+                  <ZText style={localStyles.visitMenuText} color={colors.white}>
+                    Menu
+                  </ZText>
+                </TouchableOpacity>
+              </View>
               <ZText
                 type="m14"
                 numberOfLines={2}
                 color={colors.dark ? colors.grayScale3 : colors.grayScale7}
                 style={styles.mt5}>
-                {item?.bio}
+                {item?.bio || 'Sharing delicious food content'}
               </ZText>
+              {/* Food Reels Indicator */}
+              <View style={localStyles.reelsIndicator}>
+                <Ionicons
+                  name="videocam"
+                  size={moderateScale(12)}
+                  color={colors.primary}
+                />
+                <ZText
+                  type="m12"
+                  color={colors.primary}
+                  style={styles.ml5}>
+                  Food Reels
+                </ZText>
+              </View>
             </View>
             <TouchableOpacity style={localStyles.rightContainer}>
-              <ZText
-                type="b14"
-                color={colors.dark ? colors.grayScale3 : colors.grayScale7}
-                style={styles.mr5}>
-                {item.totalHashTag}
-              </ZText>
               <Ionicons
                 name={I18nManager.isRTL? "chevron-back-outline": "chevron-forward-outline"}
                 size={moderateScale(22)}
@@ -113,11 +148,11 @@ export default function HashtagCategory({selectedTag}) {
               <ReelComponent
                 data={story?.views}
                 reelUrl={
-                  story?.avatarUri?.replace(
+                  story?.poster?.replace(
                     'https://foodtokforever.s3.amazonaws.com',
                     'https://d1wfcrbbkg3bzd.cloudfront.net',
                   ) ||
-                  story?.poster?.replace(
+                  story?.avatarUri?.replace(
                     'https://foodtokforever.s3.amazonaws.com',
                     'https://d1wfcrbbkg3bzd.cloudfront.net',
                   )
@@ -125,7 +160,7 @@ export default function HashtagCategory({selectedTag}) {
                 id={story?._id}
                 profileId={item}
                 item={story}
-                isPlay={!story?.avatarUri}
+                isPlay={!story?.poster && !story?.avatarUri}
               />
             )}
             numColumns={3}
@@ -182,5 +217,35 @@ const localStyles = StyleSheet.create({
     height: moderateScale(60),
     borderRadius: moderateScale(30),
     ...styles.rowCenter,
+  },
+  chefNameContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: moderateScale(8),
+  },
+  visitMenuButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: moderateScale(10),
+    paddingVertical: moderateScale(6),
+    borderRadius: moderateScale(15),
+    gap: moderateScale(4),
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
+  },
+  visitMenuText: {
+    fontSize: moderateScale(11),
+    fontWeight: '600',
+  },
+  reelsIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: moderateScale(4),
   },
 });

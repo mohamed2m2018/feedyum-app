@@ -271,6 +271,62 @@ export default function StackNavigation() {
         component={StackRoute.FindFriends}
       />
       <Stack.Screen name={StackNav.Live} component={StackRoute.Live} />
+      <Stack.Screen
+        name={StackNav.ChefDashboard}
+        component={StackRoute.ChefDashboard}
+      />
+      <Stack.Screen
+        name={StackNav.MenuManagement}
+        component={StackRoute.MenuManagement}
+      />
+      <Stack.Screen
+        name={StackNav.OrderManagement}
+        component={StackRoute.OrderManagement}
+      />
+      <Stack.Screen
+        name={StackNav.Analytics}
+        component={StackRoute.Analytics}
+      />
+      <Stack.Screen
+        name={StackNav.ChefMenu}
+        component={StackRoute.ChefMenu}
+      />
+      <Stack.Screen
+        name={StackNav.DishDetailScreen}
+        component={StackRoute.DishDetailScreen}
+      />
+      <Stack.Screen
+        name={StackNav.ShoppingCart}
+        component={StackRoute.ShoppingCart}
+      />
+      <Stack.Screen
+        name={StackNav.OrderTracking}
+        component={StackRoute.OrderTracking}
+      />
+      <Stack.Screen
+        name={StackNav.ChatScreen}
+        component={StackRoute.ChatScreen}
+      />
+      <Stack.Screen
+        name={StackNav.ChatList}
+        component={StackRoute.ChatList}
+      />
+      <Stack.Screen
+        name={StackNav.Wallet}
+        component={StackRoute.Wallet}
+      />
+      <Stack.Screen
+        name={StackNav.MenuDetailScreen}
+        component={StackRoute.MenuDetailScreen}
+      />
+      <Stack.Screen
+        name={StackNav.ReviewReelCreator}
+        component={StackRoute.ReviewReelCreator}
+      />
+      <Stack.Screen
+        name={StackNav.ReviewReelDetail}
+        component={StackRoute.ReviewReelDetail}
+      />
     </Stack.Navigator>
   );
 }

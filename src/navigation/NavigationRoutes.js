@@ -59,6 +59,20 @@ import ForYou from '../containers/TabBar/home/ForYou';
 import FollowingTab from '../containers/TabBar/home/Following';
 import Location from '../components/models/location';
 import SelectCategory from '../containers/auth/selectCategory';
+import ChefDashboard from '../containers/TabBar/chef/ChefDashboard';
+import MenuManagement from '../containers/TabBar/chef/MenuManagement';
+import OrderManagement from '../containers/TabBar/chef/OrderManagement';
+import Analytics from '../containers/TabBar/chef/Analytics';
+import ChefMenu from '../containers/TabBar/ordering/ChefMenu';
+import DishDetailScreen from '../containers/TabBar/ordering/DishDetailScreen';
+import MenuDetailScreen from '../containers/TabBar/ordering/MenuDetailScreen';
+import ShoppingCart from '../containers/TabBar/ordering/ShoppingCart';
+import OrderTracking from '../containers/TabBar/ordering/OrderTracking';
+import ChatScreen from '../containers/TabBar/ordering/ChatScreen';
+import ChatList from '../containers/TabBar/ordering/ChatList';
+import Wallet from '../containers/TabBar/profile/Wallet';
+import ReviewReelCreator from '../components/ReviewReelCreator';
+import ReviewReelDetail from '../components/ReviewReelDetailView';
 
 export const TabRoute = {
   ForYou: ForYou,
@@ -123,4 +137,18 @@ export const StackRoute = {
   Live,
   ReelsComponentOne,
   SelectCategory,
+  ChefDashboard,
+  MenuManagement,
+  OrderManagement,
+  Analytics,
+  ChefMenu,
+  DishDetailScreen,
+  MenuDetailScreen,
+  ShoppingCart,
+  OrderTracking,
+  ChatScreen,
+  ChatList,
+  Wallet,
+  ReviewReelCreator,
+  ReviewReelDetail,
 };

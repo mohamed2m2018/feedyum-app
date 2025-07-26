@@ -276,10 +276,42 @@ export default function ProfileDetail({navigation, route}) {
               ]}
               bgColor={colors.primary}
             />
+            
+            {/* Menu Button - Show for all users for now, can add chef condition later */}
+            <TouchableOpacity
+              style={[localStyles.stunningMenuButton, {backgroundColor: colors.primary}]}
+              onPress={() => {
+                console.log('Navigating to menu for user:', user?._id, user?.fullName);
+                navigation.navigate(StackNav.ChefMenu, { 
+                  chefId: user?._id,
+                  chefName: user?.fullName || user?.username || 'Chef'
+                });
+              }}
+              activeOpacity={0.8}
+            >
+              <View style={localStyles.menuButtonContent}>
+                <View style={localStyles.menuIconContainer}>
+                  <ZText type="b16" color={colors.white}>🍽️</ZText>
+                </View>
+                <ZText type="b14" color={colors.white} style={localStyles.menuButtonText}>
+                  View Menu
+                </ZText>
+              </View>
+            </TouchableOpacity>
           </View>
         ) : (
           <ActivityIndicator style={{margin: 5}} color={colors.primary} />
         )}
+
+        {/* Clarification Message */}
+        <View style={localStyles.clarificationContainer}>
+          <ZText type="m14" align="center" color={colors.grayScale7} style={localStyles.clarificationText}>
+            {user?.type === 'chef' 
+              ? "📱 These are food reels • Tap 'View Menu' above to see actual dishes & order"
+              : "📱 Food reels and posts"
+            }
+          </ZText>
+        </View>
 
         <FlatList
           data={stories}
@@ -289,7 +321,10 @@ export default function ProfileDetail({navigation, route}) {
               <ZLoader height={100} />
             ) : (
               <ZText style={{textAlign: 'center', marginTop: 45}} type={'B20'}>
-                {strings.noDishesYetProfileOther}
+                {user?.type === 'chef' 
+                  ? "No food reels yet! Check the menu for dishes 🍽️"
+                  : strings.noDishesYetProfileOther
+                }
               </ZText>
             )
           }
@@ -362,7 +397,50 @@ const localStyles = StyleSheet.create({
     height: getHeight(40),
     borderRadius: moderateScale(20),
     borderWidth: moderateScale(1),
-    width: '30%',
+    width: '40%',
+    marginHorizontal: moderateScale(5),
+  },
+  stunningMenuButton: {
+    height: getHeight(40),
+    borderRadius: moderateScale(20),
+    width: '40%',
+    marginHorizontal: moderateScale(5),
+    shadowColor: '#FF4D67',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+    overflow: 'hidden',
+  },
+  menuButtonContent: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: moderateScale(12),
+  },
+  menuIconContainer: {
+    marginRight: moderateScale(6),
+  },
+  menuButtonText: {
+    letterSpacing: 0.5,
+  },
+  clarificationContainer: {
+    backgroundColor: 'rgba(255, 77, 103, 0.05)',
+    marginHorizontal: moderateScale(16),
+    marginVertical: moderateScale(12),
+    paddingVertical: moderateScale(8),
+    paddingHorizontal: moderateScale(12),
+    borderRadius: moderateScale(8),
+    borderWidth: 1,
+    borderColor: 'rgba(255, 77, 103, 0.1)',
+  },
+  clarificationText: {
+    lineHeight: moderateScale(18),
+    fontStyle: 'italic',
   },
   mainContainer: {
     ...styles.flexRow,
