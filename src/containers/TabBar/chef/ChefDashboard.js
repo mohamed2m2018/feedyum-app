@@ -14,6 +14,7 @@ import DashboardCard from './components/DashboardCard';
 import {styles} from '../../../themes';
 import {moderateScale} from '../../../common/constants';
 import {StackNav} from '../../../navigation/NavigationKeys';
+import strings from '../../../i18n/strings';
 
 export default function ChefDashboard() {
   const colors = useSelector(state => state.theme.theme);
@@ -47,7 +48,7 @@ export default function ChefDashboard() {
 
   return (
     <ZSafeAreaView>
-      <ZHeader title="Chef Dashboard" />
+      <ZHeader title={strings.chefDashboard} />
       <ScrollView
         style={localStyles.container}
         showsVerticalScrollIndicator={false}
@@ -72,7 +73,7 @@ export default function ChefDashboard() {
           </ZText>
           <View style={localStyles.statsGrid}>
             <DashboardCard
-              title="Today's Revenue"
+              title={strings.todaysRevenue}
               value="$0"
               icon="cash-outline"
               color={colors.primary}
@@ -80,7 +81,7 @@ export default function ChefDashboard() {
               onPress={() => navigateToSection('Analytics')}
             />
             <DashboardCard
-              title="Pending Orders"
+              title={strings.pendingOrders}
               value="0"
               icon="time-outline"
               color={colors.orange}
@@ -90,7 +91,7 @@ export default function ChefDashboard() {
           </View>
           <View style={localStyles.statsGrid}>
             <DashboardCard
-              title="Total Dishes"
+              title={strings.totalDishes}
               value="0"
               icon="restaurant-outline"
               color={colors.blue}
@@ -98,7 +99,7 @@ export default function ChefDashboard() {
               onPress={() => navigateToSection('Menu')}
             />
             <DashboardCard
-              title="Completed Orders"
+              title={strings.completedOrders}
               value="0"
               icon="checkmark-circle-outline"
               color={colors.primary}
@@ -121,10 +122,10 @@ export default function ChefDashboard() {
                 <Ionicons name="add-outline" size={moderateScale(24)} color={colors.white} />
               </View>
               <ZText type="S16" style={localStyles.actionTitle}>
-                Add New Dish
+                {strings.addNewDish}
               </ZText>
               <ZText type="M12" color={colors.grayScale7} align="center">
-                Create a new menu item
+                {strings.createNewMenuItem}
               </ZText>
             </TouchableOpacity>
 
@@ -135,10 +136,10 @@ export default function ChefDashboard() {
                 <Ionicons name="receipt-outline" size={moderateScale(24)} color={colors.white} />
               </View>
               <ZText type="S16" style={localStyles.actionTitle}>
-                View Orders
+                {strings.viewOrders}
               </ZText>
               <ZText type="M12" color={colors.grayScale7} align="center">
-                Manage pending orders
+                {strings.managePendingOrders}
               </ZText>
             </TouchableOpacity>
           </View>
@@ -151,7 +152,7 @@ export default function ChefDashboard() {
                 <Ionicons name="chatbubbles-outline" size={moderateScale(24)} color={colors.white} />
               </View>
               <ZText type="S16" style={localStyles.actionTitle}>
-                Customer Chats
+                {strings.customerChats}
               </ZText>
               <ZText type="M12" color={colors.grayScale7} align="center">
                 Chat with customers
@@ -192,9 +193,9 @@ export default function ChefDashboard() {
             <View style={localStyles.sectionContent}>
               <Ionicons name="restaurant" size={moderateScale(32)} color={colors.primary} />
               <View style={localStyles.sectionInfo}>
-                <ZText type="B16">Manage Your Menu</ZText>
+                <ZText type="B16">{strings.manageYourMenu}</ZText>
                 <ZText type="M14" color={colors.grayScale7}>
-                  Add, edit, or remove dishes from your menu
+                  {strings.addEditRemoveDishes}
                 </ZText>
               </View>
               <Ionicons name="chevron-forward" size={moderateScale(20)} color={colors.grayScale7} />
@@ -220,9 +221,9 @@ export default function ChefDashboard() {
             <View style={localStyles.sectionContent}>
               <Ionicons name="receipt" size={moderateScale(32)} color={colors.orange} />
               <View style={localStyles.sectionInfo}>
-                <ZText type="B16">Track Orders</ZText>
+                <ZText type="B16">{strings.trackOrders}</ZText>
                 <ZText type="M14" color={colors.grayScale7}>
-                  Monitor and update order status
+                  {strings.monitorUpdateOrderStatus}
                 </ZText>
               </View>
               <Ionicons name="chevron-forward" size={moderateScale(20)} color={colors.grayScale7} />
@@ -248,9 +249,9 @@ export default function ChefDashboard() {
             <View style={localStyles.sectionContent}>
               <Ionicons name="analytics" size={moderateScale(32)} color={colors.blue} />
               <View style={localStyles.sectionInfo}>
-                <ZText type="B16">Performance Metrics</ZText>
+                <ZText type="B16">{strings.performanceMetrics}</ZText>
                 <ZText type="M14" color={colors.grayScale7}>
-                  View sales reports and trends
+                  {strings.viewSalesReportsAndTrends}
                 </ZText>
               </View>
               <Ionicons name="chevron-forward" size={moderateScale(20)} color={colors.grayScale7} />

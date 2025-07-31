@@ -102,7 +102,6 @@ export default {
   manageDevice: 'Manage device',
   managePermissions: 'Manage Permissions',
   control: 'Control',
-  rememberMe: 'Remember Me',
   faceId: 'Face ID',
   biometricId: 'Biometric ID',
   googleAuthenticator: 'Google Authenticator',
@@ -115,7 +114,6 @@ export default {
     'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
   faq: 'FAQ',
   contactUs: 'Contact us',
-  comments: 'Comments',
   submit: 'Submit',
   like: 'Like',
   noResultFoundDesc:
@@ -171,7 +169,7 @@ export default {
   joinThisHashtag: 'Join this Hashtag',
   comments: 'Comments',
   top: 'Top',
-  user: 'Users',
+  userTab: 'Users',
   videos: 'Videos',
   live: 'Live',
   choose: 'Add New Dish',
@@ -342,4 +340,395 @@ export default {
   percentOff: '% off ',
   max: 'max',
   watch: 'Watch',
+
+  // Order Management & Tracking
+  retry: 'Retry',
+  menu: 'Menu',
+  orderChats: 'Order Chats',
+  addCaption: 'Add a caption...',
+  shoppingCart: 'Shopping Cart',
+  browseMenus: 'Browse Menus',
+  orderId: 'Order ID:',
+  chef: 'Chef:',
+  customer: 'Customer:',
+  orderDate: 'Order Date:',
+  orderTime: 'Order Time:',
+  status: 'Status:',
+  unknown: 'Unknown',
+  subtotal: 'Subtotal:',
+  deliveryFee: 'Delivery Fee:',
+  orderTracking: 'Order Tracking',
+  goBack: 'Go Back',
+  chatWithChef: 'Chat with Chef',
+
+  // Chat & Messages
+  chat: 'Chat',
+  typeMessage: 'Type a message...',
+  send: 'Send',
+  thisMessageWasDeleted: 'This message was deleted',
+
+  // Chef Dashboard & Management
+  manageYourMenu: 'Manage Your Menu',
+  addEditRemoveDishes: 'Add, edit, or remove dishes from your menu',
+  trackOrders: 'Track Orders',
+  monitorUpdateOrderStatus: 'Monitor and update order status',
+  performanceMetrics: 'Performance Metrics',
+  viewSalesReportsAndTrends: 'View sales reports and trends',
+  orderManagement: 'Order Management',
+  analytics: 'Analytics',
+
+  // Order Status
+  pending: 'Pending',
+  preparing: 'Preparing',
+  ready: 'Ready',
+  readyForPickup: 'Ready for Pickup',
+  completed: 'Completed',
+  cancelled: 'Cancelled',
+  delivered: 'Delivered',
+  orderPlaced: 'Order Placed',
+
+  // Dish Management
+  dishName: 'Dish Name *',
+  enterDishName: 'Enter dish name',
+  dishDescription: 'Description *',
+  describeDish: 'Describe your dish',
+  priceEGP: 'Price (EGP) *',
+  category: 'Category',
+  section: 'Section',
+  cookingTimeMinutes: 'Cooking Time (minutes)',
+  ingredients: 'Ingredients',
+  dishNameRequired: 'Dish name is required',
+  descriptionRequired: 'Description is required',
+  priceRequired: 'Price is required',
+  validPriceRequired: 'Please enter a valid price',
+  categoryRequired: 'Category is required',
+  sectionRequired: 'Section is required',
+  validCookingTime: 'Please enter a valid cooking time',
+
+  // Image & Media
+  selectImage: 'Select Image',
+  chooseImageSelection: 'Choose how you want to select an image',
+  camera: 'Camera',
+  gallery: 'Gallery',
+  selectCategory: 'Select Category',
+  chooseCategoryForDish: 'Choose a category for your dish',
+  selectSection: 'Select Section',
+  chooseSectionForDish: 'Choose a section for your dish',
+
+  // Wallet & Payment
+  wallet: 'Wallet',
+  enterCode: 'Enter code (e.g., SAVE20)',
+  maximumDiscount: 'Maximum discount (£)',
+  maximumUses: 'Maximum uses',
+  noPaymentRequired: 'No Payment Required',
+  accountInGoodStanding: 'Your account is in good standing.',
+  promocodeRequired: 'Promocode is required',
+  validDiscountRequired: 'Valid discount value is required',
+  percentageCannotExceed: 'Percentage discount cannot exceed 100%',
+  validUntilRequired: 'Valid until date is required (YYYY-MM-DD format)',
+  noPaymentRequiredAtThisTime: 'No payment required at this time.',
+
+  // Review & Rating
+  reviewOrder: 'Review Order',
+  maximumReached: 'Maximum Reached',
+  canAttachUpTo3Dishes: 'You can attach up to 3 dishes only.',
+  alreadyAdded: 'Already Added',
+  dishAlreadyAttached: 'This dish is already attached.',
+  invalidDeliveryFee: 'Invalid Delivery Fee',
+  deliveryFeeCannotBeNegative: 'Delivery fee cannot be negative.',
+  unableToReview: 'Unable to Review',
+  cannotReviewAtThisTime: 'This order cannot be reviewed at this time.',
+  unableToLoadReviewInfo:
+    'Unable to load review information. Please try again later.',
+  submissionError: 'Submission Error',
+  someReviewsCouldNotBeSubmitted: 'Some reviews could not be submitted.',
+  failedToSubmitReviews: 'Failed to submit reviews. Please try again.',
+
+  // Audio & Voice
+  noAudio: 'No Audio',
+  noAudioFileAvailable: 'No audio file available to play',
+  audioError: 'Audio Error',
+  recordingTooShort: 'Recording Too Short',
+  recordAtLeastOneSecond: 'Please record for at least 1 second.',
+  recordingError: 'Recording Error',
+  failedToSaveRecording: 'Failed to save recording. Please try again.',
+  failedToLoadReviews: 'Failed to load reviews',
+  failedToMarkHelpful: 'Failed to mark review as helpful',
+  reportReview: 'Report Review',
+  whyReportingReview: 'Why are you reporting this review?',
+  success: 'Success',
+  reviewDeletedSuccessfully: 'Review deleted successfully',
+
+  // File & Media Processing
+  invalidFile: 'Invalid File',
+  selectValidImageFile:
+    'Please select a valid image file (JPG, PNG, GIF, WebP)',
+  processingError: 'Processing Error',
+  failedToProcessImage: 'Failed to process the image. Please try again.',
+  failedToRecordVideo: 'Failed to record video',
+  failedToTakePhoto: 'Failed to take photo',
+  failedToSelectMedia: 'Failed to select media',
+  failedToUploadMedia: 'Failed to upload media. Please try again.',
+  pleaseSelectPhotoOrVideo: 'Please select a photo or video first',
+  pleaseAddCaption: 'Please add a caption for your review',
+  captionMustBe10Characters: 'Caption must be at least 10 characters long',
+  dishDataMissing: 'Dish data is missing. Please try again.',
+  menuDataMissing: 'Menu data is missing. Please try again.',
+
+  // General Actions & Buttons
+  continueShoppingButton: 'Continue Shopping',
+  viewCart: 'View Cart',
+  removeFromCart: 'Remove',
+  clearAll: 'Clear All',
+  placeOrder: 'Place Order',
+  accept: 'Accept',
+  reject: 'Reject',
+
+  // Error Messages
+  failedToLoadSavedCart: 'Failed to load saved cart',
+  failedToPlaceOrder: 'Failed to place order',
+  failedToFetchOrderHistory: 'Failed to fetch order history',
+  failedToFetchOrderDetails: 'Failed to fetch order details',
+  failedToUpdateOrderStatus: 'Failed to update order status',
+  failedToAddToFavorites: 'Failed to add to favorites',
+  failedToRemoveFromFavorites: 'Failed to remove from favorites',
+  cartError: 'Cart Error',
+  failedToAddItemToCart: 'Failed to add item to cart. Please try again.',
+  failedToDeleteMessage: 'Failed to delete message. Please try again.',
+
+  // Chef & Restaurant Related
+  failedToLoadChefs: 'Failed to load chefs',
+  failedToLoadChefProfile: 'Failed to load chef profile',
+  noMenu: 'No Menu',
+  chefHasNotCreatedMenu: 'This chef has not created a menu yet.',
+  userNotFound: 'User not found',
+
+  // Validation & Forms
+  allReviewsSubmittedSuccessfully: 'All reviews submitted successfully',
+  reviewsSubmittedWithFailures: 'reviews submitted, failed',
+
+  // Permissions & Settings
+  microphoneAccessRequired:
+    'Microphone access is required to record voice messages. Please enable it in your device settings.',
+  failedToStartRecording:
+    'Failed to start recording. Please check microphone permissions and try again.',
+  failedToStopRecording: 'Failed to stop recording. Please try again.',
+  sendLocally: 'Send Locally',
+
+  // Navigation & Tabs
+  forYou: 'For You',
+  followingTab: 'FollowingTab',
+  orders: 'Orders',
+
+  // Order Status Messages
+  chefReviewing: 'Chef Reviewing',
+  orderAccepted: 'Order Accepted',
+  readyForPickupDelivery: 'Ready for Pickup/Delivery',
+  orderPlacedStartChatting: 'Order placed - Start chatting with chef',
+  orderPlacedExclamation: 'Order Placed!',
+  orderPlacedSuccessMessage:
+    'Your order has been placed successfully. The chef will confirm your order and delivery fee shortly.',
+
+  // Cart Error Messages
+  canOnlyOrderFromOneChef:
+    'You can only order from one chef at a time. Clear your cart to order from a different chef.',
+
+  // Additional UI Text
+  unknownChef: 'Unknown Chef',
+  serviceFee: 'Service Fee',
+  serviceFees: 'Service Fees',
+  serviceFeeRate: 'Service Fee Rate',
+  serviceFeePercentage: 'Service Fee (5%)',
+  loading: 'Loading...',
+  thankYou: 'Thank You!',
+  reviewsSubmittedSuccessfully:
+    'Your reviews have been submitted successfully.',
+
+  // More UI Text
+  unknownCustomer: 'Unknown Customer',
+  unknownDish: 'Unknown Dish',
+  orderSystem: 'Order System',
+  messageNotFound: 'Message Not Found',
+  messageNotVisible:
+    'The original message is not visible in the current chat view.',
+  noMessagesYet: 'No messages yet',
+  orderSummary: 'Order summary',
+  showLess: 'Show Less',
+  readMore: 'Read More',
+  allItems: 'All Items',
+  mainCourse: 'Main Course',
+  removeItem: 'Remove Item',
+  areYouSureRemoveItem:
+    'Are you sure you want to remove this item from your cart?',
+  removeItemFromCart: 'Remove ${dishName} from your cart?',
+  clearCart: 'Clear Cart',
+  areYouSureClearCart:
+    'Are you sure you want to remove all items from your cart?',
+  placeOrderConfirm: 'Place Order',
+  deliveryFeeMessage:
+    'Delivery fee will be determined by the chef before your order is confirmed. Do you want to proceed?',
+  orderFailed: 'Order Failed',
+  processing: 'Processing...',
+  testDishName: 'TEST DISH NAME',
+  sampleCity: 'Sample City',
+  sampleState: 'Sample State',
+  addressNotProvided: 'Address not provided',
+  deleteMessage: 'Delete Message',
+  microphonePermission: 'Microphone Permission',
+  microphonePermissionMessage:
+    'This app needs access to your microphone to record voice messages.',
+  askMeLater: 'Ask Me Later',
+  initializationError: 'Initialization Error',
+  initializationErrorMessage:
+    'Failed to initialize audio recorder. Please restart the app and try again.',
+  permissionRequired: 'Permission Required',
+  notReady: 'Not Ready',
+  notReadyMessage:
+    'Audio recorder is not ready. Please wait a moment and try again.',
+  recordingErrorMessage:
+    'Failed to start recording. Please check microphone permissions and try again.',
+  noAudioRecorded: 'No audio was recorded. Please try again.',
+  recordingFailedMessage: 'Failed to stop recording. Please try again.',
+  noAudioRecording: 'No audio recording available to send.',
+  uploadFailedMessage:
+    'Failed to upload audio: ${error.message}. Would you like to send it locally instead?',
+  previewError: 'Preview Error',
+  previewErrorMessage: 'Failed to prepare audio for preview',
+  previewPlaybackError: 'Failed to play audio preview',
+  successExclamation: 'Success!',
+  
+  // Chef Dashboard & Profile
+  chefDashboard: 'Chef Dashboard',
+  todaysRevenue: "Today's Revenue",
+  pendingOrders: 'Pending Orders',
+  totalOrders: 'Total Orders',
+  menuItems: 'Menu Items',
+  totalDishes: 'Total Dishes',
+  completedOrders: 'Completed Orders',
+  addDish: 'Add Dish',
+  addNewDish: 'Add New Dish',
+  editDish: 'Edit Dish',
+  viewOrders: 'View Orders',
+  customerChats: 'Customer Chats',
+  chatWithCustomers: 'Chat with customers',
+  viewAnalytics: 'View Analytics',
+  checkPerformance: 'Check performance',
+  menuManagement: 'Menu Management',
+  createNewMenuItem: 'Create a new menu item',
+  managePendingOrders: 'Manage pending orders',
+  failedToLoadDashboardStats: 'Failed to load dashboard stats',
+  
+  // Order Review Modal
+  pleaseEnterValidDeliveryFee: 'Please enter a valid delivery fee amount.',
+  acceptOrder: 'Accept Order',
+  acceptOrderWithFee: 'Accept this order with a delivery fee of $${fee}?',
+  rejectOrder: 'Reject Order',
+  rejectOrderConfirmation: 'Are you sure you want to reject this order? This action cannot be undone.',
+  failedToAcceptOrder: 'Failed to accept order. Please try again.',
+  failedToRejectOrder: 'Failed to reject order. Please try again.',
+  noEmailProvided: 'No email provided',
+  noStreetAddress: 'No street address',
+  noCity: 'No city',
+  noState: 'No state',
+  processingOrder: 'Processing...',
+  rejectOrderButton: 'Reject Order',
+  acceptOrderButton: 'Accept Order',
+  
+  // Add/Edit Dish Modal
+  startersAndSmallPlates: 'Starters and small plates',
+  mainDishesAndEntrees: 'Main dishes and entrees',
+  sweetTreatsAndDesserts: 'Sweet treats and desserts',
+  drinksAndBeverages: 'Drinks and beverages',
+  appetizers: 'Appetizers',
+  mainCourses: 'Main Courses',
+  desserts: 'Desserts',
+  beverages: 'Beverages',
+  
+  // Profile & Settings
+  english: 'English',
+  allActivity: 'All Activity',
+  
+  // Analytics & Dashboard
+  analyticsDashboard: 'Analytics Dashboard',
+  revenueChartsAndMetrics: 'Revenue charts and performance metrics will be displayed here',
+  
+  // Order Status Actions
+  startPreparing: 'Start Preparing',
+  markReady: 'Mark Ready',
+  completeOrder: 'Complete Order',
+  promocodeCreatedSuccessfully: 'Promocode created successfully',
+  promocodeDeletedSuccessfully: 'Promocode deleted successfully',
+
+  // Miscellaneous
+  postSound: 'PostSound',
+
+  // Additional UI Text
+  orderProgress: 'Order Progress',
+  loadingOrderDetails: 'Loading order details...',
+  loadingOrderItems: 'Loading order items...',
+  noItemsFound: 'No items found',
+  loadingPricingInformation: 'Loading pricing information...',
+  total: 'Total:',
+  specialInstructions: 'Special Instructions:',
+  orderNotFound: 'Order not found',
+  payNow: 'Pay Now',
+  youNeedToPay: 'You need to pay £{amount} to continue receiving orders.',
+  areYouSureDeleteMessage: 'Are you sure you want to delete this message?',
+  chooseImageSelectionMethod: 'Choose how you want to select an image',
+  
+  // Profile Page
+  posts: 'Posts',
+  reviews: 'Reviews',
+  noReviewPostsYet: 'No Review Posts Yet',
+  startSharingCulinaryCreations: 'Start sharing your culinary creations!',
+  shareYourFoodExperiences: 'Share your food experiences with reviews!',
+  edit: 'Edit',
+  chats: 'Chats',
+  
+  // Wallet Interface - matching the actual component usage
+  currentBalance: 'Current Balance',
+  refresh: 'Refresh',
+  goodStanding: 'Good Standing',
+  totalPayments: 'Total Payments',
+  settings: 'Settings',
+  promocodes: 'Promocodes',
+  transactions: 'Transactions',
+  recentTransactions: 'Recent Transactions',
+  noTransactionsYet: 'No transactions yet',
+  transactionHistoryWillAppearHere: 'Your transaction history will appear here',
+  
+  // Additional wallet translations used in the component
+  amountOwed: 'Amount Owed',
+  paymentRequired: 'Payment Required',
+  paymentRequiredMessage: 'Pay £{amount} to continue receiving orders',
+  paymentMade: 'Payment Made',
+  adjustment: 'Adjustment',
+  transaction: 'Transaction',
+  myPromocodes: 'My Promocodes',
+  create: 'Create',
+  noPromocodesYet: 'No promocodes yet',
+  createPromocodesToOffer: 'Create promocodes to offer discounts to your customers',
+  active: 'Active',
+  inactive: 'Inactive',
+  deletePromocode: 'Delete Promocode',
+  deletePromocodeConfirmation: 'Are you sure you want to delete "{code}"? This action cannot be undone.',
+  off: 'off',
+  used: 'Used',
+  expires: 'Expires',
+  minOrder: 'Min order',
+  createNewPromocode: 'Create New Promocode',
+  promocode: 'Promocode',
+  discountType: 'Discount Type',
+  percentage: 'Percentage',
+  fixedAmount: 'Fixed Amount',
+  discountValue: 'Discount Value',
+  setMaximumDiscount: 'Set Maximum Discount',
+  minimumOrderAmount: 'Minimum Order Amount',
+  setUsageLimit: 'Set Usage Limit',
+  validUntil: 'Valid Until',
+  createPromocode: 'Create Promocode',
+  walletInformation: 'Wallet Information',
+  paymentThreshold: 'Payment Threshold',
+  paymentThresholdMessage: 'Payment required when balance reaches -£2,000',
+  lastPayment: 'Last Payment'
 };

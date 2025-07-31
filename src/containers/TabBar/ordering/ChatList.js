@@ -18,6 +18,7 @@ import ZLoader from '../../../components/common/ZLoader';
 import {moderateScale} from '../../../common/constants';
 import {StackNav} from '../../../navigation/NavigationKeys';
 import request from '../../../api/request';
+import strings from '../../../i18n/strings';
 
 export default function ChatList({navigation}) {
   const colors = useSelector(state => state.theme.theme);
@@ -99,7 +100,7 @@ export default function ChatList({navigation}) {
   };
 
   const formatMessagePreview = (content) => {
-    if (!content) return 'No messages yet';
+    if (!content) return strings.noMessagesYet;
     
     // Try to parse as JSON first (for structured messages like audio, images, etc.)
     try {
@@ -144,7 +145,7 @@ export default function ChatList({navigation}) {
         if (orderMatch && statusMatch) {
           return `Order #${orderMatch[1]} - ${statusMatch[1]}`;
         }
-        return 'Order summary';
+        return strings.orderSummary;
       }
       
       // Regular text message - truncate if too long
@@ -176,19 +177,19 @@ export default function ChatList({navigation}) {
   const getOrderStatusText = (status) => {
     switch (status) {
       case 'pending':
-        return 'Pending';
+        return strings.pending;
       case 'chef_review':
-        return 'Review';
+        return strings.chefReviewing;
       case 'accepted':
-        return 'Accepted';
+        return strings.orderAccepted;
       case 'preparing':
-        return 'Preparing';
+        return strings.preparing;
       case 'ready':
-        return 'Ready';
+        return strings.ready;
       case 'delivered':
-        return 'Delivered';
+        return strings.delivered;
       case 'cancelled':
-        return 'Cancelled';
+        return strings.cancelled;
       default:
         return status?.charAt(0).toUpperCase() + status?.slice(1) || 'Unknown';
     }
@@ -239,7 +240,7 @@ export default function ChatList({navigation}) {
           color={colors.grayScale7}
           numberOfLines={2}
           style={localStyles.lastMessage}>
-          {formatMessagePreview(item.latestMessage?.content) || 'Order placed - Start chatting with chef'}
+          {formatMessagePreview(item.latestMessage?.content) || strings.orderPlacedStartChatting}
         </ZText>
       </View>
 
@@ -276,7 +277,7 @@ export default function ChatList({navigation}) {
   if ((chatsLoading) && !orderChats.length) {
     return (
       <ZSafeAreaView>
-        <ZHeader title="Order Chats" showBack />
+        <ZHeader title={strings.orderChats} showBack />
         <ZLoader />
       </ZSafeAreaView>
     );
@@ -284,7 +285,7 @@ export default function ChatList({navigation}) {
 
   return (
     <ZSafeAreaView>
-      <ZHeader title="Order Chats" showBack />
+      <ZHeader title={strings.orderChats} showBack />
       <FlatList
         data={orderChats}
         renderItem={renderChatItem}

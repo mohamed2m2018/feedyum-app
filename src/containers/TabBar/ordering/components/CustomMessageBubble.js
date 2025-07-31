@@ -11,6 +11,7 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import ZText from '../../../../components/common/ZText';
 import { moderateScale } from '../../../../common/constants';
+import strings from '../../../../i18n/strings';
 
 const CustomMessageBubble = ({ 
   props, 
@@ -32,11 +33,11 @@ const CustomMessageBubble = ({
     setShowOptions(false);
     Alert.alert(
       'Delete Message',
-      'Are you sure you want to delete this message?',
+      strings.areYouSureDeleteMessage,
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: strings.cancel, style: 'cancel' },
         { 
-          text: 'Delete', 
+          text: strings.delete, 
           style: 'destructive',
           onPress: () => onDeleteMessage(props.currentMessage._id)
         }
@@ -124,7 +125,7 @@ const CustomMessageBubble = ({
                   onPress={handleDelete}
                 >
                   <Ionicons name="trash-outline" size={moderateScale(20)} color={colors.red} />
-                  <ZText type="M16" color={colors.red}>Delete</ZText>
+                  <ZText type="M16" color={colors.red}>{strings.delete}</ZText>
                 </TouchableOpacity>
               )}
             </View>

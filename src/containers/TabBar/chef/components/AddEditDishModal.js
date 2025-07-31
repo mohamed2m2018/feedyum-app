@@ -20,6 +20,7 @@ import ZButton from '../../../../components/common/ZButton';
 import ZInput from '../../../../components/common/ZInput';
 import request from '../../../../api/request';
 import {moderateScale} from '../../../../common/constants';
+import strings from '../../../../i18n/strings';
 
 // PickerButton component moved outside to avoid React warning
 const PickerButton = ({label, value, onPress, error, colors}) => (
@@ -111,10 +112,10 @@ const AddEditDishModal = ({
   const availableSections = sectionsData && sectionsData.length > 0 
     ? sectionsData 
     : [
-        { name: 'Appetizers', description: 'Starters and small plates' },
-        { name: 'Main Courses', description: 'Main dishes and entrees' },
-        { name: 'Desserts', description: 'Sweet treats and desserts' },
-        { name: 'Beverages', description: 'Drinks and beverages' }
+        { name: strings.appetizers, description: strings.startersAndSmallPlates },
+        { name: strings.mainCourses, description: strings.mainDishesAndEntrees },
+        { name: strings.desserts, description: strings.sweetTreatsAndDesserts },
+        { name: strings.beverages, description: strings.drinksAndBeverages }
       ];
 
   // Initialize form data when dish prop changes
@@ -162,28 +163,28 @@ const AddEditDishModal = ({
     const newErrors = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = 'Dish name is required';
+      newErrors.name = strings.dishNameRequired;
     }
 
     if (!formData.description.trim()) {
-      newErrors.description = 'Description is required';
+      newErrors.description = strings.descriptionRequired;
     }
 
     if (!formData.price.trim()) {
-      newErrors.price = 'Price is required';
+      newErrors.price = strings.priceRequired;
     } else if (
       isNaN(parseFloat(formData.price)) ||
       parseFloat(formData.price) <= 0
     ) {
-      newErrors.price = 'Please enter a valid price';
+      newErrors.price = strings.validPriceRequired;
     }
 
     if (!formData.category.trim()) {
-      newErrors.category = 'Category is required';
+      newErrors.category = strings.categoryRequired;
     }
 
     if (!formData.section.trim()) {
-      newErrors.section = 'Section is required';
+      newErrors.section = strings.sectionRequired;
     }
 
     if (
@@ -191,7 +192,7 @@ const AddEditDishModal = ({
       (isNaN(parseInt(formData.cookingTime)) ||
         parseInt(formData.cookingTime) < 0)
     ) {
-      newErrors.cookingTime = 'Please enter a valid cooking time';
+      newErrors.cookingTime = strings.validCookingTime;
     }
 
     setErrors(newErrors);
@@ -216,10 +217,10 @@ const AddEditDishModal = ({
   };
 
   const handleImagePicker = () => {
-    Alert.alert('Select Image', 'Choose how you want to select an image', [
-      {text: 'Camera', onPress: openCamera},
-      {text: 'Gallery', onPress: openGallery},
-      {text: 'Cancel', style: 'cancel'},
+    Alert.alert(strings.selectImage, strings.chooseImageSelection, [
+      {text: strings.camera, onPress: openCamera},
+      {text: strings.gallery, onPress: openGallery},
+      {text: strings.cancel, style: 'cancel'},
     ]);
   };
 
@@ -282,7 +283,7 @@ const AddEditDishModal = ({
             />
           </TouchableOpacity>
           <ZText type="B20" style={localStyles.headerTitle}>
-            {isEditing ? 'Edit Dish' : 'Add New Dish'}
+            {isEditing ? strings.editDish : strings.addNewDish}
           </ZText>
           <View style={localStyles.placeholder} />
         </View>
@@ -326,25 +327,25 @@ const AddEditDishModal = ({
 
           {/* Form Fields */}
           <ZInput
-            label="Dish Name *"
+            label={strings.dishName}
             value={formData.name}
             onChangeText={text => updateFormData('name', text)}
-            placeholder="Enter dish name"
+            placeholder={strings.enterDishName}
             error={errors.name}
           />
 
           <ZInput
-            label="Description *"
+            label={strings.dishDescription}
             value={formData.description}
             onChangeText={text => updateFormData('description', text)}
-            placeholder="Describe your dish"
+            placeholder={strings.describeDish}
             multiline
             numberOfLines={3}
             error={errors.description}
           />
 
           <ZInput
-            label="Price (EGP) *"
+            label={strings.priceEGP}
             value={formData.price}
             onChangeText={text => updateFormData('price', text)}
             placeholder="0.00"
@@ -354,7 +355,7 @@ const AddEditDishModal = ({
 
           {/* Category Picker */}
           <PickerButton
-            label="Category"
+            label={strings.category}
             value={formData.category}
             error={errors.category}
             colors={colors}
@@ -366,16 +367,16 @@ const AddEditDishModal = ({
                 })) || [];
 
               Alert.alert(
-                'Select Category',
-                'Choose a category for your dish',
-                [...options, {text: 'Cancel', style: 'cancel'}],
+                strings.selectCategory,
+                strings.chooseCategoryForDish,
+                [...options, {text: strings.cancel, style: 'cancel'}],
               );
             }}
           />
 
           {/* Section Picker */}
           <PickerButton
-            label="Section"
+            label={strings.section}
             value={formData.section}
             error={errors.section}
             colors={colors}
@@ -386,15 +387,15 @@ const AddEditDishModal = ({
                   onPress: () => updateFormData('section', section.name),
                 })) || [];
 
-              Alert.alert('Select Section', 'Choose a section for your dish', [
+              Alert.alert(strings.selectSection, strings.chooseSectionForDish, [
                 ...options,
-                {text: 'Cancel', style: 'cancel'},
+                {text: strings.cancel, style: 'cancel'},
               ]);
             }}
           />
 
           <ZInput
-            label="Cooking Time (minutes)"
+            label={strings.cookingTimeMinutes}
             value={formData.cookingTime}
             onChangeText={text => updateFormData('cookingTime', text)}
             placeholder="15"
@@ -403,7 +404,7 @@ const AddEditDishModal = ({
           />
 
           <ZInput
-            label="Ingredients"
+            label={strings.ingredients}
             value={formData.ingredients}
             onChangeText={text => updateFormData('ingredients', text)}
             placeholder="List main ingredients"

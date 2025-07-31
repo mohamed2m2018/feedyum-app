@@ -19,6 +19,7 @@ import {moderateScale} from '../../../../common/constants';
 import {styles} from '../../../../themes';
 import images from '../../../../assets/images';
 import {updateOrderStatusAsync} from '../../../../redux/reducer/orderSlice';
+import strings from '../../../../i18n/strings';
 
 const OrderReviewModal = ({visible, order, onClose, onAccept, onReject}) => {
   const colors = useSelector(state => state.theme.theme);
@@ -41,24 +42,24 @@ const OrderReviewModal = ({visible, order, onClose, onAccept, onReject}) => {
     if (!deliveryFee || isNaN(parseFloat(deliveryFee))) {
       Alert.alert(
         'Invalid Delivery Fee',
-        'Please enter a valid delivery fee amount.',
+        strings.pleaseEnterValidDeliveryFee,
       );
       return;
     }
 
     const fee = parseFloat(deliveryFee);
     if (fee < 0) {
-      Alert.alert('Invalid Delivery Fee', 'Delivery fee cannot be negative.');
+      Alert.alert(strings.invalidDeliveryFee, strings.deliveryFeeCannotBeNegative);
       return;
     }
 
     Alert.alert(
-      'Accept Order',
-      `Accept this order with a delivery fee of $${fee.toFixed(2)}?`,
+      strings.acceptOrder,
+      strings.acceptOrderWithFee.replace('${fee}', fee.toFixed(2)),
       [
-        {text: 'Cancel', style: 'cancel'},
+        {text: strings.cancel, style: 'cancel'},
         {
-          text: 'Accept',
+          text: strings.accept,
           onPress: async () => {
             try {
               setIsProcessing(true);
@@ -77,7 +78,7 @@ const OrderReviewModal = ({visible, order, onClose, onAccept, onReject}) => {
             } catch (error) {
               Alert.alert(
                 'Error',
-                error.message || 'Failed to accept order. Please try again.',
+                error.message || strings.failedToAcceptOrder,
                 [{text: 'OK'}],
               );
             } finally {
@@ -91,12 +92,12 @@ const OrderReviewModal = ({visible, order, onClose, onAccept, onReject}) => {
 
   const handleRejectOrder = () => {
     Alert.alert(
-      'Reject Order',
-      'Are you sure you want to reject this order? This action cannot be undone.',
+      strings.rejectOrder,
+      strings.rejectOrderConfirmation,
       [
-        {text: 'Cancel', style: 'cancel'},
+        {text: strings.cancel, style: 'cancel'},
         {
-          text: 'Reject',
+          text: strings.reject,
           style: 'destructive',
           onPress: async () => {
             try {
@@ -116,7 +117,7 @@ const OrderReviewModal = ({visible, order, onClose, onAccept, onReject}) => {
             } catch (error) {
               Alert.alert(
                 'Error',
-                error.message || 'Failed to reject order. Please try again.',
+                error.message || strings.failedToRejectOrder,
                 [{text: 'OK'}],
               );
             } finally {
@@ -156,10 +157,10 @@ const OrderReviewModal = ({visible, order, onClose, onAccept, onReject}) => {
         />
         <View style={localStyles.customerDetails}>
           <ZText type="B16" color={colors.textColor}>
-            {order?.user?.fullName || 'Unknown Customer'}
+            {order?.user?.fullName || strings.unknownCustomer}
           </ZText>
           <ZText type="M14" color={colors.grayScale7}>
-            {order?.user?.email || 'No email provided'}
+            {order?.user?.email || strings.noEmailProvided}
           </ZText>
           {order?.user?.phone && (
             <TouchableOpacity style={localStyles.phoneContainer}>
@@ -368,7 +369,7 @@ const OrderReviewModal = ({visible, order, onClose, onAccept, onReject}) => {
       onRequestClose={onClose}>
       <ZSafeAreaView>
         <ZHeader
-          title="Review Order"
+          title={strings.reviewOrder}
           onBack={onClose}
           rightIcon={
             <TouchableOpacity onPress={onClose}>
@@ -397,7 +398,7 @@ const OrderReviewModal = ({visible, order, onClose, onAccept, onReject}) => {
             {backgroundColor: colors.backgroundColor},
           ]}>
           <ZButton
-            title={isProcessing ? 'Processing...' : 'Reject Order'}
+            title={isProcessing ? strings.processingOrder : strings.rejectOrderButton}
             textType="B16"
             color={colors.error}
             containerStyle={[

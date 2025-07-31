@@ -9,6 +9,7 @@ import ZText from '../../../../components/common/ZText';
 import ZButton from '../../../../components/common/ZButton';
 import {moderateScale} from '../../../../common/constants';
 import {styles} from '../../../../themes';
+import strings from '../../../../i18n/strings';
 
 const StatusBadge = ({status, colors}) => {
   const getStatusConfig = () => {
@@ -45,7 +46,7 @@ const StatusBadge = ({status, colors}) => {
         return {
           color: colors.redColor,
           backgroundColor: colors.redColor + '20',
-          text: 'Cancelled',
+          text: strings.cancelled,
           icon: 'close-circle-outline',
         };
       default:
@@ -241,7 +242,7 @@ const OrderCard = ({
           {/* Chat Button */}
           {onChatWithCustomer && (
             <ZButton
-              title="Chat"
+              title={strings.chat}
               onPress={() => onChatWithCustomer(order)}
               textType="S14"
               color={colors.blue}

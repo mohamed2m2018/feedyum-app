@@ -11,6 +11,7 @@ import {useSelector} from 'react-redux';
 import {useQuery} from 'react-query';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import strings from '../../../i18n/strings';
 
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
 import ZText from '../../../components/common/ZText';
@@ -96,7 +97,7 @@ const MenuDetailScreen = () => {
             Chef
           </ZText>
           <ZText type="B14" color="#1A1A1A">
-            {menuData.chef.fullName || 'Unknown Chef'}
+            {menuData.chef.fullName || strings.unknownChef}
           </ZText>
         </TouchableOpacity>
       )}

@@ -18,6 +18,7 @@ import ZButton from '../../../components/common/ZButton';
 import ZLoader from '../../../components/common/ZLoader';
 import {moderateScale} from '../../../common/constants';
 import {styles} from '../../../themes';
+import strings from '../../../i18n/strings';
 import {
   fetchOrderById,
   selectCurrentOrder,
@@ -83,7 +84,7 @@ const OrderTracking = () => {
 
   useEffect(() => {
     if (error) {
-      Alert.alert('Error', error, [
+      Alert.alert(strings.error, error, [
         {text: 'OK', onPress: () => dispatch(clearError())},
       ]);
     }
@@ -207,19 +208,19 @@ const OrderTracking = () => {
   const getStatusText = status => {
     switch (status) {
       case 'pending':
-        return 'Order Placed';
+        return strings.orderPlaced;
       case 'chef_review':
-        return 'Chef Reviewing';
+        return strings.chefReviewing;
       case 'accepted':
-        return 'Order Accepted';
+        return strings.orderAccepted;
       case 'preparing':
-        return 'Preparing';
+        return strings.preparing;
       case 'ready':
-        return 'Ready for Pickup/Delivery';
+        return strings.readyForPickupDelivery;
       case 'delivered':
-        return 'Delivered';
+        return strings.delivered;
       case 'cancelled':
-        return 'Cancelled';
+        return strings.cancelled;
       default:
         return status;
     }
@@ -271,7 +272,7 @@ const OrderTracking = () => {
       <View style={localStyles.timelineContainer}>
         <View style={localStyles.timelineHeader}>
           <Text style={{fontSize: 16, fontWeight: 'bold', color: '#000000'}}>
-            Order Progress
+            {strings.orderProgress}
           </Text>
           {lastUpdated && (
             <Text style={{fontSize: 12, color: '#666666'}}>
@@ -342,7 +343,7 @@ const OrderTracking = () => {
                           : '#666666',
                     }}>
                     {status === 'pending'
-                      ? 'Order Placed'
+                      ? strings.orderPlaced
                       : getStatusText(status)}
                   </Text>
 
@@ -399,7 +400,7 @@ const OrderTracking = () => {
           </Text>
           <View style={localStyles.loadingContainer}>
             <Text style={{fontSize: 14, color: '#666666', textAlign: 'center'}}>
-              Loading order details...
+              {strings.loadingOrderDetails}
             </Text>
           </View>
         </View>
@@ -420,7 +421,7 @@ const OrderTracking = () => {
 
         <View style={localStyles.orderInfo}>
           <View style={localStyles.infoRow}>
-            <Text style={{color: '#666666', fontSize: 14}}>Order ID:</Text>
+            <Text style={{color: '#666666', fontSize: 14}}>{strings.orderId}</Text>
             <Text
               style={{
                 color: '#000000',
@@ -437,7 +438,7 @@ const OrderTracking = () => {
           </View>
 
           <View style={localStyles.infoRow}>
-            <Text style={{color: '#666666', fontSize: 14}}>Chef:</Text>
+            <Text style={{color: '#666666', fontSize: 14}}>{strings.chef}</Text>
             <Text
               style={{
                 color: '#000000',
@@ -447,13 +448,13 @@ const OrderTracking = () => {
               {currentOrder.chef
                 ? currentOrder.chef.fullName ||
                   currentOrder.chef.username ||
-                  'Unknown Chef'
+                  strings.unknownChef
                 : 'Loading...'}
             </Text>
           </View>
 
           <View style={localStyles.infoRow}>
-            <Text style={{color: '#666666', fontSize: 14}}>Customer:</Text>
+            <Text style={{color: '#666666', fontSize: 14}}>{strings.customer}</Text>
             <Text
               style={{
                 color: '#000000',
@@ -463,13 +464,13 @@ const OrderTracking = () => {
               {currentOrder.user
                 ? currentOrder.user.fullName ||
                   currentOrder.user.username ||
-                  'Unknown Customer'
+                  strings.unknownCustomer
                 : 'Loading...'}
             </Text>
           </View>
 
           <View style={localStyles.infoRow}>
-            <Text style={{color: '#666666', fontSize: 14}}>Order Date:</Text>
+            <Text style={{color: '#666666', fontSize: 14}}>{strings.orderDate}</Text>
             <Text
               style={{
                 color: '#000000',
@@ -483,7 +484,7 @@ const OrderTracking = () => {
           </View>
 
           <View style={localStyles.infoRow}>
-            <Text style={{color: '#666666', fontSize: 14}}>Order Time:</Text>
+            <Text style={{color: '#666666', fontSize: 14}}>{strings.orderTime}</Text>
             <Text
               style={{
                 color: '#000000',
@@ -497,9 +498,9 @@ const OrderTracking = () => {
           </View>
 
           <View style={localStyles.infoRow}>
-            <Text style={{color: '#666666', fontSize: 14}}>Status:</Text>
+            <Text style={{color: '#666666', fontSize: 14}}>{strings.status}</Text>
             <Text style={{color: '#FB9400', fontSize: 14, fontWeight: 'bold'}}>
-              {getStatusText(currentOrder.status) || 'Unknown'}
+              {getStatusText(currentOrder.status) || strings.unknown}
             </Text>
           </View>
         </View>
@@ -522,7 +523,7 @@ const OrderTracking = () => {
           </Text>
           <View style={localStyles.loadingContainer}>
             <Text style={{fontSize: 14, color: '#666666', textAlign: 'center'}}>
-              Loading order items...
+              {strings.loadingOrderItems}
             </Text>
           </View>
         </View>
@@ -547,7 +548,7 @@ const OrderTracking = () => {
               <View style={localStyles.itemInfo}>
                 <Text
                   style={{fontSize: 14, fontWeight: 'bold', color: '#000000'}}>
-                  {item.dish?.name || 'Unknown Dish'}
+                  {item.dish?.name || strings.unknownDish}
                 </Text>
                 {item.dish?.description && (
                   <Text
@@ -576,7 +577,7 @@ const OrderTracking = () => {
         ) : (
           <View style={localStyles.loadingContainer}>
             <Text style={{fontSize: 14, color: '#666666', textAlign: 'center'}}>
-              No items found
+              {strings.noItemsFound}
             </Text>
           </View>
         )}
@@ -599,7 +600,7 @@ const OrderTracking = () => {
           </Text>
           <View style={localStyles.loadingContainer}>
             <Text style={{fontSize: 14, color: '#666666', textAlign: 'center'}}>
-              Loading pricing information...
+              {strings.loadingPricingInformation}
             </Text>
           </View>
         </View>
@@ -619,14 +620,14 @@ const OrderTracking = () => {
         </Text>
 
         <View style={localStyles.pricingRow}>
-          <Text style={{fontSize: 14, color: '#000000'}}>Subtotal:</Text>
+          <Text style={{fontSize: 14, color: '#000000'}}>{strings.subtotal}</Text>
           <Text style={{fontSize: 14, fontWeight: 'bold', color: '#000000'}}>
             ${currentOrder.subtotal?.toFixed(2) || '0.00'}
           </Text>
         </View>
 
         <View style={localStyles.pricingRow}>
-          <Text style={{fontSize: 14, color: '#000000'}}>Delivery Fee:</Text>
+          <Text style={{fontSize: 14, color: '#000000'}}>{strings.deliveryFee}</Text>
           <Text style={{fontSize: 14, fontWeight: 'bold', color: '#000000'}}>
             $
             {currentOrder.deliveryFee
@@ -637,7 +638,7 @@ const OrderTracking = () => {
 
         <View style={[localStyles.pricingRow, localStyles.totalRow]}>
           <Text style={{fontSize: 16, fontWeight: 'bold', color: '#000000'}}>
-            Total:
+            {strings.total}
           </Text>
           <Text style={{fontSize: 16, fontWeight: 'bold', color: '#FF4D67'}}>
             ${currentOrder.totalPrice?.toFixed(2) || '0.00'}
@@ -705,7 +706,7 @@ const OrderTracking = () => {
         currentOrder.specialInstructions.trim() !== '' && (
           <View style={localStyles.instructionsContainer}>
             <Text style={{fontSize: 14, fontWeight: 'bold', color: '#000000'}}>
-              Special Instructions:
+              {strings.specialInstructions}
             </Text>
             <Text style={{fontSize: 14, color: '#666666', marginTop: 4}}>
               {currentOrder.specialInstructions}
@@ -727,7 +728,7 @@ const OrderTracking = () => {
   if (isLoading && !currentOrder) {
     return (
       <ZSafeAreaView>
-        <ZHeader title="Order Tracking" showBack />
+        <ZHeader title={strings.orderTracking} showBack />
         <ZLoader />
       </ZSafeAreaView>
     );
@@ -736,7 +737,7 @@ const OrderTracking = () => {
   if (!currentOrder) {
     return (
       <ZSafeAreaView>
-        <ZHeader title="Order Tracking" showBack />
+        <ZHeader title={strings.orderTracking} showBack />
         <View style={localStyles.errorContainer}>
           <Text
             style={{
@@ -745,10 +746,10 @@ const OrderTracking = () => {
               color: '#F44336',
               textAlign: 'center',
             }}>
-            Order not found
+            {strings.orderNotFound}
           </Text>
           <ZButton
-            title="Go Back"
+            title={strings.goBack}
             onPress={() => navigation.goBack()}
             containerStyle={localStyles.errorButton}
           />
@@ -759,7 +760,7 @@ const OrderTracking = () => {
 
   return (
     <ZSafeAreaView>
-      <ZHeader title="Order Tracking" showBack />
+      <ZHeader title={strings.orderTracking} showBack />
 
       <ScrollView
         style={localStyles.container}
@@ -777,7 +778,7 @@ const OrderTracking = () => {
         {renderDeliveryInfo()}
 
         <ZButton
-          title="Chat with Chef"
+          title={strings.chatWithChef}
           textType="B16"
           color={'#FFFFFF'}
           containerStyle={[

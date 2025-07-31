@@ -10,6 +10,7 @@ import {
   TextInput,
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
+import strings from '../i18n/strings';
 import {
   selectCartItems,
   selectCartSubtotal,
@@ -98,8 +99,8 @@ const CheckoutScreen = ({ navigation, userToken }) => {
       if (data.order) {
         dispatch(clearCart());
         Alert.alert(
-          'Order Placed!',
-          'Your order has been placed successfully. The chef will confirm your order and delivery fee shortly.',
+          strings.orderPlacedExclamation,
+          strings.orderPlacedSuccessMessage,
           [
             {
               text: 'OK',
@@ -174,7 +175,7 @@ const CheckoutScreen = ({ navigation, userToken }) => {
         </View>
         
         <View style={styles.priceRow}>
-          <Text style={styles.priceLabel}>Service Fee (5%)</Text>
+          <Text style={styles.priceLabel}>{strings.serviceFeePercentage}</Text>
           <Text style={styles.priceValue}>{formatCurrency(serviceFee)}</Text>
         </View>
         

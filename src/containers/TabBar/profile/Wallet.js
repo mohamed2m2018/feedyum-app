@@ -98,7 +98,7 @@ export default function Wallet({navigation}) {
     },
     {
       onSuccess: () => {
-        Alert.alert('Success!', 'Promocode created successfully');
+        Alert.alert(strings.successExclamation, strings.promocodeCreatedSuccessfully);
         setPromocodeForm({
           code: '',
           discountType: 'percentage',
@@ -127,7 +127,7 @@ export default function Wallet({navigation}) {
     },
     {
       onSuccess: () => {
-        Alert.alert('Success!', 'Promocode deleted successfully');
+        Alert.alert(strings.successExclamation, strings.promocodeDeletedSuccessfully);
         refetchPromocodes();
       },
       onError: error => {
@@ -160,19 +160,19 @@ export default function Wallet({navigation}) {
   const getTransactionLabel = type => {
     switch (type) {
       case 'service_fee':
-        return 'Service Fee';
+        return strings.serviceFee;
       case 'payment_to_platform':
-        return 'Payment Made';
+        return strings.paymentMade;
       case 'adjustment':
-        return 'Adjustment';
+        return strings.adjustment;
       default:
-        return 'Transaction';
+        return strings.transaction;
     }
   };
 
   const handlePayment = async () => {
     if (!walletData?.summary?.isPaymentRequired) {
-      Alert.alert('No Payment Required', 'Your account is in good standing.');
+      Alert.alert(strings.noPaymentRequired, strings.accountInGoodStanding);
       return;
     }
 
@@ -180,9 +180,9 @@ export default function Wallet({navigation}) {
       'Payment Required',
       `You need to pay £${walletData.summary.paymentDueAmount.toFixed(2)} to continue receiving orders.`,
       [
-        {text: 'Cancel', style: 'cancel'},
+        {text: strings.cancel, style: 'cancel'},
         {
-          text: 'Pay Now',
+          text: strings.payNow,
           onPress: () => {
             // Navigate to payment screen or handle payment
             Alert.alert(
@@ -204,7 +204,7 @@ export default function Wallet({navigation}) {
 
   const validatePromocodeForm = () => {
     if (!promocodeForm.code.trim()) {
-      Alert.alert('Error', 'Promocode is required');
+      Alert.alert(strings.error, strings.promocodeRequired);
       return false;
     }
 
@@ -212,7 +212,7 @@ export default function Wallet({navigation}) {
       !promocodeForm.discountValue ||
       parseFloat(promocodeForm.discountValue) <= 0
     ) {
-      Alert.alert('Error', 'Valid discount value is required');
+      Alert.alert(strings.error, strings.validDiscountRequired);
       return false;
     }
 
@@ -220,12 +220,12 @@ export default function Wallet({navigation}) {
       promocodeForm.discountType === 'percentage' &&
       parseFloat(promocodeForm.discountValue) > 100
     ) {
-      Alert.alert('Error', 'Percentage discount cannot exceed 100%');
+      Alert.alert(strings.error, strings.percentageCannotExceed);
       return false;
     }
 
     if (!promocodeForm.validUntil) {
-      Alert.alert('Error', 'Valid until date is required (YYYY-MM-DD format)');
+      Alert.alert(strings.error, strings.validUntilRequired);
       return false;
     }
 
@@ -259,15 +259,15 @@ export default function Wallet({navigation}) {
 
   const handleDeletePromocode = promocode => {
     Alert.alert(
-      'Delete Promocode',
-      `Are you sure you want to delete "${promocode.code}"? This action cannot be undone.`,
+      strings.deletePromocode,
+      strings.deletePromocodeConfirmation.replace('{code}', promocode.code),
       [
         {
-          text: 'Cancel',
+          text: strings.cancel,
           style: 'cancel',
         },
         {
-          text: 'Delete',
+          text: strings.delete,
           style: 'destructive',
           onPress: () => deletePromocodeMutation.mutate(promocode._id),
         },
@@ -291,7 +291,7 @@ export default function Wallet({navigation}) {
         ]}>
         <View style={localStyles.balanceHeader}>
           <ZText type="m16" color={colors.white}>
-            {isNegative ? 'Amount Owed' : 'Current Balance'}
+            {isNegative ? strings.amountOwed : strings.currentBalance}
           </ZText>
           <TouchableOpacity onPress={refetch}>
             <Ionicons
@@ -309,11 +309,10 @@ export default function Wallet({navigation}) {
         {walletData?.summary?.isPaymentRequired && (
           <View style={localStyles.paymentWarning}>
             <ZText type="m12" color={colors.white} style={styles.mb5}>
-              ⚠️ Payment Required
+              ⚠️ {strings.paymentRequired}
             </ZText>
             <ZText type="m10" color={colors.white}>
-              Pay £{walletData.summary.paymentDueAmount.toFixed(2)} to continue
-              receiving orders
+              {strings.paymentRequiredMessage.replace('{amount}', walletData.summary.paymentDueAmount.toFixed(2))}
             </ZText>
           </View>
         )}
@@ -335,7 +334,7 @@ export default function Wallet({navigation}) {
                 type="m12"
                 color={colors.error || '#F44336'}
                 style={styles.ml5}>
-                Pay Now
+                {strings.payNow}
               </ZText>
             </TouchableOpacity>
           ) : (
@@ -345,7 +344,7 @@ export default function Wallet({navigation}) {
                 {backgroundColor: 'rgba(255,255,255,0.2)'},
               ]}
               onPress={() =>
-                Alert.alert('Info', 'No payment required at this time.')
+                Alert.alert('Info', strings.noPaymentRequiredAtThisTime)
               }>
               <Ionicons
                 name="checkmark-circle"
@@ -353,7 +352,7 @@ export default function Wallet({navigation}) {
                 color={colors.white}
               />
               <ZText type="m12" color={colors.white} style={styles.ml5}>
-                Good Standing
+                {strings.goodStanding}
               </ZText>
             </TouchableOpacity>
           )}
@@ -370,7 +369,7 @@ export default function Wallet({navigation}) {
               color={colors.white}
             />
             <ZText type="m12" color={colors.white} style={styles.ml5}>
-              Refresh
+              {strings.refresh}
             </ZText>
           </TouchableOpacity>
         </View>
@@ -387,7 +386,7 @@ export default function Wallet({navigation}) {
           color={colors.error}
         />
         <ZText type="m12" color={colors.grayScale7} style={styles.mt5}>
-          Service Fees
+          {strings.serviceFees}
         </ZText>
         <ZText type="b16" color={colors.textColor}>
           {formatCurrency(walletData?.summary?.totalServiceFees || 0)}
@@ -401,7 +400,7 @@ export default function Wallet({navigation}) {
           color={colors.success}
         />
         <ZText type="m12" color={colors.grayScale7} style={styles.mt5}>
-          Total Payments
+          {strings.totalPayments}
         </ZText>
         <ZText type="b16" color={colors.textColor}>
           {formatCurrency(walletData?.summary?.totalPayments || 0)}
@@ -421,7 +420,7 @@ export default function Wallet({navigation}) {
         <ZText
           type="m14"
           color={selectedTab === 'balance' ? colors.white : colors.grayScale7}>
-          Transactions
+          {strings.transactions}
         </ZText>
       </TouchableOpacity>
 
@@ -436,7 +435,7 @@ export default function Wallet({navigation}) {
           color={
             selectedTab === 'promocodes' ? colors.white : colors.grayScale7
           }>
-          Promocodes
+          {strings.promocodes}
         </ZText>
       </TouchableOpacity>
 
@@ -449,7 +448,7 @@ export default function Wallet({navigation}) {
         <ZText
           type="m14"
           color={selectedTab === 'settings' ? colors.white : colors.grayScale7}>
-          Settings
+          {strings.settings}
         </ZText>
       </TouchableOpacity>
     </View>
@@ -461,7 +460,7 @@ export default function Wallet({navigation}) {
     return (
       <View style={localStyles.transactionsContainer}>
         <ZText type="b18" color={colors.textColor} style={styles.mb15}>
-          Recent Transactions
+          {strings.recentTransactions}
         </ZText>
 
         {transactions.length === 0 ? (
@@ -472,10 +471,10 @@ export default function Wallet({navigation}) {
               color={colors.grayScale7}
             />
             <ZText type="m16" color={colors.grayScale7} style={styles.mt10}>
-              No transactions yet
+              {strings.noTransactionsYet}
             </ZText>
             <ZText type="m12" color={colors.grayScale7} style={styles.mt5}>
-              Your transaction history will appear here
+              {strings.transactionHistoryWillAppearHere}
             </ZText>
           </View>
         ) : (
@@ -549,7 +548,7 @@ export default function Wallet({navigation}) {
       <View style={localStyles.promocodesContainer}>
         <View style={localStyles.promocodesHeader}>
           <ZText type="b18" color={colors.textColor}>
-            My Promocodes
+            {strings.myPromocodes}
           </ZText>
           <TouchableOpacity
             style={[
@@ -563,7 +562,7 @@ export default function Wallet({navigation}) {
               color={colors.white}
             />
             <ZText type="m12" color={colors.white} style={styles.ml5}>
-              {showCreateForm ? 'Cancel' : 'Create'}
+              {showCreateForm ? strings.cancel : strings.create}
             </ZText>
           </TouchableOpacity>
         </View>
@@ -584,10 +583,10 @@ export default function Wallet({navigation}) {
               color={colors.grayScale7}
             />
             <ZText type="m16" color={colors.grayScale7} style={styles.mt10}>
-              No promocodes yet
+              {strings.noPromocodesYet}
             </ZText>
             <ZText type="m12" color={colors.grayScale7} style={styles.mt5}>
-              Create promocodes to offer discounts to your customers
+              {strings.createPromocodesToOffer}
             </ZText>
           </View>
         ) : (
@@ -617,7 +616,7 @@ export default function Wallet({navigation}) {
                       color={
                         promocode.isActive ? colors.success : colors.error
                       }>
-                      {promocode.isActive ? 'Active' : 'Inactive'}
+                      {promocode.isActive ? strings.active : strings.inactive}
                     </ZText>
                   </View>
                   <TouchableOpacity
@@ -642,23 +641,23 @@ export default function Wallet({navigation}) {
 
               <ZText type="m14" color={colors.textColor} style={styles.mt5}>
                 {promocode.discountType === 'percentage'
-                  ? `${promocode.discountValue}% off`
-                  : `£${promocode.discountValue} off`}
-                {promocode.maxDiscount && ` (max £${promocode.maxDiscount})`}
+                  ? `${promocode.discountValue}% ${strings.off}`
+                  : `£${promocode.discountValue} ${strings.off}`}
+                {promocode.maxDiscount && ` (${strings.max} £${promocode.maxDiscount})`}
               </ZText>
 
               <View style={localStyles.promocodeDetails}>
                 <ZText type="m12" color={colors.grayScale7}>
-                  Used: {promocode.usedCount}/{promocode.usageLimit || '∞'}
+                  {strings.used}: {promocode.usedCount}/{promocode.usageLimit || '∞'}
                 </ZText>
                 <ZText type="m12" color={colors.grayScale7}>
-                  Expires: {new Date(promocode.validUntil).toLocaleDateString()}
+                  {strings.expires}: {new Date(promocode.validUntil).toLocaleDateString()}
                 </ZText>
               </View>
 
               {promocode.minOrderAmount > 0 && (
                 <ZText type="m12" color={colors.grayScale7} style={styles.mt5}>
-                  Min order: £{promocode.minOrderAmount}
+                  {strings.minOrder}: £{promocode.minOrderAmount}
                 </ZText>
               )}
             </View>
@@ -671,20 +670,20 @@ export default function Wallet({navigation}) {
   const renderCreatePromocodeForm = () => (
     <View style={[localStyles.createForm, {backgroundColor: colors.inputBg}]}>
       <ZText type="b16" color={colors.textColor} style={styles.mb15}>
-        Create New Promocode
+        {strings.createNewPromocode}
       </ZText>
 
       {/* Code Input */}
       <View style={localStyles.inputGroup}>
         <ZText type="m14" color={colors.textColor} style={styles.mb5}>
-          Promocode *
+          {strings.promocode} *
         </ZText>
         <TextInput
           style={[
             localStyles.textInput,
             {backgroundColor: colors.white, color: '#000000'},
           ]}
-          placeholder="Enter code (e.g., SAVE20)"
+          placeholder={strings.enterCode}
           value={promocodeForm.code}
           onChangeText={value => handlePromocodeInputChange('code', value)}
           autoCapitalize="characters"
@@ -694,7 +693,7 @@ export default function Wallet({navigation}) {
       {/* Discount Type */}
       <View style={localStyles.inputGroup}>
         <ZText type="m14" color={colors.textColor} style={styles.mb5}>
-          Discount Type *
+          {strings.discountType} *
         </ZText>
         <View style={localStyles.typeButtons}>
           <TouchableOpacity
@@ -714,7 +713,7 @@ export default function Wallet({navigation}) {
                   ? colors.white
                   : colors.textColor
               }>
-              Percentage
+              {strings.percentage}
             </ZText>
           </TouchableOpacity>
           <TouchableOpacity
@@ -732,7 +731,7 @@ export default function Wallet({navigation}) {
                   ? colors.white
                   : colors.textColor
               }>
-              Fixed Amount
+              {strings.fixedAmount}
             </ZText>
           </TouchableOpacity>
         </View>
@@ -741,7 +740,7 @@ export default function Wallet({navigation}) {
       {/* Discount Value */}
       <View style={localStyles.inputGroup}>
         <ZText type="m14" color={colors.textColor} style={styles.mb5}>
-          Discount Value *{' '}
+          {strings.discountValue} *{' '}
           {promocodeForm.discountType === 'percentage' ? '(%)' : '(£)'}
         </ZText>
         <TextInput
@@ -765,7 +764,7 @@ export default function Wallet({navigation}) {
         <View style={localStyles.inputGroup}>
           <View style={localStyles.switchRow}>
             <ZText type="m14" color={colors.textColor}>
-              Set Maximum Discount
+              {strings.setMaximumDiscount}
             </ZText>
             <Switch
               value={hasMaxDiscount}
@@ -779,7 +778,7 @@ export default function Wallet({navigation}) {
                 localStyles.textInput,
                 {backgroundColor: colors.white, color: '#000000'},
               ]}
-              placeholder="Maximum discount (£)"
+              placeholder={strings.maximumDiscount}
               value={promocodeForm.maxDiscount}
               onChangeText={value =>
                 handlePromocodeInputChange('maxDiscount', value)
@@ -793,7 +792,7 @@ export default function Wallet({navigation}) {
       {/* Min Order Amount */}
       <View style={localStyles.inputGroup}>
         <ZText type="m14" color={colors.textColor} style={styles.mb5}>
-          Minimum Order Amount (£)
+          {strings.minimumOrderAmount} (£)
         </ZText>
         <TextInput
           style={[
@@ -813,7 +812,7 @@ export default function Wallet({navigation}) {
       <View style={localStyles.inputGroup}>
         <View style={localStyles.switchRow}>
           <ZText type="m14" color={colors.textColor}>
-            Set Usage Limit
+            {strings.setUsageLimit}
           </ZText>
           <Switch
             value={hasUsageLimit}
@@ -827,7 +826,7 @@ export default function Wallet({navigation}) {
               localStyles.textInput,
               {backgroundColor: colors.white, color: '#000000'},
             ]}
-            placeholder="Maximum uses"
+            placeholder={strings.maximumUses}
             value={promocodeForm.usageLimit}
             onChangeText={value =>
               handlePromocodeInputChange('usageLimit', value)
@@ -840,7 +839,7 @@ export default function Wallet({navigation}) {
       {/* Valid Until */}
       <View style={localStyles.inputGroup}>
         <ZText type="m14" color={colors.textColor} style={styles.mb5}>
-          Valid Until * (YYYY-MM-DD)
+          {strings.validUntil} * (YYYY-MM-DD)
         </ZText>
         <TextInput
           style={[
@@ -868,7 +867,7 @@ export default function Wallet({navigation}) {
           <ActivityIndicator size="small" color={colors.white} />
         ) : (
           <ZText type="m14" color={colors.white}>
-            Create Promocode
+            {strings.createPromocode}
           </ZText>
         )}
       </TouchableOpacity>
@@ -878,7 +877,7 @@ export default function Wallet({navigation}) {
   const renderSettings = () => (
     <View style={localStyles.settingsContainer}>
       <ZText type="b18" color={colors.textColor} style={styles.mb15}>
-        Wallet Information
+        {strings.walletInformation}
       </ZText>
 
       <View
@@ -891,7 +890,7 @@ export default function Wallet({navigation}) {
           />
           <View style={styles.ml15}>
             <ZText type="m14" color={colors.textColor}>
-              Service Fee Rate
+              {strings.serviceFeeRate}
             </ZText>
             <ZText type="m12" color={colors.grayScale7}>
               5% per order
@@ -910,10 +909,10 @@ export default function Wallet({navigation}) {
           />
           <View style={styles.ml15}>
             <ZText type="m14" color={colors.textColor}>
-              Payment Threshold
+              {strings.paymentThreshold}
             </ZText>
             <ZText type="m12" color={colors.grayScale7}>
-              Payment required when balance reaches -£2,000
+              {strings.paymentThresholdMessage}
             </ZText>
           </View>
         </View>
@@ -930,7 +929,7 @@ export default function Wallet({navigation}) {
             />
             <View style={styles.ml15}>
               <ZText type="m14" color={colors.textColor}>
-                Last Payment
+                {strings.lastPayment}
               </ZText>
               <ZText type="m12" color={colors.grayScale7}>
                 {new Date(
@@ -967,7 +966,7 @@ export default function Wallet({navigation}) {
   if (!user || walletLoading) {
     return (
       <ZSafeAreaView>
-        <ZHeader title="Wallet" showBack />
+        <ZHeader title={strings.wallet} showBack />
         <ZLoader />
       </ZSafeAreaView>
     );
@@ -976,7 +975,7 @@ export default function Wallet({navigation}) {
   if (walletError) {
     return (
       <ZSafeAreaView>
-        <ZHeader title="Wallet" showBack />
+        <ZHeader title={strings.wallet} showBack />
         <View style={localStyles.errorContainer}>
           <MaterialIcon
             name="alert-circle-outline"
@@ -1003,7 +1002,7 @@ export default function Wallet({navigation}) {
 
   return (
     <ZSafeAreaView>
-      <ZHeader title="Wallet" showBack />
+      <ZHeader title={strings.wallet} showBack />
 
       <ScrollView style={styles.flex} showsVerticalScrollIndicator={false}>
         {renderBalanceCard()}

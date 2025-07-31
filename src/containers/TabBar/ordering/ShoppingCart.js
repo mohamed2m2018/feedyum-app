@@ -18,6 +18,7 @@ import ZButton from '../../../components/common/ZButton';
 import {moderateScale} from '../../../common/constants';
 import {styles} from '../../../themes';
 import images from '../../../assets/images';
+import strings from '../../../i18n/strings';
 import {
   selectCartItems,
   selectCartSubtotal,
@@ -52,8 +53,8 @@ const ShoppingCart = () => {
   const handleQuantityChange = (dishId, newQuantity) => {
     if (newQuantity <= 0) {
       Alert.alert(
-        'Remove Item',
-        'Are you sure you want to remove this item from your cart?',
+        strings.removeItem,
+        strings.areYouSureRemoveItem,
         [
           {text: 'Cancel', style: 'cancel'},
           {
@@ -73,9 +74,9 @@ const ShoppingCart = () => {
       'Remove Item',
       `Remove ${dishName} from your cart?`,
       [
-        {text: 'Cancel', style: 'cancel'},
+        {text: strings.cancel, style: 'cancel'},
         {
-          text: 'Remove',
+          text: strings.removeFromCart,
           style: 'destructive',
           onPress: () => dispatch(removeFromCart({dishId})),
         },
@@ -85,12 +86,12 @@ const ShoppingCart = () => {
 
   const handleClearCart = () => {
     Alert.alert(
-      'Clear Cart',
-      'Are you sure you want to remove all items from your cart?',
+      strings.clearCart,
+      strings.areYouSureClearCart,
       [
-        {text: 'Cancel', style: 'cancel'},
+        {text: strings.cancel, style: 'cancel'},
         {
-          text: 'Clear All',
+          text: strings.clearAll,
           style: 'destructive',
           onPress: () => dispatch(clearCart()),
         },
@@ -100,15 +101,15 @@ const ShoppingCart = () => {
 
   const handleCheckout = async () => {
     Alert.alert(
-      'Place Order',
-      'Delivery fee will be determined by the chef before your order is confirmed. Do you want to proceed?',
+      strings.placeOrderConfirm,
+      strings.deliveryFeeMessage,
       [
         {
-          text: 'Cancel',
+          text: strings.cancel,
           style: 'cancel',
         },
         {
-          text: 'Place Order',
+          text: strings.placeOrder,
           onPress: async () => {
             try {
               setIsCheckingOut(true);
@@ -172,7 +173,7 @@ const ShoppingCart = () => {
               }
               
               Alert.alert(
-                'Order Failed',
+                strings.orderFailed,
                 errorMessage,
                 [{text: 'OK'}]
               );
@@ -205,7 +206,7 @@ const ShoppingCart = () => {
               numberOfLines={2} 
               style={[localStyles.dishName, {color: '#000000', fontWeight: 'bold'}]}
             >
-              {item.dish?.name || item.name || 'TEST DISH NAME'}
+              {item.dish?.name || item.name || strings.testDishName}
             </ZText>
             <ZText type="M14" color={colors.primary} style={localStyles.dishPrice}>
               {item.dish?.price || item.price || 0} EGP
@@ -303,7 +304,7 @@ const ShoppingCart = () => {
       </View>
       
       <ZButton
-        title={isCheckingOut ? "Processing..." : "Place Order"}
+        title={isCheckingOut ? strings.processing : strings.placeOrder}
         textType="B16"
         color={colors.white}
         containerStyle={[
@@ -319,7 +320,7 @@ const ShoppingCart = () => {
   if (cartItems.length === 0) {
     return (
       <ZSafeAreaView>
-        <ZHeader title="Shopping Cart" showBack />
+        <ZHeader title={strings.shoppingCart} showBack />
         <View style={localStyles.emptyContainer}>
           <Ionicons name="basket-outline" size={moderateScale(80)} color={colors.grayScale7} />
           <ZText type="B18" color={colors.textColor} style={localStyles.emptyTitle}>
@@ -329,7 +330,7 @@ const ShoppingCart = () => {
             Add some delicious dishes from chef menus to get started
           </ZText>
           <ZButton
-            title="Browse Menus"
+            title={strings.browseMenus}
             onPress={() => navigation.goBack()}
             containerStyle={localStyles.browseButton}
           />

@@ -13,6 +13,7 @@ import Video from 'react-native-video';
 import ZText from './common/ZText';
 import {moderateScale} from '../common/constants';
 import {styles} from '../themes';
+import strings from '../i18n/strings';
 
 const AudioMessage = ({
   audioUrl,
@@ -38,7 +39,7 @@ const AudioMessage = ({
     if (isLoading || hasError) return;
 
     if (!audioUrl) {
-      Alert.alert('No Audio', 'No audio file available to play');
+      Alert.alert(strings.noAudio, strings.noAudioFileAvailable);
       return;
     }
 
@@ -75,7 +76,7 @@ const AudioMessage = ({
     setIsLoading(false);
     setIsPlaying(false);
     setHasError(true);
-    Alert.alert('Audio Error', 'Failed to play audio file');
+    Alert.alert(strings.audioError, 'Failed to play audio file');
   };
 
   const handleSeek = (value) => {

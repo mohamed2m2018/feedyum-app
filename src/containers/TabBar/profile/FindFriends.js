@@ -171,7 +171,7 @@ export default function FindFriends() {
             />
           )}
           keyExtractor={(item, index) => index.toString()}
-          ListHeaderComponent={() => <UserItemTitle title={'User'} />}
+          ListHeaderComponent={() => <UserItemTitle title={strings.userTab} />}
           showsVerticalScrollIndicator={false}
         />
       </ScrollView>

@@ -18,6 +18,7 @@ import ZLoader from '../../../../components/common/ZLoader';
 import request from '../../../../api/request';
 import {moderateScale} from '../../../../common/constants';
 import images from '../../../../assets/images';
+import strings from '../../../../i18n/strings';
 
 const AttachedDishesComponent = ({
   colors,
@@ -59,12 +60,12 @@ const AttachedDishesComponent = ({
 
   const handleAddDish = dish => {
     if (attachedDishes.length >= 3) {
-      Alert.alert('Maximum Reached', 'You can attach up to 3 dishes only.');
+      Alert.alert(strings.maximumReached, strings.canAttachUpTo3Dishes);
       return;
     }
 
     if (attachedDishes.find(d => d._id === dish._id)) {
-      Alert.alert('Already Added', 'This dish is already attached.');
+      Alert.alert(strings.alreadyAdded, strings.dishAlreadyAttached);
       return;
     }
 

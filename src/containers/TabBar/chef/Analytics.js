@@ -9,13 +9,14 @@ import ZHeader from '../../../components/common/ZHeader';
 import ZText from '../../../components/common/ZText';
 import {styles} from '../../../themes';
 import {moderateScale} from '../../../common/constants';
+import strings from '../../../i18n/strings';
 
 export default function Analytics() {
   const colors = useSelector(state => state.theme.theme);
 
   return (
     <ZSafeAreaView>
-      <ZHeader title="Analytics" isHideBack={true} />
+      <ZHeader title={strings.analytics} isHideBack={true} />
       <View style={localStyles.container}>
         <View style={localStyles.placeholderContainer}>
           <ZText type="B20" align="center" color={colors.grayScale7}>

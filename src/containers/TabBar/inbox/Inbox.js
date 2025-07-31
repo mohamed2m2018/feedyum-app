@@ -13,6 +13,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useSelector} from 'react-redux';
 
 // Local import
+import strings from '../../../i18n/strings';
 import {styles} from '../../../themes';
 import {moderateScale, isAndroid} from '../../../common/constants';
 import ZText from '../../../components/common/ZText';
@@ -24,7 +25,7 @@ import {StackNav} from '../../../navigation/NavigationKeys';
 export default function Inbox({navigation}) {
   const colors = useSelector(state => state.theme.theme);
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState('All Activity');
+  const [selectedCategory, setSelectedCategory] = useState(strings.allActivity);
 
   const onPressHeaderCategory = item => {
     setSelectedCategory(item.type);

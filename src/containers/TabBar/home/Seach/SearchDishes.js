@@ -27,15 +27,31 @@ export default function SearchDishes({
   const navigation = useNavigation();
 
   const handleDishPress = (dish) => {
+    console.log('SearchDishes: Clicking on dish:', dish);
+    console.log('SearchDishes: Dish ID:', dish._id);
+    console.log('SearchDishes: Chef ID object:', dish.user_id);
+    
+    // Extract chef ID from object if needed
+    const chefId = dish.user_id?._id || dish.user_id;
+    console.log('SearchDishes: Extracted Chef ID:', chefId);
+    
+    console.log('SearchDishes: Navigating to DishDetailScreen with params:', {
+      dishId: dish._id,
+      chefId: chefId,
+    });
+    
     navigation.navigate(StackNav.DishDetailScreen, {
       dishId: dish._id,
-      chefId: dish.user_id,
+      chefId: chefId,
     });
   };
 
   const handleVisitMenu = (dish) => {
+    // Extract chef ID from object if needed
+    const chefId = dish.user_id?._id || dish.user_id;
+    
     navigation.navigate(StackNav.ChefMenu, {
-      chefId: dish.user_id,
+      chefId: chefId,
       scrollToDishId: dish._id,
     });
   };
@@ -179,6 +195,7 @@ const localStyles = StyleSheet.create({
   // ✨ UNIFIED MODERN DISH CARD ✨
   dishCard: {
     width: '48%',
+    height: moderateScale(200),
     marginBottom: moderateScale(16),
     borderRadius: moderateScale(16),
     backgroundColor: '#FFFFFF',
@@ -261,7 +278,9 @@ const localStyles = StyleSheet.create({
 
   // Content Section
   contentSection: {
+    flex: 1,
     padding: moderateScale(12),
+    justifyContent: 'space-between',
   },
   dishName: {
     marginBottom: moderateScale(4),

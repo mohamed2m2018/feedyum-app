@@ -71,8 +71,10 @@ export default function Search() {
   }, [isFocused, updateCurrentScreen]);
 
   const onSearchInput = text => {
+    console.log('Search: User typed:', text);
     setSearch(text);
     debounce(() => {
+      console.log('Search: Debounced search term:', text);
       setDebouncedSearch(text);
     }, 300)();
   };
@@ -166,12 +168,22 @@ export default function Search() {
     select: res => res?.pages.flatMap(page => page.data?.users || []),
   });
 
-  const searchDishes = ({pageParam = 1}) =>
-    request.get(`/dishes/search?page=${pageParam}`, {
+  const searchDishes = ({pageParam = 1}) => {
+    console.log('Search: Making dishes search API call:', `/dishes/search?page=${pageParam}`, {
+      params: { searchString: debouncedSearch || '' }
+    });
+    return request.get(`/dishes/search?page=${pageParam}`, {
       params: {
         searchString: debouncedSearch || '', // Use debouncedSearch and allow empty string
       },
+    }).then(response => {
+      console.log('Search: Dishes search response:', response);
+      return response;
+    }).catch(error => {
+      console.log('Search: Dishes search error:', error);
+      throw error;
     });
+  };
 
   const {
     data: dishes,
@@ -181,7 +193,7 @@ export default function Search() {
     error: dishesError,
   } = useInfiniteQuery(['search_dishes', debouncedSearch], searchDishes, {
     keepPreviousData: true,
-    enabled: isSelect === 3 && !!user, // Changed from 2 to 3
+    enabled: isSelect === 3, // Allow dishes search without authentication
           getNextPageParam: (lastPage, allPages) => {
         const nextPage =
         lastPage?.data?.data?.pagination?.hasNextPage
@@ -191,6 +203,17 @@ export default function Search() {
         },
 
     select: res => res?.pages.flatMap(page => page.data?.data?.dishes || []),
+  });
+
+  // Debug logging for dishes search
+  console.log('Search: Dishes search state:', {
+    isSelect,
+    debouncedSearch,
+    user: !!user,
+    enabled: isSelect === 3,
+    isFetchingDishes,
+    dishesError,
+    dishesCount: dishes?.length || 0,
   });
   const SearchIcon = () => {
     return (
@@ -213,6 +236,7 @@ export default function Search() {
       <TouchableOpacity
         key={index}
         onPress={() => {
+          console.log('Search: Selected tab index:', index, 'Tab name:', item.title);
           setIsSelect(index);
         }}
         style={[

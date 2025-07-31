@@ -18,6 +18,7 @@ import {
   uploadAudioToS3,
   convertWavToMp3,
 } from '../../../../utils/UploadUtils';
+import strings from '../../../../i18n/strings';
 
 const VoiceRecorder = ({onSend, onCancel}) => {
   const colors = useSelector(state => state.theme.theme);
@@ -293,8 +294,8 @@ const VoiceRecorder = ({onSend, onCancel}) => {
     if (recordingTime < 1) {
       console.log('ERROR: Recording too short:', recordingTime);
       Alert.alert(
-        'Recording Too Short',
-        'Please record for at least 1 second.',
+        strings.recordingTooShort,
+        strings.recordAtLeastOneSecond,
       );
       return;
     }

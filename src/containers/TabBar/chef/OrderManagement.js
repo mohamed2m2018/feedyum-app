@@ -23,6 +23,7 @@ import OrderCard from './components/OrderCard';
 import OrderDetailsModal from './components/OrderDetailsModal';
 import OrderReviewModal from './components/OrderReviewModal';
 import request from '../../../api/request';
+import strings from '../../../i18n/strings';
 import {moderateScale} from '../../../common/constants';
 import {StackNav} from '../../../navigation/NavigationKeys';
 
@@ -142,7 +143,7 @@ export default function OrderManagement() {
     {label: 'Preparing', value: 'preparing', color: colors.blue, count: 0},
     {label: 'Ready', value: 'ready', color: colors.yellow, count: 0},
     {label: 'Completed', value: 'completed', color: colors.primary, count: 0},
-    {label: 'Cancelled', value: 'cancelled', color: colors.redColor, count: 0},
+    {label: strings.cancelled, value: 'cancelled', color: colors.redColor, count: 0},
   ];
 
   // Fetch current user first
@@ -300,7 +301,7 @@ export default function OrderManagement() {
   return (
     <ZSafeAreaView>
       <ZHeader
-        title="Order Management"
+        title={strings.orderManagement}
         rightIcon={
           <TouchableOpacity
             onPress={onRefresh}

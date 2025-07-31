@@ -13,6 +13,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import AudioRecord from 'react-native-audio-record';
 import ZText from './common/ZText';
 import {moderateScale} from '../common/constants';
+import strings from '../i18n/strings';
 import {styles} from '../themes';
 
 const VoiceRecorder = ({onSendAudio, onCancel}) => {
@@ -157,13 +158,13 @@ const VoiceRecorder = ({onSendAudio, onCancel}) => {
 
   const handleSendRecording = async () => {
     if (recordTime < 1) {
-      Alert.alert('Recording Too Short', 'Please record for at least 1 second.');
+      Alert.alert(strings.recordingTooShort, strings.recordAtLeastOneSecond);
       return;
     }
 
     const audioFile = await stopRecording();
     if (!audioFile) {
-      Alert.alert('Recording Error', 'Failed to save recording. Please try again.');
+      Alert.alert(strings.recordingError, strings.failedToSaveRecording);
       return;
     }
 

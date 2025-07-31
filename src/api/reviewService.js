@@ -1,4 +1,5 @@
 import request from './request';
+import strings from '../i18n/strings';
 
 export const reviewService = {
   // Add a new review
@@ -161,8 +162,8 @@ export const reviewService = {
         results: results,
         message:
           failed.length === 0
-            ? 'All reviews submitted successfully'
-            : `${successful.length} reviews submitted, ${failed.length} failed`,
+            ? strings.allReviewsSubmittedSuccessfully
+            : `${successful.length} ${strings.reviewsSubmittedWithFailures}, ${failed.length} ${strings.failedToSubmitReviews}`,
       };
     } catch (error) {
       throw error;

@@ -16,6 +16,7 @@ import ZText from '../../../../components/common/ZText';
 import ZButton from '../../../../components/common/ZButton';
 import {styles} from '../../../../themes';
 import {moderateScale} from '../../../../common/constants';
+import strings from '../../../../i18n/strings';
 
 const OrderDetailsModal = ({
   visible,
@@ -55,7 +56,7 @@ const OrderDetailsModal = ({
         return {
           color: colors.yellow,
           backgroundColor: colors.yellow + '20',
-          text: 'Ready for Pickup',
+          text: strings.readyForPickup,
           icon: 'checkmark-circle-outline',
         };
       case 'completed':
@@ -69,7 +70,7 @@ const OrderDetailsModal = ({
         return {
           color: colors.redColor,
           backgroundColor: colors.redColor + '20',
-          text: 'Cancelled',
+          text: strings.cancelled,
           icon: 'close-circle-outline',
         };
       default:
@@ -329,18 +330,18 @@ const OrderDetailsModal = ({
             </ZText>
             <View style={[localStyles.summaryCard, {backgroundColor: colors.inputBg}]}>
               <View style={localStyles.summaryRow}>
-                <ZText type="M16">Subtotal</ZText>
+                <ZText type="M16">{strings.subtotal}</ZText>
                 <ZText type="M16">${order.subtotal?.toFixed(2) || '0.00'}</ZText>
               </View>
               {order.deliveryFee > 0 && (
                 <View style={localStyles.summaryRow}>
-                  <ZText type="M16">Delivery Fee</ZText>
+                  <ZText type="M16">{strings.deliveryFee}</ZText>
                   <ZText type="M16">${order.deliveryFee?.toFixed(2) || '0.00'}</ZText>
                 </View>
               )}
               {order.serviceFee > 0 && (
                 <View style={localStyles.summaryRow}>
-                  <ZText type="M16">Service Fee</ZText>
+                  <ZText type="M16">{strings.serviceFee}</ZText>
                   <ZText type="M16">${order.serviceFee?.toFixed(2) || '0.00'}</ZText>
                 </View>
               )}
@@ -351,7 +352,7 @@ const OrderDetailsModal = ({
                 </View>
               )}
               <View style={[localStyles.summaryRow, localStyles.totalRow]}>
-                <ZText type="B18">Total</ZText>
+                <ZText type="B18">{strings.total}</ZText>
                 <ZText type="B18" color={colors.primary}>
                   ${order.totalPrice?.toFixed(2) || '0.00'}
                 </ZText>

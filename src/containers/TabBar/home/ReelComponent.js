@@ -100,6 +100,7 @@ const ReelComponent = ({
 
   const [seekValueClick, setSeekValueClick] = useState(0);
   const [isOverlayVisible, setIsOverlayVisible] = useState(true);
+
   
   // Animation for review badge pulse effect
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -379,8 +380,8 @@ const ReelComponent = ({
                   >
                     <View style={localStyles.reviewBadgeGlass}>
                       <View style={localStyles.reviewBadgeContent}>
-                        <Ionicons name="star" size={moderateScale(16)} color="#FFD700" />
-                        <ZText type="B14" color="#FFFFFF" style={[styles.ml4, localStyles.reviewBadgeText]}>
+                        <Ionicons name="star" size={moderateScale(12)} color="#FFD700" />
+                        <ZText type="B10" color="#FFFFFF" style={[styles.ml2, localStyles.reviewBadgeText]}>
                           REVIEW
                         </ZText>
                       </View>
@@ -514,11 +515,23 @@ const ReelComponent = ({
               hasAttachedDishes: !!(item?.dishes && item.dishes.length > 0)
             })}
 
+
             {isOverlayVisible && (
-              <LinearGradient
+              <View
                 key={`item-${item?._id}`}
-                colors={['rgba(0, 0, 0, 0.01)', 'rgba(0, 0, 0, 1)']}
                 style={localStyles.bottomContainer}>
+                
+                {/* Stronger gradient for text readability */}
+                <LinearGradient
+                  colors={['rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, 0.85)']}
+                  style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    height: 250,
+                  }}
+                />
                 <View style={styles.flex}>
                   <Animated.View
                     style={[
@@ -539,78 +552,70 @@ const ReelComponent = ({
                               ? images.userDark
                               : images.userLight
                           }
-                          style={localStyles.userImage}
+                                                      style={{
+                              width: 42,
+                              height: 42,
+                              borderRadius: 21,
+                              borderWidth: 2,
+                              borderColor: 'white',
+                            }}
                         />
                       </TouchableOpacity>
-                      <View style={[styles.m10, styles.flex]}>
-                        <TouchableOpacity
-                          style={{
-                            maxWidth: moderateScale(200),
-                          }}
-                          onPress={() =>
-                            onPressProfile(
-                              item?.channelName,
-                              item?.avatarUri,
-                              item?.author?._id,
-                            )
-                          }>
-                          <ZText
-                            style={localStyles.bold}
-                            type="b15"
-                            numberOfLines={1}
-                            color={colors.white}>
-                            {item?.author?.fullName || data?.fullName}
-                          </ZText>
-                          {item?.author?.profileCompleted && (
-                            <ZText type="m8">{strings?.unofficial}</ZText>
-                          )}
-                        </TouchableOpacity>
-
+                                            <TouchableOpacity
+                        style={{marginLeft: 4}}
+                        onPress={() =>
+                          onPressProfile(
+                            item?.channelName,
+                            item?.avatarUri,
+                            item?.author?._id,
+                          )
+                        }>
                         <ZText
-                          type="m12"
-                          style={styles.mb5}
-                          numberOfLines={1}
-                          color={colors.white}>
-                          {item?.created_at?.slice(0, 10)}
+                          style={{
+                            fontSize: 12,
+                            fontWeight: 'bold',
+                            color: 'white',
+                            textShadowColor: 'rgba(0, 0, 0, 0.9)',
+                            textShadowOffset: {width: 1, height: 1},
+                            textShadowRadius: 3,
+                          }}
+                          numberOfLines={1}>
+                          {item?.author?.fullName || data?.fullName}
                         </ZText>
-                      </View>
-                    </View>
-                    {item?.author?.discount?.percentageAmount && (
-                      <ZText
-                        type="b14"
-                        style={styles.mb5}
-                        numberOfLines={1}
-                        color={colors.yellow}>
-                        {item?.author?.discount?.percentageAmount +
-                          strings.percentOff +
-                          maxDiscount}
-                      </ZText>
-                    )}
+                      </TouchableOpacity>
+                                        </View>
+                    
+                    <ZText
+                      style={{
+                        fontSize: 13,
+                        color: 'white',
+                        marginTop: 4,
+                        lineHeight: 18,
+                        textShadowColor: 'rgba(0, 0, 0, 0.8)',
+                        textShadowOffset: {width: 1, height: 1},
+                        textShadowRadius: 2,
+                      }}
+                      numberOfLines={2}>
+                      {item?.title || 'Perfect lunch for today ☀️'}
+                    </ZText>
+                    
                     {duration?.[0] && duration?.[0] !== 'undefined' && duration?.[0] !== undefined && (
-                      <ZText type="m12" color={colors.white}>
-                        {`${
-                          strings.canBeReceivedIn +
-                          duration?.[0] +
-                          ' ' +
-                          (I18nManager.isRTL
-                            ? duration?.[1] === 'Hours'
-                              ? duration?.[0] > 1
-                                ? 'ساعات'
-                                : 'ساعة'
-                              : duration?.[0] > 1
-                              ? 'ايام'
-                              : 'يوم'
-                            : pluralize?.(
-                                duration?.[1] || '',
-                                Number(duration?.[0]),
-                              ))
-                        }`}
+                      <ZText
+                        style={{
+                          fontSize: 12,
+                          color: 'white',
+                          marginTop: 6,
+                          textShadowColor: 'rgba(0, 0, 0, 0.8)',
+                          textShadowOffset: {width: 1, height: 1},
+                          textShadowRadius: 2,
+                        }}>
+                        ⏰ Receivable in {duration?.[0]} {duration?.[1]?.toLowerCase()}
                       </ZText>
                     )}
                     <ZText
                       style={localStyles.bold}
                       align="left"
-                      type="b15"
+                      type="b12"
                       color={colors.white}>
                       {item.title}
                     </ZText>
@@ -678,8 +683,17 @@ const ReelComponent = ({
                         />
                       </View>
                     )}
-                    {data?.data?.user?._id !== item?.author?._id &&
-                      item?.author?.type !== 'user' && (
+                    {/* Debug logging for author type */}
+                    {console.log('Author debug:', {
+                      authorId: item?.author?._id,
+                      authorName: item?.author?.fullName,
+                      authorType: item?.author?.type,
+                      hasMenu: item?.author?.hasMenu,
+                      shouldShowButton: item?.author?.type === 'chef' || item?.author?.hasMenu === true
+                    })}
+                    
+                    {/* Show Visit Menu button for chefs or users with menus */}
+                    {(item?.author?.type === 'chef' || item?.author?.hasMenu === true) && (
                         <ZButton
                           title="Visit Menu"
                           textType={'b18'}
@@ -720,7 +734,7 @@ const ReelComponent = ({
                   <VideoItem icon="eye" data={millify(item?.views || 0)} />
                   <VideoItem icon="share" onPress={() => handleShare(item)} />
                 </View>
-              </LinearGradient>
+              </View>
             )}
 
             {paused.paused && !paused.slider && !item?.avatarUri && (
@@ -824,13 +838,14 @@ const localStyles = StyleSheet.create({
   },
   headerContainer: {
     position: 'absolute',
-    top: moderateScale(55),
-    ...styles.ph20,
-    ...styles.rowSpaceBetween,
+    bottom: moderateScale(50),
+    left: 16,
+    right: 16,
   },
   headerInnerContainer: {
-    ...styles.flex,
-    ...styles.rowCenter,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
   },
   headerCetegoryItemContainer: {
     ...styles.mh10,
@@ -839,8 +854,7 @@ const localStyles = StyleSheet.create({
   },
   buttonContainer: {
     height: getHeight(50),
-    borderRadius: moderateScale(20),
-    borderWidth: moderateScale(1),
+                      borderRadius: moderateScale(20),
     width: '100%',
     alignSelf: 'center',
   },
@@ -855,8 +869,10 @@ const localStyles = StyleSheet.create({
   bottomContainer: {
     position: 'absolute',
     bottom: 0,
-    paddingVertical: 20,
-    ...styles.ph20,
+    left: 0,
+    right: 0,
+    paddingVertical: 15,
+    paddingHorizontal: 8,
     ...styles.flexRow,
     ...styles.itemsEnd,
   },
@@ -905,7 +921,7 @@ const localStyles = StyleSheet.create({
   verticalContainer: {
     ...styles.ph5,
     ...styles.mb50,
-    ...styles.pl10,
+    ...styles.pl5,
   },
   renderIconContainer: {
     ...styles.itemsCenter,
@@ -922,21 +938,21 @@ const localStyles = StyleSheet.create({
   },
   reviewBadge: {
     position: 'absolute',
-    top: moderateScale(60),
-    right: moderateScale(16),
+    top: moderateScale(16),
+    right: moderateScale(14),
     zIndex: 10,
   },
   reviewBadgeGradient: {
     flex: 1,
-    borderRadius: moderateScale(16),
-    padding: moderateScale(10),
+    borderRadius: moderateScale(8),
+    padding: moderateScale(4),
     justifyContent: 'center',
     alignItems: 'center',
   },
   reviewBadgeGlass: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: moderateScale(16),
-    padding: moderateScale(10),
+    borderRadius: moderateScale(8),
+    padding: moderateScale(4),
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.2)',
     shadowColor: 'rgba(0, 0, 0, 0.3)',
@@ -948,7 +964,7 @@ const localStyles = StyleSheet.create({
   reviewBadgeContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: moderateScale(2),
+    marginBottom: moderateScale(1),
   },
   reviewBadgeText: {
     fontWeight: 'bold',

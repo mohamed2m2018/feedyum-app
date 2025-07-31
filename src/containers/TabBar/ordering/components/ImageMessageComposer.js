@@ -15,6 +15,7 @@ import ImageCropPicker from 'react-native-image-crop-picker';
 import ZText from '../../../../components/common/ZText';
 import { moderateScale } from '../../../../common/constants';
 import { compressImage, validateImageFile, getFileSize, formatFileSize } from '../../../../utils/UploadUtils';
+import strings from '../../../../i18n/strings';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -30,11 +31,11 @@ const ImageMessageComposer = ({ onSend, onCancel }) => {
     setIsVisible(true);
     Alert.alert(
       'Select Image',
-      'Choose how you want to select an image',
+      strings.chooseImageSelectionMethod,
       [
-        { text: 'Camera', onPress: openCamera },
-        { text: 'Gallery', onPress: openGallery },
-        { text: 'Cancel', style: 'cancel', onPress: () => setIsVisible(false) },
+        { text: strings.camera, onPress: openCamera },
+        { text: strings.gallery, onPress: openGallery },
+        { text: strings.cancel, style: 'cancel', onPress: () => setIsVisible(false) },
       ]
     );
   };
@@ -44,7 +45,7 @@ const ImageMessageComposer = ({ onSend, onCancel }) => {
     try {
       // Validate image file
       if (!validateImageFile(image.path)) {
-        Alert.alert('Invalid File', 'Please select a valid image file (JPG, PNG, GIF, WebP)');
+        Alert.alert(strings.invalidFile, strings.selectValidImageFile);
         return;
       }
 
@@ -70,7 +71,7 @@ const ImageMessageComposer = ({ onSend, onCancel }) => {
       setIsVisible(false);
     } catch (error) {
       console.error('Image processing error:', error);
-      Alert.alert('Processing Error', 'Failed to process the image. Please try again.');
+      Alert.alert(strings.processingError, strings.failedToProcessImage);
     } finally {
       setIsProcessing(false);
     }
@@ -182,7 +183,7 @@ const ImageMessageComposer = ({ onSend, onCancel }) => {
               borderColor: colors.bColor,
             }
           ]}
-          placeholder="Add a caption..."
+          placeholder={strings.addCaption}
           placeholderTextColor={colors.grayScale7}
           value={messageText}
           onChangeText={setMessageText}
@@ -195,14 +196,14 @@ const ImageMessageComposer = ({ onSend, onCancel }) => {
             style={[styles.actionButton, { backgroundColor: colors.grayScale3 }]}
             onPress={resetComposer}
           >
-            <ZText type="M14" color={colors.textColor}>Cancel</ZText>
+            <ZText type="M14" color={colors.textColor}>{strings.cancel}</ZText>
           </TouchableOpacity>
           
           <TouchableOpacity
             style={[styles.actionButton, { backgroundColor: colors.primary }]}
             onPress={handleSend}
           >
-            <ZText type="M14" color={colors.white}>Send</ZText>
+            <ZText type="M14" color={colors.white}>{strings.send}</ZText>
           </TouchableOpacity>
         </View>
       </View>

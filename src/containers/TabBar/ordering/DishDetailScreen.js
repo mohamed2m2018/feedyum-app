@@ -14,6 +14,7 @@ import {useQuery, useMutation, useQueryClient} from 'react-query';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
+import LinearGradient from 'react-native-linear-gradient';
 
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
 import ZText from '../../../components/common/ZText';
@@ -22,6 +23,7 @@ import ZLoader from '../../../components/common/ZLoader';
 import StarRating from '../../../components/StarRating';
 import ReviewsList from '../../../components/ReviewsList';
 import ReviewStoriesSection from '../../../components/ReviewStoriesSection';
+import strings from '../../../i18n/strings';
 import {moderateScale} from '../../../common/constants';
 import {styles} from '../../../themes';
 import {StackNav} from '../../../navigation/NavigationKeys';
@@ -45,6 +47,10 @@ const DishDetailScreen = () => {
 
   const {dishId, chefId} = route.params;
 
+  console.log('DishDetailScreen: Route params:', route.params);
+  console.log('DishDetailScreen: Dish ID:', dishId);
+  console.log('DishDetailScreen: Chef ID:', chefId);
+
   const [quantity, setQuantity] = useState(1);
   const [selectedTab, setSelectedTab] = useState('reviews');
   const [scrollY] = useState(new Animated.Value(0));
@@ -63,8 +69,17 @@ const DishDetailScreen = () => {
   } = useQuery(
     ['dishDetail', dishId],
     async () => {
-      const response = await request.get(`/dishes/${dishId}`);
-      return response.data;
+      console.log('DishDetailScreen: Making API call to:', `/dishes/${dishId}`);
+      try {
+        const response = await request.get(`/dishes/${dishId}`);
+        console.log('DishDetailScreen: API response:', response);
+        console.log('DishDetailScreen: Dish data:', response.data);
+        return response.data;
+      } catch (error) {
+        console.log('DishDetailScreen: API error:', error);
+        console.log('DishDetailScreen: Error response:', error.response);
+        throw error;
+      }
     },
     {
       enabled: !!dishId,
@@ -149,7 +164,7 @@ const DishDetailScreen = () => {
         queryClient.invalidateQueries(['dishDetail', dishId]);
       },
       onError: error => {
-        Alert.alert('Error', error.message || 'Failed to add to favorites');
+        Alert.alert(strings.error, error.message || strings.failedToAddToFavorites);
       },
     },
   );
@@ -176,8 +191,8 @@ const DishDetailScreen = () => {
       },
       onError: error => {
         Alert.alert(
-          'Error',
-          error.message || 'Failed to remove from favorites',
+          strings.error,
+          error.message || strings.failedToRemoveFromFavorites,
         );
       },
     },
@@ -191,7 +206,7 @@ const DishDetailScreen = () => {
         dish: dishData,
         quantity,
         chefId,
-        chefName: finalChefData?.fullName || chefName || 'Unknown Chef',
+        chefName: finalChefData?.fullName || chefName || strings.unknownChef,
       }),
     );
 
@@ -199,9 +214,9 @@ const DishDetailScreen = () => {
       'Added to Cart!',
       `${quantity} x ${dishData.name} added to your cart`,
       [
-        {text: 'Continue Shopping', style: 'cancel'},
+        {text: strings.continueShoppingButton, style: 'cancel'},
         {
-          text: 'View Cart',
+          text: strings.viewCart,
           onPress: () => navigation.navigate('ShoppingCart'),
         },
       ],
@@ -366,7 +381,7 @@ const DishDetailScreen = () => {
               Chef
             </ZText>
             <ZText type="B14" color="#1A1A1A">
-              {finalChefData?.fullName || 'Unknown Chef'}
+              {finalChefData?.fullName || strings.unknownChef}
             </ZText>
           </View>
         </TouchableOpacity>
@@ -386,7 +401,7 @@ const DishDetailScreen = () => {
           <TouchableOpacity
             onPress={() => setShowFullDescription(!showFullDescription)}>
             <ZText type="B14" color="#FF4D67" style={styles.mt5}>
-              {showFullDescription ? 'Show Less' : 'Read More'}
+              {showFullDescription ? strings.showLess : strings.readMore}
             </ZText>
           </TouchableOpacity>
         )}
@@ -540,6 +555,8 @@ const DishDetailScreen = () => {
             </TouchableOpacity>
           </View>
 
+
+
           {displayedReviews.length > 0 ? (
             <View style={localStyles.reviewGrid}>
               {displayedReviews.map((story, index) => (
@@ -657,8 +674,9 @@ const DishDetailScreen = () => {
   );
 
   const handleReviewStoryPress = (story) => {
-    navigation.navigate(StackNav.ReelsComponentOne, {
+    navigation.navigate(StackNav.reelsOne, {
       storyId: story._id,
+      profile: { _id: story.author._id },
       stories: [story],
     });
   };
@@ -758,7 +776,7 @@ const DishDetailScreen = () => {
             This dish might not be available or there was a connection issue.
           </ZText>
           <ZButton
-            title="Retry"
+            title={strings.retry}
             onPress={refetchDish}
             containerStyle={localStyles.retryButton}
           />
@@ -781,6 +799,59 @@ const DishDetailScreen = () => {
         scrollEventThrottle={16}>
         {renderHeroSection()}
         {renderDishInfo()}
+        
+        {/* Prominent Add Review Button - Immediately Visible */}
+        <View style={localStyles.prominentButtonContainer}>
+          <TouchableOpacity 
+            style={localStyles.prominentAddReviewButton}
+            onPress={handleCreateReviewReel}>
+            <LinearGradient
+              colors={['#FF6B8A', '#FF4D67', '#E63946']}
+              start={{x: 0, y: 0}}
+              end={{x: 1, y: 1}}
+              style={localStyles.gradientButton}>
+              <View style={localStyles.addReviewContent}>
+                <View style={localStyles.starContainer}>
+                  <Ionicons
+                    name="star"
+                    size={moderateScale(28)}
+                    color="#FFD700"
+                  />
+                  <Ionicons
+                    name="star"
+                    size={moderateScale(24)}
+                    color="#FFD700"
+                    style={styles.ml2}
+                  />
+                  <Ionicons
+                    name="star"
+                    size={moderateScale(20)}
+                    color="#FFD700"
+                    style={styles.ml1}
+                  />
+                </View>
+                <View style={localStyles.reviewTextContainer}>
+                  <ZText type="B16" color={colors.white} numberOfLines={1}>
+                    ⭐ Share Your Experience
+                  </ZText>
+                  <ZText type="M12" color={colors.white} style={styles.opacity90} numberOfLines={2}>
+                    Create a review reel and help others discover this dish
+                  </ZText>
+                </View>
+                <View style={localStyles.arrowContainer}>
+                  <View style={localStyles.arrowCircle}>
+                    <Ionicons
+                      name="chevron-forward"
+                      size={moderateScale(20)}
+                      color={colors.white}
+                    />
+                  </View>
+                </View>
+              </View>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+
         {renderTabBar()}
         {renderTabContent()}
       </Animated.ScrollView>
@@ -1143,15 +1214,73 @@ const localStyles = StyleSheet.create({
     marginBottom: moderateScale(20),
   },
 
+  prominentButtonContainer: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: moderateScale(20),
+    paddingVertical: moderateScale(16),
+  },
+
+  prominentAddReviewButton: {
+    borderRadius: moderateScale(20),
+    shadowColor: '#FF4D67',
+    shadowOffset: {
+      width: 0,
+      height: 12,
+    },
+    shadowOpacity: 0.4,
+    shadowRadius: 20,
+    elevation: 15,
+  },
+
+  gradientButton: {
+    borderRadius: moderateScale(20),
+  },
+
+  addReviewContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: moderateScale(18),
+    paddingHorizontal: moderateScale(16),
+    minHeight: moderateScale(80),
+  },
+
+  starContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: moderateScale(12),
+    width: moderateScale(80),
+  },
+
+  reviewTextContainer: {
+    flex: 1,
+    marginRight: moderateScale(8),
+    justifyContent: 'center',
+  },
+
+  arrowContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  arrowCircle: {
+    width: moderateScale(36),
+    height: moderateScale(36),
+    borderRadius: moderateScale(18),
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
   reviewGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    paddingHorizontal: moderateScale(8),
   },
 
   reviewPostCard: {
     width: '48%',
     marginBottom: moderateScale(16),
+    marginHorizontal: '1%',
     borderRadius: moderateScale(16),
     padding: moderateScale(12),
     shadowColor: '#000',

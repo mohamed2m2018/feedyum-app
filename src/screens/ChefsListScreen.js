@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import ChefProfileCard from '../components/ChefProfileCard';
 import userService from '../api/userService';
+import strings from '../i18n/strings';
 
 const ChefsListScreen = ({ navigation, userToken }) => {
   const [chefs, setChefs] = useState([]);
@@ -49,11 +50,11 @@ const ChefsListScreen = ({ navigation, userToken }) => {
         
         setChefs(chefsWithProfiles);
       } else {
-        Alert.alert('Error', data.message || 'Failed to load chefs');
+        Alert.alert(strings.error, data.message || strings.failedToLoadChefs);
       }
     } catch (error) {
       console.error('Failed to fetch chefs:', error);
-      Alert.alert('Error', 'Failed to load chefs');
+      Alert.alert(strings.error, strings.failedToLoadChefs);
     } finally {
       setIsLoading(false);
     }
@@ -93,7 +94,7 @@ const ChefsListScreen = ({ navigation, userToken }) => {
         menu: chef.menu
       });
     } else {
-      Alert.alert('No Menu', 'This chef has not created a menu yet.');
+      Alert.alert(strings.noMenu, strings.chefHasNotCreatedMenu);
     }
   };
 

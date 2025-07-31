@@ -10,6 +10,7 @@ import {
   Alert,
   FlatList,
 } from 'react-native';
+import strings from '../i18n/strings';
 
 const ChefProfileScreen = ({ route, navigation }) => {
   const { chefId } = route.params;
@@ -30,11 +31,11 @@ const ChefProfileScreen = ({ route, navigation }) => {
       if (data.success) {
         setChefProfile(data.chef);
       } else {
-        Alert.alert('Error', data.message || 'Failed to load chef profile');
+        Alert.alert(strings.error, data.message || strings.failedToLoadChefProfile);
       }
     } catch (error) {
       console.error('Failed to fetch chef profile:', error);
-      Alert.alert('Error', 'Failed to load chef profile');
+      Alert.alert(strings.error, strings.failedToLoadChefProfile);
     } finally {
       setIsLoading(false);
     }

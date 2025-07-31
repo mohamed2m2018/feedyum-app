@@ -41,17 +41,28 @@ const ReelComponent = ({
     try {
       setisLoadingSomething(true);
       await request.delete(`story/deleteById/${id}`);
+      
+      // Invalidate all relevant queries to refresh the UI
       queryClient.invalidateQueries('stories');
       queryClient.invalidateQueries('user');
       await queryClient.invalidateQueries({queryKey: 'profile-stories'});
+      await queryClient.invalidateQueries({queryKey: 'profile-reviews'});
       queryClient.invalidateQueries({queryKey: 'stories_following'});
       queryClient.invalidateQueries({queryKey: 'search_user'});
       queryClient.invalidateQueries({queryKey: 'followStatistics'});
+      
       setisLoadingSomething(false);
-      // Handle success or show feedback to the user
+      
+      // Show success feedback
+      Alert.alert('Success', 
+        item?.reviewMode ? 'Review deleted successfully' : 'Post deleted successfully'
+      );
     } catch (error) {
       setisLoadingSomething(false);
-      // Handle error or show error message to the user
+      console.error('Delete error:', error);
+      Alert.alert('Error', 
+        item?.reviewMode ? 'Failed to delete review. Please try again.' : 'Failed to delete post. Please try again.'
+      );
     }
   };
 
@@ -146,9 +157,30 @@ const ReelComponent = ({
       {isDeleteAllowed && (
         <TouchableOpacity
           onPress={() => {
-            navigation.navigate(StackNav.PostDetail, {
-              postDataToBeEdited: item,
-            });
+            if (item?.reviewMode) {
+              // Navigate to review edit screen with review-specific data
+              navigation.navigate(StackNav.ReviewReelCreator, {
+                editMode: true,
+                reviewData: item,
+                dishData: item?.reviewedDish ? {
+                  _id: item.reviewedDish._id || item.reviewedDish,
+                  name: item.reviewedDish.name,
+                  image: item.reviewedDish.image,
+                  category: item.reviewedDish.category
+                } : null,
+                menuData: item?.reviewedMenu ? {
+                  _id: item.reviewedMenu._id || item.reviewedMenu,
+                  name: item.reviewedMenu.name,
+                  description: item.reviewedMenu.description
+                } : null,
+                reviewType: item.reviewType
+              });
+            } else {
+              // Navigate to normal post edit screen
+              navigation.navigate(StackNav.PostDetail, {
+                postDataToBeEdited: item,
+              });
+            }
           }}
           style={localStyles.editIconStyle}
           activeOpacity={0.7}>
@@ -165,10 +197,10 @@ const ReelComponent = ({
         <View style={localStyles.reviewBadge}>
           <Ionicons
             name="star"
-            size={moderateScale(12)}
+            size={moderateScale(10)}
             color="#FFD700"
           />
-          <ZText type="B10" color={colors.white} style={styles.ml4}>
+          <ZText type="B8" color={colors.white} style={styles.ml2}>
             REVIEW
           </ZText>
         </View>
@@ -190,7 +222,7 @@ const ReelComponent = ({
       )}
 
       <View style={styles.textContainer}>
-        <ZText style={[localStyles.titleText, {color: colors.textColor}]}>
+        <ZText style={[localStyles.titleText, {color: colors.textColor}]} numberOfLines={2}>
           {item?.title}
         </ZText>
         {!!item?.price && (
@@ -219,17 +251,22 @@ export default React.memo(ReelComponent);
 
 const localStyles = StyleSheet.create({
   postContainer: {
-    width: '33%',
+    flex: 1,
+    minHeight: getHeight(240),
+    marginHorizontal: moderateScale(4),
+    marginBottom: moderateScale(6),
   },
   textContainer: {
     justifyContent: 'center',
     alignItems: 'center',
     marginVertical: 7,
+    height: moderateScale(50),
   },
   postImgStyle: {
     ...styles.mt5,
     height: getHeight(190),
-    marginHorizontal: '3%',
+    borderRadius: moderateScale(12),
+    overflow: 'hidden',
   },
   playStyle: {
     ...styles.rowCenter,
@@ -249,6 +286,9 @@ const localStyles = StyleSheet.create({
     position: 'absolute',
     top: moderateScale(10),
     right: moderateScale(10),
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    borderRadius: moderateScale(20),
+    padding: moderateScale(6),
   },
   editIconStyle: {
     position: 'absolute',
@@ -257,14 +297,14 @@ const localStyles = StyleSheet.create({
   },
   reviewBadge: {
     position: 'absolute',
-    top: moderateScale(10),
-    left: moderateScale(10),
+    top: moderateScale(8),
+    left: moderateScale(8),
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(255, 77, 103, 0.9)',
-    paddingHorizontal: moderateScale(8),
-    paddingVertical: moderateScale(4),
-    borderRadius: moderateScale(12),
+    paddingHorizontal: moderateScale(4),
+    paddingVertical: moderateScale(2),
+    borderRadius: moderateScale(8),
     zIndex: 10,
   },
   ratingBadge: {

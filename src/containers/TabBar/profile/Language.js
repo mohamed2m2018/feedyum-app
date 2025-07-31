@@ -28,7 +28,7 @@ const Language = ({navigation}) => {
   const dispatch = useDispatch();
   const [lang, setlang] = useState('en');
   const [isSelected, setIsSelected] = React.useState(
-    lang === 'en' ? 'English' : 'العربية',
+    lang === 'en' ? strings.english : 'العربية',
   );
 
   const RenderHeader = ({title}) => {
@@ -44,7 +44,7 @@ const Language = ({navigation}) => {
       title: strings.language,
       data: [
         {
-          lnName: 'English',
+          lnName: strings.english,
         },
         {
           lnName: 'العربية',
@@ -56,7 +56,7 @@ const Language = ({navigation}) => {
   const onPressItem = async item => {
     dispatch(changeLanguageAction(item));
     setIsSelected(item);
-    if (item === 'English') {
+    if (item === strings.english) {
       setLanguage('en');
       await I18nManager.allowRTL(false);
       await I18nManager.forceRTL(false);
@@ -73,7 +73,7 @@ const Language = ({navigation}) => {
     const getLanguage = async () => {
       const l = language;
       setlang(l);
-      setIsSelected(l === 'en' || !l ? 'English' : 'العربية');
+      setIsSelected(l === 'en' || !l ? strings.english : 'العربية');
     };
     getLanguage();
   }, [language]);

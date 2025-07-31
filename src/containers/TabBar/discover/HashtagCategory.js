@@ -165,6 +165,8 @@ export default function HashtagCategory({selectedTag}) {
             )}
             numColumns={3}
             keyExtractor={(story, index) => index.toString()}
+            contentContainerStyle={localStyles.gridContainer}
+            columnWrapperStyle={localStyles.gridRow}
           />
         </View>
       );
@@ -247,5 +249,12 @@ const localStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: moderateScale(4),
+  },
+  gridContainer: {
+    paddingHorizontal: moderateScale(8),
+  },
+  gridRow: {
+    justifyContent: 'flex-start',
+    paddingHorizontal: moderateScale(0),
   },
 });

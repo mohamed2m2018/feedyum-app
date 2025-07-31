@@ -6,10 +6,12 @@ import {
   StyleSheet,
   TouchableOpacity,
   View,
+  RefreshControl,
 } from 'react-native';
 import React, {useEffect, useState} from 'react';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
+import LinearGradient from 'react-native-linear-gradient';
 
 // Local import
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
@@ -66,10 +68,11 @@ export default function Profile({navigation}) {
   const [page, setpage] = useState(1);
   const [reviewsPage, setReviewsPage] = useState(1);
   const [selectedTab, setSelectedTab] = useState('posts');
+  const [refreshing, setRefreshing] = useState(false);
 
   const [isLoadingSomething, setisLoadingSomething] = useState();
 
-  const {data} = useQuery('user', () => request.get('/user'), {retry: 1});
+  const {data, refetch} = useQuery('user', () => request.get('/user'), {retry: 1});
 
   const user = data?.data?.user;
   const getUserViews = () => request.get(`/views/user/${user?._id}`);
@@ -77,12 +80,12 @@ export default function Profile({navigation}) {
   const getFollowStatistics = () =>
     request.get(`/follow/statistics/${user?._id}`);
 
-  const {data: followStatistics} = useQuery(
+  const {data: followStatistics, refetch: refetchFollowStats} = useQuery(
     ['followStatistics', user?._id],
     () => getFollowStatistics(user?._id),
   );
 
-  const {data: views} = useQuery(['userViews', user?._id], getUserViews, {
+  const {data: views, refetch: refetchViews} = useQuery(['userViews', user?._id], getUserViews, {
     refetchInterval: 30000,
   });
 
@@ -111,6 +114,7 @@ export default function Profile({navigation}) {
     data: queryData,
     isLoading,
     isFetching,
+    refetch: refetchPosts,
   } = useQuery({
     queryKey: ['profile-stories', page],
     queryFn: () => fetchPosts(page),
@@ -136,6 +140,7 @@ export default function Profile({navigation}) {
     data: reviewQueryData,
     isLoading: reviewsLoading,
     isFetching: reviewsFetching,
+    refetch: refetchReviews,
   } = useQuery({
     queryKey: ['profile-reviews', reviewsPage],
     queryFn: () => fetchReviewPosts(reviewsPage),
@@ -156,6 +161,20 @@ export default function Profile({navigation}) {
       });
     },
   });
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([
+        refetch(),
+        refetchFollowStats(),
+        refetchViews(),
+        selectedTab === 'posts' ? refetchPosts() : refetchReviews(),
+      ]);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const onPressEditProfile = isEditBio => {
     navigation.navigate(StackNav.SetUpProfile, {
@@ -181,6 +200,230 @@ export default function Profile({navigation}) {
     );
   };
 
+  // Profile Header Component
+  const ProfileHeader = () => (
+    <View style={localStyles.headerContent}>
+      {/* Profile Header */}
+      <View style={localStyles.headerContainer}>
+        <TouchableOpacity onPress={onPressSetting}>
+          <Ionicons
+            name="settings-outline"
+            size={moderateScale(24)}
+            color={colors.dark ? colors.white : colors.darkColor}
+          />
+        </TouchableOpacity>
+      </View>
+      
+      <View style={styles.itemsCenter}>
+        <TouchableOpacity onPress={() => onPressEditProfile(false)}>
+          <Image
+            source={
+              user?.avatar
+                ? {uri: user?.avatar}
+                : colors.dark
+                ? images.userDark
+                : images.userLight
+            }
+            style={localStyles.userImage}
+          />
+          <MaterialIcon
+            name="pencil-box"
+            size={moderateScale(24)}
+            color={colors.primary}
+            style={localStyles.editIcon}
+          />
+        </TouchableOpacity>
+        <View style={styles.mv20}>
+          <ZText type="b24" align={'center'}>
+            {user?.fullName}
+          </ZText>
+          {user?.profileCompleted && (
+            <ZText type="m10" align={'center'}>
+              {strings?.unofficial}
+            </ZText>
+          )}
+          <ZText type="m14" align={'center'} style={styles.mt10}>
+            {user?.email}
+          </ZText>
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => onPressEditProfile(true)}
+            style={localStyles.bioContainer}>
+            <ZText
+              type={user?.bio ? 'm16' : 'm14'}
+              align={'center'}
+              color={user?.bio ? colors.textColor : colors.background}
+              style={[styles.mt10, localStyles.bioText]}>
+              {user?.bio ?? strings.addBio}
+            </ZText>
+            <MaterialIcon
+              name="pencil-box"
+              size={moderateScale(20)}
+              style={localStyles.bioIcon}
+              color={colors.primary}
+            />
+          </TouchableOpacity>
+        </View>
+      </View>
+      
+      <View style={[styles.flexRow, styles.justifyEvenly]}>
+        {UserDetail(
+          user?.postsNo,
+          followStatistics?.data?.followersCount,
+          followStatistics?.data?.followingCount,
+          views?.data?.viewsCount || 0,
+        ).map((item, index) => (
+          <RenderUserDetail item={item} key={index} />
+        ))}
+      </View>
+      
+      <View style={localStyles.actionButtonsContainer}>
+        <TouchableOpacity
+          style={[localStyles.iconButton, {borderColor: colors.primary}]}
+          onPress={() => onPressEditProfile(false)}
+        >
+          <MaterialIcon
+            name="account-edit"
+            size={moderateScale(20)}
+            color={colors.primary}
+          />
+          <ZText type="m12" color={colors.primary} style={styles.mt5}>
+            {strings.edit}
+          </ZText>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[localStyles.iconButton, {borderColor: colors.primary}]}
+          onPress={() => navigation.navigate(StackNav.ChatList)}
+        >
+          <Ionicons
+            name="chatbubbles-outline"
+            size={moderateScale(20)}
+            color={colors.primary}
+          />
+          <ZText type="m12" color={colors.primary} style={styles.mt5}>
+            {strings.chats}
+          </ZText>
+        </TouchableOpacity>
+
+        {user?.type === 'chef' && (
+          <TouchableOpacity
+            style={[localStyles.iconButton, localStyles.primaryButton, {backgroundColor: colors.primary, borderColor: colors.primary}]}
+            onPress={() => navigation.navigate(StackNav.ChefDashboard)}
+          >
+            <MaterialIcon
+              name="chef-hat"
+              size={moderateScale(20)}
+              color={colors.white}
+            />
+            <ZText type="m12" color={colors.white} style={styles.mt5}>
+              {strings.chef}
+            </ZText>
+          </TouchableOpacity>
+        )}
+
+        {/* WALLET BUTTON */}
+        <TouchableOpacity
+          style={[localStyles.iconButton, {borderColor: colors.primary}]}
+          onPress={() => navigation.navigate(StackNav.Wallet)}
+        >
+          <Ionicons
+            name="wallet-outline"
+            size={moderateScale(20)}
+            color={colors.primary}
+          />
+          <ZText type="m12" color={colors.primary} style={styles.mt5}>
+            {strings.wallet}
+          </ZText>
+        </TouchableOpacity>
+      </View>
+
+      {/* Enhanced Tab Bar */}
+      <View style={localStyles.tabBarContainer}>
+        <LinearGradient
+          colors={colors.dark ? ['#1C1C1E', '#2C2C2E'] : ['#F8F9FA', '#FFFFFF']}
+          style={localStyles.tabBar}
+          start={{x: 0, y: 0}}
+          end={{x: 1, y: 0}}
+        >
+          <TouchableOpacity
+            style={[
+              localStyles.tab,
+              selectedTab === 'posts' && [
+                localStyles.activeTab,
+                {backgroundColor: colors.primary}
+              ]
+            ]}
+            onPress={() => setSelectedTab('posts')}
+            activeOpacity={0.8}
+          >
+            {selectedTab === 'posts' && (
+              <LinearGradient
+                colors={[colors.primary, colors.primary + '90']}
+                style={localStyles.activeTabGradient}
+                start={{x: 0, y: 0}}
+                end={{x: 1, y: 1}}
+              />
+            )}
+            <Ionicons
+              name={selectedTab === 'posts' ? 'grid' : 'grid-outline'}
+              size={moderateScale(18)}
+              color={selectedTab === 'posts' ? colors.white : colors.grayScale6}
+              style={localStyles.tabIcon}
+            />
+            <ZText
+              type="B14"
+              color={selectedTab === 'posts' ? colors.white : colors.grayScale6}
+              style={localStyles.tabText}
+            >
+              {strings.posts}
+            </ZText>
+            {selectedTab === 'posts' && (
+              <View style={[localStyles.tabIndicator, {backgroundColor: colors.white}]} />
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              localStyles.tab,
+              selectedTab === 'reviews' && [
+                localStyles.activeTab,
+                {backgroundColor: colors.primary}
+              ]
+            ]}
+            onPress={() => setSelectedTab('reviews')}
+            activeOpacity={0.8}
+          >
+            {selectedTab === 'reviews' && (
+              <LinearGradient
+                colors={[colors.primary, colors.primary + '90']}
+                style={localStyles.activeTabGradient}
+                start={{x: 0, y: 0}}
+                end={{x: 1, y: 1}}
+              />
+            )}
+            <Ionicons
+              name={selectedTab === 'reviews' ? 'star' : 'star-outline'}
+              size={moderateScale(18)}
+              color={selectedTab === 'reviews' ? colors.white : colors.grayScale6}
+              style={localStyles.tabIcon}
+            />
+            <ZText
+              type="B14"
+              color={selectedTab === 'reviews' ? colors.white : colors.grayScale6}
+              style={localStyles.tabText}
+            >
+              {strings.reviews}
+            </ZText>
+            {selectedTab === 'reviews' && (
+              <View style={[localStyles.tabIndicator, {backgroundColor: colors.white}]} />
+            )}
+          </TouchableOpacity>
+        </LinearGradient>
+      </View>
+    </View>
+  );
+
   const {isGuest, handleAuthToast} = useHandleAuth();
 
   const isFocused = useIsFocused();
@@ -196,290 +439,107 @@ export default function Profile({navigation}) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isFocused]);
 
+  const currentData = selectedTab === 'posts' ? storiesData : reviewsData;
+  const currentLoading = selectedTab === 'posts' ? isLoading : reviewsLoading;
+  const currentFetching = selectedTab === 'posts' ? isFetching : reviewsFetching;
+  const currentQueryData = selectedTab === 'posts' ? queryData : reviewQueryData;
+
+  const renderPostItem = ({item, index}) => (
+    <View style={localStyles.gridItem}>
+      <ReelComponent
+        data={item?.views}
+        profileId={user}
+        setisLoadingSomething={setisLoadingSomething}
+        reelUrl={
+          item?.avatarUri?.replace(
+            'https://foodtokforever.s3.amazonaws.com',
+            'https://d1wfcrbbkg3bzd.cloudfront.net',
+          ) ||
+          item?.poster?.replace(
+            'https://foodtokforever.s3.amazonaws.com',
+            'https://d1wfcrbbkg3bzd.cloudfront.net',
+          )
+        }
+        id={item?._id}
+        item={item}
+        isPlay={!item?.avatarUri}
+        isDeleteAllowed={true}
+      />
+    </View>
+  );
+
+  const emptyComponent = () => (
+    <View style={localStyles.emptyContainer}>
+      <Ionicons 
+        name={selectedTab === 'posts' ? 'grid-outline' : 'star-outline'} 
+        size={moderateScale(64)} 
+        color={colors.grayScale4} 
+      />
+      <ZText
+        style={localStyles.emptyTitle}
+        type={'B18'}
+        color={colors.textColor}>
+        {selectedTab === 'posts' ? strings.noDishesYetCurrentProfile : strings.noReviewPostsYet}
+      </ZText>
+      <ZText
+        style={localStyles.emptySubtitle}
+        type={'M14'}
+        color={colors.grayScale5}>
+        {selectedTab === 'posts' 
+          ? strings.startSharingCulinaryCreations
+          : strings.shareYourFoodExperiences}
+      </ZText>
+    </View>
+  );
+
+  const onEndReached = () => {
+    if (selectedTab === 'posts') {
+      if (queryData?.data?.totalPages > page) {
+        setpage(old => old + 1);
+      }
+    } else {
+      if (reviewQueryData?.data?.totalPages > reviewsPage) {
+        setReviewsPage(old => old + 1);
+      }
+    }
+  };
+
   return (
     <ZSafeAreaView>
       {!isGuest && (
-        <View style={{flex: 1, height: '100%', padding: 20}}>
+        <View style={localStyles.container}>
           {isLoadingSomething && (
             <ZLoader overlay={true} absolute top={440} left={-10} />
           )}
-          <View style={{flex: 1}}>
-            {/* Profile Header */}
-            <View style={localStyles.headerContainer}>
-              <TouchableOpacity onPress={onPressSetting}>
-                <Ionicons
-                  name="settings-outline"
-                  size={moderateScale(24)}
-                  color={colors.dark ? colors.white : colors.darkColor}
+          
+          <FlatList
+            data={currentData}
+            renderItem={renderPostItem}
+            numColumns={3}
+            key={selectedTab} // Force re-render when tab changes
+            ListHeaderComponent={ProfileHeader}
+            ListEmptyComponent={currentLoading || !data?.data?.user?._id ? (
+              <ZLoader top={44} left={-10} />
+            ) : emptyComponent}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
+            onEndReached={onEndReached}
+            onEndReachedThreshold={0.9}
+            ListFooterComponent={
+              currentFetching && !currentLoading ? (
+                <ActivityIndicator 
+                  size={'large'} 
+                  color={colors.primary} 
+                  style={localStyles.loadingIndicator}
                 />
-              </TouchableOpacity>
-            </View>
-            <View style={styles.itemsCenter}>
-              <TouchableOpacity onPress={() => onPressEditProfile(false)}>
-                <Image
-                  source={
-                    user?.avatar
-                      ? {uri: user?.avatar}
-                      : colors.dark
-                      ? images.userDark
-                      : images.userLight
-                  }
-                  style={localStyles.userImage}
-                />
-                <MaterialIcon
-                  name="pencil-box"
-                  size={moderateScale(24)}
-                  color={colors.primary}
-                  style={localStyles.editIcon}
-                />
-              </TouchableOpacity>
-              <View style={styles.mv20}>
-                <ZText type="b24" align={'center'}>
-                  {user?.fullName}
-                </ZText>
-                {user?.profileCompleted && (
-                  <ZText type="m10" align={'center'}>
-                    {strings?.unofficial}
-                  </ZText>
-                )}
-                <ZText type="m14" align={'center'} style={styles.mt10}>
-                  {user?.email}
-                </ZText>
-                <TouchableOpacity
-                  activeOpacity={0.8}
-                  onPress={() => onPressEditProfile(true)}
-                  style={localStyles.bioContainer}>
-                  <ZText
-                    type={user?.bio ? 'm16' : 'm14'}
-                    align={'center'}
-                    color={user?.bio ? colors.textColor : colors.background}
-                    style={[styles.mt10, localStyles.bioText]}>
-                    {user?.bio ?? strings.addBio}
-                  </ZText>
-                  <MaterialIcon
-                    name="pencil-box"
-                    size={moderateScale(20)}
-                    style={localStyles.bioIcon}
-                    color={colors.primary}
-                  />
-                </TouchableOpacity>
-              </View>
-            </View>
-            <View style={[styles.flexRow, styles.justifyEvenly]}>
-              {UserDetail(
-                user?.postsNo,
-                followStatistics?.data?.followersCount,
-                followStatistics?.data?.followingCount,
-                views?.data?.viewsCount || 0,
-              ).map((item, index) => (
-                <RenderUserDetail item={item} key={index} />
-              ))}
-            </View>
-            <View style={localStyles.actionButtonsContainer}>
-              <TouchableOpacity
-                style={[localStyles.iconButton, {borderColor: colors.primary}]}
-                onPress={() => onPressEditProfile(false)}
-              >
-                <MaterialIcon
-                  name="account-edit"
-                  size={moderateScale(20)}
-                  color={colors.primary}
-                />
-                <ZText type="m12" color={colors.primary} style={styles.mt5}>
-                  Edit
-                </ZText>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[localStyles.iconButton, {borderColor: colors.primary}]}
-                onPress={() => navigation.navigate(StackNav.ChatList)}
-              >
-                <Ionicons
-                  name="chatbubbles-outline"
-                  size={moderateScale(20)}
-                  color={colors.primary}
-                />
-                <ZText type="m12" color={colors.primary} style={styles.mt5}>
-                  Chats
-                </ZText>
-              </TouchableOpacity>
-
-              {user?.type === 'chef' && (
-                <TouchableOpacity
-                  style={[localStyles.iconButton, localStyles.primaryButton, {backgroundColor: colors.primary, borderColor: colors.primary}]}
-                  onPress={() => navigation.navigate(StackNav.ChefDashboard)}
-                >
-                  <MaterialIcon
-                    name="chef-hat"
-                    size={moderateScale(20)}
-                    color={colors.white}
-                  />
-                  <ZText type="m12" color={colors.white} style={styles.mt5}>
-                    Chef
-                  </ZText>
-                </TouchableOpacity>
-              )}
-
-              {/* WALLET BUTTON */}
-              <TouchableOpacity
-                style={[localStyles.iconButton, {borderColor: colors.primary}]}
-                onPress={() => navigation.navigate(StackNav.Wallet)}
-              >
-                <Ionicons
-                  name="wallet-outline"
-                  size={moderateScale(20)}
-                  color={colors.primary}
-                />
-                <ZText type="m12" color={colors.primary} style={styles.mt5}>
-                  Wallet
-                </ZText>
-              </TouchableOpacity>
-            </View>
-
-            {/* Tab Bar */}
-            <View style={localStyles.tabBar}>
-              <TouchableOpacity
-                style={[
-                  localStyles.tab,
-                  selectedTab === 'posts' && {backgroundColor: colors.primary},
-                ]}
-                onPress={() => setSelectedTab('posts')}>
-                <ZText
-                  type="B14"
-                  color={selectedTab === 'posts' ? colors.white : colors.grayScale6}>
-                  Posts
-                </ZText>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  localStyles.tab,
-                  selectedTab === 'reviews' && {backgroundColor: colors.primary},
-                ]}
-                onPress={() => setSelectedTab('reviews')}>
-                <ZText
-                  type="B14"
-                  color={selectedTab === 'reviews' ? colors.white : colors.grayScale6}>
-                  Reviews
-                </ZText>
-              </TouchableOpacity>
-            </View>
-
-            {/* Tab Content */}
-            <View style={{flex: 1}}>
-              {selectedTab === 'posts' ? (
-                <FlatList
-                  data={storiesData}
-                  showsVerticalScrollIndicator={false}
-                  renderItem={({item}) => (
-                    <ReelComponent
-                      data={item?.views}
-                      profileId={user}
-                      setisLoadingSomething={setisLoadingSomething}
-                      reelUrl={
-                        item?.avatarUri?.replace(
-                          'https://foodtokforever.s3.amazonaws.com',
-                          'https://d1wfcrbbkg3bzd.cloudfront.net',
-                        ) ||
-                        item?.poster?.replace(
-                          'https://foodtokforever.s3.amazonaws.com',
-                          'https://d1wfcrbbkg3bzd.cloudfront.net',
-                        )
-                      }
-                      id={item?._id}
-                      item={item}
-                      isPlay={!item?.avatarUri}
-                      isDeleteAllowed={true}
-                    />
-                  )}
-                  numColumns={3}
-                  ListEmptyComponent={
-                    isLoading || !data?.data?.user?._id ? (
-                      <ZLoader top={44} left={-10} />
-                    ) : (
-                      <ZText
-                        style={{textAlign: 'center', marginTop: 45}}
-                        type={'B20'}>
-                        {strings.noDishesYetCurrentProfile}
-                      </ZText>
-                    )
-                  }
-                  onEndReachedThreshold={0.9}
-                  onMomentumScrollBegin={() => {
-                    if (queryData?.data?.totalPages > page) {
-                      setpage(old => old + 1);
-                    }
-                  }}
-                  ListFooterComponent={
-                    isFetching && !isLoading ? (
-                      <ActivityIndicator size={'large'} color={colors.primary} />
-                    ) : null
-                  }
-                  keyExtractor={(item, index) => index.toString()}
-                />
-              ) : (
-                <FlatList
-                  data={reviewsData}
-                  showsVerticalScrollIndicator={false}
-                  renderItem={({item}) => (
-                    <ReelComponent
-                      data={item?.views}
-                      profileId={user}
-                      setisLoadingSomething={setisLoadingSomething}
-                      reelUrl={
-                        item?.avatarUri?.replace(
-                          'https://foodtokforever.s3.amazonaws.com',
-                          'https://d1wfcrbbkg3bzd.cloudfront.net',
-                        ) ||
-                        item?.poster?.replace(
-                          'https://foodtokforever.s3.amazonaws.com',
-                          'https://d1wfcrbbkg3bzd.cloudfront.net',
-                        )
-                      }
-                      id={item?._id}
-                      item={item}
-                      isPlay={!item?.avatarUri}
-                      isDeleteAllowed={true}
-                    />
-                  )}
-                  numColumns={3}
-                  ListEmptyComponent={
-                    reviewsLoading || !data?.data?.user?._id ? (
-                      <ZLoader top={44} left={-10} />
-                    ) : (
-                      <View style={localStyles.emptyReviewsContainer}>
-                        <Ionicons name="star-outline" size={moderateScale(64)} color={colors.grayScale4} />
-                        <ZText
-                          style={{textAlign: 'center', marginTop: 16}}
-                          type={'B18'}
-                          color={colors.textColor}>
-                          No Review Posts Yet
-                        </ZText>
-                        <ZText
-                          style={{textAlign: 'center', marginTop: 8}}
-                          type={'M14'}
-                          color={colors.grayScale5}>
-                          Share your food experiences with reviews!
-                        </ZText>
-                      </View>
-                    )
-                  }
-                  onEndReachedThreshold={0.9}
-                  onMomentumScrollBegin={() => {
-                    if (reviewQueryData?.data?.totalPages > reviewsPage) {
-                      setReviewsPage(old => old + 1);
-                    }
-                  }}
-                  ListFooterComponent={
-                    reviewsFetching && !reviewsLoading ? (
-                      <ActivityIndicator size={'large'} color={colors.primary} />
-                    ) : null
-                  }
-                  keyExtractor={(item, index) => index.toString()}
-                />
-              )}
-            </View>
-          </View>
+              ) : null
+            }
+            keyExtractor={(item, index) => `${selectedTab}-${item._id || index}`}
+            contentContainerStyle={localStyles.flatListContent}
+            columnWrapperStyle={localStyles.columnWrapper}
+          />
         </View>
       )}
     </ZSafeAreaView>
@@ -487,11 +547,21 @@ export default function Profile({navigation}) {
 }
 
 const localStyles = StyleSheet.create({
-  root: {
-    ...styles.flex,
-    ...styles.ph20,
-    ...styles.mb20,
+  container: {
     flex: 1,
+    backgroundColor: 'transparent',
+  },
+  flatListContent: {
+    paddingHorizontal: moderateScale(20),
+    paddingBottom: moderateScale(20),
+  },
+  columnWrapper: {
+    marginBottom: moderateScale(12),
+    paddingHorizontal: moderateScale(5),
+  },
+  headerContent: {
+    width: '100%',
+    marginBottom: moderateScale(20),
   },
   headerContainer: {
     ...styles.flex,
@@ -499,6 +569,7 @@ const localStyles = StyleSheet.create({
     ...styles.alignCenter,
     ...styles.justifyBetween,
     ...styles.mt20,
+    marginBottom: moderateScale(20),
   },
   userImage: {
     width: moderateScale(100),
@@ -509,18 +580,6 @@ const localStyles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
     right: 0,
-  },
-  editIcon2: {
-    position: 'absolute',
-    bottom: 15,
-    right: -33,
-  },
-  buttonContainer: {
-    ...styles.mt15,
-    height: getHeight(45),
-    borderRadius: moderateScale(22),
-    borderWidth: moderateScale(1),
-    ...styles.mb15,
   },
   bioContainer: {
     flexDirection: 'row',
@@ -533,17 +592,6 @@ const localStyles = StyleSheet.create({
   },
   bioIcon: {
     marginTop: 7,
-  },
-  mainContainer: {
-    ...styles.flexRow,
-    width: '100%',
-    ...styles.mt15,
-  },
-  tabItemStyle: {
-    borderBottomWidth: moderateScale(2),
-    width: '25%',
-    ...styles.itemsCenter,
-    ...styles.pv15,
   },
   actionButtonsContainer: {
     flexDirection: 'row',
@@ -568,28 +616,85 @@ const localStyles = StyleSheet.create({
     // Additional styles for the chef dashboard button
   },
 
-  // Tab Bar Styles
+  // Enhanced Tab Bar Styles
+  tabBarContainer: {
+    marginTop: moderateScale(10),
+    marginBottom: moderateScale(20),
+    marginHorizontal: moderateScale(10),
+  },
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: 'transparent',
-    marginHorizontal: moderateScale(20),
-    marginVertical: moderateScale(16),
-    borderRadius: moderateScale(8),
-    padding: moderateScale(4),
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderRadius: moderateScale(16),
+    padding: moderateScale(6),
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
   },
-
   tab: {
     flex: 1,
-    paddingVertical: moderateScale(12),
+    flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: moderateScale(6),
+    justifyContent: 'center',
+    paddingVertical: moderateScale(14),
+    paddingHorizontal: moderateScale(16),
+    borderRadius: moderateScale(12),
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  activeTab: {
+    transform: [{scale: 1.02}],
+  },
+  activeTabGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: moderateScale(12),
+  },
+  tabIcon: {
+    marginRight: moderateScale(6),
+    zIndex: 2,
+  },
+  tabText: {
+    zIndex: 2,
+    fontWeight: '600',
+  },
+  tabIndicator: {
+    position: 'absolute',
+    bottom: moderateScale(4),
+    width: moderateScale(20),
+    height: moderateScale(2),
+    borderRadius: moderateScale(1),
+    zIndex: 2,
   },
 
-  emptyReviewsContainer: {
-    alignItems: 'center',
-    paddingVertical: moderateScale(60),
+  // Content Styles
+  gridItem: {
+    width: '31%',
+    marginHorizontal: moderateScale(2),
   },
-
+  emptyContainer: {
+    alignItems: 'center',
+    paddingVertical: moderateScale(80),
+    paddingHorizontal: moderateScale(40),
+  },
+  emptyTitle: {
+    textAlign: 'center',
+    marginTop: moderateScale(20),
+    marginBottom: moderateScale(8),
+  },
+  emptySubtitle: {
+    textAlign: 'center',
+    lineHeight: moderateScale(20),
+  },
+  loadingIndicator: {
+    marginTop: moderateScale(20),
+    marginBottom: moderateScale(10),
+  },
 });

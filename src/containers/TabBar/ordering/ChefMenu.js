@@ -23,6 +23,7 @@ import {styles} from '../../../themes';
 import request from '../../../api/request';
 import images from '../../../assets/images';
 import {StackNav} from '../../../navigation/NavigationKeys';
+import strings from '../../../i18n/strings';
 import {
   addToCart,
   selectCartItemCount,
@@ -73,7 +74,7 @@ const ChefMenu = () => {
         // If we can't get chef info, create a basic chef object
         chef = {
           _id: chefId,
-          fullName: chefName || 'Unknown Chef',
+          fullName: chefName || strings.unknownChef,
           avatar: null,
         };
       }
@@ -98,32 +99,26 @@ const ChefMenu = () => {
           dishes = allDishes.filter(
             dish =>
               (dish.user_id === chefId ||
-                dish.chef === chefId ||
-                dish.owner === chefId) &&
+                (dish.chef && dish.chef._id === chefId)) &&
               dish.visible !== false,
           );
-          console.log('Fallback visible dishes:', dishes);
+          console.log('Fallback dishes for chef:', dishes);
         } catch (fallbackError) {
-          console.log(
-            'Could not fetch fallback dishes:',
-            fallbackError.message,
-          );
-          dishes = [];
+          console.log('Fallback fetch also failed:', fallbackError.message);
         }
       }
 
       return {
-        chef: chef,
-        dishes: dishes,
-        menu: menu,
+        menu,
+        dishes,
+        chef,
       };
     } catch (error) {
-      console.error('Failed to fetch chef menu:', error);
+      console.error('Error in fetchChefMenu:', error);
       throw error;
     }
   };
 
-  // Fetch chef menu data
   const {
     data: menuData,
     isLoading,
@@ -131,27 +126,32 @@ const ChefMenu = () => {
     refetch,
   } = useQuery(['chefMenu', chefId], () => fetchChefMenu(chefId), {
     enabled: !!chefId,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    cacheTime: 1000 * 60 * 10, // 10 minutes
     retry: 2,
-    retryDelay: 1000,
-  });
-
-  // Auto-scroll to specific dish if provided
-  useEffect(() => {
-    if (menuData?.dishes && scrollToDishId && flatListRef.current) {
-      const dishIndex = menuData.dishes.findIndex(
-        dish => dish._id === scrollToDishId,
-      );
-      if (dishIndex !== -1) {
+    onError: error => {
+      console.error('Menu fetch error:', error);
+    },
+    onSuccess: data => {
+      console.log('Menu data fetched successfully:', data);
+      
+      // Auto-scroll to specific dish if provided
+      if (scrollToDishId && data?.dishes && flatListRef.current) {
         setTimeout(() => {
-          flatListRef.current?.scrollToIndex({
-            index: dishIndex,
-            animated: true,
-            viewPosition: 0.5,
-          });
+          const dishIndex = data.dishes.findIndex(
+            dish => dish._id === scrollToDishId,
+          );
+          if (dishIndex !== -1) {
+            flatListRef.current.scrollToIndex({
+              index: dishIndex,
+              animated: true,
+              viewPosition: 0.1,
+            });
+          }
         }, 500);
       }
-    }
-  }, [menuData, scrollToDishId]);
+    },
+  });
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -159,242 +159,172 @@ const ChefMenu = () => {
     setRefreshing(false);
   };
 
-  const handleAddToCart = (dish, quantity = 1) => {
-    dispatch(
-      addToCart({
-        dish,
-        quantity,
-        chefId,
-        chefName: menuData?.chef?.fullName || chefName,
-      }),
-    );
+  const handleQuantityChange = (dishId, delta) => {
+    setQuantities(prev => ({
+      ...prev,
+      [dishId]: Math.max(0, (prev[dishId] || 0) + delta),
+    }));
   };
 
-  const handleQuantityChange = (dishId, change) => {
-    setQuantities(prev => {
-      const currentQty = prev[dishId] || 0;
-      const newQty = Math.max(0, currentQty + change);
-      return {...prev, [dishId]: newQty};
-    });
-  };
+  const handleAddToCart = async (dish, quantity = 1) => {
+    if (!dish || quantity <= 0) return;
 
-  const handleAddWithQuantity = dish => {
-    const quantity = quantities[dish._id] || 1;
-    handleAddToCart(dish, quantity);
-    // Reset quantity after adding to cart
-    setQuantities(prev => ({...prev, [dish._id]: 0}));
+    try {
+      // Remove .unwrap() since addToCart is a regular action creator, not an async thunk
+      dispatch(
+        addToCart({
+          dish,
+          quantity,
+          chefId,
+        }),
+      );
+    } catch (error) {
+      Alert.alert(strings.error, strings.failedToAddItemToCart);
+      console.error('Add to cart error:', error);
+    }
   };
 
   const handleCartPress = () => {
+    // Change from CheckoutScreen to ShoppingCart which is defined in NavigationKeys.js
     navigation.navigate(StackNav.ShoppingCart);
   };
 
   // Handle cart errors
   useEffect(() => {
     if (cartError) {
-      Alert.alert('Cart Error', cartError, [
-        {
-          text: 'OK',
-          onPress: () => dispatch(clearError()),
-        },
-      ]);
+      Alert.alert('Cart Error', cartError);
+      dispatch(clearError());
     }
   }, [cartError, dispatch]);
 
-  const handleVisitFullMenu = () => {
-    // Navigate to full menu if needed
-    console.log('Visit full menu');
-  };
-
-  // Helper function to get stunning gradient colors for categories
+  // Helper function to generate color gradients for categories
   const getCategoryGradient = index => {
     const gradients = [
-      {primary: '#FF6B6B', secondary: '#FF8E8E'}, // Red
-      {primary: '#4ECDC4', secondary: '#6ED5CE'}, // Teal
-      {primary: '#45B7D1', secondary: '#6BC5D8'}, // Blue
-      {primary: '#96CEB4', secondary: '#A8D4BE'}, // Green
-      {primary: '#FFEAA7', secondary: '#FFED4A'}, // Yellow
-      {primary: '#DDA0DD', secondary: '#E6B3E6'}, // Purple
-      {primary: '#FFB347', secondary: '#FFC266'}, // Orange
-      {primary: '#87CEEB', secondary: '#9BD6F0'}, // Sky Blue
+      {primary: '#FF6B8A', secondary: '#FF8FA3'},
+      {primary: '#4ECDC4', secondary: '#7EDDD8'},
+      {primary: '#45B7D1', secondary: '#6BCFF6'},
+      {primary: '#FFA726', secondary: '#FFB74D'},
+      {primary: '#AB47BC', secondary: '#BA68C8'},
+      {primary: '#66BB6A', secondary: '#81C784'},
+      {primary: '#EF5350', secondary: '#E57373'},
+      {primary: '#26A69A', secondary: '#4DB6AC'},
     ];
     return gradients[index % gradients.length];
   };
 
-  // Helper function to get category-specific icons
+  // Helper function to get category icons
   const getCategoryIcon = category => {
-    const categoryLower = category.toLowerCase();
-    if (
-      categoryLower.includes('appetizer') ||
-      categoryLower.includes('starter')
-    ) {
-      return 'restaurant-outline';
-    } else if (
-      categoryLower.includes('main') ||
-      categoryLower.includes('entree')
-    ) {
-      return 'pizza-outline';
-    } else if (
-      categoryLower.includes('dessert') ||
-      categoryLower.includes('sweet')
-    ) {
-      return 'ice-cream-outline';
-    } else if (
-      categoryLower.includes('drink') ||
-      categoryLower.includes('beverage')
-    ) {
-      return 'wine-outline';
-    } else if (categoryLower.includes('salad')) {
-      return 'leaf-outline';
-    } else if (categoryLower.includes('soup')) {
-      return 'cafe-outline';
-    } else if (categoryLower.includes('burger')) {
-      return 'fast-food-outline';
-    } else if (categoryLower.includes('sandwich')) {
-      return 'fast-food-outline';
-    } else {
-      return 'restaurant';
-    }
+    const iconMap = {
+      Italian: 'restaurant-outline',
+      Pasta: 'restaurant',
+      Pizza: 'pizza-outline',
+      Dessert: 'ice-cream-outline',
+      Appetizer: 'wine-outline',
+      'Main Course': 'restaurant',
+      Beverage: 'wine',
+      Salad: 'leaf-outline',
+      Soup: 'cafe-outline',
+      'All Items': 'grid-outline',
+    };
+    return iconMap[category] || 'restaurant-outline';
   };
 
-  const renderDishCard = ({item: dish, index}) => {
+  const renderDishCard = ({item: dish}) => {
     const currentQuantity = quantities[dish._id] || 0;
-    const isInCart = currentQuantity > 0;
-
-    // Check if this is the first dish in a new category for section header
-    const currentCategory = dish.category || 'Main Dishes';
-    const previousDish = index > 0 ? menuData.dishes[index - 1] : null;
-    const previousCategory = previousDish
-      ? previousDish.category || 'Main Dishes'
-      : null;
-    const showCategoryHeader =
-      currentCategory !== previousCategory;
+    const isAvailable = dish.visible !== false;
 
     return (
       <>
-        {showCategoryHeader && (
-          <View style={localStyles.sectionHeader}>
-            <ZText type="B18" color={colors.textColor} style={localStyles.sectionTitle}>
-              {currentCategory}
-            </ZText>
-          </View>
-        )}
-        <TouchableOpacity 
-          style={[localStyles.dishCard, {backgroundColor: colors.white}]}
-          onPress={() => navigation.navigate('DishDetailScreen', {
-            dishId: dish._id,
-            chefId: chefId,
-          })}
-          activeOpacity={0.95}>
+        <TouchableOpacity
+          style={[
+            localStyles.dishCard,
+            {backgroundColor: colors.backgroundColor},
+          ]}
+          onPress={() => {
+            navigation.navigate(StackNav.DishDetailScreen, {
+              dishId: dish._id,
+              chefId: chefId,
+            });
+          }}
+          activeOpacity={0.9}>
           {/* Hero Image Section */}
           <View style={localStyles.heroImageContainer}>
             <Image
-              source={dish.image ? {uri: dish.image} : images.dishPlaceholder}
+              source={
+                dish.image
+                  ? {uri: dish.image}
+                  : colors.dark
+                    ? images.dishplaceholder
+                    : images.dishplaceholder
+              }
               style={localStyles.heroImage}
-              resizeMode="cover"
             />
-
-            {/* Gradient Overlays for Depth */}
+            {/* Subtle top gradient */}
             <View style={localStyles.topGradient} />
-            <View style={localStyles.bottomGradient} />
-
-            {/* Floating Rating Badge */}
-            {dish.average_rating > 0 && (
-              <View style={localStyles.floatingRating}>
-                <Ionicons
-                  name="star"
-                  size={moderateScale(14)}
-                  color="#FFD700"
-                />
-                <ZText
-                  type="B14"
-                  color={colors.white}
-                  style={localStyles.ratingValue}>
-                  {dish.average_rating.toFixed(1)}
-                </ZText>
-              </View>
-            )}
-
-            {/* Price Tag */}
-            <View
-              style={[localStyles.priceTag, {backgroundColor: colors.primary}]}>
-              <ZText
-                type="B18"
-                color={colors.white}
-                style={localStyles.priceText}>
-                {dish.price} EGP
-              </ZText>
-            </View>
           </View>
 
           {/* Content Section */}
-          <View style={localStyles.contentSection}>
-            {/* Title */}
-            <ZText type="B22" numberOfLines={1} style={localStyles.dishName}>
-              {dish.name}
-            </ZText>
+          <View style={localStyles.dishContent}>
+            {/* Dish Info */}
+            <View style={localStyles.dishInfo}>
+              <ZText
+                type="B16"
+                numberOfLines={1}
+                color={colors.textColor}
+                style={localStyles.dishName}>
+                {dish.name}
+              </ZText>
+              
+              {dish.description && (
+                <ZText
+                  type="M12"
+                  numberOfLines={2}
+                  color={colors.grayScale7}
+                  style={localStyles.dishDescription}>
+                  {dish.description}
+                </ZText>
+              )}
 
-            {/* Description */}
-            <ZText
-              type="M14"
-              color={colors.grayScale6}
-              numberOfLines={2}
-              style={localStyles.dishDesc}>
-              {dish.description}
-            </ZText>
-
-            {/* Action Row */}
-            <View style={localStyles.actionRow}>
-              {dish.visible ? (
-                !isInCart ? (
-                  // Stunning Add to Cart Button
-                  <TouchableOpacity
-                    style={[
-                      localStyles.stunningAddBtn,
-                      {backgroundColor: colors.primary},
-                    ]}
-                    onPress={() => {
-                      handleQuantityChange(dish._id, 1);
-                      handleAddToCart(dish, 1);
-                    }}
-                    activeOpacity={0.85}>
-                    <View style={localStyles.addBtnContent}>
-                      <Ionicons
-                        name="add-circle"
-                        size={moderateScale(24)}
-                        color={colors.white}
-                      />
+              {/* Price and Category */}
+              <View style={localStyles.priceRow}>
+                <View style={localStyles.priceContainer}>
+                  <ZText type="B18" color={colors.primary}>
+                    ${dish.price?.toFixed(2) || '0.00'}
+                  </ZText>
+                  {dish.category && (
+                    <View
+                      style={[
+                        localStyles.categoryBadge,
+                        {backgroundColor: colors.primary + '15'},
+                      ]}>
                       <ZText
-                        type="B18"
-                        color={colors.white}
-                        style={localStyles.addBtnText}>
-                        Add to Cart
+                        type="M10"
+                        color={colors.primary}
+                        style={localStyles.categoryText}>
+                        {dish.category}
                       </ZText>
                     </View>
-                  </TouchableOpacity>
-                ) : (
-                  // Quantity Controls
-                  <View style={localStyles.quantityRow}>
+                  )}
+                </View>
+              </View>
+            </View>
+
+            {/* Action Section */}
+            <View style={localStyles.actionSection}>
+              {isAvailable ? (
+                currentQuantity > 0 ? (
+                  <View style={localStyles.quantityController}>
                     <TouchableOpacity
                       style={[
                         localStyles.quantityControl,
-                        {backgroundColor: colors.inputBg},
+                        {backgroundColor: colors.grayScale4},
                       ]}
-                      onPress={() => {
-                        const newQty = Math.max(0, currentQuantity - 1);
-                        handleQuantityChange(dish._id, -1);
-                        if (newQty === 0) {
-                          // Remove from cart
-                          handleAddToCart(dish, -currentQuantity);
-                        } else {
-                          handleAddToCart(dish, -1);
-                        }
-                      }}
+                      onPress={() => handleQuantityChange(dish._id, -1)}
                       activeOpacity={0.7}>
                       <Ionicons
                         name="remove"
                         size={moderateScale(20)}
-                        color={colors.textColor}
+                        color={colors.white}
                       />
                     </TouchableOpacity>
 
@@ -421,6 +351,26 @@ const ChefMenu = () => {
                       />
                     </TouchableOpacity>
                   </View>
+                ) : (
+                  <TouchableOpacity
+                    style={[
+                      localStyles.addButton,
+                      {backgroundColor: colors.primary},
+                    ]}
+                    onPress={() => {
+                      handleQuantityChange(dish._id, 1);
+                      handleAddToCart(dish, 1);
+                    }}
+                    activeOpacity={0.8}>
+                    <Ionicons
+                      name="add"
+                      size={moderateScale(20)}
+                      color={colors.white}
+                    />
+                    <ZText type="B14" color={colors.white}>
+                      Add to Cart
+                    </ZText>
+                  </TouchableOpacity>
                 )
               ) : (
                 // Unavailable State
@@ -446,20 +396,121 @@ const ChefMenu = () => {
     );
   };
 
-  const renderHeader = () => {
+  // Render sticky Browse Menu sections
+  const renderStickyBrowseMenu = () => {
+    if (!menuData?.dishes) return null;
+
     // Group dishes by category for sections
-    const dishCategories =
-      menuData?.dishes?.reduce((acc, dish) => {
-        const category = dish.category || 'All Items';
-        if (!acc[category]) {
-          acc[category] = [];
-        }
-        acc[category].push(dish);
-        return acc;
-      }, {}) || {};
+    const dishCategories = menuData.dishes.reduce((acc, dish) => {
+      const category = dish.category || strings.allItems;
+      if (!acc[category]) {
+        acc[category] = [];
+      }
+      acc[category].push(dish);
+      return acc;
+    }, {});
 
     const categoryNames = Object.keys(dishCategories);
 
+    if (categoryNames.length <= 1) return null;
+
+    return (
+      <View style={[localStyles.stickyBrowseContainer, {backgroundColor: colors.backgroundColor}]}>
+        <View style={localStyles.stunningCategoriesContainer}>
+          <ZText
+            type="B16"
+            color={colors.textColor}
+            style={localStyles.categoriesTitle}>
+            Browse Menu
+          </ZText>
+          <FlatList
+            data={categoryNames}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={localStyles.stunningCategoriesList}
+            renderItem={({item: category, index}) => {
+              const itemCount = dishCategories[category].length;
+              const gradientColors = getCategoryGradient(index);
+
+              return (
+                <TouchableOpacity
+                  style={[
+                    localStyles.stunningCategoryCard,
+                    {
+                      backgroundColor: gradientColors.primary,
+                      shadowColor: gradientColors.primary,
+                    },
+                  ]}
+                  onPress={() => {
+                    // Scroll to first dish in this category
+                    const firstDishInCategory = menuData.dishes.find(
+                      dish => (dish.category || strings.allItems) === category,
+                    );
+                    if (firstDishInCategory && flatListRef.current) {
+                      const dishIndex = menuData.dishes.findIndex(
+                        dish => dish._id === firstDishInCategory._id,
+                      );
+                      if (dishIndex !== -1) {
+                        flatListRef.current.scrollToIndex({
+                          index: dishIndex,
+                          animated: true,
+                          viewPosition: 0.1,
+                        });
+                      }
+                    }
+                  }}
+                  activeOpacity={0.8}>
+                  {/* Gradient Overlay */}
+                  <View
+                    style={[
+                      localStyles.categoryGradientOverlay,
+                      {backgroundColor: gradientColors.secondary},
+                    ]}
+                  />
+
+                  {/* Category Icon */}
+                  <View
+                    style={[
+                      localStyles.categoryIconContainer,
+                      {backgroundColor: 'rgba(255,255,255,0.2)'},
+                    ]}>
+                    <Ionicons
+                      name={getCategoryIcon(category)}
+                      size={moderateScale(24)}
+                      color="white"
+                    />
+                  </View>
+
+                  {/* Category Info */}
+                  <View style={localStyles.categoryInfo}>
+                    <ZText
+                      type="B14"
+                      color="white"
+                      numberOfLines={1}
+                      style={localStyles.categoryName}>
+                      {category}
+                    </ZText>
+                    <ZText
+                      type="M10"
+                      color="rgba(255,255,255,0.9)"
+                      style={localStyles.categoryItemCount}>
+                      {itemCount} {itemCount === 1 ? 'item' : 'items'}
+                    </ZText>
+                  </View>
+
+                  {/* Shine Effect */}
+                  <View style={localStyles.shineEffect} />
+                </TouchableOpacity>
+              );
+            }}
+            keyExtractor={item => item}
+          />
+        </View>
+      </View>
+    );
+  };
+
+  const renderHeader = () => {
     return (
       <View
         style={[
@@ -486,100 +537,6 @@ const ChefMenu = () => {
             </ZText>
           </View>
         </View>
-
-        {/* STUNNING CATEGORY SECTIONS */}
-        {categoryNames.length > 1 && (
-          <View style={localStyles.stunningCategoriesContainer}>
-            <ZText
-              type="B16"
-              color={colors.textColor}
-              style={localStyles.categoriesTitle}>
-              Browse Menu
-            </ZText>
-            <FlatList
-              data={categoryNames}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={localStyles.stunningCategoriesList}
-              renderItem={({item: category, index}) => {
-                const itemCount = dishCategories[category].length;
-                const gradientColors = getCategoryGradient(index);
-
-                return (
-                  <TouchableOpacity
-                    style={[
-                      localStyles.stunningCategoryCard,
-                      {
-                        backgroundColor: gradientColors.primary,
-                        shadowColor: gradientColors.primary,
-                      },
-                    ]}
-                    onPress={() => {
-                      // Scroll to first dish in this category
-                      const firstDishInCategory = menuData.dishes.find(
-                        dish => (dish.category || 'All Items') === category,
-                      );
-                      if (firstDishInCategory && flatListRef.current) {
-                        const dishIndex = menuData.dishes.findIndex(
-                          dish => dish._id === firstDishInCategory._id,
-                        );
-                        if (dishIndex !== -1) {
-                          flatListRef.current.scrollToIndex({
-                            index: dishIndex,
-                            animated: true,
-                            viewPosition: 0.1,
-                          });
-                        }
-                      }
-                    }}
-                    activeOpacity={0.8}>
-                    {/* Gradient Overlay */}
-                    <View
-                      style={[
-                        localStyles.categoryGradientOverlay,
-                        {backgroundColor: gradientColors.secondary},
-                      ]}
-                    />
-
-                    {/* Category Icon */}
-                    <View
-                      style={[
-                        localStyles.categoryIconContainer,
-                        {backgroundColor: 'rgba(255,255,255,0.2)'},
-                      ]}>
-                      <Ionicons
-                        name={getCategoryIcon(category)}
-                        size={moderateScale(24)}
-                        color="white"
-                      />
-                    </View>
-
-                    {/* Category Info */}
-                    <View style={localStyles.categoryInfo}>
-                      <ZText
-                        type="B14"
-                        color="white"
-                        numberOfLines={1}
-                        style={localStyles.categoryName}>
-                        {category}
-                      </ZText>
-                      <ZText
-                        type="M10"
-                        color="rgba(255,255,255,0.9)"
-                        style={localStyles.categoryItemCount}>
-                        {itemCount} {itemCount === 1 ? 'item' : 'items'}
-                      </ZText>
-                    </View>
-
-                    {/* Shine Effect */}
-                    <View style={localStyles.shineEffect} />
-                  </TouchableOpacity>
-                );
-              }}
-              keyExtractor={item => item}
-            />
-          </View>
-        )}
       </View>
     );
   };
@@ -587,7 +544,7 @@ const ChefMenu = () => {
   if (isLoading) {
     return (
       <ZSafeAreaView>
-        <ZHeader title="Menu" showBack />
+        <ZHeader title={strings.menu} showBack />
         <ZLoader />
       </ZSafeAreaView>
     );
@@ -596,7 +553,7 @@ const ChefMenu = () => {
   if (error) {
     return (
       <ZSafeAreaView>
-        <ZHeader title="Menu" showBack />
+        <ZHeader title={strings.menu} showBack />
         <View style={localStyles.errorContainer}>
           <Ionicons
             name="restaurant-outline"
@@ -619,7 +576,7 @@ const ChefMenu = () => {
             connection issue.
           </ZText>
           <ZButton
-            title="Retry"
+            title={strings.retry}
             onPress={refetch}
             containerStyle={localStyles.retryButton}
           />
@@ -632,7 +589,7 @@ const ChefMenu = () => {
   if (menuData && (!menuData.dishes || menuData.dishes.length === 0)) {
     return (
       <ZSafeAreaView>
-        <ZHeader title="Menu" showBack />
+        <ZHeader title={strings.menu} showBack />
         {renderHeader()}
         <View style={localStyles.emptyContainer}>
           <Ionicons
@@ -661,7 +618,10 @@ const ChefMenu = () => {
 
   return (
     <ZSafeAreaView>
-      <ZHeader title="Menu" showBack />
+      <ZHeader title={strings.menu} showBack />
+
+      {/* Sticky Browse Menu */}
+      {renderStickyBrowseMenu()}
 
       <FlatList
         ref={flatListRef}
@@ -701,7 +661,6 @@ const localStyles = StyleSheet.create({
   chefInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: moderateScale(15),
   },
   chefAvatar: {
     width: moderateScale(60),
@@ -711,6 +670,19 @@ const localStyles = StyleSheet.create({
   },
   chefDetails: {
     flex: 1,
+  },
+  // Sticky Browse Menu Container
+  stickyBrowseContainer: {
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.05)',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   // ✨ CLEAN & MODERN DISH CARD ✨
   dishCard: {
@@ -748,100 +720,74 @@ const localStyles = StyleSheet.create({
     height: moderateScale(60),
     backgroundColor: 'rgba(0,0,0,0.1)',
   },
-  bottomGradient: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: moderateScale(80),
-    backgroundColor: 'rgba(0,0,0,0.2)',
-  },
-  floatingRating: {
-    position: 'absolute',
-    top: moderateScale(12),
-    right: moderateScale(12),
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    paddingHorizontal: moderateScale(8),
-    paddingVertical: moderateScale(4),
-    borderRadius: moderateScale(12),
-    gap: moderateScale(4),
-  },
-  ratingValue: {
-    fontSize: moderateScale(12),
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-  priceTag: {
-    position: 'absolute',
-    bottom: moderateScale(12),
-    left: moderateScale(12),
-    paddingHorizontal: moderateScale(12),
-    paddingVertical: moderateScale(6),
-    borderRadius: moderateScale(16),
-    backgroundColor: '#FF4D67',
-  },
-  priceText: {
-    fontSize: moderateScale(14),
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
 
-  // Clean Content Section
-  contentSection: {
+  // Content Section
+  dishContent: {
     padding: moderateScale(16),
   },
+  dishInfo: {
+    marginBottom: moderateScale(12),
+  },
   dishName: {
-    fontSize: moderateScale(18),
+    marginBottom: moderateScale(4),
     fontWeight: '700',
-    color: '#1A1A1A',
-    marginBottom: moderateScale(6),
-    lineHeight: moderateScale(22),
+    letterSpacing: 0.3,
   },
-  dishDesc: {
-    fontSize: moderateScale(14),
-    lineHeight: moderateScale(18),
-    marginBottom: moderateScale(16),
-    color: '#666666',
-    fontWeight: '400',
+  dishDescription: {
+    lineHeight: moderateScale(16),
+    marginBottom: moderateScale(8),
   },
-
-  // Clean Action Row
-  actionRow: {
-    marginTop: moderateScale(4),
-  },
-
-  // Clean Add to Cart Button
-  stunningAddBtn: {
+  priceRow: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: moderateScale(14),
-    paddingHorizontal: moderateScale(24),
-    borderRadius: moderateScale(12),
   },
-  addBtnContent: {
+  priceContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: moderateScale(8),
   },
-  addBtnText: {
-    fontSize: moderateScale(16),
+  categoryBadge: {
+    paddingHorizontal: moderateScale(8),
+    paddingVertical: moderateScale(4),
+    borderRadius: moderateScale(12),
+  },
+  categoryText: {
     fontWeight: '600',
+    fontSize: moderateScale(9),
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
 
-  // Compact Quantity Controls Row
-  quantityRow: {
+  // Action Section
+  actionSection: {
+    alignItems: 'flex-end',
+  },
+  addButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: moderateScale(4),
+    paddingHorizontal: moderateScale(16),
+    paddingVertical: moderateScale(8),
+    borderRadius: moderateScale(20),
+    gap: moderateScale(6),
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  quantityController: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: moderateScale(8),
   },
   quantityControl: {
-    width: moderateScale(36),
-    height: moderateScale(36),
-    borderRadius: moderateScale(18),
+    width: moderateScale(32),
+    height: moderateScale(32),
+    borderRadius: moderateScale(16),
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
@@ -849,50 +795,46 @@ const localStyles = StyleSheet.create({
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.12,
+    shadowOpacity: 0.15,
     shadowRadius: 4,
-    elevation: 4,
+    elevation: 3,
   },
   quantityBadge: {
-    backgroundColor: 'rgba(255, 77, 103, 0.1)',
-    paddingHorizontal: moderateScale(16),
-    paddingVertical: moderateScale(8),
-    borderRadius: moderateScale(16),
-    borderWidth: 1.5,
-    borderColor: 'rgba(255, 77, 103, 0.2)',
+    minWidth: moderateScale(40),
+    alignItems: 'center',
+    paddingHorizontal: moderateScale(8),
   },
-
-  // Unavailable State
   unavailableState: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: moderateScale(18),
-    paddingHorizontal: moderateScale(24),
+    paddingHorizontal: moderateScale(12),
+    paddingVertical: moderateScale(8),
     borderRadius: moderateScale(16),
-    gap: moderateScale(10),
-    opacity: 0.6,
+    gap: moderateScale(6),
   },
-  // Error and Empty States
+
+  // Error states
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: moderateScale(20),
-  },
-  retryButton: {
-    marginTop: moderateScale(20),
-    height: moderateScale(40),
-    paddingHorizontal: moderateScale(30),
+    padding: moderateScale(40),
   },
   errorTitle: {
     marginTop: moderateScale(16),
     marginBottom: moderateScale(8),
   },
   errorSubtitle: {
-    marginBottom: moderateScale(20),
+    textAlign: 'center',
     lineHeight: moderateScale(20),
+    marginBottom: moderateScale(24),
   },
+  retryButton: {
+    paddingHorizontal: moderateScale(32),
+    paddingVertical: moderateScale(12),
+  },
+
+  // Empty states
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -909,10 +851,8 @@ const localStyles = StyleSheet.create({
 
   // STUNNING Category Sections Styles
   stunningCategoriesContainer: {
-    marginTop: moderateScale(20),
-    paddingTop: moderateScale(20),
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(0,0,0,0.05)',
+    paddingHorizontal: moderateScale(20),
+    paddingVertical: moderateScale(15),
   },
   categoriesTitle: {
     marginBottom: moderateScale(15),

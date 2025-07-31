@@ -152,10 +152,14 @@ export default function ReelsComponent({amIFocused}) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [commentSheetRef]);
 
-  const fetchReels = page =>
-    request.get(
+  const fetchReels = async page => {
+    const response = await request.get(
       `/story/stories?limit=15&page=${page}&userId=${user?._id}&lat=${location?.latitude}&long=${location?.longitude}&categoryIds=${categoryIds}`,
     );
+    return response;
+  };
+
+
 
   const {
     hasNextPage,
@@ -166,7 +170,7 @@ export default function ReelsComponent({amIFocused}) {
     isRefetching,
     isFetching,
   } = useInfiniteQuery(
-    ['stories', user?._id, categoryIds?.toLocaleString()],
+    ['stories', user?._id, categoryIds?.toLocaleString(), location?.latitude, location?.longitude],
     ({pageParam = 1}) => fetchReels(pageParam),
     {
       retry: 0,
@@ -205,7 +209,7 @@ export default function ReelsComponent({amIFocused}) {
       },
       refetchOnWindowFocus: false,
       refetchOnMount: false,
-      enabled: !!user?._id,
+      enabled: !!user?._id, // Will automatically refetch when location changes due to query key
       refetchOnReconnect: false,
     },
   );
@@ -361,25 +365,6 @@ export default function ReelsComponent({amIFocused}) {
           />
         </View>
       )}
-      {/* {filteredData?.[activeVideoIndex]?.type !== 'ad' && (
-        <View style={localStyles.headerContainer4}>
-          <ZButton
-            disabled={true}
-            type="m14"
-            containerStyle={localStyles.buttonTag}
-            title={filteredData?.[activeVideoIndex]?.category?.[0]?.name}
-          />
-        </View>
-      )} */}
-      <View style={localStyles.headerContainer}>
-        <TouchableOpacity onPress={onPressSearch}>
-          <Ionicons
-            name="search-outline"
-            size={moderateScale(30)}
-            color={colors.white}
-          />
-        </TouchableOpacity>
-      </View>
       <TouchableOpacity
         onPress={() => {
           navigation.navigate(StackNav.SelectCategory, {

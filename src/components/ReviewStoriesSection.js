@@ -29,8 +29,9 @@ const ReviewStoriesSection = ({
 
   const handleReviewStoryPress = (story) => {
     // Navigate to the story in the reels view
-    navigation.navigate(StackNav.ReelsOne, {
+    navigation.navigate(StackNav.reelsOne, {
       storyId: story._id,
+      profile: { _id: story.author._id },
       stories: [story],
     });
   };

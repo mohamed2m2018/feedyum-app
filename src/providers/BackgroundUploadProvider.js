@@ -35,6 +35,24 @@ export function BackgroundUploadProvider({children}) {
   }
 
   const addNewPost = data => {
+    // Use different endpoint for review reels
+    if (data.reviewMode) {
+      // Map field names for review reel endpoint
+      const reviewReelData = {
+        caption: data.caption,
+        rating: data.rating,
+        reviewType: data.reviewType,
+        dishId: data.reviewedDish,
+        menuId: data.reviewedMenu,
+        // Include media URLs if they exist
+        uri: data.uri,
+        avatarUri: data.avatarUri,
+        poster: data.poster,
+      };
+      
+      console.log('Sending review reel data:', reviewReelData);
+      return request.post('/story/create-review-reel', reviewReelData);
+    }
     return request.post('/story/add_story', data);
   };
 
@@ -110,18 +128,37 @@ export function BackgroundUploadProvider({children}) {
             Toast.hide();
             settoastTitle('');
           }, 500);
-          navigation.navigate(TabNav.ForYou, {
+          navigation.navigate(TabNav.FollowingTab, {
             storyId: res?.data?.story?._id,
           });
         },
         onError: err => {
           Dialog.hide();
           setisFormFilled(false);
-          Toast.show({
-            type: ALERT_TYPE.DANGER,
-            title: strings.uploadError,
-            textBody: err[Object.keys(err)?.[0]],
-          });
+          
+          console.error('Story creation error:', err);
+          
+          // Handle validation errors specifically
+          if (err.details && typeof err.details === 'object') {
+            const errorMessages = Object.values(err.details).join(', ');
+            Toast.show({
+              type: ALERT_TYPE.DANGER,
+              title: strings.uploadError,
+              textBody: `Validation error: ${errorMessages}`,
+            });
+          } else if (err.message) {
+            Toast.show({
+              type: ALERT_TYPE.DANGER,
+              title: strings.uploadError,
+              textBody: err.message,
+            });
+          } else {
+            Toast.show({
+              type: ALERT_TYPE.DANGER,
+              title: strings.uploadError,
+              textBody: err[Object.keys(err)?.[0]] || 'Unknown error occurred',
+            });
+          }
         },
       });
     }

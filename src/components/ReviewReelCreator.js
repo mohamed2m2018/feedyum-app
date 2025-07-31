@@ -1,4 +1,4 @@
-import React, {useState, useRef} from 'react';
+import React, {useState, useRef, useEffect} from 'react';
 import {
   View,
   StyleSheet,
@@ -22,6 +22,7 @@ import ZLoader from './common/ZLoader';
 import {moderateScale} from '../common/constants';
 import {styles} from '../themes';
 import request from '../api/request';
+import strings from '../i18n/strings';
 
 const {width: screenWidth, height: screenHeight} = Dimensions.get('window');
 
@@ -38,14 +39,33 @@ const ReviewReelCreator = ({route}) => {
   const [isMediaUploading, setIsMediaUploading] = useState(false);
   const [localUri, setLocalUri] = useState('');
   
-  const {dishData, menuData, reviewType = 'dish'} = route.params;
+  // Handle both create and edit modes
+  const {
+    dishData, 
+    menuData, 
+    reviewType = 'dish',
+    editMode = false,
+    reviewData = null
+  } = route.params;
   
   const [selectedMedia, setSelectedMedia] = useState(null);
   const [mediaType, setMediaType] = useState(null); // 'video' or 'image'
-  const [caption, setCaption] = useState('');
-  const [rating, setRating] = useState(5);
+  const [caption, setCaption] = useState(editMode ? (reviewData?.caption || '') : '');
+  const [rating, setRating] = useState(editMode ? (reviewData?.rating || 5) : 5);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Pre-populate media for edit mode
+  useEffect(() => {
+    if (editMode && reviewData) {
+      if (reviewData.uri) {
+        setSelectedMedia({path: reviewData.uri, mime: 'video/mp4'});
+        setMediaType('video');
+      } else if (reviewData.avatarUri) {
+        setSelectedMedia({path: reviewData.avatarUri, mime: 'image/jpeg'});
+        setMediaType('image');
+      }
+    }
+  }, [editMode, reviewData]);
 
 
   const handleSelectMedia = () => {
@@ -90,7 +110,7 @@ const ReviewReelCreator = ({route}) => {
     } catch (error) {
       setIsLoading(false);
       if (error.code !== 'E_PICKER_CANCELLED') {
-        Alert.alert('Error', 'Failed to record video');
+        Alert.alert(strings.error, strings.failedToRecordVideo);
       }
     }
   };
@@ -111,7 +131,7 @@ const ReviewReelCreator = ({route}) => {
     } catch (error) {
       setIsLoading(false);
       if (error.code !== 'E_PICKER_CANCELLED') {
-        Alert.alert('Error', 'Failed to take photo');
+        Alert.alert(strings.error, strings.failedToTakePhoto);
       }
     }
   };
@@ -133,7 +153,7 @@ const ReviewReelCreator = ({route}) => {
     } catch (error) {
       setIsLoading(false);
       if (error.code !== 'E_PICKER_CANCELLED') {
-        Alert.alert('Error', 'Failed to select media');
+        Alert.alert(strings.error, strings.failedToSelectMedia);
       }
     }
   };
@@ -152,34 +172,46 @@ const ReviewReelCreator = ({route}) => {
     } catch (error) {
       setIsLoading(false);
       console.error('Media upload error:', error);
-      Alert.alert('Error', 'Failed to upload media. Please try again.');
+      Alert.alert(strings.error, strings.failedToUploadMedia);
     }
   };
 
   const handleSubmitReview = () => {
+    console.log('=== FRONTEND: Review submission started ===');
+    console.log('Selected media:', selectedMedia ? 'YES' : 'NO');
+    console.log('Caption length:', caption.trim().length);
+    console.log('Rating:', rating);
+    console.log('Review type:', reviewType);
+    console.log('Dish data:', dishData);
+    
     if (!selectedMedia) {
-      Alert.alert('Error', 'Please select a photo or video first');
+      console.log('ERROR: No media selected');
+      Alert.alert(strings.error, strings.pleaseSelectPhotoOrVideo);
       return;
     }
 
     if (!caption.trim()) {
-      Alert.alert('Error', 'Please add a caption for your review');
+      console.log('ERROR: No caption provided');
+      Alert.alert(strings.error, strings.pleaseAddCaption);
       return;
     }
 
     if (caption.trim().length < 10) {
-      Alert.alert('Error', 'Caption must be at least 10 characters long');
+      console.log('ERROR: Caption too short');
+      Alert.alert(strings.error, strings.captionMustBe10Characters);
       return;
     }
 
     // Additional validation
     if (reviewType === 'dish' && !dishData?._id) {
-      Alert.alert('Error', 'Dish data is missing. Please try again.');
+      console.log('ERROR: Missing dish data');
+      Alert.alert(strings.error, strings.dishDataMissing);
       return;
     }
 
     if (reviewType === 'menu' && !menuData?._id) {
-      Alert.alert('Error', 'Menu data is missing. Please try again.');
+      console.log('ERROR: Missing menu data');
+      Alert.alert(strings.error, strings.menuDataMissing);
       return;
     }
 
@@ -204,18 +236,28 @@ const ReviewReelCreator = ({route}) => {
       title: `Review: ${reviewType === 'dish' ? dishData?.name : menuData?.name}`,
       allowContact: true,
       category: categoryIds,
+      // Add edit-specific fields
+      ...(editMode && {
+        _id: reviewData._id,
+        isEdit: true
+      })
     };
 
-    console.log('Submitting review data:', postData);
+    console.log('=== FRONTEND: Submitting review data ===');
+    console.log('Edit mode:', editMode);
+    console.log('Post data:', JSON.stringify(postData, null, 2));
     console.log('DishData object:', dishData);
     console.log('MenuData object:', menuData);
 
     // Set the data and trigger submission
+    console.log('=== FRONTEND: Calling handleDataToBeSent ===');
     handleDataToBeSent(postData);
+    
+    console.log('=== FRONTEND: Setting isFormFilled to true ===');
     setisFormFilled(true);
 
-    // Navigate to For You screen - BackgroundUploadProvider will handle this automatically
-    // The provider navigates to TabNav.ForYou with the new story ID
+    console.log('=== FRONTEND: Navigating back ===');
+    // Navigate to For You screen - BackgroundUploadProvider now correctly navigates to TabNav.ForYou
     navigation.goBack();
   };
 
@@ -228,7 +270,10 @@ const ReviewReelCreator = ({route}) => {
       </TouchableOpacity>
       
       <ZText type="B18" color={colors.textColor}>
-        Review {reviewType === 'dish' ? dishData?.name : menuData?.name}
+        {editMode 
+          ? 'Edit Review' 
+          : `Review ${reviewType === 'dish' ? dishData?.name : menuData?.name}`
+        }
       </ZText>
       
       <View style={localStyles.headerButton} />
@@ -355,7 +400,12 @@ const ReviewReelCreator = ({route}) => {
 
       {/* Submit Button */}
       <ZButton
-        title={isLoading || isMediaUploading ? 'Processing...' : 'Post Review'}
+        title={isLoading || isMediaUploading 
+          ? 'Processing...' 
+          : editMode 
+            ? 'Update Review' 
+            : 'Post Review'
+        }
         onPress={handleSubmitReview}
         disabled={isLoading || isMediaUploading || !selectedMedia}
         containerStyle={localStyles.submitButton}

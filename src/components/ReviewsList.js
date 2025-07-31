@@ -11,9 +11,12 @@ import {
 } from 'react-native';
 import {useSelector} from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import {useQuery} from 'react-query';
 import {moderateScale} from '../common/constants';
 import StarRating from './StarRating';
 import {reviewService} from '../api/reviewService';
+import request from '../api/request';
+import strings from '../i18n/strings';
 
 const ReviewsList = ({
   chefId,
@@ -28,6 +31,10 @@ const ReviewsList = ({
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  
+  // Get current user
+  const { data: userData } = useQuery('user', () => request.get('/user'));
+  const currentUser = userData?.data?.user;
   const [stats, setStats] = useState(null);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
@@ -70,7 +77,7 @@ const ReviewsList = ({
       }
     } catch (error) {
       console.error('Error loading reviews:', error);
-      Alert.alert('Error', 'Failed to load reviews');
+      Alert.alert(strings.error, strings.failedToLoadReviews);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -98,12 +105,12 @@ const ReviewsList = ({
       handleRefresh();
     } catch (error) {
       console.error('Error marking helpful:', error);
-      Alert.alert('Error', 'Failed to mark review as helpful');
+      Alert.alert(strings.error, strings.failedToMarkHelpful);
     }
   };
 
   const handleReport = reviewId => {
-    Alert.alert('Report Review', 'Why are you reporting this review?', [
+    Alert.alert(strings.reportReview, strings.whyReportingReview, [
       {text: 'Cancel', style: 'cancel'},
       {
         text: 'Inappropriate Content',
@@ -118,6 +125,33 @@ const ReviewsList = ({
         onPress: () => submitReport(reviewId, 'fake'),
       },
     ]);
+  };
+
+  const handleDelete = reviewId => {
+    Alert.alert(
+      'Delete Review',
+      'Are you sure you want to delete this review? This action cannot be undone.',
+      [
+        {text: 'Cancel', style: 'cancel'},
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => confirmDelete(reviewId),
+        },
+      ]
+    );
+  };
+
+  const confirmDelete = async reviewId => {
+    try {
+      await reviewService.deleteReview(reviewId);
+      Alert.alert(strings.success, strings.reviewDeletedSuccessfully);
+      // Refresh the reviews list
+      handleRefresh();
+    } catch (error) {
+      console.error('Error deleting review:', error);
+      Alert.alert('Error', 'Failed to delete review. Please try again.');
+    }
   };
 
   const submitReport = async (reviewId, reason) => {
@@ -248,6 +282,21 @@ const ReviewsList = ({
             Report
           </Text>
         </TouchableOpacity>
+
+                 {item.user?._id === currentUser?._id && (
+           <TouchableOpacity
+             onPress={() => handleDelete(item._id)}
+             style={styles.actionButton}>
+             <Icon
+               name="delete"
+               size={moderateScale(16)}
+               color={colors.grayScale5}
+             />
+             <Text style={[styles.actionText, {color: colors.grayScale5}]}>
+               Delete
+             </Text>
+           </TouchableOpacity>
+         )}
       </View>
     </View>
   );

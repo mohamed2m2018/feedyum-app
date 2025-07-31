@@ -23,6 +23,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import Feather from 'react-native-vector-icons/Feather';
 import { useSelector } from 'react-redux';
 import { useQuery } from 'react-query';
+import strings from '../../../i18n/strings';
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
 import ZHeader from '../../../components/common/ZHeader';
 import ZText from '../../../components/common/ZText';
@@ -244,7 +245,7 @@ ${orderData.specialInstructions ? `📝 Special Instructions:\n${orderData.speci
       createdAt: new Date(orderData.created_at),
       user: {
         _id: 'system',
-        name: 'Order System',
+        name: strings.orderSystem,
         avatar: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=200',
       },
       system: true,
@@ -321,7 +322,7 @@ ${orderData.specialInstructions ? `📝 Special Instructions:\n${orderData.speci
       setMessages(prevMessages => 
         prevMessages.map(msg => 
           msg._id === messageId 
-            ? { ...msg, isDeleted: true, text: 'This message was deleted' }
+            ? { ...msg, isDeleted: true, text: strings.thisMessageWasDeleted }
             : msg
         )
       );
@@ -333,7 +334,7 @@ ${orderData.specialInstructions ? `📝 Special Instructions:\n${orderData.speci
       
     } catch (error) {
       console.error('Failed to delete message:', error);
-      Alert.alert('Error', 'Failed to delete message. Please try again.');
+      Alert.alert(strings.error, strings.failedToDeleteMessage);
     }
   };
 
@@ -388,8 +389,8 @@ ${orderData.specialInstructions ? `📝 Special Instructions:\n${orderData.speci
     } else {
       console.log('Message not found in current messages array');
       Alert.alert(
-        'Message Not Found',
-        'The original message is not visible in the current chat view.',
+        strings.messageNotFound,
+        strings.messageNotVisible,
         [{ text: 'OK' }]
       );
     }
@@ -474,7 +475,7 @@ ${orderData.specialInstructions ? `📝 Special Instructions:\n${orderData.speci
   if ((userLoading || chefLoading) && !userError && !chefError) {
     return (
       <ZSafeAreaView>
-        <ZHeader title="Chat" showBack />
+        <ZHeader title={strings.chat} showBack />
         <View style={localStyles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
           <ZText type="M14" color={colors.grayScale7} style={localStyles.loadingText}>
@@ -489,7 +490,7 @@ ${orderData.specialInstructions ? `📝 Special Instructions:\n${orderData.speci
   if (userError || chefError) {
     return (
       <ZSafeAreaView>
-        <ZHeader title="Chat" showBack />
+        <ZHeader title={strings.chat} showBack />
         <View style={localStyles.loadingContainer}>
           <ZText type="M16" color={colors.red}>
             Failed to load chat
@@ -534,7 +535,7 @@ ${orderData.specialInstructions ? `📝 Special Instructions:\n${orderData.speci
           messagesContainerStyle={localStyles.messagesContainer}
           isKeyboardInternallyHandled={false}
           alwaysShowSend
-          placeholder="Type a message..."
+          placeholder={strings.typeMessage}
           showUserAvatar
           renderAvatarOnTop
           onLongPress={() => {}}

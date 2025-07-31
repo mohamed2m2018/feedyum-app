@@ -12,6 +12,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import Video from 'react-native-video';
 import ZText from '../../../../components/common/ZText';
 import { moderateScale } from '../../../../common/constants';
+import strings from '../../../../i18n/strings';
 
 // Global audio manager to ensure only one audio plays at a time
 class GlobalAudioManager {
@@ -124,7 +125,7 @@ const AudioMessage = ({ audioPath, duration = 0, isCurrentUser = false }) => {
     
     if (!audioPath) {
       console.log('No audio path available');
-      Alert.alert('Audio Error', 'No audio file available to play');
+      Alert.alert(strings.audioError, strings.noAudioFileAvailable);
       return;
     }
     

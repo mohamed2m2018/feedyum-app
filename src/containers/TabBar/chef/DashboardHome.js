@@ -13,6 +13,7 @@ import ZText from '../../../components/common/ZText';
 import ZLoader from '../../../components/common/ZLoader';
 import DashboardCard from './components/DashboardCard';
 import {useDashboardStats, useRecentActivity} from './hooks/useDashboardData';
+import strings from '../../../i18n/strings';
 import {styles} from '../../../themes';
 import {moderateScale} from '../../../common/constants';
 
@@ -82,7 +83,7 @@ export default function DashboardHome() {
 
   return (
     <ZSafeAreaView>
-      <ZHeader title="Chef Dashboard" isHideBack={true} />
+      <ZHeader title={strings.chefDashboard} isHideBack={true} />
       <ScrollView
         style={localStyles.container}
         showsVerticalScrollIndicator={false}
@@ -112,14 +113,14 @@ export default function DashboardHome() {
           ) : statsError ? (
             <View style={localStyles.errorContainer}>
               <ZText type="M16" color={colors.redColor} align="center">
-                Failed to load dashboard stats
+                {strings.failedToLoadDashboardStats}
               </ZText>
             </View>
           ) : (
             <>
               <View style={localStyles.statsGrid}>
                 <DashboardCard
-                  title="Today's Revenue"
+                  title={strings.todaysRevenue}
                   value={`$${dashboardStats?.todayRevenue?.toFixed(2) || '0.00'}`}
                   icon="cash-outline"
                   color={colors.primary}
@@ -128,7 +129,7 @@ export default function DashboardHome() {
                   isLoading={statsLoading}
                 />
                 <DashboardCard
-                  title="Pending Orders"
+                  title={strings.pendingOrders}
                   value={dashboardStats?.pendingOrders?.toString() || '0'}
                   icon="time-outline"
                   color={colors.orange}
@@ -139,7 +140,7 @@ export default function DashboardHome() {
               </View>
               <View style={localStyles.statsGrid}>
                 <DashboardCard
-                  title="Total Orders"
+                  title={strings.totalOrders}
                   value={dashboardStats?.totalOrders?.toString() || '0'}
                   icon="receipt-outline"
                   color={colors.blue}
@@ -148,7 +149,7 @@ export default function DashboardHome() {
                   isLoading={statsLoading}
                 />
                 <DashboardCard
-                  title="Menu Items"
+                  title={strings.menuItems}
                   value={dashboardStats?.totalDishes?.toString() || '0'}
                   icon="restaurant-outline"
                   color={colors.yellow}
@@ -168,19 +169,19 @@ export default function DashboardHome() {
           </ZText>
           <View style={localStyles.quickActionsGrid}>
             <QuickActionButton
-              title="Add Dish"
+              title={strings.addDish}
               icon="add-circle-outline"
               color={colors.primary}
               onPress={() => navigateToTab('Menu')}
             />
             <QuickActionButton
-              title="View Orders"
+              title={strings.viewOrders}
               icon="list-outline"
               color={colors.blue}
               onPress={() => navigateToTab('Orders')}
             />
             <QuickActionButton
-              title="Analytics"
+              title={strings.analytics}
               icon="analytics-outline"
               color={colors.yellow}
               onPress={() => navigateToTab('Analytics')}

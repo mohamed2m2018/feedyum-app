@@ -1,4 +1,5 @@
 import {useStorage} from '../../utils/useStorage';
+import strings from '../../i18n/strings';
 
 // Action Types
 export const ADD_TO_CART = 'ADD_TO_CART';
@@ -79,7 +80,7 @@ export default function cartReducer(state = initialState, action) {
         // Different chef - show error
         return {
           ...state,
-          error: 'You can only order from one chef at a time. Clear your cart to order from a different chef.',
+          error: strings.canOnlyOrderFromOneChef,
         };
       }
     }

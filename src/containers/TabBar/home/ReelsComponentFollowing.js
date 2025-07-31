@@ -64,7 +64,7 @@ export default function ReelsComponent({amIFocused}) {
     isRefetching,
     isFetching,
   } = useInfiniteQuery(
-    ['stories_following', user?._id, categoryIds?.toLocaleString()],
+    ['stories_following', user?._id, categoryIds?.toLocaleString(), location?.latitude, location?.longitude],
     ({pageParam = 1}) => fetchReelsFollowing(pageParam),
     {
       retry: 0,

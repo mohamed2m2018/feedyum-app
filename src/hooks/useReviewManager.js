@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Alert } from 'react-native';
 import { reviewStorage } from '../utils/reviewStorage';
 import { reviewService } from '../api/reviewService';
+import strings from '../i18n/strings';
 
 export const useReviewManager = () => {
   const [showReviewPrompt, setShowReviewPrompt] = useState(false);
@@ -64,11 +65,11 @@ export const useReviewManager = () => {
           });
           setShowReviewModal(true);
         } else {
-          Alert.alert('Unable to Review', response.message || 'This order cannot be reviewed at this time.');
+          Alert.alert(strings.unableToReview, response.message || strings.cannotReviewAtThisTime);
         }
       } catch (error) {
         console.error('Error getting order review status:', error);
-        Alert.alert('Error', 'Unable to load review information. Please try again later.');
+        Alert.alert(strings.error, strings.unableToLoadReviewInfo);
       }
       
       // Increment prompt count
@@ -123,8 +124,8 @@ export const useReviewManager = () => {
 
       if (result.success) {
         Alert.alert(
-          'Thank You!',
-          'Your reviews have been submitted successfully.',
+          strings.thankYou,
+          strings.reviewsSubmittedSuccessfully,
           [
             {
               text: 'OK',
@@ -140,11 +141,11 @@ export const useReviewManager = () => {
         await reviewStorage.markOrderAsReviewed(currentOrderForReview.orderId);
         await reviewStorage.removeCompletedOrder(currentOrderForReview.orderId);
       } else {
-        Alert.alert('Submission Error', result.message || 'Some reviews could not be submitted.');
+        Alert.alert(strings.submissionError, result.message || strings.someReviewsCouldNotBeSubmitted);
       }
     } catch (error) {
       console.error('Error submitting reviews:', error);
-      Alert.alert('Error', 'Failed to submit reviews. Please try again.');
+      Alert.alert(strings.error, strings.failedToSubmitReviews);
     } finally {
       setReviewLoading(false);
     }

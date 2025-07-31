@@ -35,6 +35,19 @@ import request from '../../../../api/request';
 import strings from '../../../../i18n/strings';
 import {useHandleAuth} from '../../../../utils/useHandleAuth';
 
+const RenderUserDetail = ({item}) => {
+  return (
+    <TouchableOpacity onPress={item?.onPress} style={styles.itemsCenter}>
+      <ZText type="b24" align={'center'}>
+        {item.value}
+      </ZText>
+      <ZText type="m16" align={'center'} style={styles.mt10}>
+        {item.title}
+      </ZText>
+    </TouchableOpacity>
+  );
+};
+
 export default function ProfileDetail({navigation, route}) {
   const {id} = route.params;
   const colors = useSelector(state => state.theme.theme);
@@ -175,19 +188,7 @@ export default function ProfileDetail({navigation, route}) {
   // const onPressProfile = () => setModalVisible(true);
   const onPressModalClose = () => setModalVisible(false);
 
-  // eslint-disable-next-line react/no-unstable-nested-components
-  const RenderUserDetail = ({item}) => {
-    return (
-      <TouchableOpacity onPress={item?.onPress} style={styles.itemsCenter}>
-        <ZText type="b24" align={'center'}>
-          {item.value}
-        </ZText>
-        <ZText type="m16" align={'center'} style={styles.mt10}>
-          {item.title}
-        </ZText>
-      </TouchableOpacity>
-    );
-  };
+
 
   const user = data?.data?.user;
 
@@ -195,140 +196,154 @@ export default function ProfileDetail({navigation, route}) {
     setselectedGov(data?.data?.user?.locations);
     locationSheetRef.current?.show();
   };
-  return (
-    <ZSafeAreaView>
+  const renderHeader = () => (
+    <View>
       <ZHeader />
-      <View style={{flex: 1}}>
-        <View style={styles.itemsCenter}>
-          <Image
-            source={
-              user?.avatar
-                ? {uri: user?.avatar}
-                : colors.dark
-                ? images.userDark
-                : images.userLight
-            }
-            style={localStyles.userImage}
-          />
-          <View style={styles.mv20}>
-            <ZText type="b24" align={'center'}>
-              {user?.fullName}
+      <View style={styles.itemsCenter}>
+        <Image
+          source={
+            user?.avatar
+              ? {uri: user?.avatar}
+              : colors.dark
+              ? images.userDark
+              : images.userLight
+          }
+          style={localStyles.userImage}
+        />
+        <View style={styles.mv20}>
+          <ZText type="b24" align={'center'}>
+            {user?.fullName}
+          </ZText>
+          {user?.profileCompleted && (
+            <ZText align={'center'} type="m10">
+              {strings?.unofficial}
             </ZText>
-            {user?.profileCompleted && (
-              <ZText align={'center'} type="m10">
-                {strings?.unofficial}
-              </ZText>
-            )}
-            {/* <ZText type="m14" align={'center'} style={styles.mt10}>
-              {user?.email}
-            </ZText> */}
+          )}
+          {/* <ZText type="m14" align={'center'} style={styles.mt10}>
+                {user?.email}
+            </ZText>
             {user?.bio && (
               <ZText
-                type={user?.bio ? 'm16' : 'm14'}
-                align={'center'}
-                color={user?.bio ? colors.textColor : colors.background}
-                style={[styles.mt10, localStyles.bioIcon]}>
+                type={'m16'}
+                style={localStyles.bioIcon}
+                color={colors.textColor}
+                numberOfLines={2}>
                 {user?.bio}
               </ZText>
-            )}
-          </View>
+            )} */}
         </View>
-        {user?.type === 'chef' && (
-          <ZButton
-            containerStyle={{
-              height: 40,
-              paddingHorizontal: 10,
-              alignSelf: 'center',
-              borderColor: colors.primary,
-              borderWidth: 1,
-              borderRadius: 10,
-            }}
-            bgColor={colors.tranparent}
-            textType={'m14'}
-            color={colors.primary}
-            onPress={onPressAvailableLocation}
-            title={strings.branches}
-          />
-        )}
-        <View style={[styles.flexRow, styles.justifyEvenly]}>
-          {UserDetailCategory(
-            user?.postsNo || 0,
-            followStatistics?.data?.followersCount || 0,
-            followStatistics?.data?.followingCount || 0,
-            views?.data?.viewsCount || 0,
-            onPressEditProfile,
-          ).map((item, index) => (
-            <RenderUserDetail item={item} key={index} />
-          ))}
-        </View>
-        {!isLoading && !isFetchingUserDetailsFollowed ? (
-          <View style={localStyles.editProfileContainer}>
-            <ZButton
-              title={!isFollow ? strings.follow : strings.unfollow}
-              onPress={onPressFollow}
-              color={colors.white}
-              disabled={isLoading}
-              textType="b14"
-              style={styles.ml5}
-              containerStyle={[
-                localStyles.buttonContainer,
-                {borderColor: colors.primary},
-              ]}
-              bgColor={colors.primary}
-            />
-            
-            {/* Menu Button - Show for all users for now, can add chef condition later */}
-            <TouchableOpacity
-              style={[localStyles.stunningMenuButton, {backgroundColor: colors.primary}]}
-              onPress={() => {
-                console.log('Navigating to menu for user:', user?._id, user?.fullName);
-                navigation.navigate(StackNav.ChefMenu, { 
-                  chefId: user?._id,
-                  chefName: user?.fullName || user?.username || 'Chef'
-                });
-              }}
-              activeOpacity={0.8}
-            >
-              <View style={localStyles.menuButtonContent}>
-                <View style={localStyles.menuIconContainer}>
-                  <ZText type="b16" color={colors.white}>🍽️</ZText>
-                </View>
-                <ZText type="b14" color={colors.white} style={localStyles.menuButtonText}>
-                  View Menu
-                </ZText>
-              </View>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <ActivityIndicator style={{margin: 5}} color={colors.primary} />
-        )}
-
-        {/* Clarification Message */}
-        <View style={localStyles.clarificationContainer}>
-          <ZText type="m14" align="center" color={colors.grayScale7} style={localStyles.clarificationText}>
-            {user?.type === 'chef' 
-              ? "📱 These are food reels • Tap 'View Menu' above to see actual dishes & order"
-              : "📱 Food reels and posts"
-            }
-          </ZText>
-        </View>
-
-        <FlatList
-          data={stories}
-          showsVerticalScrollIndicator={false}
-          ListEmptyComponent={
-            isLoading ? (
-              <ZLoader height={100} />
-            ) : (
-              <ZText style={{textAlign: 'center', marginTop: 45}} type={'B20'}>
-                {user?.type === 'chef' 
-                  ? "No food reels yet! Check the menu for dishes 🍽️"
-                  : strings.noDishesYetProfileOther
-                }
+      </View>
+      {user?.type === 'chef' && (
+        <ZButton
+          containerStyle={{
+            height: 40,
+            paddingHorizontal: 10,
+            alignSelf: 'center',
+            borderColor: colors.primary,
+            borderWidth: 1,
+            borderRadius: 10,
+            marginBottom: 10,
+          }}
+          bgColor={colors.tranparent}
+          textType={'m14'}
+          color={colors.primary}
+          onPress={onPressAvailableLocation}
+          title={strings.branches}
+        />
+      )}
+      <View style={localStyles.headerContainer}>
+        {UserDetailCategory(
+          user?.postsNo || 0,
+          followStatistics?.data?.followersCount || 0,
+          followStatistics?.data?.followingCount || 0,
+          views?.data?.viewsCount || 0,
+          () =>
+            navigation.navigate(StackNav.UserNetwork, {userId: user?._id}),
+        ).map((item, index) => (
+          <TouchableOpacity
+            key={index}
+            onPress={item?.onPress}
+            style={styles.itemsCenter}>
+            <ZText type="b24" align={'center'}>
+              {item.value}
+            </ZText>
+            <ZText type="m16" align={'center'} style={styles.mt10}>
+              {item.title}
+            </ZText>
+          </TouchableOpacity>
+        ))}
+      </View>
+      <View style={localStyles.editProfileContainer}>
+        <ZButton
+          title={!isFollow ? strings.follow : strings.unfollow}
+          onPress={onPressFollow}
+          containerStyle={[
+            localStyles.buttonContainer,
+            {borderColor: colors.primary},
+          ]}
+          textType="b14"
+          color={colors.white}
+          disabled={isLoading}
+          bgColor={colors.primary}
+        />
+        {/* Menu Button - Show for all users for now, can add chef condition later */}
+        <TouchableOpacity
+          style={[
+            localStyles.stunningMenuButton,
+            {backgroundColor: colors.primary},
+          ]}
+          onPress={() => {
+            navigation.navigate(StackNav.ChefMenu, {
+              chefId: user?._id,
+              chefName: user?.fullName || user?.username || 'Chef',
+            });
+          }}
+          activeOpacity={0.8}>
+          <View style={localStyles.menuButtonContent}>
+            <View style={localStyles.menuIconContainer}>
+              <ZText type="b16" color={colors.white}>
+                🍽️
               </ZText>
-            )
-          }
-          renderItem={({item}) => (
+            </View>
+            <ZText
+              type="b14"
+              color={colors.white}
+              style={localStyles.menuButtonText}>
+              View Menu
+            </ZText>
+          </View>
+        </TouchableOpacity>
+      </View>
+      <View style={localStyles.clarificationContainer}>
+        <ZText style={localStyles.clarificationText} type={'m14'}>
+          {user?.type === 'chef'
+            ? "📱 These are food reels • Tap 'View Menu' above to see actual dishes & order"
+            : '📱 Food reels and posts'}
+        </ZText>
+      </View>
+    </View>
+  );
+
+  return (
+    <ZSafeAreaView style={{flex: 1, backgroundColor: colors.backgroundColor}}>
+      <FlatList
+        data={stories}
+        ListHeaderComponent={renderHeader}
+        showsVerticalScrollIndicator={false}
+        ListEmptyComponent={
+          isLoading ? (
+            <ZLoader height={100} />
+          ) : (
+            <ZText style={{textAlign: 'center', marginTop: 45}} type={'B20'}>
+              {user?.type === 'chef' 
+                ? "No food reels yet! Check the menu for dishes 🍽️"
+                : strings.noDishesYetProfileOther
+              }
+            </ZText>
+          )
+        }
+        renderItem={({item, index}) => (
+          <View style={localStyles.dishItemContainer}>
             <ReelComponent
               profileId={user}
               data={item?.views}
@@ -346,15 +361,17 @@ export default function ProfileDetail({navigation, route}) {
               isPlay={!item?.avatarUri}
               id={item?._id}
             />
-          )}
-          numColumns={3}
-          onMomentumScrollBegin={fetchNextPage}
-          keyExtractor={item => item?._id}
-        />
-      </View>
+          </View>
+        )}
+        numColumns={3}
+        onMomentumScrollBegin={fetchNextPage}
+        keyExtractor={item => item?._id}
+        columnWrapperStyle={localStyles.dishRowContainer}
+        ItemSeparatorComponent={() => <View style={localStyles.dishRowSeparator} />}
+      />
       <SuccessModal
         visible={modalVisible}
-        onPressModalClose={onPressModalClose}
+        onPressModalClose={() => setModalVisible(false)}
         headerTitle={'27M Total Likes'}
         subTitle={'jenny_wilson received a total of 27M likes from all videos.'}
         itemImage={<LikeIconModal style={styles.selfCenter} />}
@@ -452,5 +469,16 @@ const localStyles = StyleSheet.create({
     width: '33%',
     ...styles.itemsCenter,
     ...styles.pv15,
+  },
+  dishItemContainer: {
+    flex: 1,
+    marginHorizontal: moderateScale(4),
+  },
+  dishRowContainer: {
+    justifyContent: 'space-between',
+    paddingHorizontal: moderateScale(8),
+  },
+  dishRowSeparator: {
+    height: moderateScale(8),
   },
 });
