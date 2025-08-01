@@ -435,6 +435,7 @@ const localStyles = StyleSheet.create({
     margin: moderateScale(16),
     padding: moderateScale(16),
     borderRadius: moderateScale(12),
+    backgroundColor: '#FFFFFF', // Background color for shadow efficiency
     shadowColor: '#000',
     shadowOffset: {
       width: 0,

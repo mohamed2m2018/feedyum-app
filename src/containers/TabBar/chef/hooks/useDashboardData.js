@@ -21,7 +21,7 @@ export const useDashboardStats = () => {
       };
     },
     {
-      refetchInterval: 30000, // Refetch every 30 seconds
+      refetchInterval: false, // Disable auto-refresh - use manual refresh instead
       staleTime: 10000, // Consider data stale after 10 seconds
     }
   );
@@ -61,8 +61,8 @@ export const useRecentActivity = () => {
       ];
     },
     {
-      refetchInterval: 60000, // Refetch every minute
-      staleTime: 30000, // Consider data stale after 30 seconds
+      refetchInterval: false, // Polling disabled
+      staleTime: 5 * 60 * 1000, // Consider data stale after 5 minutes
     }
   );
 };
@@ -112,7 +112,7 @@ export const usePopularDishes = () => {
       return popularDishes;
     },
     {
-      refetchInterval: 300000, // Refetch every 5 minutes
+      refetchInterval: false, // Polling disabled
       staleTime: 60000, // Consider data stale after 1 minute
     }
   );

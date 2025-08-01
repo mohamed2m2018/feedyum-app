@@ -802,15 +802,16 @@ const DishDetailScreen = () => {
         
         {/* Prominent Add Review Button - Immediately Visible */}
         <View style={localStyles.prominentButtonContainer}>
-          <TouchableOpacity 
-            style={localStyles.prominentAddReviewButton}
-            onPress={handleCreateReviewReel}>
-            <LinearGradient
-              colors={['#FF6B8A', '#FF4D67', '#E63946']}
-              start={{x: 0, y: 0}}
-              end={{x: 1, y: 1}}
-              style={localStyles.gradientButton}>
-              <View style={localStyles.addReviewContent}>
+          <View style={localStyles.prominentAddReviewButton}>
+            <TouchableOpacity 
+              style={localStyles.touchableButton}
+              onPress={handleCreateReviewReel}>
+              <LinearGradient
+                colors={['#FF6B8A', '#FF4D67', '#E63946']}
+                start={{x: 0, y: 0}}
+                end={{x: 1, y: 1}}
+                style={localStyles.gradientButton}>
+                <View style={localStyles.addReviewContent}>
                 <View style={localStyles.starContainer}>
                   <Ionicons
                     name="star"
@@ -847,9 +848,10 @@ const DishDetailScreen = () => {
                     />
                   </View>
                 </View>
-              </View>
-            </LinearGradient>
-          </TouchableOpacity>
+                </View>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {renderTabBar()}
@@ -885,6 +887,7 @@ const localStyles = StyleSheet.create({
     width: moderateScale(40),
     height: moderateScale(40),
     borderRadius: moderateScale(20),
+    backgroundColor: 'rgba(255, 255, 255, 0.9)', // Background color for shadow efficiency
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
@@ -1028,6 +1031,7 @@ const localStyles = StyleSheet.create({
     flexDirection: 'row',
     paddingHorizontal: moderateScale(20),
     paddingVertical: moderateScale(16),
+    backgroundColor: '#FFFFFF', // Background color for shadow efficiency
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -1109,6 +1113,7 @@ const localStyles = StyleSheet.create({
   bottomSection: {
     padding: moderateScale(20),
     paddingBottom: moderateScale(30),
+    backgroundColor: '#FFFFFF', // Background color for shadow efficiency
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -1222,6 +1227,7 @@ const localStyles = StyleSheet.create({
 
   prominentAddReviewButton: {
     borderRadius: moderateScale(20),
+    backgroundColor: '#FF4D67', // Background color for shadow efficiency
     shadowColor: '#FF4D67',
     shadowOffset: {
       width: 0,
@@ -1230,6 +1236,10 @@ const localStyles = StyleSheet.create({
     shadowOpacity: 0.4,
     shadowRadius: 20,
     elevation: 15,
+  },
+
+  touchableButton: {
+    borderRadius: moderateScale(20),
   },
 
   gradientButton: {
@@ -1282,6 +1292,7 @@ const localStyles = StyleSheet.create({
     marginBottom: moderateScale(16),
     marginHorizontal: '1%',
     borderRadius: moderateScale(16),
+    backgroundColor: '#FFFFFF', // Background color for shadow efficiency
     padding: moderateScale(12),
     shadowColor: '#000',
     shadowOffset: {

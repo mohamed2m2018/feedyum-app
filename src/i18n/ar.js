@@ -341,6 +341,7 @@ export default {
   // Order Management & Tracking
   retry: 'إعادة المحاولة',
   menu: 'القائمة',
+  viewMenu: 'عرض القائمة',
   orderChats: 'محادثات الطلبات',
   addCaption: 'أضف تعليقاً...',
   shoppingCart: 'عربة التسوق',
@@ -512,6 +513,8 @@ export default {
   forYou: 'لك',
   followingTab: 'المتابَعون',
   orders: 'الطلبات',
+  myOrders: 'طلباتي',
+  chat: 'المحادثة',
   
   // Order Status Messages
   chefReviewing: 'الطاه يراجع الطلب',
@@ -636,6 +639,7 @@ export default {
   // Order Status Actions
   startPreparing: 'بدء التحضير',
   markReady: 'وضع علامة جاهز',
+  markAsReady: 'وضع علامة جاهز',
   completeOrder: 'إكمال الطلب',
   
   // Miscellaneous
@@ -664,6 +668,13 @@ export default {
   edit: 'تعديل',
   chats: 'المحادثات',
   
+  // Search Page
+  dishes: 'الأطباق',
+  noDishesFound: 'لم يتم العثور على أطباق',
+  trySearchingDifferentKeywords: 'جرب البحث بكلمات مفتاحية مختلفة',
+  visitMenu: 'زيارة القائمة',
+  user: 'المستخدمون',
+  
   // Wallet Interface - matching the actual component usage
   currentBalance: 'الرصيد الحالي',
   refresh: 'تحديث',
@@ -689,7 +700,6 @@ export default {
   transaction: 'معاملة',
   myPromocodes: 'أكواد الخصم الخاصة بي',
   create: 'إنشاء',
-  cancel: 'إلغاء',
   noPromocodesYet: 'لا توجد أكواد خصم بعد',
   createPromocodesToOffer: 'أنشئ أكواد خصم لتقديم تخفيضات لعملائك',
   active: 'نشط',
@@ -697,7 +707,6 @@ export default {
   deletePromocode: 'حذف كود الخصم',
   deletePromocodeConfirmation: 'هل أنت متأكد من حذف "{code}"؟ لا يمكن التراجع عن هذا الإجراء.',
   off: 'خصم',
-  max: 'بحد أقصى',
   used: 'مستخدم',
   expires: 'ينتهي في',
   minOrder: 'الحد الأدنى للطلب',
@@ -715,5 +724,18 @@ export default {
   walletInformation: 'معلومات المحفظة',
   paymentThreshold: 'حد الدفع',
   paymentThresholdMessage: 'الدفع مطلوب عندما يصل الرصيد إلى -£2,000',
-  lastPayment: 'آخر دفعة'
+  lastPayment: 'آخر دفعة',
+  
+  // Chef Dashboard translations
+  welcomeBackChef: 'مرحباً بعودتك أيها الطاه!',
+  restaurantOverview: 'إليك نظرة عامة على مطعمك',
+  todaysOverview: 'نظرة عامة على اليوم',
+  quickActions: 'إجراءات سريعة',
+  analyticsAndInsights: 'التحليلات والإحصائيات',
+  recentActivity: 'النشاط الأخير',
+  noRecentActivity: 'لا يوجد نشاط حديث',
+  recentActivityDescription: 'ستظهر طلباتك وتحديثاتك الأخيرة هنا',
+  manage: 'إدارة',
+  viewReports: 'عرض التقارير',
+
 };

@@ -225,6 +225,7 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: moderateScale(400),
     borderRadius: moderateScale(20),
+    backgroundColor: '#FFFFFF', // Background color for shadow efficiency
     padding: moderateScale(24),
     shadowColor: '#000',
     shadowOffset: {

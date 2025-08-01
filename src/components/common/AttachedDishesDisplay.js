@@ -175,6 +175,7 @@ const localStyles = StyleSheet.create({
     width: moderateScale(120),
     height: moderateScale(140),
     borderRadius: moderateScale(16),
+    backgroundColor: '#FFFFFF', // Background color for shadow efficiency
     marginRight: moderateScale(12),
     borderWidth: 1,
     overflow: 'hidden',
@@ -192,6 +193,7 @@ const localStyles = StyleSheet.create({
     width: moderateScale(75),
     height: moderateScale(85),
     borderRadius: moderateScale(12),
+    backgroundColor: '#FFFFFF', // Background color for shadow efficiency
     marginBottom: moderateScale(10),
     borderWidth: 2,
     overflow: 'hidden',

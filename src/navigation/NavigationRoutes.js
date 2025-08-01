@@ -70,6 +70,7 @@ import ShoppingCart from '../containers/TabBar/ordering/ShoppingCart';
 import OrderTracking from '../containers/TabBar/ordering/OrderTracking';
 import ChatScreen from '../containers/TabBar/ordering/ChatScreen';
 import ChatList from '../containers/TabBar/ordering/ChatList';
+import Orders from '../containers/TabBar/orders/Orders';
 import Wallet from '../containers/TabBar/profile/Wallet';
 import ReviewReelCreator from '../components/ReviewReelCreator';
 import ReviewReelDetail from '../components/ReviewReelDetailView';
@@ -77,10 +78,11 @@ import ReviewReelDetail from '../components/ReviewReelDetailView';
 export const TabRoute = {
   ForYou: ForYou,
   Following: FollowingTab,
-  Search: Search,
   Profile,
   Discover,
-  Inbox,
+  Orders,
+  OrderManagement,
+  Chat: ChatList,
 };
 
 export const StackRoute = {

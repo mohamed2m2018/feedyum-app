@@ -25,11 +25,13 @@ export default StyleSheet.create({
     width: '100%',
   },
   shadowStyle: {
+    backgroundColor: '#FFFFFF', // Default background color for shadow efficiency
+    shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.5,
+    shadowOpacity: 0.1, // Reduced opacity for better performance
     shadowRadius: 4,
     elevation: 5,
   },

@@ -673,6 +673,7 @@ const localStyles = StyleSheet.create({
   },
   // Sticky Browse Menu Container
   stickyBrowseContainer: {
+    backgroundColor: '#FFFFFF', // Background color for shadow efficiency
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(0,0,0,0.05)',
     shadowColor: '#000',
@@ -769,6 +770,7 @@ const localStyles = StyleSheet.create({
     paddingHorizontal: moderateScale(16),
     paddingVertical: moderateScale(8),
     borderRadius: moderateScale(20),
+    backgroundColor: '#FF4D67', // Background color for shadow efficiency
     gap: moderateScale(6),
     shadowColor: '#000',
     shadowOffset: {
@@ -788,6 +790,7 @@ const localStyles = StyleSheet.create({
     width: moderateScale(32),
     height: moderateScale(32),
     borderRadius: moderateScale(16),
+    backgroundColor: '#FFFFFF', // Background color for shadow efficiency
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
@@ -868,9 +871,11 @@ const localStyles = StyleSheet.create({
     width: moderateScale(140),
     height: moderateScale(120),
     borderRadius: moderateScale(20),
+    backgroundColor: '#FFFFFF', // Background color for shadow efficiency
     padding: moderateScale(16),
     position: 'relative',
     overflow: 'hidden',
+    shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 8,
@@ -891,6 +896,7 @@ const localStyles = StyleSheet.create({
     width: moderateScale(48),
     height: moderateScale(48),
     borderRadius: moderateScale(24),
+    backgroundColor: '#FFFFFF', // Background color for shadow efficiency
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: moderateScale(8),

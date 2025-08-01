@@ -35,9 +35,9 @@ const StatusTab = ({status, isSelected, onPress, colors}) => (
       {
         backgroundColor: isSelected
           ? status.color + '15'
-          : colors.inputBg,
+          : (colors.inputBg || '#FFFFFF'), // Fallback to white for shadow efficiency
         borderColor: isSelected ? status.color : colors.bColor,
-        shadowColor: isSelected ? status.color : 'transparent',
+        shadowColor: isSelected ? status.color : '#000',
         shadowOffset: {
           width: 0,
           height: 2,
@@ -139,10 +139,10 @@ export default function OrderManagement() {
   // Order status options
   const statusOptions = [
     {label: 'All', value: 'all', color: colors.textColor, count: 0},
-    {label: 'Pending', value: 'pending', color: colors.orange, count: 0},
-    {label: 'Preparing', value: 'preparing', color: colors.blue, count: 0},
-    {label: 'Ready', value: 'ready', color: colors.yellow, count: 0},
-    {label: 'Completed', value: 'completed', color: colors.primary, count: 0},
+    {label: strings.pending, value: 'pending', color: colors.orange, count: 0},
+    {label: strings.preparing, value: 'preparing', color: colors.blue, count: 0},
+    {label: strings.ready, value: 'ready', color: colors.yellow, count: 0},
+    {label: strings.completed, value: 'completed', color: colors.primary, count: 0},
     {label: strings.cancelled, value: 'cancelled', color: colors.redColor, count: 0},
   ];
 
@@ -169,8 +169,11 @@ export default function OrderManagement() {
     },
     {
       enabled: !!userId,
-      refetchInterval: 30000, // Refetch every 30 seconds for real-time updates
-      staleTime: 10000, // Consider data stale after 10 seconds
+      refetchInterval: false, // Disable automatic refresh - use manual refresh instead
+      staleTime: 2 * 60 * 1000, // Consider data stale after 2 minutes
+      cacheTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
     },
   );
 
@@ -318,7 +321,7 @@ export default function OrderManagement() {
       <View style={localStyles.container}>
         {/* Summary Header */}
         {!ordersLoading && ordersData.length > 0 && (
-          <View style={[localStyles.summaryContainer, {backgroundColor: colors.inputBg}]}>
+          <View style={[localStyles.summaryContainer, {backgroundColor: colors.inputBg || '#FFFFFF'}]}>
             <View style={localStyles.summaryRow}>
               <View style={localStyles.summaryItem}>
                 <ZText type="B20" color={colors.primary}>
@@ -349,7 +352,7 @@ export default function OrderManagement() {
                   {ordersData.filter(order => order.status === 'ready').length}
                 </ZText>
                 <ZText type="M12" color={colors.grayScale7}>
-                  Ready
+                  {strings.ready}
                 </ZText>
               </View>
             </View>
@@ -406,7 +409,7 @@ export default function OrderManagement() {
               style={[localStyles.indicator, {backgroundColor: colors.primary}]}
             />
             <ZText type="R12" color={colors.grayScale7}>
-              Auto-refreshing every 30 seconds
+              Manual refresh available
             </ZText>
           </View>
         )}
@@ -532,6 +535,7 @@ const localStyles = StyleSheet.create({
     marginHorizontal: moderateScale(20),
     marginVertical: moderateScale(12),
     borderRadius: moderateScale(12),
+    backgroundColor: '#FFFFFF', // Background color for shadow efficiency
     padding: moderateScale(16),
     shadowColor: '#000',
     shadowOffset: {

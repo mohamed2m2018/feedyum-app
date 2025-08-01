@@ -344,6 +344,7 @@ export default {
   // Order Management & Tracking
   retry: 'Retry',
   menu: 'Menu',
+  viewMenu: 'View Menu',
   orderChats: 'Order Chats',
   addCaption: 'Add a caption...',
   shoppingCart: 'Shopping Cart',
@@ -519,6 +520,8 @@ export default {
   forYou: 'For You',
   followingTab: 'FollowingTab',
   orders: 'Orders',
+  myOrders: 'My Orders',
+  chat: 'Chat',
 
   // Order Status Messages
   chefReviewing: 'Chef Reviewing',
@@ -596,7 +599,7 @@ export default {
   previewErrorMessage: 'Failed to prepare audio for preview',
   previewPlaybackError: 'Failed to play audio preview',
   successExclamation: 'Success!',
-  
+
   // Chef Dashboard & Profile
   chefDashboard: 'Chef Dashboard',
   todaysRevenue: "Today's Revenue",
@@ -617,13 +620,14 @@ export default {
   createNewMenuItem: 'Create a new menu item',
   managePendingOrders: 'Manage pending orders',
   failedToLoadDashboardStats: 'Failed to load dashboard stats',
-  
+
   // Order Review Modal
   pleaseEnterValidDeliveryFee: 'Please enter a valid delivery fee amount.',
   acceptOrder: 'Accept Order',
   acceptOrderWithFee: 'Accept this order with a delivery fee of $${fee}?',
   rejectOrder: 'Reject Order',
-  rejectOrderConfirmation: 'Are you sure you want to reject this order? This action cannot be undone.',
+  rejectOrderConfirmation:
+    'Are you sure you want to reject this order? This action cannot be undone.',
   failedToAcceptOrder: 'Failed to accept order. Please try again.',
   failedToRejectOrder: 'Failed to reject order. Please try again.',
   noEmailProvided: 'No email provided',
@@ -633,7 +637,7 @@ export default {
   processingOrder: 'Processing...',
   rejectOrderButton: 'Reject Order',
   acceptOrderButton: 'Accept Order',
-  
+
   // Add/Edit Dish Modal
   startersAndSmallPlates: 'Starters and small plates',
   mainDishesAndEntrees: 'Main dishes and entrees',
@@ -643,18 +647,20 @@ export default {
   mainCourses: 'Main Courses',
   desserts: 'Desserts',
   beverages: 'Beverages',
-  
+
   // Profile & Settings
   english: 'English',
   allActivity: 'All Activity',
-  
+
   // Analytics & Dashboard
   analyticsDashboard: 'Analytics Dashboard',
-  revenueChartsAndMetrics: 'Revenue charts and performance metrics will be displayed here',
-  
+  revenueChartsAndMetrics:
+    'Revenue charts and performance metrics will be displayed here',
+
   // Order Status Actions
   startPreparing: 'Start Preparing',
   markReady: 'Mark Ready',
+  markAsReady: 'Mark as Ready',
   completeOrder: 'Complete Order',
   promocodeCreatedSuccessfully: 'Promocode created successfully',
   promocodeDeletedSuccessfully: 'Promocode deleted successfully',
@@ -675,7 +681,7 @@ export default {
   youNeedToPay: 'You need to pay £{amount} to continue receiving orders.',
   areYouSureDeleteMessage: 'Are you sure you want to delete this message?',
   chooseImageSelectionMethod: 'Choose how you want to select an image',
-  
+
   // Profile Page
   posts: 'Posts',
   reviews: 'Reviews',
@@ -684,7 +690,14 @@ export default {
   shareYourFoodExperiences: 'Share your food experiences with reviews!',
   edit: 'Edit',
   chats: 'Chats',
-  
+
+  // Search Page
+  dishes: 'Dishes',
+  noDishesFound: 'No Dishes Found',
+  trySearchingDifferentKeywords: 'Try searching with different keywords',
+  visitMenu: 'Visit Menu',
+  user: 'Users',
+
   // Wallet Interface - matching the actual component usage
   currentBalance: 'Current Balance',
   refresh: 'Refresh',
@@ -696,7 +709,7 @@ export default {
   recentTransactions: 'Recent Transactions',
   noTransactionsYet: 'No transactions yet',
   transactionHistoryWillAppearHere: 'Your transaction history will appear here',
-  
+
   // Additional wallet translations used in the component
   amountOwed: 'Amount Owed',
   paymentRequired: 'Payment Required',
@@ -707,11 +720,13 @@ export default {
   myPromocodes: 'My Promocodes',
   create: 'Create',
   noPromocodesYet: 'No promocodes yet',
-  createPromocodesToOffer: 'Create promocodes to offer discounts to your customers',
+  createPromocodesToOffer:
+    'Create promocodes to offer discounts to your customers',
   active: 'Active',
   inactive: 'Inactive',
   deletePromocode: 'Delete Promocode',
-  deletePromocodeConfirmation: 'Are you sure you want to delete "{code}"? This action cannot be undone.',
+  deletePromocodeConfirmation:
+    'Are you sure you want to delete "{code}"? This action cannot be undone.',
   off: 'off',
   used: 'Used',
   expires: 'Expires',
@@ -730,5 +745,18 @@ export default {
   walletInformation: 'Wallet Information',
   paymentThreshold: 'Payment Threshold',
   paymentThresholdMessage: 'Payment required when balance reaches -£2,000',
-  lastPayment: 'Last Payment'
+  lastPayment: 'Last Payment',
+
+  // Chef Dashboard translations
+  welcomeBackChef: 'Welcome back, Chef!',
+  restaurantOverview: "Here's your restaurant overview",
+  todaysOverview: "Today's Overview",
+  quickActions: 'Quick Actions',
+  analyticsAndInsights: 'Analytics & Insights',
+  recentActivity: 'Recent Activity',
+  noRecentActivity: 'No recent activity',
+  recentActivityDescription: 'Your recent orders and updates will appear here',
+  manage: 'Manage',
+  viewReports: 'View Reports',
+
 };

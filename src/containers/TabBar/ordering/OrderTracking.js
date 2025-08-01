@@ -93,21 +93,22 @@ const OrderTracking = () => {
   // Real-time order status updates
   useEffect(() => {
     const startPolling = () => {
-      if (
-        orderId &&
-        currentOrder &&
-        !['delivered', 'cancelled'].includes(currentOrder.status)
-      ) {
-        intervalRef.current = setInterval(async () => {
-          try {
-            console.log('OrderTracking: Polling for order updates...');
-            await dispatch(fetchOrderById(orderId));
-            setLastUpdated(new Date());
-          } catch (error) {
-            console.error('OrderTracking: Polling error:', error);
-          }
-        }, 30000); // Poll every 30 seconds
-      }
+      // Polling disabled - users can manually refresh if needed
+      // if (
+      //   orderId &&
+      //   currentOrder &&
+      //   !['delivered', 'cancelled'].includes(currentOrder.status)
+      // ) {
+      //   intervalRef.current = setInterval(async () => {
+      //     try {
+      //       console.log('OrderTracking: Polling for order updates...');
+      //       await dispatch(fetchOrderById(orderId));
+      //       setLastUpdated(new Date());
+      //     } catch (error) {
+      //       console.error('OrderTracking: Polling error:', error);
+      //     }
+      //   }, 60000);
+      // }
     };
 
     const stopPolling = () => {
@@ -800,6 +801,7 @@ const localStyles = StyleSheet.create({
     margin: moderateScale(16),
     padding: moderateScale(16),
     borderRadius: moderateScale(12),
+    backgroundColor: '#FFFFFF', // Background color for shadow efficiency
     shadowColor: '#000',
     shadowOffset: {
       width: 0,

@@ -68,6 +68,7 @@ const localStyles = StyleSheet.create({
     padding: moderateScale(16),
     borderRadius: moderateScale(12),
     borderWidth: 1,
+    backgroundColor: '#FFFFFF', // Background color for shadow efficiency
     minHeight: moderateScale(100),
     justifyContent: 'space-between',
     ...styles.shadowStyle,

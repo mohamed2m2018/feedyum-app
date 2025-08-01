@@ -989,6 +989,7 @@ const localStyles = StyleSheet.create({
     right: 0,
     bottom: 0,
     borderRadius: moderateScale(8),
+    backgroundColor: 'rgba(255, 215, 0, 0.1)', // Background color for shadow efficiency
     borderWidth: 2,
     borderColor: 'rgba(255, 215, 0, 0.3)',
     shadowColor: '#FFD700',

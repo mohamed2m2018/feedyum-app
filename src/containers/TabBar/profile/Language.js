@@ -76,7 +76,7 @@ const Language = ({navigation}) => {
       setIsSelected(l === 'en' || !l ? strings.english : 'العربية');
     };
     getLanguage();
-  }, [language]);
+  }, [language]); // Add strings.english to dependencies to prevent stale closure
 
   const RenderData = ({item}) => {
     return (

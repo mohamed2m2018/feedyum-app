@@ -2,9 +2,9 @@ export const TabNav = {
   ForYou: 'For You',
   FollowingTab: 'FollowingTab',
   Profile: 'Profile',
-  Discover: 'Orders',
-  Inbox: 'Inbox',
-  Search: 'Search',
+  Discover: 'Discover',
+  Orders: 'Orders',
+  Chat: 'Chat',
 };
 
 export const StackNav = {

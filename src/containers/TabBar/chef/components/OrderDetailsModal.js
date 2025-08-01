@@ -63,7 +63,7 @@ const OrderDetailsModal = ({
         return {
           color: colors.primary,
           backgroundColor: colors.primary + '20',
-          text: 'Completed',
+          text: strings.completed,
           icon: 'checkmark-done-outline',
         };
       case 'cancelled':
@@ -101,11 +101,11 @@ const OrderDetailsModal = ({
   const getStatusButtonText = () => {
     switch (order.status) {
       case 'pending':
-        return 'Start Preparing';
+        return strings.startPreparing;
       case 'preparing':
-        return 'Mark as Ready';
+        return strings.markAsReady;
       case 'ready':
-        return 'Complete Order';
+        return strings.completeOrder;
       default:
         return null;
     }

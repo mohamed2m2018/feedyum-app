@@ -43,7 +43,7 @@ export default function ChatList({navigation}) {
     () => request.get('/chat/order-chats'),
     {
       enabled: !!currentUser?._id,
-      refetchInterval: 5000, // Refresh every 5 seconds for faster updates
+      refetchInterval: false, // Polling disabled - manual refresh only
       staleTime: 0, // Always consider data stale for immediate updates
       cacheTime: 30000, // Keep in cache for 30 seconds
     },
@@ -318,6 +318,7 @@ const localStyles = StyleSheet.create({
     marginHorizontal: moderateScale(16),
     marginVertical: moderateScale(4),
     borderRadius: moderateScale(12),
+    backgroundColor: '#FFFFFF', // Background color for shadow efficiency
     shadowColor: '#000',
     shadowOffset: {
       width: 0,

@@ -32,14 +32,14 @@ const StatusBadge = ({status, colors}) => {
         return {
           color: colors.yellow,
           backgroundColor: colors.yellow + '20',
-          text: 'Ready',
+          text: strings.ready,
           icon: 'checkmark-circle-outline',
         };
       case 'completed':
         return {
           color: colors.primary,
           backgroundColor: colors.primary + '20',
-          text: 'Completed',
+          text: strings.completed,
           icon: 'checkmark-done-outline',
         };
       case 'cancelled':
@@ -97,11 +97,11 @@ const StatusUpdateButtons = ({order, onStatusChange, colors}) => {
   const getButtonText = () => {
     switch (order.status) {
       case 'pending':
-        return 'Start Preparing';
+        return strings.startPreparing;
       case 'preparing':
-        return 'Mark Ready';
+        return strings.markReady;
       case 'ready':
-        return 'Complete Order';
+        return strings.completeOrder;
       default:
         return null;
     }
@@ -285,6 +285,7 @@ const localStyles = StyleSheet.create({
   container: {
     borderRadius: moderateScale(12),
     borderWidth: 1,
+    backgroundColor: '#FFFFFF', // Background color for shadow efficiency
     padding: moderateScale(16),
     marginBottom: moderateScale(12),
     ...styles.shadowStyle,

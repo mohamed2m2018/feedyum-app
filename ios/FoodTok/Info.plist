@@ -26,6 +26,84 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	
+	<!-- URL Schemes for Deep Linking -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<!-- Main app URL scheme -->
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.foodtok.deeplink</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>foodtok</string>
+			</array>
+		</dict>
+		
+		<!-- Universal links support -->
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.foodtok.universallink</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>https</string>
+			</array>
+		</dict>
+		
+		<!-- Reel sharing support -->
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.foodtok.reel</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>foodtok-reel</string>
+			</array>
+		</dict>
+		
+		<!-- Profile sharing support -->
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.foodtok.profile</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>foodtok-profile</string>
+			</array>
+		</dict>
+		
+		<!-- Menu sharing support -->
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.foodtok.menu</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>foodtok-menu</string>
+			</array>
+		</dict>
+	</array>
+	
+	<!-- Associated Domains for Universal Links -->
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:food2k.com</string>
+		<string>applinks:www.food2k.com</string>
+		<string>applinks:reel.food2k.com</string>
+		<string>applinks:menu.food2k.com</string>
+		<string>applinks:chef.food2k.com</string>
+	</array>
+
+	<!-- Custom query schemes for opening other apps -->
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>instagram</string>
+		<string>instagram-stories</string>
+		<string>tiktok</string>
+		<string>whatsapp</string>
+		<string>twitter</string>
+		<string>fb</string>
+		<string>snapchat</string>
+		<string>youtube</string>
+	</array>
+
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSExceptionDomains</key>

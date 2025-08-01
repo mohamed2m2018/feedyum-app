@@ -59,17 +59,17 @@ export default function ChefDashboard() {
         {/* Welcome Section */}
         <View style={localStyles.welcomeSection}>
           <ZText type="B24" style={localStyles.welcomeText}>
-            Welcome back, Chef!
+            {strings.welcomeBackChef}
           </ZText>
           <ZText type="M16" color={colors.grayScale7}>
-            Here's your restaurant overview
+            {strings.restaurantOverview}
           </ZText>
         </View>
 
         {/* Quick Stats Grid */}
         <View style={localStyles.statsContainer}>
           <ZText type="S18" style={localStyles.sectionTitle}>
-            Today's Overview
+            {strings.todaysOverview}
           </ZText>
           <View style={localStyles.statsGrid}>
             <DashboardCard
@@ -112,7 +112,7 @@ export default function ChefDashboard() {
         {/* Quick Actions Section */}
         <View style={localStyles.quickActionsSection}>
           <ZText type="S18" style={localStyles.sectionTitle}>
-            Quick Actions
+            {strings.quickActions}
           </ZText>
           <View style={localStyles.actionsGrid}>
             <TouchableOpacity
@@ -155,7 +155,7 @@ export default function ChefDashboard() {
                 {strings.customerChats}
               </ZText>
               <ZText type="M12" color={colors.grayScale7} align="center">
-                Chat with customers
+                {strings.chatWithCustomers}
               </ZText>
             </TouchableOpacity>
 
@@ -166,10 +166,10 @@ export default function ChefDashboard() {
                 <Ionicons name="analytics-outline" size={moderateScale(24)} color={colors.white} />
               </View>
               <ZText type="S16" style={localStyles.actionTitle}>
-                View Analytics
+                {strings.viewAnalytics}
               </ZText>
               <ZText type="M12" color={colors.grayScale7} align="center">
-                Check performance
+                {strings.checkPerformance}
               </ZText>
             </TouchableOpacity>
           </View>
@@ -179,11 +179,11 @@ export default function ChefDashboard() {
         <View style={localStyles.sectionContainer}>
           <View style={localStyles.sectionHeader}>
             <ZText type="S18" style={localStyles.sectionTitle}>
-              Menu Management
+              {strings.menuManagement}
             </ZText>
             <TouchableOpacity onPress={() => navigateToSection('Menu')}>
               <ZText type="M14" color={colors.primary}>
-                Manage
+                {strings.manage}
               </ZText>
             </TouchableOpacity>
           </View>
@@ -207,11 +207,11 @@ export default function ChefDashboard() {
         <View style={localStyles.sectionContainer}>
           <View style={localStyles.sectionHeader}>
             <ZText type="S18" style={localStyles.sectionTitle}>
-              Order Management
+              {strings.orderManagement}
             </ZText>
             <TouchableOpacity onPress={() => navigateToSection('Orders')}>
               <ZText type="M14" color={colors.primary}>
-                Manage
+                {strings.manage}
               </ZText>
             </TouchableOpacity>
           </View>
@@ -235,11 +235,11 @@ export default function ChefDashboard() {
         <View style={localStyles.sectionContainer}>
           <View style={localStyles.sectionHeader}>
             <ZText type="S18" style={localStyles.sectionTitle}>
-              Analytics & Insights
+              {strings.analyticsAndInsights}
             </ZText>
             <TouchableOpacity onPress={() => navigateToSection('Analytics')}>
               <ZText type="M14" color={colors.primary}>
-                View Reports
+                {strings.viewReports}
               </ZText>
             </TouchableOpacity>
           </View>
@@ -262,15 +262,15 @@ export default function ChefDashboard() {
         {/* Recent Activity Section */}
         <View style={localStyles.sectionContainer}>
           <ZText type="S18" style={localStyles.sectionTitle}>
-            Recent Activity
+            {strings.recentActivity}
           </ZText>
           <View style={[localStyles.activityCard, {backgroundColor: colors.inputBg}]}>
             <Ionicons name="time-outline" size={moderateScale(32)} color={colors.grayScale7} />
             <ZText type="M16" align="center" color={colors.grayScale7} style={localStyles.activityText}>
-              No recent activity
+              {strings.noRecentActivity}
             </ZText>
             <ZText type="M12" align="center" color={colors.grayScale7}>
-              Your recent orders and updates will appear here
+              {strings.recentActivityDescription}
             </ZText>
           </View>
         </View>
@@ -317,6 +317,7 @@ const localStyles = StyleSheet.create({
     flex: 1,
     padding: moderateScale(16),
     borderRadius: moderateScale(12),
+    backgroundColor: '#FFFFFF', // Background color for shadow efficiency
     alignItems: 'center',
     ...styles.shadowStyle,
     shadowOpacity: 0.1,
@@ -362,6 +363,7 @@ const localStyles = StyleSheet.create({
   activityCard: {
     padding: moderateScale(24),
     borderRadius: moderateScale(12),
+    backgroundColor: '#FFFFFF', // Background color for shadow efficiency
     alignItems: 'center',
     ...styles.shadowStyle,
     shadowOpacity: 0.1,

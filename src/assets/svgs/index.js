@@ -30,6 +30,8 @@ import Connect_Dark from './connectDark.svg';
 import Notification_Icon from './notification.svg';
 import Search_Dark from './searchDark.svg';
 import Search_Light from './searchLight.svg';
+import Orders_Dark from './ordersDark.svg';
+import Orders_Light from './ordersLight.svg';
 import Menu_Dark from './menuDark.svg';
 import Menu_Light from './menuLight.svg';
 import Control from './control.svg';
@@ -72,6 +74,8 @@ export {
   Notification_Icon,
   Search_Dark,
   Search_Light,
+  Orders_Dark,
+  Orders_Light,
   Menu_Dark,
   Menu_Light,
   Control,

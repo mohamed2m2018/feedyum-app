@@ -135,7 +135,7 @@ export default function SearchDishes({
         >
           <Ionicons name="restaurant-outline" size={moderateScale(14)} color={colors.primary} />
           <ZText type="B12" color={colors.primary} style={styles.ml4}>
-            Visit Menu
+            {strings.visitMenu}
           </ZText>
         </TouchableOpacity>
       </View>
@@ -158,10 +158,10 @@ export default function SearchDishes({
             <View style={localStyles.emptyContainer}>
               <Ionicons name="restaurant-outline" size={moderateScale(64)} color={colors.grayScale4} />
               <ZText style={localStyles.emptyTitle} type={'B18'} color={colors.textColor}>
-                No Dishes Found
+                {strings.noDishesFound}
               </ZText>
               <ZText style={localStyles.emptySubtitle} type={'M14'} color={colors.grayScale5}>
-                Try searching with different keywords
+                {strings.trySearchingDifferentKeywords}
               </ZText>
             </View>
           )

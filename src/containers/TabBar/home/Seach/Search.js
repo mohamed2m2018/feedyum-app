@@ -31,15 +31,15 @@ export default function Search() {
     },
     {
       id: 1,
-      title: 'Posts',
+      title: strings.posts,
     },
     {
       id: 2,
-      title: 'Reviews',
+      title: strings.reviews,
     },
     {
       id: 3,
-      title: 'Dishes',
+      title: strings.dishes,
     },
   ];
 

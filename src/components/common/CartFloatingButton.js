@@ -52,6 +52,7 @@ const localStyles = StyleSheet.create({
     width: moderateScale(56),
     height: moderateScale(56),
     borderRadius: moderateScale(28),
+    backgroundColor: '#FF4D67', // Background color for shadow efficiency
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',

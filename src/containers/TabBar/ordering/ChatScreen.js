@@ -142,7 +142,7 @@ export default function ChatScreen({ route }) {
     () => request.get(`/chat/messages?chatUserId=${chefId}&orderId=${orderId || ''}`),
     { 
       enabled: !!(currentUser?._id && chefId),
-      refetchInterval: 3000, // Refresh every 3 seconds for real-time feel
+      refetchInterval: false, // Polling disabled - manual refresh only
     }
   );
 
