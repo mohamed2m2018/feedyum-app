@@ -55,7 +55,7 @@ const OrderReviewModal = ({visible, order, onClose, onAccept, onReject}) => {
 
     Alert.alert(
       strings.acceptOrder,
-      strings.acceptOrderWithFee.replace('${fee}', fee.toFixed(2)),
+      strings.acceptOrderWithFee.replace('{fee}', fee.toFixed(2)),
       [
         {text: strings.cancel, style: 'cancel'},
         {
@@ -247,11 +247,11 @@ const OrderReviewModal = ({visible, order, onClose, onAccept, onReject}) => {
               Quantity: {item.quantity}
             </ZText>
             <ZText type="M12" color={colors.grayScale7}>
-              Price: ${item.price?.toFixed(2) || '0.00'} each
+              Price: {(item.price?.toFixed(2) || '0.00')} each
             </ZText>
           </View>
           <ZText type="B14" color={colors.primary}>
-            ${((item.price || 0) * (item.quantity || 0)).toFixed(2)}
+            {((item.price || 0) * (item.quantity || 0)).toFixed(2)}
           </ZText>
         </View>
       ))}
@@ -272,7 +272,7 @@ const OrderReviewModal = ({visible, order, onClose, onAccept, onReject}) => {
           type="M14"
           color={colors.textColor}
           style={localStyles.inputLabel}>
-          Delivery Fee ($)
+          Delivery Fee
         </ZText>
         <TextInput
           style={[
@@ -333,7 +333,7 @@ const OrderReviewModal = ({visible, order, onClose, onAccept, onReject}) => {
           Subtotal:
         </ZText>
         <ZText type="B14" color={colors.textColor}>
-          ${order?.subtotal?.toFixed(2) || '0.00'}
+          {order?.subtotal?.toFixed(2) || '0.00'}
         </ZText>
       </View>
 
@@ -342,7 +342,7 @@ const OrderReviewModal = ({visible, order, onClose, onAccept, onReject}) => {
           Delivery Fee:
         </ZText>
         <ZText type="B14" color={colors.textColor}>
-          ${parseFloat(deliveryFee || 0).toFixed(2)}
+          {parseFloat(deliveryFee || 0).toFixed(2)}
         </ZText>
       </View>
 
@@ -351,7 +351,7 @@ const OrderReviewModal = ({visible, order, onClose, onAccept, onReject}) => {
           Total:
         </ZText>
         <ZText type="B16" color={colors.primary}>
-          ${calculateTotal().toFixed(2)}
+          {calculateTotal().toFixed(2)}
         </ZText>
       </View>
     </View>

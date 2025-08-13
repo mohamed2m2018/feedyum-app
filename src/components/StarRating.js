@@ -10,6 +10,7 @@ const StarRating = ({
   size = 'medium',
   showText = true,
   showCount = true,
+  showWhenNoRating = false,
   style,
 }) => {
   const colors = useSelector(state => state.theme.theme);
@@ -36,6 +37,29 @@ const StarRating = ({
 
   const renderStars = () => {
     const stars = [];
+    
+    // Check if we should show disabled stars when no rating
+    const hasNoRating = !rating || rating === 0;
+    
+    if (hasNoRating && showWhenNoRating) {
+      // Show 5 empty (outlined) stars
+      for (let i = 0; i < 5; i++) {
+        stars.push(
+          <Icon
+            key={`empty-norating-${i}`}
+            name="star-border"
+            size={currentSize.star}
+            color={colors.grayScale4 || "#CCCCCC"}
+            style={{ 
+              marginRight: moderateScale(1)
+            }}
+          />
+        );
+      }
+      return stars;
+    }
+    
+    // Original logic for when there is a rating
     const fullStars = Math.floor(rating);
     const hasHalfStar = rating % 1 !== 0;
 
@@ -100,9 +124,14 @@ const StarRating = ({
         <View style={[styles.textContainer, { marginLeft: currentSize.spacing }]}>
           <Text style={[styles.ratingText, { 
             fontSize: currentSize.text,
-            color: colors.textColor 
+            color: (!rating || rating === 0) && showWhenNoRating 
+              ? colors.grayScale4 || "#CCCCCC"
+              : colors.textColor 
           }]}>
-            {rating.toFixed(1)}
+            {(!rating || rating === 0) && showWhenNoRating 
+              ? "No rating" 
+              : rating.toFixed(1)
+            }
           </Text>
           
           {showCount && totalReviews > 0 && (

@@ -2,7 +2,7 @@
 import {BackHandler, StyleSheet, View} from 'react-native';
 import React from 'react';
 import {useSelector} from 'react-redux';
-import {GooglePlacesAutocomplete} from 'react-native-google-places-autocomplete';
+import FreeAddressSearch from '../FreeAddressSearch';
 
 // Custom import
 import {moderateScale} from '../../common/constants';
@@ -77,30 +77,10 @@ const Location = () => {
           : strings.editLocation}
       </ZText>
       <View style={localStyles.bottomContainer}>
-        <GooglePlacesAutocomplete
+        <FreeAddressSearch
           placeholder={strings.search}
-          fetchDetails
-          styles={{
-            textInput: {
-              color: 'black',
-            },
-            description: {color: 'black'},
-            predefinedPlacesDescription: {
-              color: 'black',
-            },
-          }}
-          listUnderlayColor={'black'}
-          textInputProps={{
-            cursorColor: colors.primary,
-            autoFocus: true,
-          }}
-          onPress={handleLocations}
-          query={{
-            key: '***REMOVED***',
-            language: 'ar',
-            components: 'country:eg',
-            type: ['address', 'region'],
-          }}
+          onLocationSelect={handleLocations}
+          autoFocus={true}
         />
       </View>
     </View>

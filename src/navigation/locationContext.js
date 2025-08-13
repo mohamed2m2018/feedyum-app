@@ -16,6 +16,8 @@ export const useLocation = () => {
 
 export const LocationProvider = ({children}) => {
   const [location, setLocation] = useState(null);
+  const [deliveryLocation, setDeliveryLocation] = useState(null);
+  const [useDeliveryAddress, setUseDeliveryAddress] = useState(false);
 
   const handleRequestPermission = () => {
     if (Platform.OS === 'android') {
@@ -74,8 +76,44 @@ export const LocationProvider = ({children}) => {
     requestLocationPermission();
   }, []);
 
+  // Function to update delivery address location
+  const updateDeliveryLocation = (address) => {
+    if (address?.location?.lat && address?.location?.long) {
+      const newDeliveryLocation = {
+        latitude: parseFloat(address.location.lat),
+        longitude: parseFloat(address.location.long),
+        address: address
+      };
+      setDeliveryLocation(newDeliveryLocation);
+      setUseDeliveryAddress(true);
+      console.log('🏠 Location updated for content filtering:', {
+        address: address.formattedAddress || address.nameLine,
+        coordinates: `${newDeliveryLocation.latitude}, ${newDeliveryLocation.longitude}`
+      });
+    } else {
+      setUseDeliveryAddress(false);
+    }
+  };
+
+  // Function to use device location
+  const useDeviceLocation = () => {
+    setUseDeliveryAddress(false);
+    console.log('📱 Switched back to device GPS location for content filtering');
+  };
+
+  // Determine which location to return
+  const currentLocation = useDeliveryAddress && deliveryLocation ? deliveryLocation : location;
+
+  const contextValue = {
+    ...currentLocation,
+    updateDeliveryLocation,
+    useDeviceLocation,
+    isUsingDeliveryAddress: useDeliveryAddress,
+    deliveryAddress: deliveryLocation?.address
+  };
+
   return (
-    <LocationContext.Provider value={location}>
+    <LocationContext.Provider value={contextValue}>
       {children}
     </LocationContext.Provider>
   );

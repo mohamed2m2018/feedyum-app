@@ -9,6 +9,7 @@ import {
 import {useSelector} from 'react-redux';
 import {useNavigation} from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import StarRating from '../StarRating';
 import ZText from './ZText';
 import {moderateScale} from '../../common/constants';
 import images from '../../assets/images';
@@ -37,7 +38,7 @@ const AttachedDishesDisplay = ({
       // Navigate to chef menu with dish ID for auto-scroll
       navigation.navigate(StackNav.ChefMenu, {
         chefId: chefId,
-        scrollToDishId: dish._id,
+        scrollToDishId: dish?._id || dish?.id,
         chefName: chefName,
       });
     }
@@ -73,6 +74,16 @@ const AttachedDishesDisplay = ({
             style={localStyles.dishName}>
             {dish.name}
           </ZText>
+          <StarRating
+            rating={Number.isFinite(dish?.average_rating)
+              ? dish.average_rating
+              : (Number.isFinite(dish?.rating) ? dish.rating : 0)}
+            size={compact ? 'small' : 'medium'}
+            showText={false}
+            showCount={false}
+            showWhenNoRating={true}
+            style={{ marginBottom: moderateScale(2) }}
+          />
           
           {showPrices && (
             <View style={localStyles.priceContainer}>

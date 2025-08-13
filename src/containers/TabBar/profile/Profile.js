@@ -189,11 +189,11 @@ export default function Profile({navigation}) {
   // eslint-disable-next-line react/no-unstable-nested-components
   const RenderUserDetail = ({item}) => {
     return (
-      <TouchableOpacity onPress={item.onPress} style={styles.itemsCenter}>
-        <ZText type="b24" align={'center'}>
+      <TouchableOpacity onPress={item.onPress} style={[styles.itemsCenter, localStyles.statsContainer]}>
+        <ZText type="b24" align={'center'} style={localStyles.statsNumber}>
           {item.value}
         </ZText>
-        <ZText type="m16" align={'center'} style={styles.mt10}>
+        <ZText type="m16" align={'center'} style={[styles.mt10, localStyles.statsLabel]}>
           {item.title}
         </ZText>
       </TouchableOpacity>
@@ -368,13 +368,19 @@ export default function Profile({navigation}) {
             <Ionicons
               name={selectedTab === 'posts' ? 'grid' : 'grid-outline'}
               size={moderateScale(18)}
-              color={selectedTab === 'posts' ? colors.white : colors.grayScale6}
+              color={selectedTab === 'posts' ? colors.white : colors.textColor}
               style={localStyles.tabIcon}
             />
             <ZText
               type="B14"
-              color={selectedTab === 'posts' ? colors.white : colors.grayScale6}
-              style={localStyles.tabText}
+              color={selectedTab === 'posts' ? colors.white : colors.textColor}
+              style={[localStyles.tabText, {
+                position: 'relative',
+                zIndex: 10,
+                backgroundColor: 'transparent',
+              }]}
+              numberOfLines={1}
+              ellipsizeMode="tail"
             >
               {strings.posts}
             </ZText>
@@ -405,13 +411,19 @@ export default function Profile({navigation}) {
             <Ionicons
               name={selectedTab === 'reviews' ? 'star' : 'star-outline'}
               size={moderateScale(18)}
-              color={selectedTab === 'reviews' ? colors.white : colors.grayScale6}
+              color={selectedTab === 'reviews' ? colors.white : colors.textColor}
               style={localStyles.tabIcon}
             />
             <ZText
               type="B14"
-              color={selectedTab === 'reviews' ? colors.white : colors.grayScale6}
-              style={localStyles.tabText}
+              color={selectedTab === 'reviews' ? colors.white : colors.textColor}
+              style={[localStyles.tabText, {
+                position: 'relative',
+                zIndex: 10,
+                backgroundColor: 'transparent',
+              }]}
+              numberOfLines={1}
+              ellipsizeMode="tail"
             >
               {strings.reviews}
             </ZText>
@@ -505,7 +517,7 @@ export default function Profile({navigation}) {
   };
 
   return (
-    <ZSafeAreaView>
+    <ZSafeAreaView style={localStyles.screenContainer}>
       {!isGuest && (
         <View style={localStyles.container}>
           {isLoadingSomething && (
@@ -547,21 +559,27 @@ export default function Profile({navigation}) {
 }
 
 const localStyles = StyleSheet.create({
+  screenContainer: {
+    flex: 1,
+    paddingHorizontal: moderateScale(20),
+    paddingTop: moderateScale(10),
+  },
   container: {
     flex: 1,
     backgroundColor: 'transparent',
   },
   flatListContent: {
-    paddingHorizontal: moderateScale(20),
-    paddingBottom: moderateScale(20),
+    paddingHorizontal: moderateScale(0),
+    paddingBottom: moderateScale(30),
   },
   columnWrapper: {
-    marginBottom: moderateScale(12),
-    paddingHorizontal: moderateScale(5),
+    marginBottom: moderateScale(15),
+    paddingHorizontal: moderateScale(8),
   },
   headerContent: {
     width: '100%',
     marginBottom: moderateScale(20),
+    paddingHorizontal: moderateScale(0),
   },
   headerContainer: {
     ...styles.flex,
@@ -593,12 +611,27 @@ const localStyles = StyleSheet.create({
   bioIcon: {
     marginTop: 7,
   },
+  // Stats Styles
+  statsContainer: {
+    paddingVertical: moderateScale(15),
+    paddingHorizontal: moderateScale(12),
+    marginHorizontal: moderateScale(2),
+    borderRadius: moderateScale(8),
+    minWidth: moderateScale(70),
+  },
+  statsNumber: {
+    paddingHorizontal: moderateScale(8),
+    paddingVertical: moderateScale(4),
+  },
+  statsLabel: {
+    paddingHorizontal: moderateScale(4),
+  },
   actionButtonsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-evenly',
-    marginTop: 20,
-    marginBottom: 20,
-    paddingHorizontal: 10,
+    marginTop: moderateScale(20),
+    marginBottom: moderateScale(20),
+    paddingHorizontal: moderateScale(15),
     flexWrap: 'wrap',
   },
   iconButton: {
@@ -620,7 +653,7 @@ const localStyles = StyleSheet.create({
   tabBarContainer: {
     marginTop: moderateScale(10),
     marginBottom: moderateScale(20),
-    marginHorizontal: moderateScale(10),
+    marginHorizontal: moderateScale(0),
   },
   tabBar: {
     flexDirection: 'row',
@@ -634,6 +667,7 @@ const localStyles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 5,
+    minHeight: moderateScale(50),
   },
   tab: {
     flex: 1,
@@ -641,10 +675,11 @@ const localStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: moderateScale(14),
-    paddingHorizontal: moderateScale(16),
+    paddingHorizontal: moderateScale(12),
     borderRadius: moderateScale(12),
     position: 'relative',
-    overflow: 'hidden',
+    overflow: 'visible',
+    minWidth: moderateScale(80),
   },
   activeTab: {
     transform: [{scale: 1.02}],
@@ -659,11 +694,13 @@ const localStyles = StyleSheet.create({
   },
   tabIcon: {
     marginRight: moderateScale(6),
-    zIndex: 2,
+    zIndex: 10,
   },
   tabText: {
     zIndex: 2,
     fontWeight: '600',
+    fontSize: moderateScale(14),
+    flexShrink: 0,
   },
   tabIndicator: {
     position: 'absolute',

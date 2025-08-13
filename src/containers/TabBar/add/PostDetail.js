@@ -7,12 +7,21 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Platform,
+  Alert,
+  Linking,
 } from 'react-native';
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import React, {useEffect, useState} from 'react';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
+ 
 import {useSelector} from 'react-redux';
 import ImagePicker from 'react-native-image-crop-picker';
+import {
+  PERMISSIONS,
+  request as requestPermission,
+  check as checkPermission,
+  RESULTS,
+} from 'react-native-permissions';
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
 import ZHeader from '../../../components/common/ZHeader';
 import strings from '../../../i18n/strings';
@@ -30,45 +39,24 @@ import {StackNav, TabNav} from '../../../navigation/NavigationKeys';
 import {useQuery} from 'react-query';
 import request from '../../../api/request';
 import {ALERT_TYPE, Toast} from 'react-native-alert-notification';
+import BottomActionSheet from '../../../components/models/BottomActionSheet';
 import images from '../../../assets/images';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
-import {Dropdown} from 'react-native-element-dropdown';
+ 
 import {useBackgroundUpload} from '../../../providers/BackgroundUploadProvider';
 import {useScreen} from '../../../navigation/screenContext';
 import AttachedDishesComponent from './components/AttachedDishesComponent';
 
 export default function PostDetail() {
-  const Duration = [
-    {label: strings.hours, value: 'Hours'},
-    {label: strings.days, value: 'Days'},
-  ];
 
   const colors = useSelector(state => state.theme.theme);
   const navigation = useNavigation();
   const [postedData, setpostedData] = useState({});
 
-  const [toggleStatus, setToggleStatus] = useState('Hours');
+ 
   const route = useRoute();
 
   const {currentScreen: previousScreen} = useScreen();
-
-  // Override the back button behavior
-  useFocusEffect(() => {
-    const onBackPress = () => {
-      // Your custom logic here
-      // For example, navigate to a different screen or show an alert
-      navigation.navigate(previousScreen);
-      return true; // Return true to prevent default back behavior
-    };
-
-    navigation.addListener('beforeRemove', e => {
-      if (!onBackPress()) {
-        e.preventDefault();
-      }
-    });
-
-    return () => navigation.removeListener('beforeRemove');
-  });
   const postDataToBeEdited = route?.params?.postDataToBeEdited;
   const isImage = route.params?.isImage;
   const [mediaIsEdited, setmediaIsEdited] = useState(false);
@@ -88,7 +76,7 @@ export default function PostDetail() {
         isEdit: true,
         mediaIsEdited,
       });
-      setToggleStatus(postDataToBeEdited.duration?.split(' ')?.[1] || 'Hours');
+      
       setlocalUri(
         postDataToBeEdited?.poster || postDataToBeEdited?.avatarUri || '',
       );
@@ -130,29 +118,9 @@ export default function PostDetail() {
   const [localUri, setlocalUri] = useState('');
   const [phone, setPhone] = useState();
   const [locations, setLocations] = useState(locationsData?.data?.locations);
-  const [categoryIds, setcategoryIds] = useState(
-    route.params?.postDataToBeEdited?.category?.map(item => item._id) || [],
-  );
-  const [categoryNames, setCategoryNames] = useState(
-    route.params?.postDataToBeEdited?.category?.map(item =>
-      I18nManager?.isRTL ? item?.nameArabic : item.name,
-    ) || [],
-  );
-  const onPressCategory = () => {
-    navigation.navigate(StackNav.SelectCategory, {
-      setcategoryIds,
-      categoryIds,
-      setCategoryNames,
-      categoryNames,
-    });
-  };
+  const [modalState, setModalState] = useState({visible: false, title: '', message: ''});
 
-  useEffect(() => {
-    setpostedData(currentState => ({
-      ...currentState,
-      category: categoryIds,
-    }));
-  }, [categoryIds]);
+  
 
   const handleUpload = async (response, isImage) => {
     uploadData(
@@ -174,15 +142,49 @@ export default function PostDetail() {
   };
 
   const onPressHome = async () => {
+    // If chef, ensure they have at least one dish in menu before posting
+    if (user?.type === 'chef') {
+      try {
+        const menuResponse = await request.get(`/menus/chef/${user?._id}`);
+        const menuId = menuResponse?.data?._id;
+        if (!menuId) {
+          setModalState({
+            visible: true,
+            title: 'Create your menu first',
+            message: 'To start posting, please create your menu and add your dishes so customers can order easily.',
+          });
+          return;
+        }
+
+        const dishesResponse = await request.get(`/dishes/menu/${menuId}`);
+        const dishes = dishesResponse?.data || [];
+        if (!Array.isArray(dishes) || dishes.length === 0) {
+          setModalState({
+            visible: true,
+            title: 'No dishes found',
+            message: 'We didn’t find any dishes in your menu. Please add at least one dish before posting.',
+          });
+          return;
+        }
+      } catch (e) {
+        // If fetching fails, fail safe with prompt to manage menu
+        setModalState({
+          visible: true,
+          title: 'No dishes found',
+          message: 'We didn’t find any dishes in your menu. Please add at least one dish before posting.',
+        });
+        return;
+      }
+    }
+
     const validationChef =
       !postedData?.title ||
       !postedData?.caption ||
       (!user?.phone && !phone) ||
-      !locations.length ||
-      !postedData.category.length;
+      !locations.length;
 
     const validationUser =
-      !postedData?.title || !postedData?.caption || !postedData.category.length;
+      !postedData?.title || !postedData?.caption;
     const validation = user?.type === 'chef' ? validationChef : validationUser;
     if (validation) {
       Toast.show({
@@ -209,40 +211,46 @@ export default function PostDetail() {
       return;
     }
 
-    if (postedData.category?.length < 1) {
-      Toast.show({
-        type: ALERT_TYPE.DANGER,
-        title: strings.error,
-        textBody: 'Please select at least one category',
-      });
-      return;
+    
+
+    // Derive categories from attached dishes (fallback to backend default if none)
+    const derivedCategories = Array.from(
+      new Set(
+        (postedData?.attachedDishes || [])
+          .flatMap(dish =>
+            Array.isArray(dish?.categories) && dish.categories.length
+              ? dish.categories
+              : [dish?.category],
+          )
+          .filter(Boolean),
+      ),
+    );
+
+    const dataToBeSent = {
+      ...postedData,
+      phone: user?.phone || phone,
+      mediaIsEdited: postDataToBeEdited?.title && mediaIsEdited,
+      dishes: postedData?.attachedDishes?.map(dish => dish._id) || [],
+    };
+
+    // Only set category if derived from dishes; otherwise let backend/use existing
+    if (derivedCategories.length > 0) {
+      dataToBeSent.category = derivedCategories;
+    } else {
+      delete dataToBeSent.category;
     }
 
-    const dataToBeSent = postedData?.linkToGo
-      ? {
-          ...postedData,
-          duration: postedData.duration + ' ' + toggleStatus,
-          mediaIsEdited: postDataToBeEdited?.title && mediaIsEdited,
-          // Transform attachedDishes to dishes for backend compatibility
-          dishes: postedData?.attachedDishes?.map(dish => dish._id) || [],
-        }
-      : {
-          ...postedData,
-          duration: postedData.duration + ' ' + toggleStatus,
-          phone: user?.phone || phone,
-          mediaIsEdited: postDataToBeEdited?.title && mediaIsEdited,
-          // Transform attachedDishes to dishes for backend compatibility
-          dishes: postedData?.attachedDishes?.map(dish => dish._id) || [],
-        };
-
-    // Remove attachedDishes from the data sent to backend since we're using dishes
+    // Remove fields not needed anymore
     delete dataToBeSent.attachedDishes;
+    delete dataToBeSent.price;
+    delete dataToBeSent.duration;
+    delete dataToBeSent.linkToGo;
     handleDataToBeSent(dataToBeSent);
     handleEditUser(phone, locations);
     setisFormFilled(true);
 
     setTimeout(() => {
-      navigation.navigate(TabNav.ForYou);
+      navigation.navigate(StackNav.TabBar, {screen: TabNav.ForYou});
     }, 100);
   };
 
@@ -279,7 +287,81 @@ export default function PostDetail() {
     setLocations(l => l.filter((_, index) => index !== indexToDelete));
   };
 
-  const handleCaptureVideo = () =>
+  // Permission request functions
+  const requestCameraPermission = async () => {
+    try {
+      const permission = Platform.OS === 'ios' 
+        ? PERMISSIONS.IOS.CAMERA 
+        : PERMISSIONS.ANDROID.CAMERA;
+
+      // First check existing status to avoid unnecessary prompts
+      const currentStatus = await checkPermission(permission);
+      if (currentStatus === RESULTS.GRANTED) {
+        return true;
+      }
+
+      if (currentStatus === RESULTS.DENIED) {
+        const result = await requestPermission(permission);
+        return result === RESULTS.GRANTED;
+      }
+
+      // BLOCKED or UNAVAILABLE
+      return false;
+    } catch (error) {
+      console.log('Camera permission error:', error);
+      return false;
+    }
+  };
+
+  const requestPhotoLibraryPermission = async () => {
+    try {
+      const permission = Platform.OS === 'ios' 
+        ? PERMISSIONS.IOS.PHOTO_LIBRARY 
+        : PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE;
+
+      // Check status first
+      const currentStatus = await checkPermission(permission);
+      if (
+        currentStatus === RESULTS.GRANTED ||
+        (Platform.OS === 'ios' && currentStatus === RESULTS.LIMITED)
+      ) {
+        return true;
+      }
+
+      if (currentStatus === RESULTS.DENIED) {
+        const result = await requestPermission(permission);
+        return (
+          result === RESULTS.GRANTED ||
+          (Platform.OS === 'ios' && result === RESULTS.LIMITED)
+        );
+      }
+
+      // BLOCKED or UNAVAILABLE
+      return false;
+    } catch (error) {
+      console.log('Photo library permission error:', error);
+      return false;
+    }
+  };
+
+  const showPermissionAlert = (type) => {
+    Alert.alert(
+      'Permission Required',
+      `${type} access is required to use this feature. Please enable it in your device settings.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Settings', onPress: () => Linking.openSettings() }
+      ]
+    );
+  };
+
+  const handleCaptureVideo = async () => {
+    const hasPermission = await requestCameraPermission();
+    if (!hasPermission) {
+      showPermissionAlert('Camera');
+      return;
+    }
+    
     ImagePicker.openCamera({
       mediaType: 'video',
       cropping: false,
@@ -287,30 +369,75 @@ export default function PostDetail() {
     })
       .then(handleMedia)
       .catch(err => console.log('err ', err));
+  };
 
-  const handleCaptureImage = () =>
+  const handleCaptureImage = async () => {
+    const hasPermission = await requestCameraPermission();
+    if (!hasPermission) {
+      showPermissionAlert('Camera');
+      return;
+    }
+    
     ImagePicker.openCamera({
       cropping: true,
       compressImageQuality: 1,
-    }).then(handleMedia);
+    })
+      .then(handleMedia)
+      .catch(err => console.log('err ', err));
+  };
 
-  const handlepickImage = () =>
-    ImagePicker.openPicker({
-      mediaType: 'image',
-      cropping: true,
-      compressImageQuality: 1,
-    }).then(handleMedia);
+  const handlepickImage = async () => {
+    try {
+      // Try to open directly; iOS will prompt if needed
+      const res = await ImagePicker.openPicker({
+        mediaType: 'image',
+        cropping: true,
+        compressImageQuality: 1,
+      });
+      handleMedia(res);
+    } catch (err) {
+      const message = String(err?.message || err?.toString?.() || '');
+      const code = err?.code;
+      const permissionError =
+        code === 'E_PERMISSION_MISSING' ||
+        message.includes('permission') ||
+        message.includes('denied') ||
+        message.includes('not authorized');
+      if (permissionError) {
+        showPermissionAlert('Photo Library');
+      } else if (code !== 'E_PICKER_CANCELLED') {
+        console.log('Image picker error: ', err);
+      }
+    }
+  };
 
-  const handlePickVideo = () =>
-    ImagePicker.openPicker({
-      mediaType: 'video',
-      compressVideoPreset: 'HighestQuality',
-    }).then(handleMedia);
+  const handlePickVideo = async () => {
+    try {
+      const res = await ImagePicker.openPicker({
+        mediaType: 'video',
+        compressVideoPreset: 'HighestQuality',
+      });
+      handleMedia(res);
+    } catch (err) {
+      const message = String(err?.message || err?.toString?.() || '');
+      const code = err?.code;
+      const permissionError =
+        code === 'E_PERMISSION_MISSING' ||
+        message.includes('permission') ||
+        message.includes('denied') ||
+        message.includes('not authorized');
+      if (permissionError) {
+        showPermissionAlert('Photo Library');
+      } else if (code !== 'E_PICKER_CANCELLED') {
+        console.log('Video picker error: ', err);
+      }
+    }
+  };
 
   return (
     <ZSafeAreaView>
       <ZHeader
-        onPressBack={() => navigation.navigate(previousScreen)}
+        onPressBack={() => navigation.goBack()}
         title={strings.post}
       />
       <KeyboardAwareScrollView
@@ -433,105 +560,7 @@ export default function PostDetail() {
                   />
                 </View>
 
-                <TextInput
-                  placeholder={strings.price + ' ' + strings.optional}
-                  keyboardType="number-pad"
-                  textAlign={I18nManager.isRTL ? 'right' : 'left'}
-                  value={`${postedData?.price || ''}`}
-                  onChangeText={input =>
-                    setpostedData(currentState => ({
-                      ...currentState,
-                      price: input,
-                    }))
-                  }
-                  placeholderTextColor={colors.placeHolderColor}
-                  style={[
-                    {
-                      backgroundColor: colors.inputBg,
-                      borderColor: colors.bColor,
-                      color: colors.textColor,
-                    },
-                    localStyles.smallInputContainerStyle,
-                  ]}
-                  inputBoxStyle={localStyles.inputBoxStyle}
-                />
-                <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                  <TextInput
-                    placeholder={`${strings.no} ${
-                      toggleStatus === 'Hours' ? strings.hours : strings.days
-                    } ${strings.toDeliver} ${strings.optional}`}
-                    keyboardType="number-pad"
-                    textAlign={I18nManager.isRTL ? 'right' : 'left'}
-                    value={`${
-                      postedData?.duration?.split?.(' ')?.[0] !== 'undefined' &&
-                      !!postedData?.duration?.split?.(' ')?.[0]
-                        ? // postedData?.duration?.split?.(' ')?.[0] !== undefined
-                          postedData?.duration?.split?.(' ')?.[0]
-                        : ''
-                    }`}
-                    multiline={true}
-                    onChangeText={input =>
-                      setpostedData(currentState => ({
-                        ...currentState,
-                        duration: input,
-                      }))
-                    }
-                    placeholderTextColor={colors.placeHolderColor}
-                    style={[
-                      {
-                        backgroundColor: colors.inputBg,
-                        borderColor: colors.bColor,
-                        color: colors.textColor,
-                      },
-                      localStyles.smallInputContainerStyle,
-                      {
-                        maxWidth: '58%',
-                        paddingTop: 20,
-                      },
-                    ]}
-                    inputBoxStyle={localStyles.inputBoxStyle}
-                  />
-                  <View>
-                    <Dropdown
-                      style={[
-                        localStyles.dropdownStyle,
-                        {
-                          backgroundColor: colors.inputBg,
-                          borderColor: colors.inputBg,
-                          color: colors.white,
-                          zIndex: 10000,
-                        },
-                      ]}
-                      renderRightIcon={() => (
-                        <FontAwesome
-                          style={{paddingRight: 10}}
-                          name="chevron-down"
-                          size={12}
-                          color={colors.textColor}
-                        />
-                      )}
-                      placeholderStyle={{color: colors.grayScale5}}
-                      data={Duration}
-                      maxHeight={moderateScale(180)}
-                      labelField="label"
-                      valueField="value"
-                      placeholder={'Duration'}
-                      value={toggleStatus}
-                      itemTextStyle={{
-                        color: colors.textColor,
-                        fontSize: moderateScale(16),
-                      }}
-                      onChange={text => setToggleStatus(text.value)}
-                      selectedTextStyle={{
-                        color: colors.textColor,
-                      }}
-                      itemContainerStyle={{
-                        backgroundColor: colors.inputBg,
-                      }}
-                      activeColor={colors.inputBg}
-                    />
-                  </View>
-                </View>
+                
                 {!user?.phone && (
                   <TextInput
                     placeholder={'Please add your phone number'}
@@ -551,28 +580,7 @@ export default function PostDetail() {
                     inputBoxStyle={localStyles.inputBoxStyle}
                   />
                 )}
-                <TextInput
-                  placeholder={strings.linkOptional}
-                  textAlign={I18nManager.isRTL ? 'right' : 'left'}
-                  multiline={true}
-                  value={postedData?.linkToGo}
-                  onChangeText={input =>
-                    setpostedData(currentState => ({
-                      ...currentState,
-                      linkToGo: input,
-                    }))
-                  }
-                  placeholderTextColor={colors.placeHolderColor}
-                  style={[
-                    {
-                      backgroundColor: colors.inputBg,
-                      borderColor: colors.bColor,
-                      color: colors.textColor,
-                    },
-                    localStyles.smallInputContainerStyle,
-                  ]}
-                  inputBoxStyle={localStyles.inputBoxStyle}
-                />
+                
 
                 {user?.type === 'chef' &&
                   !locationsData?.data?.locations?.length && (
@@ -625,35 +633,7 @@ export default function PostDetail() {
                   )}
               </>
             )}
-            <View style={{flexDirection: 'row', marginVertical: 15}}>
-              <ZText type={'B20'}>
-                {categoryNames.length
-                  ? strings.editCategory
-                  : strings.addCategory}
-              </ZText>
-              {categoryNames.length ? (
-                <MaterialIcon
-                  name="pencil"
-                  onPress={onPressCategory}
-                  size={moderateScale(25)}
-                  color={colors.primary}
-                />
-              ) : (
-                <MaterialIcon
-                  name="plus"
-                  onPress={onPressCategory}
-                  size={moderateScale(25)}
-                  color={colors.primary}
-                />
-              )}
-            </View>
-            <View style={{flexDirection: 'row'}}>
-              {categoryNames.map((item, index) => (
-                <ZText key={item}>
-                  {index !== categoryNames.length - 1 ? item + ', ' : item}
-                </ZText>
-              ))}
-            </View>
+            
           </>
         )}
         <View style={localStyles.btnContainer}>
@@ -719,6 +699,20 @@ export default function PostDetail() {
           )}
         </View>
       </KeyboardAwareScrollView>
+      {modalState.visible && (
+        <BottomActionSheet
+          visible={modalState.visible}
+          title={modalState.title}
+          message={modalState.message}
+          primaryLabel={'Open Menu Management'}
+          secondaryLabel={'Not now'}
+          onPrimary={() => {
+            setModalState({visible: false, title: '', message: ''});
+            navigation.navigate(StackNav.MenuManagement, {fromTabs: true});
+          }}
+          onClose={() => setModalState({visible: false, title: '', message: ''})}
+        />
+      )}
     </ZSafeAreaView>
   );
 }

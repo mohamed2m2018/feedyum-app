@@ -186,6 +186,11 @@ class AppInitializer {
   static async handleUserLogin(userData, authToken) {
     try {
       console.log('Setting up notifications for user login:', userData.fullName);
+      // Always update Authorization header on login to avoid stale tokens
+      if (authToken) {
+        const request = (await import('../api/request')).default;
+        request.defaults.headers.common.Authorization = authToken;
+      }
 
       // Store user data
       await AsyncStorage.setItem('user_data', JSON.stringify(userData));

@@ -16,7 +16,7 @@ export default function Analytics() {
 
   return (
     <ZSafeAreaView>
-      <ZHeader title={strings.analytics} isHideBack={true} />
+      <ZHeader title={strings.analytics} />
       <View style={localStyles.container}>
         <View style={localStyles.placeholderContainer}>
           <ZText type="B20" align="center" color={colors.grayScale7}>

@@ -563,14 +563,14 @@ const OrderTracking = () => {
                     Qty: {item.quantity || 1}
                   </Text>
                   <Text style={{fontSize: 12, color: '#666666'}}>
-                    ${(item.dish?.price || 0).toFixed(2)} each
+                    {(item.dish?.price || 0).toFixed(2)} each
                   </Text>
                 </View>
               </View>
               <View style={localStyles.itemPriceContainer}>
                 <Text
                   style={{fontSize: 14, fontWeight: 'bold', color: '#FF4D67'}}>
-                  ${((item.dish?.price || 0) * (item.quantity || 1)).toFixed(2)}
+                  {((item.dish?.price || 0) * (item.quantity || 1)).toFixed(2)}
                 </Text>
               </View>
             </View>
@@ -623,14 +623,13 @@ const OrderTracking = () => {
         <View style={localStyles.pricingRow}>
           <Text style={{fontSize: 14, color: '#000000'}}>{strings.subtotal}</Text>
           <Text style={{fontSize: 14, fontWeight: 'bold', color: '#000000'}}>
-            ${currentOrder.subtotal?.toFixed(2) || '0.00'}
+            {currentOrder.subtotal?.toFixed(2) || '0.00'}
           </Text>
         </View>
 
         <View style={localStyles.pricingRow}>
           <Text style={{fontSize: 14, color: '#000000'}}>{strings.deliveryFee}</Text>
           <Text style={{fontSize: 14, fontWeight: 'bold', color: '#000000'}}>
-            $
             {currentOrder.deliveryFee
               ? currentOrder.deliveryFee.toFixed(2)
               : '0.00'}
@@ -642,7 +641,7 @@ const OrderTracking = () => {
             {strings.total}
           </Text>
           <Text style={{fontSize: 16, fontWeight: 'bold', color: '#FF4D67'}}>
-            ${currentOrder.totalPrice?.toFixed(2) || '0.00'}
+            {currentOrder.totalPrice?.toFixed(2) || '0.00'}
           </Text>
         </View>
       </View>
@@ -703,20 +702,20 @@ const OrderTracking = () => {
         </View>
       )}
 
-      {currentOrder?.specialInstructions &&
-        currentOrder.specialInstructions.trim() !== '' && (
+      {((currentOrder?.specialInstructions && currentOrder.specialInstructions.trim() !== '') ||
+        (currentOrder?.notes && currentOrder.notes.trim() !== '')) && (
           <View style={localStyles.instructionsContainer}>
             <Text style={{fontSize: 14, fontWeight: 'bold', color: '#000000'}}>
               {strings.specialInstructions}
             </Text>
             <Text style={{fontSize: 14, color: '#666666', marginTop: 4}}>
-              {currentOrder.specialInstructions}
+              {currentOrder.specialInstructions || currentOrder.notes}
             </Text>
           </View>
         )}
 
-      {(!currentOrder?.specialInstructions ||
-        currentOrder.specialInstructions.trim() === '') && (
+      {((!currentOrder?.specialInstructions || currentOrder.specialInstructions.trim() === '') &&
+        (!currentOrder?.notes || currentOrder.notes.trim() === '')) && (
         <View style={localStyles.noInstructionsContainer}>
           <Text style={{fontSize: 14, color: '#666666'}}>
             No special instructions provided

@@ -18,6 +18,7 @@ import {
   InputToolbar, 
   Composer,
   MessageImage,
+  SystemMessage,
 } from 'react-native-gifted-chat';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Feather from 'react-native-vector-icons/Feather';
@@ -32,9 +33,15 @@ import { moderateScale } from '../../../common/constants';
 import request from '../../../api/request';
 import ImageMessageComposer from './components/ImageMessageComposer';
 import CustomMessageBubble from './components/CustomMessageBubble';
+import OrderSummaryCard from './components/OrderSummaryCard';
+import { useNavigation } from '@react-navigation/native';
+import { StackNav } from '../../../navigation/NavigationKeys';
 
 // Move component definitions outside of render
-const ChefProfile = ({ chef, orderId, colors, onPress }) => {
+const toUriString = (value) => {
+  return typeof value === 'string' ? value : (value?.url || value?.uri || '');
+};
+  const ChefProfile = ({ chef, orderId, colors, onPress }) => {
   const profileStyles = {
     flexDirection: 'row',
     alignItems: 'center',
@@ -54,11 +61,15 @@ const ChefProfile = ({ chef, orderId, colors, onPress }) => {
     justifyContent: 'center',
   };
   
-  return (
+    const avatarUri = typeof chef?.avatar === 'string'
+      ? chef.avatar
+      : (chef?.avatar?.url || chef?.avatar?.uri || 'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?w=200');
+
+    return (
     <TouchableOpacity onPress={onPress} style={profileStyles}>
-      <Image
+          <Image
         source={{ 
-          uri: chef?.avatar || 'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?w=200' 
+          uri: avatarUri 
         }}
         style={avatarStyles}
       />
@@ -92,10 +103,12 @@ const RightIcon = ({ colors }) => {
 
 export default function ChatScreen({ route }) {
   const { chefId, orderId } = route.params;
+  const navigation = useNavigation();
   const colors = useSelector(state => state.theme.theme);
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [inputText, setInputText] = useState('');
+  const [hideOrderSummary, setHideOrderSummary] = useState(false);
   const giftedChatRef = useRef(null);
   const flatListRef = useRef(null);
 
@@ -160,7 +173,7 @@ export default function ChatScreen({ route }) {
             user: {
               _id: msg.sender._id || msg.sender,
               name: msg.sender.username || 'User',
-              avatar: msg.sender.avatar,
+              avatar: toUriString(msg.sender.avatar),
             },
           };
 
@@ -205,7 +218,7 @@ export default function ChatScreen({ route }) {
     }
     
     // Always add order summary as first message if order exists
-    if (order) {
+    if (order && !hideOrderSummary) {
       const orderSummary = createOrderSummaryMessage(order);
       // Check if order summary already exists to avoid duplicates
       const hasOrderSummary = formattedMessages.some(msg => msg._id === `order-summary-${order._id}`);
@@ -215,33 +228,34 @@ export default function ChatScreen({ route }) {
     }
     
     setMessages(formattedMessages);
-  }, [messagesData, order]);
+  }, [messagesData, order, hideOrderSummary]);
 
   const createOrderSummaryMessage = (orderData) => {
-    const itemsList = orderData.items?.map(item => 
-      `• ${item.quantity}x ${item.dish?.name || 'Item'} - $${(item.dish?.price * item.quantity).toFixed(2)}`
-    ).join('\n') || '';
-    
-    const orderText = `🍽️ ORDER #${orderData._id?.slice(-6)}
-
-📋 Items:
-${itemsList}
-
-💰 Subtotal: $${orderData.subtotal?.toFixed(2) || '0.00'}
-🚚 Delivery Fee: ${orderData.deliveryFee ? `$${orderData.deliveryFee.toFixed(2)}` : 'TBD'}
-📍 Total: $${orderData.totalPrice?.toFixed(2) || '0.00'}
-
-📍 Delivery Address:
-${orderData.deliveryAddress?.nameLine || 'Address not provided'}
-
-${orderData.specialInstructions ? `📝 Special Instructions:\n${orderData.specialInstructions}` : ''}
-
-📅 Ordered: ${new Date(orderData.created_at).toLocaleDateString()} at ${new Date(orderData.created_at).toLocaleTimeString()}
-🔄 Status: ${orderData.status?.toUpperCase() || 'PENDING'}`;
+    const orderSummary = {
+      id: orderData._id,
+      status: orderData.status,
+      subtotal: orderData.subtotal,
+      totalPrice: orderData.totalPrice,
+      deliveryFee: orderData.deliveryFee,
+      serviceFee: orderData.serviceFee,
+      tax: orderData.tax,
+      promocode: orderData.promocode,
+      address: orderData.deliveryAddress?.nameLine,
+      formattedDate: `${new Date(orderData.created_at).toLocaleDateString()} · ${new Date(orderData.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+      items: (orderData.items || []).map(({ dish, quantity }) => {
+        const imageSource = toUriString(dish?.image);
+        return {
+          name: dish?.name,
+          image: imageSource,
+          unitPrice: dish?.price,
+          quantity: quantity || 1,
+        };
+      }),
+    };
 
     return {
       _id: `order-summary-${orderData._id}`,
-      text: orderText,
+      text: 'Order summary',
       createdAt: new Date(orderData.created_at),
       user: {
         _id: 'system',
@@ -249,6 +263,8 @@ ${orderData.specialInstructions ? `📝 Special Instructions:\n${orderData.speci
         avatar: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=200',
       },
       system: true,
+      type: 'order_summary',
+      orderSummary,
     };
   };
 
@@ -467,6 +483,28 @@ ${orderData.specialInstructions ? `📝 Special Instructions:\n${orderData.speci
     />
   );
 
+  const handleTrackOrder = () => {
+    if (orderId) {
+      navigation.navigate(StackNav.OrderTracking, { orderId });
+    }
+  };
+
+  const renderSystem = (props) => {
+    const msg = props.currentMessage;
+    if (msg?.type === 'order_summary' && msg?.orderSummary) {
+      return (
+        <OrderSummaryCard
+          order={msg.orderSummary}
+          colors={colors}
+          onPressPrimary={handleTrackOrder}
+          initialCollapsed
+          onClose={() => setHideOrderSummary(true)}
+        />
+      );
+    }
+    return <SystemMessage {...props} />;
+  };
+
 
 
 
@@ -524,7 +562,7 @@ ${orderData.specialInstructions ? `📝 Special Instructions:\n${orderData.speci
           user={{ 
             _id: currentUser?._id || 'unknown',
             name: currentUser?.fullName || 'User',
-            avatar: currentUser?.avatar,
+            avatar: toUriString(currentUser?.avatar),
           }}
           renderSend={renderSend}
           renderBubble={renderBubble}
@@ -532,6 +570,7 @@ ${orderData.specialInstructions ? `📝 Special Instructions:\n${orderData.speci
           renderComposer={renderComposer}
           renderActions={renderActions}
           renderMessageImage={renderMessageImage}
+          renderSystemMessage={renderSystem}
           messagesContainerStyle={localStyles.messagesContainer}
           isKeyboardInternallyHandled={false}
           alwaysShowSend

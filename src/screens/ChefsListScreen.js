@@ -91,6 +91,8 @@ const ChefsListScreen = ({ navigation, userToken }) => {
       navigation.navigate('ChefMenu', { 
         chefId: chef._id,
         chefName: chef.fullName || chef.username,
+        averageDishRating: chef.averageDishRating || 0,
+        ratedDishesCount: chef.ratedDishesCount || 0,
         menu: chef.menu
       });
     } else {

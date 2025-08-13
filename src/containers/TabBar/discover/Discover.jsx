@@ -1,6 +1,6 @@
 // Library import
 import {StyleSheet, TouchableOpacity, View, ScrollView, I18nManager} from 'react-native';
-import React, {useState, useRef} from 'react';
+import React, {useState, useRef, useEffect} from 'react';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useSelector} from 'react-redux';
 import {TabView} from 'react-native-tab-view';
@@ -15,17 +15,40 @@ import HashtagCategory from './HashtagCategory';
 import {StackNav} from '../../../navigation/NavigationKeys';
 import {routes} from './utils/routes';
 import strings from '../../../i18n/strings';
+import AddressDropdown from '../../../components/AddressDropdown';
+import { useLocation } from '../../../navigation/locationContext';
 
 export default function Discover({navigation}) {
   const colors = useSelector(state => state.theme.theme);
+  const location = useLocation();
   const [isContentOverflowing, setIsContentOverflowing] = useState(false);
   const [scrollViewWidth, setScrollViewWidth] = useState(0);
-  const [currentScrollPosition, setCurrentScrollPosition] = useState(0); // New state for scroll position
+  const [currentScrollPosition, setCurrentScrollPosition] = useState(0);
+  const [isLocationChanging, setIsLocationChanging] = useState(false);
 
   const [isSelect, setIsSelect] = useState({
     index: 0,
     routes: routes?.map(item => ({key: I18nManager.isRTL? item.nameAr: item.nameEn, title:  I18nManager.isRTL? item.nameAr: item.nameEn})),
   });
+
+  // Track location changes and provide visual feedback
+  useEffect(() => {
+    if (location?.latitude && location?.longitude) {
+      setIsLocationChanging(true);
+      console.log('Location changed in Discover:', {
+        lat: location.latitude,
+        long: location.longitude,
+        address: location.selectedAddress
+      });
+      
+      // Reset loading state after a brief moment to let React Query handle the refetch
+      const timer = setTimeout(() => {
+        setIsLocationChanging(false);
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [location?.latitude, location?.longitude, location?.selectedAddress]);
 
   const scrollViewRef = useRef(null);
 
@@ -141,14 +164,14 @@ export default function Discover({navigation}) {
   };
 
   const _renderScene = ({route}) => {
+    const selectedTag = I18nManager.isRTL 
+      ? routes.find(item => item.nameAr === route.title).nameAr 
+      : routes.find(item => item.nameEn === route.title).nameEn;
 
     return (
       <HashtagCategory 
-        selectedTag={
-          I18nManager.isRTL 
-            ? routes.find(item => item.nameAr === route.title).nameAr 
-            : routes.find(item => item.nameEn === route.title).nameEn 
-        } 
+        selectedTag={selectedTag}
+        isLocationChanging={isLocationChanging}
       />
     );
     };
@@ -161,14 +184,31 @@ export default function Discover({navigation}) {
     <ZSafeAreaView style={{flex: 1}}>
       <View style={localStyles.headerContainer}>
         <ZText type="b24">{strings.explore}</ZText>
-        <TouchableOpacity onPress={onPressSearch}>
-          <Ionicons
-            name="search-outline"
-            size={moderateScale(30)}
-            color={colors.dark ? colors.white : colors.darkColor}
-          />
-        </TouchableOpacity>
+        <View style={localStyles.headerRightSection}>
+          {/* Address Dropdown for Discover */}
+          <View style={localStyles.addressDropdownWrapper}>
+            <AddressDropdown 
+              compact={true}
+              style={{ 
+                flex: 1,
+                maxWidth: moderateScale(160) // Increased max width
+              }}
+              onAddressSelect={(address) => {
+                console.log('Selected delivery address in discover:', address);
+                // React Query will automatically refetch when location context changes
+              }}
+            />
+          </View>
+          <TouchableOpacity onPress={onPressSearch} style={localStyles.searchButton}>
+            <Ionicons
+              name="search-outline"
+              size={moderateScale(30)}
+              color={colors.dark ? colors.white : colors.darkColor}
+            />
+          </TouchableOpacity>
+        </View>
       </View>
+      
       <TabView
         navigationState={isSelect}
         renderScene={_renderScene}
@@ -187,6 +227,21 @@ const localStyles = StyleSheet.create({
     ...styles.pt20,
     ...styles.ph20,
     ...styles.pb30,
+  },
+  headerRightSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  addressDropdownWrapper: {
+    flex: 1,
+    marginRight: moderateScale(15), // Increased space from search icon
+    maxWidth: moderateScale(160), // Prevent overflow
+  },
+  searchButton: {
+    padding: moderateScale(5), // Add touch area
+    marginLeft: moderateScale(5),
   },
   root: {
     borderBottomWidth: moderateScale(2),

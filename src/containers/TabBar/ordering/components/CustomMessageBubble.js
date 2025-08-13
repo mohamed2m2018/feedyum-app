@@ -72,6 +72,10 @@ const CustomMessageBubble = ({
   const renderCustomBubble = () => {
     const message = props.currentMessage;
     const isHighlighted = message.highlighted;
+    if (message?.system && message?.type === 'order_summary') {
+      // Let parent render system message component
+      return null;
+    }
     
     const bubbleStyle = [
       styles.bubble,

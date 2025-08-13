@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import {useSelector, useDispatch} from 'react-redux';
 import {useQuery, useMutation, useQueryClient} from 'react-query';
-import {useNavigation, useRoute} from '@react-navigation/native';
+import {useNavigation, useRoute, CommonActions} from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
@@ -201,12 +201,15 @@ const DishDetailScreen = () => {
   const handleAddToCart = () => {
     if (!dishData) return;
 
+    const computedChefName =
+      finalChefData?.fullName || route?.params?.chefName || strings.unknownChef;
+
     dispatch(
       addToCart({
         dish: dishData,
         quantity,
         chefId,
-        chefName: finalChefData?.fullName || chefName || strings.unknownChef,
+        chefName: computedChefName,
       }),
     );
 
@@ -214,10 +217,37 @@ const DishDetailScreen = () => {
       'Added to Cart!',
       `${quantity} x ${dishData.name} added to your cart`,
       [
-        {text: strings.continueShoppingButton, style: 'cancel'},
+        {
+          text: strings.continueShoppingButton,
+          style: 'cancel',
+          onPress: () => {
+            if (route?.params?.fromDiscover && chefId) {
+              navigation.dispatch(
+                CommonActions.reset({
+                  index: 1,
+                  routes: [
+                    {name: 'TabBar', params: {screen: 'Discover'}},
+                    {
+                      name: StackNav.ChefMenu,
+                      params: {
+                        chefId: chefId,
+                        chefName: computedChefName,
+                      },
+                    },
+                  ],
+                }),
+              );
+            } else {
+              navigation.navigate(StackNav.ChefMenu, {
+                chefId: chefId,
+                chefName: computedChefName,
+              });
+            }
+          },
+        },
         {
           text: strings.viewCart,
-          onPress: () => navigation.navigate('ShoppingCart'),
+          onPress: () => navigation.navigate(StackNav.ShoppingCart),
         },
       ],
     );
@@ -237,7 +267,29 @@ const DishDetailScreen = () => {
   };
 
   const handleBack = () => {
-    navigation.goBack();
+    const {fromDiscover, chefId, chefName} = route.params;
+    
+    if (fromDiscover && chefId) {
+      // Reset navigation stack to show: Discover -> ChefMenu
+      // This way back from ChefMenu goes to Discover, not to DishDetail
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 1,
+          routes: [
+            { name: 'TabBar', params: { screen: 'Discover' } },
+            { 
+              name: StackNav.ChefMenu, 
+              params: {
+                chefId: chefId,
+                chefName: chefName || 'Chef Menu',
+              }
+            },
+          ],
+        })
+      );
+    } else {
+      navigation.goBack();
+    }
   };
 
   // Handle cart errors
@@ -336,15 +388,16 @@ const DishDetailScreen = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Rating Badge */}
-      {dishData?.average_rating > 0 && (
-        <View style={localStyles.ratingBadge}>
-          <Ionicons name="star" size={moderateScale(16)} color="#FFD700" />
-          <ZText type="B14" color={colors.white} style={styles.ml5}>
-            {dishData.average_rating.toFixed(1)}
-          </ZText>
-        </View>
-      )}
+      {/* Rating Badge - always show stars; empty if no rating */}
+      <View style={localStyles.ratingBadge}>
+        <StarRating
+          rating={Number.isFinite(dishData?.average_rating) ? dishData.average_rating : 0}
+          size="medium"
+          showText={true}
+          showCount={false}
+          showWhenNoRating={true}
+        />
+      </View>
     </View>
   );
 
@@ -436,7 +489,7 @@ const DishDetailScreen = () => {
         onPress={() => setSelectedTab('reviews')}>
         <ZText
           type="B14"
-          color={selectedTab === 'reviews' ? colors.white : '#666666'}>
+          color={selectedTab === 'reviews' ? colors.white : colors.textColor}>
           Reviews ({reviewsData?.reviews?.length || 0})
         </ZText>
       </TouchableOpacity>
@@ -450,7 +503,7 @@ const DishDetailScreen = () => {
           onPress={() => setSelectedTab('ingredients')}>
           <ZText
             type="B14"
-            color={selectedTab === 'ingredients' ? colors.white : '#666666'}>
+            color={selectedTab === 'ingredients' ? colors.white : colors.textColor}>
             Ingredients
           </ZText>
         </TouchableOpacity>
@@ -612,9 +665,18 @@ const DishDetailScreen = () => {
                         {[1, 2, 3, 4, 5].map((star) => (
                           <Ionicons
                             key={star}
-                            name={star <= story.rating ? 'star' : 'star-outline'}
+                            name={story.rating && story.rating > 0 
+                              ? (star <= story.rating ? 'star' : 'star-outline')
+                              : 'star'
+                            }
                             size={moderateScale(12)}
-                            color={star <= story.rating ? '#FFD700' : colors.grayScale4}
+                            color={story.rating && story.rating > 0 
+                              ? (star <= story.rating ? '#FFD700' : colors.grayScale4)
+                              : (colors.grayScale4 || "#CCCCCC")
+                            }
+                            style={{
+                              opacity: story.rating && story.rating > 0 ? 1 : 0.4
+                            }}
                           />
                         ))}
                       </View>

@@ -1,12 +1,14 @@
 import {AppRegistry} from 'react-native';
 import {Provider} from 'react-redux';
-import {QueryClient, QueryClientProvider} from 'react-query';
+import {QueryClientProvider} from 'react-query';
 import App from './src';
 import {name as appName} from './app.json';
 import store from './src/redux/store';
 import OneSignal from 'react-native-onesignal';
 import {createClient, AnalyticsProvider} from '@segment/analytics-react-native';
-const queryClient = new QueryClient();
+import { createOptimizedQueryClient } from './src/config/queryClient';
+
+const queryClient = createOptimizedQueryClient();
 
 if (__DEV__) {
   require('./ReactotronConfig');

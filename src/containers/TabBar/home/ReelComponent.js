@@ -8,7 +8,6 @@ import {
   View,
   Animated,
 } from 'react-native';
-import dynamicLinks from '@react-native-firebase/dynamic-links';
 import {Image} from 'react-native';
 import {
   getHeight,
@@ -40,6 +39,9 @@ import {AdView} from './ads/AdView';
 import DoubleClick from 'react-native-double-tap';
 import {useAnalytics} from '@segment/analytics-react-native';
 import AttachedDishesDisplay from '../../../components/common/AttachedDishesDisplay';
+import DeepLinkingService from '../../../services/DeepLinkingService';
+import ImageZoomModal from '../../../components/common/ImageZoomModal';
+import strings from '../../../i18n/strings';
 
 const ReelComponent = ({
   item,
@@ -163,6 +165,8 @@ const ReelComponent = ({
   const navigation = useNavigation();
 
   const [isLike, setIsLike] = useState(false);
+  const [showImageZoom, setShowImageZoom] = useState(false);
+  
   const onPressProfile = (userName, userImage, id) => {
     if (id === data?.data?.user?._id) {
       navigation.navigate(TabNav.Profile);
@@ -192,25 +196,15 @@ const ReelComponent = ({
   }, [layoutHeight]);
 
   const generateDynamicLink = async postItem => {
-    const link = await dynamicLinks().buildShortLink(
-      {
-        link: `http://food2k.com/post/${postItem?._id}`,
-        domainUriPrefix: 'https://food2k.page.link',
-        android: {
-          packageName: 'com.foodtok',
-        },
-        ios: {
-          bundleId: 'com.foodtok',
-        },
-        social: {
-          title: postItem?.title,
-          description: 'Check my post on FoodTok',
-        },
-      },
-      dynamicLinks.ShortLinkType.UNGUESSABLE,
-    );
+    const shareableLinks = DeepLinkingService.generateShareableLink('reel', postItem?._id, {
+      title: postItem?.title,
+      caption: postItem?.caption,
+      author: postItem?.author?.fullName,
+      utm_source: 'app_share',
+      utm_medium: 'reel_share'
+    });
 
-    return decodeURIComponent(link);
+    return shareableLinks.universalLink;
   };
 
   const handleShare = async Postitem => {
@@ -394,10 +388,19 @@ const ReelComponent = ({
                             {[1, 2, 3, 4, 5].map((star) => (
                               <Ionicons
                                 key={star}
-                                name={star <= item.rating ? 'star' : 'star-outline'}
+                                name={item.rating && item.rating > 0 
+                                  ? (star <= item.rating ? 'star' : 'star-outline')
+                                  : 'star'
+                                }
                                 size={moderateScale(10)}
-                                color={star <= item.rating ? '#FFD700' : 'rgba(255, 255, 255, 0.6)'}
-                                style={localStyles.starIcon}
+                                color={item.rating && item.rating > 0 
+                                  ? (star <= item.rating ? '#FFD700' : 'rgba(255, 255, 255, 0.6)')
+                                  : 'rgba(255, 255, 255, 0.3)'
+                                }
+                                style={[
+                                  localStyles.starIcon,
+                                  { opacity: item.rating && item.rating > 0 ? 1 : 0.4 }
+                                ]}
                               />
                             ))}
                           </View>
@@ -410,13 +413,26 @@ const ReelComponent = ({
             )}
 
             {item?.avatarUri ? (
-              <FastImage
-                source={{
-                  uri: poster,
-                }}
-                resizeMode="contain"
-                style={imageStyles}
-              />
+              <TouchableOpacity
+                activeOpacity={0.9}
+                onPress={() => setShowImageZoom(true)}
+                style={imageStyles}>
+                <FastImage
+                  source={{
+                    uri: poster,
+                  }}
+                  resizeMode="contain"
+                  style={imageStyles}
+                />
+                {/* Zoom indicator */}
+                <View style={localStyles.zoomIndicator}>
+                  <Ionicons
+                    name="expand-outline"
+                    size={moderateScale(20)}
+                    color="rgba(255, 255, 255, 0.8)"
+                  />
+                </View>
+              </TouchableOpacity>
             ) : !!item?.uri &&
               (activeVideoIndex === index ||
                 activeVideoIndex === index + 1 ||
@@ -562,7 +578,7 @@ const ReelComponent = ({
                         />
                       </TouchableOpacity>
                                             <TouchableOpacity
-                        style={{marginLeft: 4}}
+                        style={{marginLeft: 4, flex: 1}}
                         onPress={() =>
                           onPressProfile(
                             item?.channelName,
@@ -570,18 +586,65 @@ const ReelComponent = ({
                             item?.author?._id,
                           )
                         }>
-                        <ZText
-                          style={{
-                            fontSize: 12,
-                            fontWeight: 'bold',
-                            color: 'white',
-                            textShadowColor: 'rgba(0, 0, 0, 0.9)',
-                            textShadowOffset: {width: 1, height: 1},
-                            textShadowRadius: 3,
-                          }}
-                          numberOfLines={1}>
-                          {item?.author?.fullName || data?.fullName}
-                        </ZText>
+                        <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'}}>
+                          <ZText
+                            style={{
+                              fontSize: 12,
+                              fontWeight: 'bold',
+                              color: 'white',
+                              textShadowColor: 'rgba(0, 0, 0, 0.9)',
+                              textShadowOffset: {width: 1, height: 1},
+                              textShadowRadius: 3,
+                              flex: 1,
+                            }}
+                            numberOfLines={1}>
+                            {item?.author?.fullName || data?.fullName}
+                          </ZText>
+                          {/* Debug: Show rating data and always render something */}
+                          {console.log('Author rating debug:', {
+                            authorId: item?.author?._id,
+                            authorName: item?.author?.fullName,
+                            averageDishRating: item?.author?.averageDishRating,
+                            ratedDishesCount: item?.author?.ratedDishesCount,
+                            hasRating: item?.author?.ratedDishesCount > 0 && item?.author?.averageDishRating > 0
+                          })}
+                          {item?.author?.ratedDishesCount > 0 && item?.author?.averageDishRating > 0 ? (
+                            <View style={{flexDirection: 'row', alignItems: 'center', marginLeft: 8}}>
+                              <ZText style={{
+                                fontSize: 10,
+                                fontWeight: 'bold',
+                                color: '#FFD700',
+                                textShadowColor: 'rgba(0, 0, 0, 0.9)',
+                                textShadowOffset: {width: 1, height: 1},
+                                textShadowRadius: 2,
+                              }}>
+                                {item.author.averageDishRating.toFixed(1)}
+                              </ZText>
+                              <ZText style={{
+                                fontSize: 10,
+                                color: 'white',
+                                textShadowColor: 'rgba(0, 0, 0, 0.9)',
+                                textShadowOffset: {width: 1, height: 1},
+                                textShadowRadius: 2,
+                                marginLeft: 2,
+                              }}>
+                                ⭐
+                              </ZText>
+                            </View>
+                          ) : (
+                            <ZText style={{
+                              fontSize: 12,
+                              color: '#FFD700',
+                              textShadowColor: 'rgba(0, 0, 0, 0.9)',
+                              textShadowOffset: {width: 1, height: 1},
+                              textShadowRadius: 2,
+                              marginLeft: 8,
+                              fontWeight: 'bold',
+                            }}>
+                              -
+                            </ZText>
+                          )}
+                        </View>
                       </TouchableOpacity>
                                         </View>
                     
@@ -621,16 +684,25 @@ const ReelComponent = ({
                     </ZText>
                     
                     {/* Review-specific info */}
-                    {item?.reviewMode && item?.rating && (
+                    {item?.reviewMode && (
                       <View style={localStyles.reviewInfo}>
                         <View style={localStyles.reviewRating}>
                           {[1, 2, 3, 4, 5].map((star) => (
                             <Ionicons
                               key={star}
-                              name={star <= item.rating ? 'star' : 'star-outline'}
+                              name={item?.rating && item.rating > 0 
+                                ? (star <= item.rating ? 'star' : 'star-outline')
+                                : 'star'
+                              }
                               size={moderateScale(12)}
-                              color={star <= item.rating ? '#FFD700' : 'rgba(255, 255, 255, 0.5)'}
-                              style={styles.mr2}
+                              color={item?.rating && item.rating > 0 
+                                ? (star <= item.rating ? '#FFD700' : 'rgba(255, 255, 255, 0.5)')
+                                : 'rgba(255, 255, 255, 0.3)'
+                              }
+                              style={[
+                                styles.mr2,
+                                { opacity: item?.rating && item.rating > 0 ? 1 : 0.4 }
+                              ]}
                             />
                           ))}
                           <ZText type="B12" color={colors.white} style={styles.ml4}>
@@ -763,7 +835,7 @@ const ReelComponent = ({
         </View>
       ) : (
         <>
-          {item?.type === 'ad' &&
+          {/* {item?.type === 'ad' &&
             activeVideoIndex !== 0 &&
             activeVideoIndex !== undefined && (
               <AdView
@@ -772,9 +844,16 @@ const ReelComponent = ({
                 type="video"
                 media
               />
-            )}
+            )} */}
         </>
       )}
+      
+      {/* Image Zoom Modal */}
+      <ImageZoomModal
+        visible={showImageZoom}
+        imageUri={poster}
+        onClose={() => setShowImageZoom(false)}
+      />
     </View>
   );
 };
@@ -917,6 +996,15 @@ const localStyles = StyleSheet.create({
   },
   musicContainer: {
     ...styles.rowCenter,
+  },
+  zoomIndicator: {
+    position: 'absolute',
+    top: 80, // Below header area
+    left: 15, // Move to left side to avoid filter icon
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 15,
+    padding: 5,
+    zIndex: 1,
   },
   verticalContainer: {
     ...styles.ph5,

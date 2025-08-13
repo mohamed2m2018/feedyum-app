@@ -8,6 +8,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import ZText from '../../../../components/common/ZText';
 import {moderateScale} from '../../../../common/constants';
 import {styles} from '../../../../themes';
+import StarRating from '../../../../components/StarRating';
 
 const DishCard = ({
   dish,
@@ -80,6 +81,16 @@ const DishCard = ({
           style={localStyles.dishDescription}>
           {dish.description}
         </ZText>
+        <StarRating
+          rating={Number.isFinite(dish?.average_rating)
+            ? dish.average_rating
+            : (Number.isFinite(dish?.rating) ? dish.rating : 0)}
+          size="small"
+          showText={false}
+          showCount={false}
+          showWhenNoRating={true}
+          style={{ marginBottom: moderateScale(6) }}
+        />
         <View style={localStyles.priceRow}>
           <ZText type="B16" color={colors.primary}>
             {dish.price} EGP

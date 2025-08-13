@@ -47,6 +47,10 @@ target 'FoodTok' do
   permissions_path = '../node_modules/react-native-permissions/ios'
   pod 'Permission-LocationAccuracy', :path => "#{permissions_path}/LocationAccuracy"
   pod 'Permission-LocationWhenInUse', :path => "#{permissions_path}/LocationWhenInUse"
+  # Add missing permission pods so react-native-permissions can request them on iOS
+  pod 'Permission-PhotoLibrary', :path => "#{permissions_path}/PhotoLibrary"
+  pod 'Permission-PhotoLibraryAddOnly', :path => "#{permissions_path}/PhotoLibraryAddOnly"
+  pod 'Permission-Camera', :path => "#{permissions_path}/Camera"
   target 'FoodTokTests' do
     inherit! :complete
     # Pods for testing

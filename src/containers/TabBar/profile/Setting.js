@@ -29,6 +29,7 @@ import {useHandleAuth} from '../../../utils/useHandleAuth';
 import OneSignal from 'react-native-onesignal';
 import {ALERT_TYPE, Toast} from 'react-native-alert-notification';
 import {useStorage} from '../../../utils/useStorage';
+import AppInitializer from '../../../services/AppInitializer';
 
 export default Setting = ({navigation}) => {
   const {data: user} = useQuery('user', () => request.get('/user'));
@@ -41,6 +42,13 @@ export default Setting = ({navigation}) => {
       header: strings.editProfile,
       icon: 'person-outline',
       route: StackNav.SetUpProfile,
+    },
+    {
+      id: 2,
+      title: strings.savedAddresses,
+      header: strings.savedAddresses,
+      icon: 'location-outline',
+      route: StackNav.SavedAddresses,
     },
     // {
     //   id: 2,
@@ -131,6 +139,7 @@ export default Setting = ({navigation}) => {
   const {handleAuthToast} = useHandleAuth();
   const [_, setTheme] = useStorage(THEME);
   const [__, setToken] = useStorage(ACCESS_TOKEN);
+  const [___, setUser] = useStorage('user');
 
   const [isEnabled, setIsEnabled] = useState(!!color.dark);
 
@@ -173,10 +182,15 @@ export default Setting = ({navigation}) => {
 
   const onPressYesLogOut = async () => {
     try {
+      // Clear MMKV stored session and user
       setToken();
+      setUser();
       LogOutSheetRef?.current?.hide();
+      // Clear query cache and auth header
       await queryClient.removeQueries();
       delete request.defaults.headers.common.Authorization;
+      // Clear AsyncStorage-stored session/notification data
+      await AppInitializer.handleUserLogout();
       googleSignOut();
       OneSignal.removeExternalUserId();
       setTimeout(() => {

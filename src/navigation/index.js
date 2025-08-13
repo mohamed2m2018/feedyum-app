@@ -5,6 +5,7 @@ import StackNavigation from './Type/StackNavigation';
 import {useSelector} from 'react-redux';
 import {BackgroundUploadProvider} from '../providers/BackgroundUploadProvider';
 import {LocationProvider} from './locationContext';
+import {ScreenProvider} from './screenContext';
 import DeepLinkingService from '../services/DeepLinkingService';
 import NotificationService from '../services/NotificationService';
 import AppInitializer from '../services/AppInitializer';
@@ -358,11 +359,13 @@ export default function pAppNavigator() {
         }
       }}
     >
-      <BackgroundUploadProvider>
-        <LocationProvider>
-          <StackNavigation />
-        </LocationProvider>
-      </BackgroundUploadProvider>
+      <ScreenProvider>
+        <BackgroundUploadProvider>
+          <LocationProvider>
+            <StackNavigation />
+          </LocationProvider>
+        </BackgroundUploadProvider>
+      </ScreenProvider>
     </NavigationContainer>
   );
 }

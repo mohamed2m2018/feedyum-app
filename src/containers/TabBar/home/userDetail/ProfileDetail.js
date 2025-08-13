@@ -295,11 +295,11 @@ export default function ProfileDetail({navigation, route}) {
           <TouchableOpacity
             key={index}
             onPress={item?.onPress}
-            style={styles.itemsCenter}>
-            <ZText type="b24" align={'center'}>
+            style={[styles.itemsCenter, localStyles.statsContainer]}>
+            <ZText type="b24" align={'center'} style={localStyles.statsNumber}>
               {item.value}
             </ZText>
-            <ZText type="m16" align={'center'} style={styles.mt10}>
+            <ZText type="m16" align={'center'} style={[styles.mt10, localStyles.statsLabel]}>
               {item.title}
             </ZText>
           </TouchableOpacity>
@@ -362,7 +362,7 @@ export default function ProfileDetail({navigation, route}) {
             selectedTab === 'posts' && {borderBottomColor: colors.primary, borderBottomWidth: 2}
           ]}
           onPress={() => setSelectedTab('posts')}>
-          <ZText type={selectedTab === 'posts' ? 'b16' : 'm16'} color={selectedTab === 'posts' ? colors.primary : colors.gray}>
+          <ZText type={selectedTab === 'posts' ? 'b16' : 'm16'} color={selectedTab === 'posts' ? colors.primary : colors.textColor}>
             Posts
           </ZText>
         </TouchableOpacity>
@@ -372,7 +372,7 @@ export default function ProfileDetail({navigation, route}) {
             selectedTab === 'reviews' && {borderBottomColor: colors.primary, borderBottomWidth: 2}
           ]}
           onPress={() => setSelectedTab('reviews')}>
-          <ZText type={selectedTab === 'reviews' ? 'b16' : 'm16'} color={selectedTab === 'reviews' ? colors.primary : colors.gray}>
+          <ZText type={selectedTab === 'reviews' ? 'b16' : 'm16'} color={selectedTab === 'reviews' ? colors.primary : colors.textColor}>
             Reviews
           </ZText>
         </TouchableOpacity>
@@ -388,17 +388,18 @@ export default function ProfileDetail({navigation, route}) {
   const currentFetchNext = selectedTab === 'posts' ? fetchNextPage : fetchNextReviewPage;
 
   return (
-    <ZSafeAreaView style={{flex: 1, backgroundColor: colors.backgroundColor}}>
+    <ZSafeAreaView style={[localStyles.screenContainer, {backgroundColor: colors.backgroundColor}]}>
       <FlatList
         data={currentData}
         ListHeaderComponent={renderHeader}
         showsVerticalScrollIndicator={false}
         key={selectedTab} // Force re-render when tab changes
+        contentContainerStyle={localStyles.flatListContent}
         ListEmptyComponent={
           currentLoading ? (
             <ZLoader height={100} />
           ) : (
-            <ZText style={{textAlign: 'center', marginTop: 45}} type={'B20'}>
+            <ZText style={localStyles.emptyStateText} type={'B20'}>
               {selectedTab === 'posts' 
                 ? (user?.type === 'chef' || user?.hasMenu)
                   ? "No food reels yet! Check the menu for dishes 🍽️"
@@ -448,6 +449,19 @@ export default function ProfileDetail({navigation, route}) {
 }
 
 const localStyles = StyleSheet.create({
+  screenContainer: {
+    flex: 1,
+    paddingHorizontal: moderateScale(16),
+  },
+  flatListContent: {
+    paddingBottom: moderateScale(20),
+  },
+  emptyStateText: {
+    textAlign: 'center',
+    marginTop: moderateScale(45),
+    marginHorizontal: moderateScale(20),
+    lineHeight: moderateScale(28),
+  },
   root: {
     ...styles.flex,
     ...styles.ph20,
@@ -540,6 +554,7 @@ const localStyles = StyleSheet.create({
   dishItemContainer: {
     flex: 1,
     marginHorizontal: moderateScale(4),
+    marginBottom: moderateScale(12),
   },
   dishRowContainer: {
     justifyContent: 'space-between',
@@ -548,11 +563,27 @@ const localStyles = StyleSheet.create({
   dishRowSeparator: {
     height: moderateScale(8),
   },
+  // Stats Styles
+  statsContainer: {
+    paddingVertical: moderateScale(15),
+    paddingHorizontal: moderateScale(12),
+    marginHorizontal: moderateScale(2),
+    borderRadius: moderateScale(8),
+    minWidth: moderateScale(70),
+  },
+  statsNumber: {
+    paddingHorizontal: moderateScale(8),
+    paddingVertical: moderateScale(4),
+  },
+  statsLabel: {
+    paddingHorizontal: moderateScale(4),
+  },
   // Tab styles
   tabContainer: {
     flexDirection: 'row',
-    marginHorizontal: moderateScale(16),
+    marginHorizontal: moderateScale(8),
     marginTop: moderateScale(16),
+    marginBottom: moderateScale(16),
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 255, 255, 0.1)',
   },

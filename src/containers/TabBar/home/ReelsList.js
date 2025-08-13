@@ -37,7 +37,7 @@ const ReelsList = ({
       onViewableItemsChanged={viewableItemsChanged}
       onLayout={onSetLayout}
       snapToInterval={Platform.OS === 'android' ? layoutHeight : undefined}
-      drawDistance={layoutHeight}
+      drawDistance={layoutHeight * 2} // Increase draw distance for better performance
       decelerationRate={'fast'}
       refreshControl={
         <RefreshControl
@@ -62,7 +62,7 @@ const ReelsList = ({
       }
       ref={flatListRef}
       estimatedItemSize={700}
-      onEndReachedThreshold={0.8}
+      onEndReachedThreshold={0.5} // Reduce threshold for better pagination
       onEndReached={
         hasNextPage && !isLoading && !isRefetching ? fetchNextPage : null
       }
@@ -71,6 +71,12 @@ const ReelsList = ({
           <ActivityIndicator size={'large'} color={'#FF4D67'} />
         )
       }
+      // Performance optimizations
+      removeClippedSubviews={true}
+      maxToRenderPerBatch={3}
+      updateCellsBatchingPeriod={100}
+      initialNumToRender={3}
+      windowSize={5}
     />
   );
 };

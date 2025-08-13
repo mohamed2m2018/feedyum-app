@@ -127,7 +127,7 @@ const OrderDetailsModal = ({
           {item.dish?.name || 'Unknown Dish'}
         </ZText>
         <ZText type="M14" color={colors.grayScale7}>
-          ${item.dish?.price?.toFixed(2) || '0.00'} × {item.quantity}
+          {(item.dish?.price?.toFixed(2) || '0.00')} × {item.quantity}
         </ZText>
         {item.dish?.cookingTime && (
           <ZText type="R12" color={colors.grayScale7}>
@@ -137,7 +137,7 @@ const OrderDetailsModal = ({
       </View>
       <View style={localStyles.itemPrice}>
         <ZText type="B16" color={colors.primary}>
-          ${((item.dish?.price || 0) * item.quantity).toFixed(2)}
+          {((item.dish?.price || 0) * item.quantity).toFixed(2)}
         </ZText>
       </View>
     </View>
@@ -304,7 +304,7 @@ const OrderDetailsModal = ({
           </View>
 
           {/* Special Instructions */}
-          {order.specialInstructions && (
+          {(order.specialInstructions || order.notes) && (
             <View style={localStyles.section}>
               <ZText type="S18" style={localStyles.sectionTitle}>
                 Special Instructions
@@ -317,7 +317,7 @@ const OrderDetailsModal = ({
                   style={localStyles.instructionsIcon}
                 />
                 <ZText type="M16" style={localStyles.instructionsText}>
-                  {order.specialInstructions}
+                  {order.specialInstructions || order.notes}
                 </ZText>
               </View>
             </View>
@@ -331,30 +331,30 @@ const OrderDetailsModal = ({
             <View style={[localStyles.summaryCard, {backgroundColor: colors.inputBg}]}>
               <View style={localStyles.summaryRow}>
                 <ZText type="M16">{strings.subtotal}</ZText>
-                <ZText type="M16">${order.subtotal?.toFixed(2) || '0.00'}</ZText>
+                <ZText type="M16">{order.subtotal?.toFixed(2) || '0.00'}</ZText>
               </View>
               {order.deliveryFee > 0 && (
                 <View style={localStyles.summaryRow}>
                   <ZText type="M16">{strings.deliveryFee}</ZText>
-                  <ZText type="M16">${order.deliveryFee?.toFixed(2) || '0.00'}</ZText>
+                  <ZText type="M16">{order.deliveryFee?.toFixed(2) || '0.00'}</ZText>
                 </View>
               )}
               {order.serviceFee > 0 && (
                 <View style={localStyles.summaryRow}>
                   <ZText type="M16">{strings.serviceFee}</ZText>
-                  <ZText type="M16">${order.serviceFee?.toFixed(2) || '0.00'}</ZText>
+                  <ZText type="M16">{order.serviceFee?.toFixed(2) || '0.00'}</ZText>
                 </View>
               )}
               {order.tax > 0 && (
                 <View style={localStyles.summaryRow}>
                   <ZText type="M16">Tax</ZText>
-                  <ZText type="M16">${order.tax?.toFixed(2) || '0.00'}</ZText>
+                  <ZText type="M16">{order.tax?.toFixed(2) || '0.00'}</ZText>
                 </View>
               )}
               <View style={[localStyles.summaryRow, localStyles.totalRow]}>
                 <ZText type="B18">{strings.total}</ZText>
                 <ZText type="B18" color={colors.primary}>
-                  ${order.totalPrice?.toFixed(2) || '0.00'}
+                  {order.totalPrice?.toFixed(2) || '0.00'}
                 </ZText>
               </View>
             </View>

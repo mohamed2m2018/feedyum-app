@@ -1,325 +1,187 @@
 import React from 'react';
 import {
-  ActivityIndicator,
   View,
   FlatList,
   TouchableOpacity,
-  Image,
   StyleSheet,
+  Image,
+  Dimensions
 } from 'react-native';
-import {useSelector} from 'react-redux';
-import {useNavigation} from '@react-navigation/native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-
+import { useSelector } from 'react-redux';
+import { useNavigation } from '@react-navigation/native';
+import { moderateScale } from '../../../../common/constants';
+import { styles } from '../../../../themes';
 import ZText from '../../../../components/common/ZText';
 import strings from '../../../../i18n/strings';
-import {moderateScale} from '../../../../common/constants';
-import {styles} from '../../../../themes';
-import {StackNav} from '../../../../navigation/NavigationKeys';
+import { StackNav } from '../../../../navigation/NavigationKeys';
 import images from '../../../../assets/images';
+import StarRating from '../../../../components/StarRating';
 
-export default function SearchDishes({
-  dishes = [],
-  isFetchingNextPage,
-  ...props
-}) {
+const { width } = Dimensions.get('window');
+const horizontalPadding = moderateScale(32); // 16 on each side
+const columnGap = moderateScale(12); // Gap between columns
+const itemWidth = (width - horizontalPadding - columnGap) / 2;
+
+const SearchDishes = ({ 
+  dishes, 
+  onEndReachedThreshold, 
+  isFetching, 
+  isFetchingNextPage, 
+  onMomentumScrollBegin 
+}) => {
   const colors = useSelector(state => state.theme.theme);
   const navigation = useNavigation();
 
+  // Debug logging
+  console.log('SearchDishes: Received dishes:', dishes?.length || 0);
+  console.log('SearchDishes: isFetching:', isFetching);
+  console.log('SearchDishes: First dish:', dishes?.[0]);
+
   const handleDishPress = (dish) => {
-    console.log('SearchDishes: Clicking on dish:', dish);
-    console.log('SearchDishes: Dish ID:', dish._id);
-    console.log('SearchDishes: Chef ID object:', dish.user_id);
-    
-    // Extract chef ID from object if needed
-    const chefId = dish.user_id?._id || dish.user_id;
-    console.log('SearchDishes: Extracted Chef ID:', chefId);
-    
-    console.log('SearchDishes: Navigating to DishDetailScreen with params:', {
+    navigation.navigate(StackNav.DishDetailScreen, { 
       dishId: dish._id,
-      chefId: chefId,
-    });
-    
-    navigation.navigate(StackNav.DishDetailScreen, {
-      dishId: dish._id,
-      chefId: chefId,
+      dish: dish 
     });
   };
 
-  const handleVisitMenu = (dish) => {
-    // Extract chef ID from object if needed
-    const chefId = dish.user_id?._id || dish.user_id;
-    
-    navigation.navigate(StackNav.ChefMenu, {
-      chefId: chefId,
-      scrollToDishId: dish._id,
-    });
-  };
-
-  const renderDishItem = ({item}) => (
+  const renderDishItem = ({ item }) => (
     <TouchableOpacity
-      style={[localStyles.dishCard, {backgroundColor: colors.white}]}
+      style={[localStyles.dishItem, { backgroundColor: colors.inputBg }]}
       onPress={() => handleDishPress(item)}
-      activeOpacity={0.95}
     >
-      {/* Hero Image Section */}
-      <View style={localStyles.heroImageContainer}>
-        <Image
-          source={item.image ? {uri: item.image} : images.dishPlaceholder}
-          style={localStyles.heroImage}
-          resizeMode="cover"
-        />
-
-        {/* Gradient Overlays for Depth */}
-        <View style={localStyles.topGradient} />
-        <View style={localStyles.bottomGradient} />
-
-        {/* Floating Rating Badge */}
-        {item.average_rating > 0 && (
-          <View style={localStyles.floatingRating}>
-            <Ionicons
-              name="star"
-              size={moderateScale(12)}
-              color="#FFD700"
-            />
-            <ZText
-              type="B12"
-              color={colors.white}
-              style={localStyles.ratingValue}>
-              {item.average_rating.toFixed(1)}
-            </ZText>
-          </View>
-        )}
-
-        {/* Price Tag */}
-        <View
-          style={[localStyles.priceTag, {backgroundColor: colors.primary}]}>
-          <ZText
-            type="B14"
-            color={colors.white}
-            style={localStyles.priceText}>
-            {item.price} EGP
-          </ZText>
-        </View>
-      </View>
-
-      {/* Content Section */}
-      <View style={localStyles.contentSection}>
-        {/* Title */}
-        <ZText type="B16" color="#1A1A1A" numberOfLines={1} style={localStyles.dishName}>
+      <Image
+        source={
+          item.image
+            ? { uri: item.image }
+            : images.defaultDish
+        }
+        style={localStyles.dishImage}
+        resizeMode="cover"
+      />
+      <View style={localStyles.dishInfo}>
+        <ZText 
+          type="B14" 
+          color={colors.textColor}
+          numberOfLines={2}
+          style={localStyles.dishName}
+        >
           {item.name}
         </ZText>
-
-        {/* Description */}
-        <ZText
-          type="M12"
-          color="#666666"
-          numberOfLines={2}
-          style={localStyles.dishDesc}>
-          {item.description}
-        </ZText>
-
-        {/* Category Badge */}
-        {item.category && (
-          <View style={[localStyles.categoryBadge, {backgroundColor: colors.grayScale1}]}>
-            <ZText type="M10" color="#888888">
-              {item.category}
-            </ZText>
-          </View>
-        )}
-
-        {/* Visit Menu Button */}
-        <TouchableOpacity
-          style={[localStyles.visitMenuButton, {borderColor: colors.primary}]}
-          onPress={() => handleVisitMenu(item)}
+        <ZText 
+          type="s12" 
+          color={colors.grayScale5}
+          numberOfLines={1}
+          style={localStyles.chefName}
         >
-          <Ionicons name="restaurant-outline" size={moderateScale(14)} color={colors.primary} />
-          <ZText type="B12" color={colors.primary} style={styles.ml4}>
-            {strings.visitMenu}
+          {item.chef?.fullName || item.user_id?.fullName || strings.unknownChef}
+        </ZText>
+        <View style={localStyles.priceContainer}>
+          <ZText type="B16" color={colors.primary}>
+            £{item.price?.toFixed(2)}
           </ZText>
-        </TouchableOpacity>
+          <StarRating
+            rating={Number.isFinite(item?.average_rating)
+              ? item.average_rating
+              : (Number.isFinite(item?.rating) ? item.rating : 0)}
+            size="small"
+            showText={false}
+            showCount={false}
+            showWhenNoRating={true}
+          />
+        </View>
       </View>
     </TouchableOpacity>
   );
 
-  return (
-    <View style={localStyles.container}>
-      <FlatList
-        data={dishes}
-        ListFooterComponent={
-          <View style={{height: 100}}>
-            {isFetchingNextPage && (
-              <ActivityIndicator color={colors.primary} size={'small'} />
-            )}
-          </View>
-        }
-        ListEmptyComponent={
-          !props.isFetching && (
-            <View style={localStyles.emptyContainer}>
-              <Ionicons name="restaurant-outline" size={moderateScale(64)} color={colors.grayScale4} />
-              <ZText style={localStyles.emptyTitle} type={'B18'} color={colors.textColor}>
-                {strings.noDishesFound}
-              </ZText>
-              <ZText style={localStyles.emptySubtitle} type={'M14'} color={colors.grayScale5}>
-                {strings.trySearchingDifferentKeywords}
-              </ZText>
-            </View>
-          )
-        }
-        renderItem={renderDishItem}
-        {...props}
-        keyExtractor={item => item?._id}
-        numColumns={2}
-        columnWrapperStyle={localStyles.row}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={localStyles.listContainer}
-      />
+  const renderEmptyState = () => (
+    <View style={localStyles.emptyState}>
+      <ZText type="s16" color={colors.grayScale5} style={localStyles.emptyText}>
+        {strings.trySearchingDifferentKeywords}
+      </ZText>
     </View>
   );
-}
+
+  if (isFetching && (!dishes || dishes.length === 0)) {
+    return (
+      <View style={localStyles.emptyState}>
+        <ZText type="s16" color={colors.grayScale5} style={localStyles.emptyText}>
+          {strings.loading}
+        </ZText>
+      </View>
+    );
+  }
+
+  if (!dishes || dishes.length === 0) {
+    return renderEmptyState();
+  }
+
+  return (
+    <FlatList
+      data={dishes}
+      renderItem={renderDishItem}
+      keyExtractor={(item, index) => `dish-${item._id || index}`}
+      numColumns={2}
+      contentContainerStyle={localStyles.container}
+      columnWrapperStyle={localStyles.row}
+      onEndReached={onMomentumScrollBegin}
+      onEndReachedThreshold={onEndReachedThreshold}
+      showsVerticalScrollIndicator={false}
+      ListEmptyComponent={renderEmptyState}
+    />
+  );
+};
 
 const localStyles = StyleSheet.create({
   container: {
-    flex: 1,
+    paddingHorizontal: moderateScale(16),
+    paddingBottom: moderateScale(20),
   },
-  
-  listContainer: {
-    padding: moderateScale(8),
-  },
-
   row: {
     justifyContent: 'space-between',
-    paddingHorizontal: moderateScale(8),
+    gap: moderateScale(12), // Add gap between columns
   },
-
-  // ✨ UNIFIED MODERN DISH CARD ✨
-  dishCard: {
-    width: '48%',
-    height: moderateScale(200),
+  dishItem: {
+    width: itemWidth,
+    borderRadius: moderateScale(12),
     marginBottom: moderateScale(16),
-    borderRadius: moderateScale(16),
-    backgroundColor: '#FFFFFF',
-    shadowColor: '#000000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
     overflow: 'hidden',
-  },
-
-  // Clean Hero Image Section
-  heroImageContainer: {
-    position: 'relative',
-    height: moderateScale(120),
-    overflow: 'hidden',
-  },
-  heroImage: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
-  },
-  topGradient: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: moderateScale(40),
-    backgroundColor: 'rgba(0,0,0,0.1)',
-  },
-  bottomGradient: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: moderateScale(60),
-    backgroundColor: 'rgba(0,0,0,0.2)',
-  },
-  floatingRating: {
-    position: 'absolute',
-    top: moderateScale(8),
-    right: moderateScale(8),
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    paddingHorizontal: moderateScale(6),
-    paddingVertical: moderateScale(3),
-    borderRadius: moderateScale(8),
-    gap: moderateScale(3),
-  },
-  ratingValue: {
-    fontSize: moderateScale(10),
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-  priceTag: {
-    position: 'absolute',
-    bottom: moderateScale(8),
-    left: moderateScale(8),
-    paddingHorizontal: moderateScale(8),
-    paddingVertical: moderateScale(4),
-    borderRadius: moderateScale(8),
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
     elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
-  priceText: {
-    fontSize: moderateScale(12),
-    fontWeight: '700',
-    color: '#FFFFFF',
+  dishImage: {
+    width: '100%',
+    height: moderateScale(120),
   },
-
-  // Content Section
-  contentSection: {
-    flex: 1,
+  dishInfo: {
     padding: moderateScale(12),
-    justifyContent: 'space-between',
   },
   dishName: {
     marginBottom: moderateScale(4),
-    fontWeight: '600',
   },
-  dishDesc: {
-    marginBottom: moderateScale(8),
-    lineHeight: moderateScale(16),
-    opacity: 0.8,
-  },
-
-  categoryBadge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: moderateScale(8),
-    paddingVertical: moderateScale(3),
-    borderRadius: moderateScale(6),
+  chefName: {
     marginBottom: moderateScale(8),
   },
-
-  visitMenuButton: {
+  priceContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: moderateScale(6),
-    borderWidth: 1,
-    borderRadius: moderateScale(6),
+    justifyContent: 'space-between',
   },
-
-  emptyContainer: {
+  ratingContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: moderateScale(60),
   },
-
-  emptyTitle: {
-    marginTop: moderateScale(16),
-    marginBottom: moderateScale(8),
+  emptyState: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: moderateScale(40),
   },
-
-  emptySubtitle: {
+  emptyText: {
     textAlign: 'center',
   },
 });
+
+export default SearchDishes;

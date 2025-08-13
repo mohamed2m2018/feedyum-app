@@ -27,6 +27,8 @@ import strings from '../../../i18n/strings';
 import {useLocation} from '../../../navigation/locationContext';
 import ZButton from '../../../components/common/ZButton';
 import {useStorage} from '../../../utils/useStorage';
+import { useOptimizedFollowingReels } from '../../../hooks/useOptimizedQueries';
+import { optimizeImageUrl, prefetchImages } from '../../../utils/imageOptimizer';
 
 export default function ReelsComponent({amIFocused}) {
   const colors = useSelector(state => state.theme.theme);
@@ -187,7 +189,7 @@ export default function ReelsComponent({amIFocused}) {
             type="m14"
             containerStyle={localStyles.buttonTag}
             title={
-              filteredData?.[activeVideoIndex]?.kmAway
+              filteredData?.[activeVideoIndex]?.kmAway && filteredData?.[activeVideoIndex]?.kmAway !== null
                 ? filteredData?.[activeVideoIndex]?.kmAway?.toFixed(2) +
                   strings.kmAway
                 : strings.clickbranches

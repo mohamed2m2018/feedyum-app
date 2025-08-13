@@ -8,8 +8,8 @@ import {useSelector} from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
-import dynamicLinks from '@react-native-firebase/dynamic-links';
 import {useIsFocused, useNavigation, useRoute} from '@react-navigation/native';
+import DeepLinkingService from '../../../services/DeepLinkingService';
 
 // Local import
 import {styles} from '../../../themes';
@@ -22,7 +22,6 @@ import {
 import {StackNav, TabNav} from '../../../navigation/NavigationKeys';
 import {
   QueryClient,
-  useInfiniteQuery,
   useMutation,
   useQuery,
 } from 'react-query';
@@ -36,6 +35,9 @@ import ZLoader from '../../../components/common/ZLoader';
 import {useLocation} from '../../../navigation/locationContext';
 import ZButton from '../../../components/common/ZButton';
 import {useStorage} from '../../../utils/useStorage';
+import AddressDropdown from '../../../components/AddressDropdown';
+import { useOptimizedReels, useOptimizedStory } from '../../../hooks/useOptimizedQueries';
+import { optimizeImageUrl, prefetchImages } from '../../../utils/imageOptimizer';
 
 export default function ReelsComponent({amIFocused}) {
   const [storyId, setStoryId] = useState();
@@ -152,15 +154,7 @@ export default function ReelsComponent({amIFocused}) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [commentSheetRef]);
 
-  const fetchReels = async page => {
-    const response = await request.get(
-      `/story/stories?limit=15&page=${page}&userId=${user?._id}&lat=${location?.latitude}&long=${location?.longitude}&categoryIds=${categoryIds}`,
-    );
-    return response;
-  };
-
-
-
+  // Use optimized reels hook
   const {
     hasNextPage,
     fetchNextPage,
@@ -169,122 +163,95 @@ export default function ReelsComponent({amIFocused}) {
     refetch,
     isRefetching,
     isFetching,
-  } = useInfiniteQuery(
-    ['stories', user?._id, categoryIds?.toLocaleString(), location?.latitude, location?.longitude],
-    ({pageParam = 1}) => fetchReels(pageParam),
-    {
-      retry: 0,
-      getNextPageParam: (lastPage, allPages) => {
-        return lastPage?.data?.currentPage < lastPage?.data?.totalPages
-          ? allPages.length + 1
-          : undefined;
-      },
-      onSuccess: res => {
-        if (res?.pageParams?.length === 1) {
-          flatListRef.current?.scrollToOffset({offset: 0});
+    data: reelsData,
+  } = useOptimizedReels(categoryIds);
+
+  // Process data and add ads
+  useEffect(() => {
+    if (!reelsData?.pages?.[0]?.stories) {
+      setFilteredData([]);
+      return;
+    }
+
+    const allStoriesWithAds = [];
+    let storyCounter = 0;
+    
+    for (const page of reelsData.pages) {
+      for (const story of page.stories) {
+        allStoriesWithAds.push(story);
+        storyCounter++;
+
+        if (storyCounter % 5 === 0) {
+          allStoriesWithAds.push({_id: `ad-${storyCounter}`, type: 'ad'});
         }
-        if (!res?.pages?.[0]?.data) {
-          return;
-        }
+      }
+    }
 
-        const allStoriesWithAds = [];
-        let storyCounter = 0;
-        for (const page of res.pages) {
-          for (const story of page.data.stories) {
-            allStoriesWithAds.push(story);
-            storyCounter++;
+    // Ensure at least one ad even for less than 5 stories
+    if (allStoriesWithAds.length > 0 && storyCounter < 5) {
+      allStoriesWithAds.push({_id: 'ad-end', type: 'ad'});
+    }
 
-            if (storyCounter % 5 === 0) {
-              allStoriesWithAds.push({_id: `ad-${storyCounter}`, type: 'ad'});
-            }
-          }
-        }
+    setFilteredData(allStoriesWithAds);
 
-        // Ensure at least one ad even for less than 5 stories
-        if (allStoriesWithAds.length > 0 && storyCounter < 5) {
-          allStoriesWithAds.push({_id: 'ad-end', type: 'ad'});
-        }
+    // Prefetch images for next few items
+    if (allStoriesWithAds.length > 0) {
+      const imagesToPrefetch = allStoriesWithAds
+        .slice(0, 5) // Prefetch first 5 items
+        .filter(item => item.type !== 'ad')
+        .map(story => story.poster || story.avatarUri)
+        .filter(Boolean);
+      
+      prefetchImages(imagesToPrefetch, { concurrent: 2 });
+    }
+  }, [reelsData]);
 
-        setFilteredData(allStoriesWithAds);
-      },
-      refetchOnWindowFocus: false,
-      refetchOnMount: false,
-      enabled: !!user?._id, // Will automatically refetch when location changes due to query key
-      refetchOnReconnect: false,
-    },
-  );
-
+  // Use optimized story hook
   const {
+    data: storyData,
     refetch: refetchStory,
     isLoading: isLoadingStory,
     isFetching: isFetchingStory,
-  } = useQuery(
-    ['storyById', storyId],
-    () =>
-      request.get(
-        `/story/${storyId}?lat=${location?.latitude}&long=${location?.longitude}`,
-        {
-          params: {
-            userId: user?._id,
-          },
-        },
-      ),
-    {
-      enabled: !!storyId && !!filteredData?.length,
-      onSuccess: res => {
-        const filtered = filteredData?.filter(item => {
-          return res?.data?.story?._id !== item?._id;
-        });
-        if (filtered.length) {
-          setFilteredData([res?.data?.story, ...filtered]);
-        }
-        flatListRef.current?.scrollToOffset({offset: 0});
-        updateViewsMutation.mutate(res?.data?.story?._id);
-        setActiveVideoIndex(0);
-        setStoryId(null);
-      },
-    },
-  );
+  } = useOptimizedStory(storyId);
+
+  // Handle story data when it arrives
+  useEffect(() => {
+    if (storyData?.story && filteredData?.length) {
+      const filtered = filteredData.filter(item => {
+        return storyData.story._id !== item._id;
+      });
+      if (filtered.length) {
+        setFilteredData([storyData.story, ...filtered]);
+      }
+      flatListRef.current?.scrollToOffset({offset: 0});
+      updateViewsMutation.mutate(storyData.story._id);
+      setActiveVideoIndex(0);
+      setStoryId(null);
+    }
+  }, [storyData, filteredData]);
   useEffect(() => {
     setExtraData(e => !e);
   }, [activeVideoIndex, isFocused, notificationReceived]);
 
   const onPressSearch = () => navigation.navigate(TabNav.Search);
 
-  const handleDeepLink = link => {
-    // Handle dynamic link inside your own application
-    if (link) {
-      navigation.navigate(TabNav.FollowingTab);
-      const postId = link?.url?.split?.('/')?.pop();
-      setStoryId(postId);
-      setTimeout(() => {
-        refetchStory();
-      }, 500);
+  useEffect(() => {
+    // Initialize deep linking service
+    const deepLinkingService = DeepLinkingService.getInstance();
 
-      queryClient.invalidateQueries({queryKey: 'user'});
-      queryClient.invalidateQueries({queryKey: 'profile-stories'});
-
-      setnotificationReceived(true);
+    // Set navigation reference if not already set
+    if (navigation && !DeepLinkingService.navigationRef) {
+      DeepLinkingService.setNavigationRef(navigation);
     }
-  };
 
-  useEffect(() => {
-    dynamicLinks()
-      .getInitialLink()
-      .then(link => {
-        handleDeepLink(link);
-      });
-  }, []);
+    // Initialize the service to handle incoming links
+    const cleanup = deepLinkingService.addEventListeners();
 
-  const handleDynamicLink = link => {
-    handleDeepLink(link);
-  };
+    // Handle initial URL if app was launched from a link
+    deepLinkingService.getInitialURL();
 
-  useEffect(() => {
-    const unsubscribe = dynamicLinks().onLink(handleDynamicLink);
-    dynamicLinks().getInitialLink().then(handleDynamicLink); // Handle initial links
-    return () => unsubscribe();
-  }, []); // Empty dependency array ensures this runs only once
+    return cleanup;
+  }, [navigation]);
 
   React.useEffect(() => {
     setStoryId(route.params?.storyId);
@@ -344,7 +311,20 @@ export default function ReelsComponent({amIFocused}) {
   const onSetLayout = e => setLayoutHeight(e.nativeEvent.layout.height);
 
   return (
-    <View style={[localStyles.outerContainer, {color: colors.backgroundColor}]}>
+    <View style={[localStyles.outerContainer, {backgroundColor: colors.backgroundColor}]}>
+      {/* Address Dropdown for Delivery Location */}
+      <View style={localStyles.addressDropdownContainer}>
+        <AddressDropdown
+          compact={true}
+          style={{
+            width: moderateScale(140), // Fixed width to match discover
+          }}
+          onAddressSelect={address => {
+            console.log('Selected delivery address:', address);
+            // You can add logic here to filter content by delivery area if needed
+          }}
+        />
+      </View>
       {isLoadingStory && <ZLoader absolute height={100} top={300} />}
       {filteredData?.[activeVideoIndex]?.type !== 'ad' && (
         <View style={localStyles.headerContainer3}>
@@ -357,7 +337,7 @@ export default function ReelsComponent({amIFocused}) {
             type="m14"
             containerStyle={localStyles.buttonTag}
             title={
-              filteredData?.[activeVideoIndex]?.kmAway
+              filteredData?.[activeVideoIndex]?.kmAway && filteredData?.[activeVideoIndex]?.kmAway !== null
                 ? filteredData?.[activeVideoIndex]?.kmAway?.toFixed(2) +
                   strings.kmAway
                 : strings.clickbranches
@@ -503,6 +483,13 @@ const localStyles = StyleSheet.create({
     zIndex: 1,
     right: 30,
     ...styles.rowSpaceBetween,
+  },
+  addressDropdownContainer: {
+    position: 'absolute',
+    top: moderateScale(15), // Move higher to avoid any overlaps
+    right: moderateScale(15),
+    zIndex: 999,
+    width: moderateScale(140), // Fixed width to match discover
   },
   headerInnerContainer: {
     ...styles.flex,

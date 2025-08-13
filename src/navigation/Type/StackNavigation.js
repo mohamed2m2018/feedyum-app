@@ -327,6 +327,18 @@ export default function StackNavigation() {
         name={StackNav.ReviewReelDetail}
         component={StackRoute.ReviewReelDetail}
       />
+      <Stack.Screen
+        name={StackNav.SavedAddresses}
+        component={StackRoute.SavedAddresses}
+      />
+      <Stack.Screen
+        name={StackNav.EditAddress}
+        component={StackRoute.EditAddress}
+      />
+      <Stack.Screen
+        name={StackNav.MapLocationPicker}
+        component={StackRoute.MapLocationPicker}
+      />
     </Stack.Navigator>
   );
 }

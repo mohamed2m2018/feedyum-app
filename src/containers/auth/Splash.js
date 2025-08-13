@@ -3,7 +3,6 @@ import { View } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import SplashScreen from 'react-native-splash-screen';
-import dynamicLinks from '@react-native-firebase/dynamic-links';
 import OneSignal from 'react-native-onesignal';
 // Local Imports
 import { colors } from '../../themes';
@@ -22,6 +21,7 @@ const Splash = ({ navigation }) => {
   const [access_token] = useStorage(ACCESS_TOKEN);
 
   const [isNavigating, setIsNavigating] = useState(false);
+  const [initialTab, setInitialTab] = useState(TabNav.Discover);
 
   useQuery('user', () => request.get('/user'), { retry: 1, cacheTime: Infinity });
 
@@ -34,21 +34,10 @@ const Splash = ({ navigation }) => {
       }
     }
 
-    let initialTab = TabNav.Discover; // Default tab
-
-    const handleDynamicLink = (link) => {
-      if (link) {
-        initialTab = TabNav.FollowingTab;
-      }
-    };
-
-    const dynamicLink = await dynamicLinks().getInitialLink();
-    handleDynamicLink(dynamicLink);
-
     OneSignal.setNotificationOpenedHandler((notification) => {
       const additionalData = notification.notification.additionalData;
       if (additionalData && additionalData.screen === 'FollowingTab') {
-        initialTab = TabNav.FollowingTab;
+        setInitialTab(TabNav.FollowingTab);
       }
     });
 

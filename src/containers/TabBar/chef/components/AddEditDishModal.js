@@ -18,6 +18,8 @@ import {useQuery} from 'react-query';
 import ZText from '../../../../components/common/ZText';
 import ZButton from '../../../../components/common/ZButton';
 import ZInput from '../../../../components/common/ZInput';
+import CategorySelectionModal from '../../../../components/modals/CategorySelectionModal';
+import SectionInputModal from '../../../../components/modals/SectionInputModal';
 import request from '../../../../api/request';
 import {moderateScale} from '../../../../common/constants';
 import strings from '../../../../i18n/strings';
@@ -70,6 +72,7 @@ const AddEditDishModal = ({
     description: '',
     price: '',
     category: '',
+    categories: [],
     section: '',
     image: '',
     cookingTime: '',
@@ -79,6 +82,8 @@ const AddEditDishModal = ({
 
   const [errors, setErrors] = useState({});
   const [imageUri, setImageUri] = useState('');
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [showSectionModal, setShowSectionModal] = useState(false);
 
   // Fetch current user first
   const {data: userData} = useQuery('user', () => request.get('/user'));
@@ -108,15 +113,20 @@ const AddEditDishModal = ({
     },
   );
 
-  // Provide default sections if none exist
-  const availableSections = sectionsData && sectionsData.length > 0 
-    ? sectionsData 
-    : [
-        { name: strings.appetizers, description: strings.startersAndSmallPlates },
-        { name: strings.mainCourses, description: strings.mainDishesAndEntrees },
-        { name: strings.desserts, description: strings.sweetTreatsAndDesserts },
-        { name: strings.beverages, description: strings.drinksAndBeverages }
-      ];
+  // State for managing custom sections
+  const [customSections, setCustomSections] = useState([]);
+
+  // Only use sections from API (which now only returns sections with dishes)
+  // No default sections fallback - only show sections the chef has actually used
+  const apiSections = sectionsData || [];
+  
+  // Combine API sections with custom sections, avoiding duplicates
+  const availableSections = [
+    ...apiSections,
+    ...customSections.filter(customSection => 
+      !apiSections.some(apiSection => apiSection.name.toLowerCase() === customSection.name.toLowerCase())
+    )
+  ];
 
   // Initialize form data when dish prop changes
   useEffect(() => {
@@ -126,6 +136,7 @@ const AddEditDishModal = ({
         description: dish.description || '',
         price: dish.price?.toString() || '',
         category: dish.category || '',
+        categories: Array.isArray(dish.categories) ? dish.categories : (dish.category ? [dish.category] : []),
         section: dish.section?.name || dish.section || '',
         image: dish.image || '',
         cookingTime: dish.cookingTime?.toString() || '',
@@ -140,6 +151,7 @@ const AddEditDishModal = ({
         description: '',
         price: '',
         category: '',
+        categories: [],
         section: '',
         image: '',
         cookingTime: '',
@@ -156,6 +168,23 @@ const AddEditDishModal = ({
     // Clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({...prev, [field]: ''}));
+    }
+  };
+
+  const handleSectionSelection = (sectionName) => {
+    updateFormData('section', sectionName);
+    
+    // Add to custom sections if it's not already in available sections
+    const existingSection = availableSections.find(section => 
+      section.name.toLowerCase() === sectionName.toLowerCase()
+    );
+    
+    if (!existingSection) {
+      const newSection = { 
+        name: sectionName, 
+        description: `Custom section: ${sectionName}` 
+      };
+      setCustomSections(prev => [...prev, newSection]);
     }
   };
 
@@ -179,7 +208,7 @@ const AddEditDishModal = ({
       newErrors.price = strings.validPriceRequired;
     }
 
-    if (!formData.category.trim()) {
+    if ((!Array.isArray(formData.categories) || formData.categories.length === 0) && !formData.category.trim()) {
       newErrors.category = strings.categoryRequired;
     }
 
@@ -211,6 +240,9 @@ const AddEditDishModal = ({
         ? parseInt(formData.cookingTime)
         : undefined,
       image: imageUri || formData.image,
+      // Ensure both single and multi are present for backward compatibility
+      category: formData.category || formData.categories?.[0] || '',
+      categories: formData.categories || (formData.category ? [formData.category] : []),
     };
 
     onSave(dishData);
@@ -353,25 +385,15 @@ const AddEditDishModal = ({
             error={errors.price}
           />
 
-          {/* Category Picker */}
+          {/* Category Picker (now supports multi-select) */}
           <PickerButton
             label={strings.category}
-            value={formData.category}
+            value={(formData.categories && formData.categories.length > 0)
+              ? formData.categories.join(', ')
+              : formData.category}
             error={errors.category}
             colors={colors}
-            onPress={() => {
-              const options =
-                categoriesData?.map(cat => ({
-                  text: cat.name,
-                  onPress: () => updateFormData('category', cat.name),
-                })) || [];
-
-              Alert.alert(
-                strings.selectCategory,
-                strings.chooseCategoryForDish,
-                [...options, {text: strings.cancel, style: 'cancel'}],
-              );
-            }}
+            onPress={() => setShowCategoryModal(true)}
           />
 
           {/* Section Picker */}
@@ -380,18 +402,7 @@ const AddEditDishModal = ({
             value={formData.section}
             error={errors.section}
             colors={colors}
-            onPress={() => {
-              const options =
-                availableSections?.map(section => ({
-                  text: section.name,
-                  onPress: () => updateFormData('section', section.name),
-                })) || [];
-
-              Alert.alert(strings.selectSection, strings.chooseSectionForDish, [
-                ...options,
-                {text: strings.cancel, style: 'cancel'},
-              ]);
-            }}
+            onPress={() => setShowSectionModal(true)}
           />
 
           <ZInput
@@ -463,6 +474,45 @@ const AddEditDishModal = ({
           />
         </View>
       </View>
+
+      {/* Category Selection Modal */}
+      <CategorySelectionModal
+        visible={showCategoryModal}
+        onClose={() => setShowCategoryModal(false)}
+        categories={categoriesData || []}
+        // multi-select enabled
+        multiSelect
+        selectedCategories={formData.categories}
+        selectedCategory={formData.category}
+        onToggleCategory={(category) => {
+          const name = category.name;
+          setFormData(prev => {
+            const current = Array.isArray(prev.categories) ? prev.categories : [];
+            const exists = current.includes(name);
+            const next = exists ? current.filter(c => c !== name) : [...current, name];
+            return {
+              ...prev,
+              categories: next,
+              category: next[0] || '',
+            };
+          });
+        }}
+        onDone={() => setShowCategoryModal(false)}
+        onSelectCategory={(category) => updateFormData('category', category.name)}
+        title={strings.selectCategory}
+        subtitle={strings.chooseCategoryForDish}
+      />
+
+      {/* Section Input Modal */}
+      <SectionInputModal
+        visible={showSectionModal}
+        onClose={() => setShowSectionModal(false)}
+        availableSections={availableSections || []}
+        onSelectSection={handleSectionSelection}
+        selectedSection={formData.section}
+        title={strings.selectSection}
+        subtitle={strings.chooseSectionForDish}
+      />
     </Modal>
   );
 };

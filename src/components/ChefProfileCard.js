@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Image,
 } from 'react-native';
+import StarRating from './StarRating';
 
 const ChefProfileCard = ({ chef, onPress, onViewMenu, showMenuButton = true }) => {
   const handlePress = () => {
@@ -20,6 +21,10 @@ const ChefProfileCard = ({ chef, onPress, onViewMenu, showMenuButton = true }) =
     }
   };
 
+  // Use backend-provided rating only
+  const ratingValue = Number.isFinite(chef?.averageDishRating) ? chef.averageDishRating : 0;
+  const reviewsCount = chef?.ratedDishesCount || 0;
+
   return (
     <TouchableOpacity style={styles.card} onPress={handlePress}>
       <View style={styles.header}>
@@ -28,9 +33,20 @@ const ChefProfileCard = ({ chef, onPress, onViewMenu, showMenuButton = true }) =
           style={styles.avatar} 
         />
         <View style={styles.info}>
-          <Text style={styles.name}>
-            {chef.fullName || chef.username}
-          </Text>
+          <View style={styles.nameRow}>
+            <Text style={styles.name}>
+              {chef.fullName || chef.username}
+            </Text>
+            <StarRating
+              rating={ratingValue}
+              totalReviews={reviewsCount}
+              size="small"
+              showText={true}
+              showCount={reviewsCount > 0}
+              showWhenNoRating={true}
+              style={styles.rating}
+            />
+          </View>
           <Text style={styles.type}>Chef</Text>
           {chef.bio && (
             <Text style={styles.bio} numberOfLines={2}>
@@ -119,11 +135,25 @@ const styles = StyleSheet.create({
   info: {
     flex: 1,
   },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   name: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 4,
+  },
+  rating: {
+    marginLeft: 8,
+  },
+  noRating: {
+    marginLeft: 8,
+    color: '#999',
+    fontSize: 14,
+    fontWeight: '600',
   },
   type: {
     fontSize: 14,

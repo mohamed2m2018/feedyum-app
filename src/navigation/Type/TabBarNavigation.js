@@ -20,6 +20,8 @@ import {
   Discover_Dark,
   Discover_Light,
   Profile_Light,
+  Search_Dark,
+  Search_Light,
   Orders_Dark,
   Orders_Light,
   Inbox_Dark,
@@ -32,23 +34,38 @@ import {useQuery} from 'react-query';
 import {useHandleAuth} from '../../utils/useHandleAuth';
 import AddPost from '../../containers/TabBar/add/addPost';
 import {useScreen} from '../screenContext';
+import ChefDashboard from '../../containers/TabBar/chef/ChefDashboard';
+import ZLoader from '../../components/common/ZLoader';
+import BottomActionSheet from '../../components/models/BottomActionSheet';
 
 export default function TabBarNavigation({route, navigation}) {
   const colors = useSelector(state => state.theme.theme);
   const Tab = createMaterialTopTabNavigator();
   const ProfilePictureSheetRef = React.createRef();
-  const {data} = useQuery('user', () => request.get('/user'), {retry: 1});
+  const {data, isLoading} = useQuery('user', () => request.get('/user'), {retry: 1});
   const {handleAuthToast} = useHandleAuth();
   const {currentScreen: previousScreen} = useScreen();
+  const [modalState, setModalState] = React.useState({visible: false, title: '', message: ''});
+
+  // Avoid flashing Discover before user type is known
+  if (isLoading && !data) {
+    return (
+      <View style={{flex: 1}}>
+        <ZLoader height={150} top={300} />
+      </View>
+    );
+  }
 
   // Extract initialTab from route params or default to Discover
   const {initialTab = TabNav.Discover} = route.params || {};
 
   // Determine which component to use for Orders tab based on user type
-  const isChef = data?.data?.user?.type === 'chef';
+  const user = data?.data?.user;
+  const isChef = user?.type === 'chef';
   const OrdersTabComponent = isChef
     ? TabRoute.OrderManagement
     : TabRoute.Orders;
+  const DiscoverTabComponent = isChef ? ChefDashboard : TabRoute.Discover;
 
   const TabText = ({text, focused, icon}) => (
     <View style={localStyles.tabViewContainer}>
@@ -65,19 +82,62 @@ export default function TabBarNavigation({route, navigation}) {
     </View>
   );
 
-  const onPressAdd = () => {
+  const verifyChefCanPost = async () => {
+    if (!isChef) return true;
+    try {
+      const menuResponse = await request.get(`/menus/chef/${user?._id}`);
+      const menuId = menuResponse?.data?._id;
+      if (!menuId) {
+        setModalState({
+          visible: true,
+          title: 'Create your menu first',
+          message: 'To start posting, please create your menu and add your dishes so customers can order easily.',
+        });
+        return false;
+      }
+
+      const dishesResponse = await request.get(`/dishes/menu/${menuId}`);
+      const dishes = dishesResponse?.data || [];
+      if (!Array.isArray(dishes) || dishes.length === 0) {
+        setModalState({
+          visible: true,
+          title: 'No dishes found',
+          message: 'We didn’t find any dishes in your menu. Please add at least one dish before posting.',
+        });
+        return false;
+      }
+      return true;
+    } catch (e) {
+      setModalState({
+        visible: true,
+        title: 'No dishes found',
+        message: 'We didn’t find any dishes in your menu. Please add at least one dish before posting.',
+      });
+      return false;
+    }
+  };
+
+  const onPressAdd = async () => {
     if (handleAuthToast()) {
       return;
     }
+    const ok = await verifyChefCanPost();
+    if (!ok) return;
     ProfilePictureSheetRef?.current?.show();
   };
 
-  const onPressPost = isImage => {
+  const onPressPost = async isImage => {
+    const ok = await verifyChefCanPost();
+    if (!ok) {
+      ProfilePictureSheetRef?.current?.hide();
+      return;
+    }
     ProfilePictureSheetRef?.current?.hide();
     navigation.navigate(StackNav.PostDetail, {isImage});
   };
 
   return (
+    <>
     <Tab.Navigator
       tabBarPosition="bottom"
       sceneContainerStyle={{backgroundColor: colors.backgroundColor}}
@@ -100,11 +160,11 @@ export default function TabBarNavigation({route, navigation}) {
       initialRouteName={initialTab}>
       <Tab.Screen
         name={TabNav.Discover}
-        component={TabRoute.Discover}
+        component={DiscoverTabComponent}
         options={{
           tabBarIcon: ({focused}) => (
             <TabText
-              text={strings.explore}
+              text={isChef ? strings.chefDashboard : strings.explore}
               focused={focused}
               icon={focused ? <Discover_Dark /> : <Discover_Light />}
             />
@@ -128,6 +188,20 @@ export default function TabBarNavigation({route, navigation}) {
             // Additional work on tab press for FollowingTab
             // console.log('Following tab pressed');
           },
+        }}
+      />
+
+      <Tab.Screen
+        name={TabNav.Search}
+        component={TabRoute.Search}
+        options={{
+          tabBarIcon: ({focused}) => (
+            <TabText
+              text={strings.search}
+              focused={focused}
+              icon={focused ? <Search_Dark /> : <Search_Light />}
+            />
+          ),
         }}
       />
 
@@ -218,6 +292,21 @@ export default function TabBarNavigation({route, navigation}) {
         }}
       />
     </Tab.Navigator>
+    {modalState.visible && (
+      <BottomActionSheet
+        visible={modalState.visible}
+        title={modalState.title}
+        message={modalState.message}
+        primaryLabel={'Open Menu Management'}
+        secondaryLabel={'Not now'}
+        onPrimary={() => {
+          setModalState({visible: false, title: '', message: ''});
+          navigation.navigate(StackNav.MenuManagement, {fromTabs: true});
+        }}
+        onClose={() => setModalState({visible: false, title: '', message: ''})}
+      />
+    )}
+  </>
   );
 }
 

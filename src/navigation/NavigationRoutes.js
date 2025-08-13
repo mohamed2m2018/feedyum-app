@@ -74,12 +74,16 @@ import Orders from '../containers/TabBar/orders/Orders';
 import Wallet from '../containers/TabBar/profile/Wallet';
 import ReviewReelCreator from '../components/ReviewReelCreator';
 import ReviewReelDetail from '../components/ReviewReelDetailView';
+import SavedAddresses from '../containers/TabBar/profile/SavedAddresses';
+import EditAddress from '../containers/TabBar/profile/EditAddress';
+import MapLocationPicker from '../components/MapLocationPicker';
 
 export const TabRoute = {
   ForYou: ForYou,
   Following: FollowingTab,
   Profile,
   Discover,
+  Search,
   Orders,
   OrderManagement,
   Chat: ChatList,
@@ -153,4 +157,7 @@ export const StackRoute = {
   Wallet,
   ReviewReelCreator,
   ReviewReelDetail,
+  SavedAddresses,
+  EditAddress,
+  MapLocationPicker,
 };

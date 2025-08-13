@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useEffect, useRef, useState, useCallback} from 'react';
 import {
   View,
   StyleSheet,
@@ -7,18 +7,22 @@ import {
   TouchableOpacity,
   RefreshControl,
   Alert,
+  InteractionManager,
+  ActivityIndicator,
 } from 'react-native';
 import {useSelector, useDispatch} from 'react-redux';
 import {useQuery} from 'react-query';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import ZText from '../../../components/common/ZText';
+import ZInput from '../../../components/common/ZInput';
+import StarRating from '../../../components/StarRating';
 import ZHeader from '../../../components/common/ZHeader';
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
 import ZLoader from '../../../components/common/ZLoader';
 import ZButton from '../../../components/common/ZButton';
 import CartFloatingButton from '../../../components/common/CartFloatingButton';
-import {moderateScale} from '../../../common/constants';
+import {moderateScale, getHeight} from '../../../common/constants';
 import {styles} from '../../../themes';
 import request from '../../../api/request';
 import images from '../../../assets/images';
@@ -36,9 +40,13 @@ const ChefMenu = () => {
   const dispatch = useDispatch();
   const navigation = useNavigation();
   const route = useRoute();
-  const {chefId, scrollToDishId, chefName} = route.params;
+  const {chefId, scrollToDishId, chefName, averageDishRating: headerAvg = 0, ratedDishesCount: headerCount = 0} = route.params;
+
+
 
   const flatListRef = useRef(null);
+  const hasAttemptedScrollRef = useRef(false);
+  const [scrollRetryCount, setScrollRetryCount] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const [quantities, setQuantities] = useState({}); // Track quantities for each dish
 
@@ -79,33 +87,13 @@ const ChefMenu = () => {
         };
       }
 
-      // Fetch dishes directly by chef ID (this works regardless of menu structure)
+      // Fetch dishes for this chef
       try {
         const dishesResponse = await request.get(`/dishes/chef/${chefId}`);
         dishes = dishesResponse.data || [];
-        console.log('Dishes from chef:', dishes);
-
-        // Filter only visible dishes for customers
-        dishes = dishes.filter(dish => dish.visible !== false);
-        console.log('Visible dishes for customers:', dishes);
       } catch (dishError) {
         console.log('Could not fetch dishes from chef:', dishError.message);
-
-        // Fallback: try to get all dishes and filter
-        try {
-          const allDishesResponse = await request.get('/dishes');
-          const allDishes = allDishesResponse.data || [];
-          // Filter dishes by chef and visibility
-          dishes = allDishes.filter(
-            dish =>
-              (dish.user_id === chefId ||
-                (dish.chef && dish.chef._id === chefId)) &&
-              dish.visible !== false,
-          );
-          console.log('Fallback dishes for chef:', dishes);
-        } catch (fallbackError) {
-          console.log('Fallback fetch also failed:', fallbackError.message);
-        }
+        dishes = [];
       }
 
       return {
@@ -137,21 +125,91 @@ const ChefMenu = () => {
       
       // Auto-scroll to specific dish if provided
       if (scrollToDishId && data?.dishes && flatListRef.current) {
-        setTimeout(() => {
-          const dishIndex = data.dishes.findIndex(
-            dish => dish._id === scrollToDishId,
-          );
-          if (dishIndex !== -1) {
-            flatListRef.current.scrollToIndex({
-              index: dishIndex,
-              animated: true,
-              viewPosition: 0.1,
-            });
-          }
-        }, 500);
+        // Defer until interactions complete to ensure list has measured content
+        InteractionManager.runAfterInteractions(() => {
+          setTimeout(() => {
+            const dishIndex = data.dishes.findIndex(
+              dish => dish._id === scrollToDishId || dish.id === scrollToDishId,
+            );
+            if (dishIndex !== -1) {
+              try {
+                flatListRef.current.scrollToIndex({
+                  index: dishIndex,
+                  animated: true,
+                  viewPosition: 0.1,
+                });
+                hasAttemptedScrollRef.current = true;
+              } catch (e) {
+                console.log('Initial scrollToIndex threw, will retry:', e?.message);
+              }
+            }
+          }, 300);
+        });
       }
     },
   });
+
+  // Search state for within-chef menu
+  const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [useSemanticSearch, setUseSemanticSearch] = useState(true);
+
+  const onSearchInput = text => {
+    setSearch(text);
+    clearTimeout(onSearchInput._t);
+    onSearchInput._t = setTimeout(() => setDebouncedSearch(text), 500);
+  };
+
+  // Fetch searched dishes scoped to chef
+  const fetchSearchedDishes = async ({ pageParam = null }) => {
+    if (!debouncedSearch) return { data: { data: { dishes: menuData?.dishes || [], pagination: {} } } };
+    const endpoint = useSemanticSearch ? '/dishes/semantic-search' : '/dishes/search';
+    const params = useSemanticSearch
+      ? { searchString: debouncedSearch, cursor: pageParam, limit: 10, searchType: 'hybrid', chefId }
+      : { searchString: debouncedSearch, page: pageParam || 1, limit: 10, chefId };
+    return request.get(endpoint, { params });
+  };
+
+  const { data: searchedDishes, isFetching: isSearching } = useQuery(
+    ['chefMenuSearch', chefId, debouncedSearch, useSemanticSearch],
+    async () => {
+      const res = await fetchSearchedDishes({ pageParam: null });
+      const dishes = res?.data?.data?.dishes || res?.data?.dishes || [];
+      return dishes;
+    },
+    { enabled: !!chefId && debouncedSearch.length > 0 }
+  );
+
+  // Retry scroll when data changes and we have a target dish
+  useEffect(() => {
+    if (!menuData?.dishes || !scrollToDishId || !flatListRef.current) return;
+    if (hasAttemptedScrollRef.current) return;
+
+    const index = menuData.dishes.findIndex(
+      d => d._id === scrollToDishId || d.id === scrollToDishId,
+    );
+    if (index === -1) return;
+
+    const tryScroll = (attempt = 0) => {
+      if (!flatListRef.current) return;
+      try {
+        flatListRef.current.scrollToIndex({
+          index,
+          animated: true,
+          viewPosition: 0.1,
+        });
+        hasAttemptedScrollRef.current = true;
+      } catch (err) {
+        if (attempt < 5) {
+          setTimeout(() => tryScroll(attempt + 1), 200);
+        } else {
+          console.log('Failed to scroll to dish after retries:', err?.message);
+        }
+      }
+    };
+
+    InteractionManager.runAfterInteractions(() => tryScroll(0));
+  }, [menuData?.dishes, scrollToDishId]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -169,6 +227,8 @@ const ChefMenu = () => {
   const handleAddToCart = async (dish, quantity = 1) => {
     if (!dish || quantity <= 0) return;
 
+
+
     try {
       // Remove .unwrap() since addToCart is a regular action creator, not an async thunk
       dispatch(
@@ -176,6 +236,7 @@ const ChefMenu = () => {
           dish,
           quantity,
           chefId,
+          chefName: chefName || 'Unknown Chef',
         }),
       );
     } catch (error) {
@@ -284,6 +345,18 @@ const ChefMenu = () => {
                   {dish.description}
                 </ZText>
               )}
+
+              {/* Rating */}
+              <StarRating
+                rating={Number.isFinite(dish?.average_rating)
+                  ? dish.average_rating
+                  : (Number.isFinite(dish?.rating) ? dish.rating : 0)}
+                size="small"
+                showText={false}
+                showCount={false}
+                showWhenNoRating={true}
+                style={{ marginBottom: moderateScale(6) }}
+              />
 
               {/* Price and Category */}
               <View style={localStyles.priceRow}>
@@ -415,14 +488,40 @@ const ChefMenu = () => {
     if (categoryNames.length <= 1) return null;
 
     return (
-      <View style={[localStyles.stickyBrowseContainer, {backgroundColor: colors.backgroundColor}]}>
+      <View style={[localStyles.stickyBrowseContainer, {backgroundColor: colors.backgroundColor}]}> 
         <View style={localStyles.stunningCategoriesContainer}>
-          <ZText
-            type="B16"
-            color={colors.textColor}
-            style={localStyles.categoriesTitle}>
-            Browse Menu
-          </ZText>
+          {/* Header row: Browse Menu + Search */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: moderateScale(10), marginTop: moderateScale(-6), marginBottom: moderateScale(8) }}>
+            <ZText
+              type="B16"
+              color={colors.textColor}
+              style={[localStyles.categoriesTitle, { marginBottom: 0 }]}>
+              Browse Menu
+            </ZText>
+            <View style={{ flex: 1, marginTop: -moderateScale(4) }}>
+              <ZInput
+                _value={search}
+                placeHolder={'Search dishes...'}
+                toGetTextFieldValue={onSearchInput}
+                insideLeftIcon={() => (
+                  <Ionicons name="search" size={moderateScale(16)} color={colors.grayScale6} />
+                )}
+                inputContainerStyle={{ backgroundColor: colors.inputBg || colors.grayScale2, borderColor: colors.bColor || colors.grayScale3, height: getHeight(42) }}
+                inputBoxStyle={{ color: colors.textColor, height: getHeight(42), paddingVertical: moderateScale(6) }}
+                rightAccessory={() => (
+                  isSearching ? (
+                    <ActivityIndicator size="small" color={colors.primary} />
+                  ) : (
+                    search?.length > 0 ? (
+                      <TouchableOpacity onPress={() => { setSearch(''); setDebouncedSearch(''); }}>
+                        <Ionicons name="close-circle" size={moderateScale(18)} color={colors.grayScale6} />
+                      </TouchableOpacity>
+                    ) : null
+                  )
+                )}
+              />
+            </View>
+          </View>
           <FlatList
             data={categoryNames}
             horizontal
@@ -529,9 +628,27 @@ const ChefMenu = () => {
             style={localStyles.chefAvatar}
           />
           <View style={localStyles.chefDetails}>
-            <ZText type="B18" color={colors.textColor}>
-              {menuData?.chef?.fullName || chefName}
-            </ZText>
+            <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'}}>
+              <ZText type="B18" color={colors.textColor}>
+                {menuData?.chef?.fullName || chefName}
+              </ZText>
+              {((Number.isFinite(menuData?.chef?.ratedDishesCount) && menuData.chef.ratedDishesCount > 0 && Number.isFinite(menuData?.chef?.averageDishRating) && menuData.chef.averageDishRating > 0) ||
+                (headerCount > 0 && headerAvg > 0)) ? (
+                <StarRating
+                  rating={Number.isFinite(menuData?.chef?.averageDishRating)
+                    ? menuData.chef.averageDishRating
+                    : headerAvg}
+                  totalReviews={Number.isFinite(menuData?.chef?.ratedDishesCount)
+                    ? menuData.chef.ratedDishesCount
+                    : headerCount}
+                  size="small"
+                  showText={true}
+                  showCount={true}
+                />
+              ) : (
+                <ZText type="B14" color={colors.grayScale7}>-</ZText>
+              )}
+            </View>
             <ZText type="M14" color={colors.grayScale7}>
               {menuData?.dishes?.length || 0} dishes available
             </ZText>
@@ -623,9 +740,19 @@ const ChefMenu = () => {
       {/* Sticky Browse Menu */}
       {renderStickyBrowseMenu()}
 
+      {/* Search bar + toggle */}
+      {/* Removed standalone search row and semantic button per request */}
+
+      {/* Optional small loader below search when searching */}
+      {debouncedSearch.length > 0 && isSearching ? (
+        <View style={{ paddingHorizontal: moderateScale(16), paddingBottom: moderateScale(6) }}>
+          <ZText type="M12" color={colors.grayScale7}>Searching…</ZText>
+        </View>
+      ) : null}
+
       <FlatList
         ref={flatListRef}
-        data={menuData?.dishes || []}
+        data={(debouncedSearch ? searchedDishes : menuData?.dishes) || []}
         renderItem={renderDishCard}
         keyExtractor={item => item._id}
         ListHeaderComponent={renderHeader}
@@ -639,7 +766,29 @@ const ChefMenu = () => {
           />
         }
         onScrollToIndexFailed={info => {
-          console.log('Scroll to index failed:', info);
+          // Fallback: scroll by approximate offset then retry
+          try {
+            if (flatListRef.current && Number.isFinite(info.averageItemLength)) {
+              const approximateOffset = Math.max(0, info.averageItemLength * info.index);
+              flatListRef.current.scrollToOffset({
+                offset: approximateOffset,
+                animated: true,
+              });
+              setTimeout(() => {
+                try {
+                  flatListRef.current?.scrollToIndex({
+                    index: info.index,
+                    animated: true,
+                    viewPosition: 0.1,
+                  });
+                } catch (e2) {
+                  console.log('Retry scrollToIndex failed:', e2?.message);
+                }
+              }, 250);
+            }
+          } catch (e) {
+            console.log('onScrollToIndexFailed handler error:', e?.message);
+          }
         }}
       />
 
@@ -656,7 +805,7 @@ const localStyles = StyleSheet.create({
     padding: moderateScale(20),
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(0,0,0,0.1)',
-    marginBottom: moderateScale(10),
+    marginBottom: moderateScale(4),
   },
   chefInfo: {
     flexDirection: 'row',
@@ -855,7 +1004,8 @@ const localStyles = StyleSheet.create({
   // STUNNING Category Sections Styles
   stunningCategoriesContainer: {
     paddingHorizontal: moderateScale(20),
-    paddingVertical: moderateScale(15),
+    paddingTop: moderateScale(8),
+    paddingBottom: moderateScale(12),
   },
   categoriesTitle: {
     marginBottom: moderateScale(15),

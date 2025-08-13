@@ -177,7 +177,7 @@ export default function Orders({navigation}) {
 
         <View style={localStyles.orderDetails}>
           <ZText type="M14" color={colors.grayScale7} numberOfLines={1}>
-            {item.items?.length || 0} items • ${item.totalPrice?.toFixed(2) || '0.00'}
+            {item.items?.length || 0} items • {item.totalPrice?.toFixed(2) || '0.00'}
           </ZText>
         </View>
       </View>

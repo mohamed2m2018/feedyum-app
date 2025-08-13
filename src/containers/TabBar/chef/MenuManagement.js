@@ -11,6 +11,8 @@ import {
   Alert,
 } from 'react-native';
 import {useSelector} from 'react-redux';
+import {useNavigation, useNavigationState, useRoute} from '@react-navigation/native';
+import {StackNav} from '../../../navigation/NavigationKeys';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useQuery, useQueryClient, useMutation} from 'react-query';
 import {Toast, ALERT_TYPE} from 'react-native-alert-notification';
@@ -20,6 +22,7 @@ import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
 import ZHeader from '../../../components/common/ZHeader';
 import ZText from '../../../components/common/ZText';
 import ZLoader from '../../../components/common/ZLoader';
+import ZButton from '../../../components/common/ZButton';
 import DishCard from './components/DishCard';
 import AddEditDishModal from './components/AddEditDishModal';
 import request from '../../../api/request';
@@ -43,7 +46,7 @@ const SectionTab = ({section, isSelected, onPress, colors}) => (
   </TouchableOpacity>
 );
 
-const EmptyState = ({searchQuery, colors}) => (
+const EmptyState = ({searchQuery, colors, onAddDish}) => (
   <View style={localStyles.emptyContainer}>
     <Ionicons
       name="restaurant-outline"
@@ -61,12 +64,40 @@ const EmptyState = ({searchQuery, colors}) => (
         ? 'Try adjusting your search terms'
         : 'Start by adding your first dish to the menu'}
     </ZText>
+    {!searchQuery && (
+      <ZButton
+        title={'Add your first dish'}
+        textType={'b18'}
+        color={colors.white}
+        containerStyle={localStyles.ctaButton}
+        frontIcon={
+          <Ionicons
+            name="add"
+            size={moderateScale(18)}
+            color={colors.white}
+            style={{marginRight: moderateScale(8)}}
+          />
+        }
+        onPress={onAddDish}
+      />
+    )}
   </View>
 );
 
 export default function MenuManagement() {
   const colors = useSelector(state => state.theme.theme);
   const queryClient = useQueryClient();
+  const navigation = useNavigation();
+  const route = useRoute();
+  const fromTabsParam = !!route?.params?.fromTabs;
+  const isFromTabBar = useNavigationState(state => {
+    try {
+      const prevRoute = state?.routes?.[state?.index - 1];
+      return prevRoute?.name === StackNav.TabBar;
+    } catch (e) {
+      return false;
+    }
+  });
 
   const [selectedSection, setSelectedSection] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -76,8 +107,8 @@ export default function MenuManagement() {
   const [modalVisible, setModalVisible] = useState(false);
   const [editingDish, setEditingDish] = useState(null);
 
-  // Helper function to ensure chef has a menu and default sections
-  const ensureMenuAndSections = async () => {
+  // Helper function to ensure chef has a menu (no default sections)
+  const ensureMenu = async () => {
     try {
       // Try to get existing menu
       let menuResponse;
@@ -94,28 +125,6 @@ export default function MenuManagement() {
             name: 'My Restaurant Menu',
             description: 'Welcome to my restaurant!',
           });
-
-          // Create default sections
-          const defaultSections = [
-            {name: 'Appetizers', description: 'Starters and small plates'},
-            {name: 'Main Courses', description: 'Main dishes and entrees'},
-            {name: 'Desserts', description: 'Sweet treats and desserts'},
-            {name: 'Beverages', description: 'Drinks and beverages'},
-          ];
-
-          for (const section of defaultSections) {
-            try {
-              await request.post('/sections', section);
-            } catch (sectionError) {
-              console.log(
-                'Section creation error (might already exist):',
-                sectionError,
-              );
-            }
-          }
-
-          // Refresh sections data
-          queryClient.invalidateQueries(['menuSections', userId]);
         } else {
           throw error;
         }
@@ -130,7 +139,7 @@ export default function MenuManagement() {
 
       return menuId;
     } catch (error) {
-      console.error('Error ensuring menu and sections:', error);
+      console.error('Error ensuring menu:', error);
       throw error;
     }
   };
@@ -138,8 +147,8 @@ export default function MenuManagement() {
   // Mutations for CRUD operations - using real API calls
   const createDishMutation = useMutation(
     async dishData => {
-      // Ensure chef has a menu and sections
-      const menuId = await ensureMenuAndSections();
+      // Ensure chef has a menu
+      const menuId = await ensureMenu();
 
       // Ensure all required fields are present and valid
       if (
@@ -162,12 +171,13 @@ export default function MenuManagement() {
         throw new Error('User ID is required but not found');
       }
 
-      // Send EXACTLY what the controller expects - nothing more, nothing less
+      // Send fields the controller expects (now with multi-categories)
       const requestData = {
         name: dishData.name.trim(),
         description: dishData.description.trim(),
         price: parseFloat(dishData.price),
-        category: dishData.category.trim(),
+        category: (dishData.category || '').trim(),
+        categories: Array.isArray(dishData.categories) ? dishData.categories : ((dishData.category && dishData.category.trim()) ? [dishData.category.trim()] : []),
         sectionName: dishData.section.trim(),
         menuId: menuId,
         image: dishData.image || '',
@@ -201,8 +211,9 @@ export default function MenuManagement() {
     },
     {
       onSuccess: () => {
-        queryClient.invalidateQueries(['menuDishes', userId]);
-        queryClient.invalidateQueries(['menuSections', userId]);
+        // Invalidate broadly to avoid issues with stale closures capturing an undefined userId
+        queryClient.invalidateQueries('menuDishes');
+        queryClient.invalidateQueries('menuSections');
         setModalVisible(false);
         setEditingDish(null);
         Toast.show({
@@ -229,6 +240,7 @@ export default function MenuManagement() {
       // Update dish with real API call
       const response = await request.put(`/dishes/${dishId}`, {
         ...dishData,
+        categories: Array.isArray(dishData.categories) ? dishData.categories : ((dishData.category && dishData.category.trim()) ? [dishData.category.trim()] : []),
         sectionName: dishData.section, // Send section name to backend
       });
 
@@ -236,8 +248,9 @@ export default function MenuManagement() {
     },
     {
       onSuccess: () => {
-        queryClient.invalidateQueries(['menuDishes', userId]);
-        queryClient.invalidateQueries(['menuSections', userId]);
+        // Invalidate broadly to ensure refetch regardless of captured userId
+        queryClient.invalidateQueries('menuDishes');
+        queryClient.invalidateQueries('menuSections');
         setModalVisible(false);
         setEditingDish(null);
         Toast.show({
@@ -267,7 +280,8 @@ export default function MenuManagement() {
     },
     {
       onSuccess: () => {
-        queryClient.invalidateQueries(['menuDishes', userId]);
+        // Invalidate broadly to ensure list refresh
+        queryClient.invalidateQueries('menuDishes');
         Toast.show({
           type: ALERT_TYPE.SUCCESS,
           title: 'Success',
@@ -312,20 +326,22 @@ export default function MenuManagement() {
     },
   );
 
-  // Provide default sections based on actual categories in database
-  const availableSections = [
-    {name: 'Appetizers', description: 'Starters and small plates'},
-    {name: 'Main Course', description: 'Main dishes and entrees'},
-    {name: 'Pizza', description: 'Pizza varieties'},
-    {name: 'Pasta', description: 'Pasta dishes'},
-    {name: 'Burgers', description: 'Burger varieties'},
-    {name: 'Salads', description: 'Fresh salads'},
-    {name: 'Desserts', description: 'Sweet treats and desserts'},
-    {name: 'Beverages', description: 'Drinks and beverages'},
-  ];
-
-  // If we have sections from API, use them, otherwise use defaults
-  const finalSections = sectionsData && sectionsData.length > 0 ? sectionsData : availableSections;
+  // Prefer sections from API. If empty, derive from dishes to ensure UI shows the new section immediately
+  const derivedSections = (Array.isArray(dishesData)
+    ? Array.from(
+        new Map(
+          dishesData
+            .map(d => {
+              const name = d?.section?.name || d?.section || d?.category;
+              return name ? [name.toLowerCase(), { name }] : null;
+            })
+            .filter(Boolean),
+        ).values(),
+      )
+    : []);
+  const finalSections = (sectionsData && sectionsData.length > 0)
+    ? sectionsData
+    : derivedSections;
 
   // Fetch dishes - using real API call
   const {
@@ -362,7 +378,8 @@ export default function MenuManagement() {
         !searchQuery ||
         dish.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         dish.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        dish.category.toLowerCase().includes(searchQuery.toLowerCase());
+        (dish.category && dish.category.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (Array.isArray(dish.categories) && dish.categories.some(c => c.toLowerCase().includes(searchQuery.toLowerCase())));
 
       return matchesSection && matchesSearch;
     }) || [];
@@ -476,7 +493,7 @@ export default function MenuManagement() {
 
   const sections = [
     {name: 'All', value: 'all'},
-    ...(availableSections?.map(section => ({
+    ...(finalSections?.map(section => ({
       name: section.name,
       value: section.name,
     })) || []),
@@ -486,6 +503,7 @@ export default function MenuManagement() {
     <ZSafeAreaView>
       <ZHeader
         title="Menu Management"
+        isHideBack={fromTabsParam || isFromTabBar || !navigation.canGoBack()}
         rightIcon={
           <TouchableOpacity
             onPress={handleAddDish}
@@ -593,7 +611,11 @@ export default function MenuManagement() {
                 <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
               }
               ListEmptyComponent={
-                <EmptyState searchQuery={searchQuery} colors={colors} />
+                <EmptyState
+                  searchQuery={searchQuery}
+                  colors={colors}
+                  onAddDish={handleAddDish}
+                />
               }
               contentContainerStyle={localStyles.dishesContent}
             />
@@ -705,5 +727,11 @@ const localStyles = StyleSheet.create({
   emptySubtitle: {
     textAlign: 'center',
     paddingHorizontal: moderateScale(32),
+  },
+  ctaButton: {
+    marginTop: moderateScale(16),
+    paddingHorizontal: moderateScale(20),
+    alignSelf: 'center',
+    width: '75%',
   },
 });

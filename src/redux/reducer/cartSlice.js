@@ -1,6 +1,30 @@
 import {useStorage} from '../../utils/useStorage';
 import strings from '../../i18n/strings';
 
+// Utility function to properly convert ObjectId to string
+const objectIdToString = (obj) => {
+  if (!obj) return obj;
+  if (typeof obj === 'string') return obj;
+  
+  // Since we've fixed the backend to return strings, this should be simple now
+  if (typeof obj === 'object') {
+    // Handle MongoDB ObjectId objects that might still come through
+    if (obj.toString && typeof obj.toString === 'function') {
+      const stringified = obj.toString();
+      if (stringified !== '[object Object]') {
+        return stringified;
+      }
+    }
+    
+    // Handle serialized ObjectId formats
+    if (obj.$oid) return obj.$oid;
+    if (obj._id) return objectIdToString(obj._id);
+    if (obj.id && typeof obj.id === 'string') return obj.id;
+  }
+  
+  return String(obj);
+};
+
 // Action Types
 export const ADD_TO_CART = 'ADD_TO_CART';
 export const UPDATE_QUANTITY = 'UPDATE_QUANTITY';
@@ -42,14 +66,36 @@ export default function cartReducer(state = initialState, action) {
     case ADD_TO_CART: {
       const {dish, quantity = 1, chefId, chefName} = action.payload;
       
+      // Ensure chefId is a string (handle ObjectId objects)
+      const normalizedChefId = objectIdToString(chefId);
+      
+      // If chefId is not provided, try to extract it from dish data
+      let finalChefId = normalizedChefId;
+      if (!finalChefId && dish.chef) {
+        finalChefId = objectIdToString(dish.chef._id);
+      }
+
+      // Ensure dishId is a string (handle ObjectId objects)
+      const dishId = objectIdToString(dish._id);
+      
+      // Debug logging
+      console.log('=== ADD_TO_CART DEBUG ===');
+      console.log('Original dish._id:', dish._id);
+      console.log('Converted dishId:', dishId);
+      console.log('Original chefId:', chefId);
+      console.log('Final chefId:', finalChefId);
+      console.log('Dish object:', dish);
+      console.log('========================');
+      
       // If cart is empty or same chef, proceed
-      if (!state.chefId || state.chefId === chefId) {
-        const existingItem = state.items.find(item => item.dishId === dish._id);
+      if (!state.chefId || state.chefId === finalChefId) {
+        
+        const existingItem = state.items.find(item => item.dishId === dishId);
         let newItems;
         
         if (existingItem) {
           newItems = state.items.map(item =>
-            item.dishId === dish._id
+            item.dishId === dishId
               ? {...item, quantity: item.quantity + quantity}
               : item
           );
@@ -57,7 +103,7 @@ export default function cartReducer(state = initialState, action) {
           newItems = [
             ...state.items,
             {
-              dishId: dish._id,
+              dishId: dishId,
               dish: dish,
               quantity: quantity,
               addedAt: new Date().toISOString(),
@@ -70,8 +116,8 @@ export default function cartReducer(state = initialState, action) {
         return {
           ...state,
           items: newItems,
-          chefId: chefId,
-          chefName: chefName,
+          chefId: finalChefId,
+          chefName: chefName || (dish.chef && dish.chef.fullName) || 'Unknown Chef',
           subtotal: totals.subtotal,
           itemCount: totals.itemCount,
           error: null,
@@ -87,13 +133,15 @@ export default function cartReducer(state = initialState, action) {
 
     case UPDATE_QUANTITY: {
       const {dishId, quantity} = action.payload;
+      // Ensure dishId is a string
+      const normalizedDishId = objectIdToString(dishId);
       let newItems;
       
       if (quantity <= 0) {
-        newItems = state.items.filter(item => item.dishId !== dishId);
+        newItems = state.items.filter(item => item.dishId !== normalizedDishId);
       } else {
         newItems = state.items.map(item =>
-          item.dishId === dishId
+          item.dishId === normalizedDishId
             ? {...item, quantity: quantity}
             : item
         );
@@ -113,7 +161,9 @@ export default function cartReducer(state = initialState, action) {
 
     case REMOVE_FROM_CART: {
       const {dishId} = action.payload;
-      const newItems = state.items.filter(item => item.dishId !== dishId);
+      // Ensure dishId is a string
+      const normalizedDishId = objectIdToString(dishId);
+      const newItems = state.items.filter(item => item.dishId !== normalizedDishId);
       const totals = calculateTotals(newItems);
       
       return {

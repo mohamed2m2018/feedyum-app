@@ -3,6 +3,7 @@ export const TabNav = {
   FollowingTab: 'FollowingTab',
   Profile: 'Profile',
   Discover: 'Discover',
+  Search: 'Search',
   Orders: 'Orders',
   Chat: 'Chat',
 };
@@ -79,4 +80,8 @@ export const StackNav = {
   // Review System
   ReviewReelCreator: 'ReviewReelCreator',
   ReviewReelDetail: 'ReviewReelDetail',
+  // Address Management
+  SavedAddresses: 'SavedAddresses',
+  EditAddress: 'EditAddress',
+  MapLocationPicker: 'MapLocationPicker',
 };

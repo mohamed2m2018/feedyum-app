@@ -21,6 +21,7 @@ import {StackNav} from '../navigation/NavigationKeys';
 import request from '../api/request';
 import {useQueryClient} from 'react-query';
 import strings from '../i18n/strings';
+import { optimizeImageUrl, ImagePresets } from '../utils/imageOptimizer';
 
 const ReelComponent = ({
   data = 0,
@@ -100,19 +101,10 @@ const ReelComponent = ({
         source={
           reelUrl
             ? {
-                uri:
-                  item?.poster?.replace(
-                    'https://foodtokforever.s3.amazonaws.com',
-                    'https://d1wfcrbbkg3bzd.cloudfront.net',
-                  ) ||
-                  item?.avatarUri?.replace(
-                    'https://foodtokforever.s3.amazonaws.com',
-                    'https://d1wfcrbbkg3bzd.cloudfront.net',
-                  ) ||
-                  reelUrl?.replace(
-                    'https://foodtokforever.s3.amazonaws.com',
-                    'https://d1wfcrbbkg3bzd.cloudfront.net',
-                  ),
+                uri: optimizeImageUrl(
+                  item?.poster || item?.avatarUri || reelUrl,
+                  ImagePresets.REEL_POSTER
+                ),
               }
             : images.post
         }
@@ -230,14 +222,23 @@ const ReelComponent = ({
             {item?.price} LE
           </ZText>
         )}
-        {item?.reviewMode && item?.rating && (
+        {item?.reviewMode && (
           <View style={localStyles.ratingContainer}>
             {[1, 2, 3, 4, 5].map((star) => (
               <Ionicons
                 key={star}
-                name={star <= item.rating ? 'star' : 'star-outline'}
+                name={item?.rating && item.rating > 0 
+                  ? (star <= item.rating ? 'star' : 'star-outline')
+                  : 'star'
+                }
                 size={moderateScale(12)}
-                color={star <= item.rating ? '#FFD700' : colors.grayScale5}
+                color={item?.rating && item.rating > 0 
+                  ? (star <= item.rating ? '#FFD700' : colors.grayScale5)
+                  : (colors.grayScale4 || "#CCCCCC")
+                }
+                style={{
+                  opacity: item?.rating && item.rating > 0 ? 1 : 0.4
+                }}
               />
             ))}
           </View>

@@ -136,9 +136,18 @@ const ReviewStoriesSection = ({
                   {[1, 2, 3, 4, 5].map((star) => (
                     <Ionicons
                       key={star}
-                      name={star <= story.rating ? 'star' : 'star-outline'}
+                      name={story.rating && story.rating > 0 
+                        ? (star <= story.rating ? 'star' : 'star-outline')
+                        : 'star'
+                      }
                       size={moderateScale(10)}
-                      color={star <= story.rating ? '#FFD700' : colors.grayScale5}
+                      color={story.rating && story.rating > 0 
+                        ? (star <= story.rating ? '#FFD700' : colors.grayScale5)
+                        : (colors.grayScale4 || "#CCCCCC")
+                      }
+                      style={{
+                        opacity: story.rating && story.rating > 0 ? 1 : 0.4
+                      }}
                     />
                   ))}
                 </View>

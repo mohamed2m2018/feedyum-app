@@ -19,64 +19,134 @@ import ZText from '../../../components/common/ZText';
 import {styles} from '../../../themes';
 import ReelComponent from '../../../components/ReelComponent';
 import {StackNav, TabNav} from '../../../navigation/NavigationKeys';
-import {useInfiniteQuery, useQuery} from 'react-query';
+import {useInfiniteQuery, useQuery, useQueryClient} from 'react-query';
 import request from '../../../api/request';
 import ZLoader from '../../../components/common/ZLoader';
 import { useStorage } from '../../../utils/useStorage';
 import images from '../../../assets/images';
 import strings from '../../../i18n/strings';
+import { useLocation } from '../../../navigation/locationContext';
+import StarRating from '../../../components/StarRating';
+import { optimizeImageUrl, ImagePresets } from '../../../utils/imageOptimizer';
+import { useDiscoverCategory } from '../../../hooks/useDiscoverBatch';
 
-export default function HashtagCategory({selectedTag}) {
+export default function HashtagCategory({selectedTag, isLocationChanging}) {
   const colors = useSelector(state => state.theme.theme);
   const navigation = useNavigation();
-  const [userPage, setUserPage] = useState(1);
-  const [limit] = useState(10);
+  const location = useLocation();
   const [user] = useStorage('user');
   
   // State to track which tab is selected for each kitchen
   const [kitchenTabs, setKitchenTabs] = useState({});
-  // Fetch users/kitchens by tag (these have reels with the tag)
+  
+  // OPTIMIZED BATCH LOADING - Single API call for all data
+  const {
+    users: batchUsers,
+    dishes: batchDishes,
+    isLoading: isBatchLoading,
+    error: batchError,
+    hasData
+  } = useDiscoverCategory(selectedTag, location, user?._id);
+
+  // Fallback to individual API calls if batch fails or for pagination
   const {
     isLoading: isLoadingUsers,
+    isFetching: isFetchingUsers,
+    isFetchingNextPage: isFetchingNextPageUsers,
     data: userPages,
     fetchNextPage,
     hasNextPage,
   } = useInfiniteQuery(
-    ['users', selectedTag, userPage],
-    ({pageParam = 1}) =>
-      request
-        .get(`/user/tag/${selectedTag}`, {params: {page: pageParam, limit}})
-        .then(res => res.data),
-    {
-      getNextPageParam: lastPage => lastPage?.currentPage + 1,
-      enabled: !!selectedTag,
+    ['discover-users-fallback', selectedTag, location?.latitude, location?.longitude],
+    async ({ pageParam = 1 }) => {
+      const response = await request.get(`/user/tag/${selectedTag}`, {
+        params: {
+          page: pageParam,
+          limit: 10,
+          lat: location?.latitude,
+          long: location?.longitude,
+        }
+      });
+      return response.data;
     },
+    {
+      getNextPageParam: (lastPage) => 
+        lastPage?.currentPage < lastPage?.totalPages 
+          ? lastPage.currentPage + 1 
+          : undefined,
+      enabled: !!selectedTag && (!hasData || !!batchError), // Only use fallback if batch fails
+      staleTime: 1 * 60 * 1000,
+      cacheTime: 5 * 60 * 1000,
+      refetchOnWindowFocus: false,
+    }
   );
-
-  // Fetch all dishes for the current category
+  
   const {
     data: categoryDishes,
     isLoading: isLoadingCategoryDishes,
+    isFetching: isFetchingCategoryDishes,
   } = useQuery(
-    ['categoryDishes', selectedTag],
-    () =>
-      request
-        .get(`/dishes/category/${selectedTag}`)
-        .then(res => res.data),
-    {
-      enabled: !!selectedTag,
+    ['discover-dishes-fallback', selectedTag, location?.latitude, location?.longitude],
+    async () => {
+      const response = await request.get(`/dishes/category/${selectedTag}`, {
+        params: {
+          page: 1,
+          limit: 20,
+          lat: location?.latitude,
+          long: location?.longitude,
+        }
+      });
+      return response.data;
     },
+    {
+      enabled: !!selectedTag && (!hasData || !!batchError), // Only use fallback if batch fails
+      staleTime: 1 * 60 * 1000,
+      cacheTime: 5 * 60 * 1000,
+      refetchOnWindowFocus: false,
+    }
   );
+
+  // Safely extract users from paginated response in case some pages are undefined
+  const fallbackUsers = React.useMemo(() => {
+    const pages = userPages?.pages;
+    if (!Array.isArray(pages)) return [];
+    return pages.flatMap(page => {
+      if (!page) return [];
+      const users = Array.isArray(page?.users)
+        ? page.users
+        : Array.isArray(page?.data?.users)
+          ? page.data.users
+          : [];
+      return users;
+    });
+  }, [userPages]);
+
+  // Use batch data if available, otherwise fallback to individual calls
+  const finalUsers = hasData && !batchError ? batchUsers : fallbackUsers;
+  const finalDishes = hasData && !batchError ? batchDishes : (categoryDishes || []);
+  
+  // Show loading until we have at least some data
+  const isInitialLoading = isBatchLoading || (!!batchError && (isLoadingUsers || isLoadingCategoryDishes));
 
   // Combine users and dishes based on the logic you described
   const kitchensWithTaggedContent = React.useMemo(() => {
-    if (!userPages || !categoryDishes) return [];
+    console.log('[DISCOVER CATEGORY]', selectedTag + ':', {
+      finalUsers: finalUsers.length,
+      finalDishes: finalDishes.length,
+      hasData,
+      batchError,
+      data: { users: finalUsers, dishes: finalDishes }
+    });
     
-    const allUsers = userPages.pages?.flatMap(page => page.users) || [];
+    if (!finalUsers.length && !finalDishes.length) {
+      console.log('[DISCOVER CATEGORY] No users or dishes, returning empty array');
+      return [];
+    }
+    
     const kitchenMap = new Map();
     
     // 1. Add kitchens that appear because their reels have the tag
-    allUsers.forEach(user => {
+    finalUsers.forEach(user => {
       if (!kitchenMap.has(user._id)) {
         kitchenMap.set(user._id, {
           ...user,
@@ -104,35 +174,55 @@ export default function HashtagCategory({selectedTag}) {
     });
     
     // 2. Add dishes that match the category (whether attached to reels or not)
-    categoryDishes.forEach(dish => {
-      if (dish.user_id && dish.chef) {
-        const chefId = dish.user_id._id || dish.user_id;
-        
-        // If this chef is not already in our map, add them
-        if (!kitchenMap.has(chefId)) {
-          kitchenMap.set(chefId, {
-            _id: chefId,
-            fullName: dish.chef.fullName,
-            avatar: dish.chef.avatar,
-            bio: dish.chef.bio,
-            stories: [], // No stories for this chef
-            dishes: [],
-            reelDishes: [],
-            categoryDishes: []
-          });
-        }
-        
-        const kitchen = kitchenMap.get(chefId);
-        
-        // Check if this dish is already in reelDishes
-        const isInReelDishes = kitchen.reelDishes.find(d => d._id === dish._id);
-        
-        if (isInReelDishes) {
-          // Dish is attached to a reel, don't add to categoryDishes
-        } else {
-          // Dish matches category but not attached to reel
-          kitchen.categoryDishes.push(dish);
-        }
+    finalDishes.forEach(dish => {
+      console.log('[DISCOVER CATEGORY] Processing dish:', dish);
+      
+      // Handle different dish structures from API
+      let chefId, chefInfo;
+      
+      if (dish.chef && dish.chef._id) {
+        // New API structure with populated chef
+        chefId = dish.chef._id;
+        chefInfo = dish.chef;
+      } else if (dish.user_id) {
+        // Fallback structure
+        chefId = dish.user_id._id || dish.user_id;
+        chefInfo = dish.user_id;
+      } else {
+        console.log('[DISCOVER CATEGORY] Skipping dish - no chef info:', dish);
+        return;
+      }
+      
+      // If this chef is not already in our map, add them
+      if (!kitchenMap.has(chefId)) {
+        kitchenMap.set(chefId, {
+          _id: chefId,
+          fullName: chefInfo.fullName || 'Unknown Chef',
+          avatar: chefInfo.avatar,
+          bio: chefInfo.bio || 'Food creator',
+          kmAway: dish.distance, // Use distance from dish
+          stories: [], // No stories for this chef
+          dishes: [],
+          reelDishes: [],
+          categoryDishes: []
+        });
+      }
+      
+      const kitchen = kitchenMap.get(chefId);
+      
+      // Update distance to keep the minimum distance (closest location)
+      if (dish.distance !== undefined && (kitchen.kmAway === undefined || dish.distance < kitchen.kmAway)) {
+        kitchen.kmAway = dish.distance;
+      }
+      
+      // Check if this dish is already in reelDishes
+      const isInReelDishes = kitchen.reelDishes.find(d => d._id === dish._id);
+      
+      if (isInReelDishes) {
+        // Dish is attached to a reel, don't add to categoryDishes
+      } else {
+        // Dish matches category but not attached to reel
+        kitchen.categoryDishes.push(dish);
       }
     });
     
@@ -143,11 +233,15 @@ export default function HashtagCategory({selectedTag}) {
     }));
     
     // Only return kitchens that have either stories or dishes
-    return result.filter(kitchen => 
+    const filteredResult = result.filter(kitchen => 
       (kitchen.stories && kitchen.stories.length > 0) || 
       (kitchen.dishes && kitchen.dishes.length > 0)
     );
-  }, [userPages, categoryDishes]);
+    
+    console.log('[DISCOVER CATEGORY] Final kitchens for', selectedTag + ':', filteredResult.length, filteredResult);
+    
+    return filteredResult;
+  }, [finalUsers, finalDishes]);
 
   // Function to get dishes for a specific chef
   const getChefDishes = (chefId) => {
@@ -182,7 +276,7 @@ export default function HashtagCategory({selectedTag}) {
   const RenderChefDishes = ({chefId, chefName}) => {
     const dishes = getChefDishes(chefId);
 
-    if (isLoadingCategoryDishes) {
+    if (isBatchLoading || (!!batchError && isLoadingCategoryDishes)) {
       return (
         <View style={localStyles.loadingContainer}>
           <ZLoader />
@@ -219,10 +313,11 @@ export default function HashtagCategory({selectedTag}) {
               {backgroundColor: colors.backgroundColor},
             ]}
             onPress={() => {
-              navigation.navigate(StackNav.ChefMenu, {
+              navigation.navigate(StackNav.DishDetailScreen, {
+                dishId: item._id,
                 chefId: chefId,
+                fromDiscover: true,
                 chefName: chefName,
-                scrollToDishId: item._id,
               });
             }}
             activeOpacity={0.9}>
@@ -242,6 +337,16 @@ export default function HashtagCategory({selectedTag}) {
                 style={localStyles.dishName}>
                 {item.name}
               </ZText>
+              <StarRating
+                rating={Number.isFinite(item?.average_rating)
+                  ? item.average_rating
+                  : (Number.isFinite(item?.rating) ? item.rating : 0)}
+                size="small"
+                showText={false}
+                showCount={false}
+                showWhenNoRating={true}
+                style={{ marginBottom: moderateScale(2) }}
+              />
               <ZText
                 type="b14"
                 color={colors.white}
@@ -300,6 +405,8 @@ export default function HashtagCategory({selectedTag}) {
                     navigation.navigate(StackNav.ChefMenu, {
                       chefId: item._id,
                       chefName: item.fullName,
+                      averageDishRating: item.averageDishRating || 0,
+                      ratedDishesCount: item.ratedDishesCount || 0,
                     });
                   }}
                   activeOpacity={0.8}>
@@ -313,6 +420,17 @@ export default function HashtagCategory({selectedTag}) {
                   </ZText>
                 </TouchableOpacity>
               </View>
+              {/* Rating next to name */}
+              <View style={{flexDirection: 'row', alignItems: 'center', marginTop: moderateScale(4)}}>
+                <StarRating
+                  rating={item?.averageDishRating || 0}
+                  totalReviews={item?.ratedDishesCount || 0}
+                  size="small"
+                  showText={true}
+                  showCount={item?.ratedDishesCount > 0}
+                  showWhenNoRating={true}
+                />
+              </View>
               <ZText
                 type="m14"
                 numberOfLines={2}
@@ -320,6 +438,22 @@ export default function HashtagCategory({selectedTag}) {
                 style={styles.mt5}>
                 {item?.bio || 'Sharing delicious food content'}
               </ZText>
+              {/* Distance Display */}
+              {item?.kmAway !== undefined && item?.kmAway !== null && (
+                <View style={localStyles.distanceContainer}>
+                  <Ionicons
+                    name="location-outline"
+                    size={moderateScale(12)}
+                    color={colors.primary}
+                  />
+                  <ZText
+                    type="s12"
+                    color={colors.primary}
+                    style={styles.ml5}>
+                    {item.kmAway.toFixed(1) + strings.kmAway}
+                  </ZText>
+                </View>
+              )}
             </View>
           </TouchableOpacity>
 
@@ -415,13 +549,9 @@ export default function HashtagCategory({selectedTag}) {
                   <ReelComponent
                     data={story?.views}
                     reelUrl={
-                      story?.poster?.replace(
-                        'https://foodtokforever.s3.amazonaws.com',
-                        'https://d1wfcrbbkg3bzd.cloudfront.net',
-                      ) ||
-                      story?.avatarUri?.replace(
-                        'https://foodtokforever.s3.amazonaws.com',
-                        'https://d1wfcrbbkg3bzd.cloudfront.net',
+                      optimizeImageUrl(
+                        story?.poster || story?.avatarUri,
+                        ImagePresets.REEL_POSTER
                       )
                     }
                     id={story?._id}
@@ -444,10 +574,16 @@ export default function HashtagCategory({selectedTag}) {
         </View>
       );
     },
-    [colors, navigation, styles, kitchenTabs, selectedTag, kitchensWithTaggedContent, isLoadingCategoryDishes],
+    [colors, navigation, styles, kitchenTabs, selectedTag, kitchensWithTaggedContent, isBatchLoading, !!batchError, isLoadingCategoryDishes, isFetchingCategoryDishes],
   );
 
-  if (isLoadingUsers || isLoadingCategoryDishes) {
+  // Show loading during initial load, location changes, or when refetching due to location changes
+  // BUT NOT during pagination (isFetchingNextPageUsers)
+  const isInitialOrLocationLoading = isInitialLoading || 
+    (!!batchError && ((isFetchingUsers && !isFetchingNextPageUsers) || isFetchingCategoryDishes)) || 
+    isLocationChanging;
+    
+  if (isInitialOrLocationLoading) {
     return <ZLoader absolute height={80} top={300} />;
   }
 
@@ -461,11 +597,19 @@ export default function HashtagCategory({selectedTag}) {
       bounces={false}
       keyExtractor={(item, index) => item._id.toString()}
       onEndReached={() => {
-        if (hasNextPage) {
+        // Only enable pagination for fallback mode (when batch fails)
+        if (!!batchError && hasNextPage && !isFetchingNextPageUsers) {
           fetchNextPage();
         }
       }}
       onEndReachedThreshold={0.5}
+      ListFooterComponent={
+        !!batchError && isFetchingNextPageUsers ? (
+          <View style={localStyles.paginationLoader}>
+            <ZLoader height={50} />
+          </View>
+        ) : null
+      }
     />
   );
 }
@@ -598,5 +742,14 @@ const localStyles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: moderateScale(20),
+  },
+  distanceContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: moderateScale(5),
+  },
+  paginationLoader: {
+    paddingVertical: moderateScale(20),
+    alignItems: 'center',
   },
 });

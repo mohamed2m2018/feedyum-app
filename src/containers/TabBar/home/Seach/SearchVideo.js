@@ -27,7 +27,7 @@ export default function SearchVideo({
         ListEmptyComponent={
           !props.isFetching && (
             <ZText style={{textAlign: 'center', marginTop: 250}} type={'B20'}>
-              {strings.noDishesYet}
+              {strings.noResultFoundDesc}
             </ZText>
           )
         }
@@ -37,14 +37,18 @@ export default function SearchVideo({
               id={item._id}
               data={item?.title}
               reelUrl={
-                item?.avatarUri?.replace(
-                  'https://foodtokforever.s3.amazonaws.com',
-                  'https://d1wfcrbbkg3bzd.cloudfront.net',
-                ) ||
-                item?.poster?.replace(
-                  'https://foodtokforever.s3.amazonaws.com',
-                  'https://d1wfcrbbkg3bzd.cloudfront.net',
-                )
+                item?.avatarUri?.includes('https://foodtokforever.s3.amazonaws.com')
+                  ? item?.avatarUri?.replace(
+                      'https://foodtokforever.s3.amazonaws.com',
+                      'https://d1wfcrbbkg3bzd.cloudfront.net',
+                    )
+                  : item?.avatarUri ||
+                item?.poster?.includes('https://foodtokforever.s3.amazonaws.com')
+                  ? item?.poster?.replace(
+                      'https://foodtokforever.s3.amazonaws.com',
+                      'https://d1wfcrbbkg3bzd.cloudfront.net',
+                    )
+                  : item?.poster
               }
               userName={item?.title}
               userId={item?.author}
@@ -52,7 +56,7 @@ export default function SearchVideo({
           );
         }}
         {...props}
-        keyExtractor={item => item?._id}
+        keyExtractor={(item, index) => item?._id || `story-${index}`}
         numColumns={2}
         legacyImplementation
         showsVerticalScrollIndicator={false}

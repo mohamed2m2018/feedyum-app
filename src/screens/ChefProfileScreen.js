@@ -11,6 +11,7 @@ import {
   FlatList,
 } from 'react-native';
 import strings from '../i18n/strings';
+import StarRating from '../components/StarRating';
 
 const ChefProfileScreen = ({ route, navigation }) => {
   const { chefId } = route.params;
@@ -46,6 +47,9 @@ const ChefProfileScreen = ({ route, navigation }) => {
       navigation.navigate('ChefMenu', { 
         chefId: chefId,
         chefName: chefProfile.fullName || chefProfile.username,
+        // Pass rating info for header fallback
+        averageDishRating: chefProfile.averageDishRating || 0,
+        ratedDishesCount: chefProfile.ratedDishesCount || 0,
         menu: chefProfile.menu
       });
     }
@@ -127,9 +131,21 @@ const ChefProfileScreen = ({ route, navigation }) => {
           style={styles.avatar} 
         />
         <View style={styles.headerInfo}>
-          <Text style={styles.chefName}>
-            {chefProfile.fullName || chefProfile.username}
-          </Text>
+          <View style={styles.nameRow}>
+          <View style={styles.nameRow}>
+            <Text style={styles.chefName}>
+              {chefProfile.fullName || chefProfile.username}
+            </Text>
+            <StarRating
+              rating={chefProfile?.averageDishRating || 0}
+              totalReviews={chefProfile?.ratedDishesCount || 0}
+              size="small"
+              showText={true}
+              showCount={chefProfile?.ratedDishesCount > 0}
+              showWhenNoRating={true}
+            />
+          </View>
+        </View>
           <Text style={styles.chefType}>Chef</Text>
           {chefProfile.bio && (
             <Text style={styles.bio}>{chefProfile.bio}</Text>
@@ -342,11 +358,22 @@ const styles = StyleSheet.create({
   headerInfo: {
     flex: 1,
   },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   chefName: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 4,
+  },
+  noRating: {
+    marginLeft: 8,
+    color: '#999',
+    fontSize: 14,
+    fontWeight: '600',
   },
   chefType: {
     fontSize: 16,

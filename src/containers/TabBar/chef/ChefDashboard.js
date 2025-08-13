@@ -33,7 +33,7 @@ export default function ChefDashboard() {
     // Navigate to specific management screens
     switch (sectionName) {
       case 'Menu':
-        navigation.navigate(StackNav.MenuManagement);
+        navigation.navigate(StackNav.MenuManagement, {fromTabs: true});
         break;
       case 'Orders':
         navigation.navigate(StackNav.OrderManagement);
@@ -74,7 +74,7 @@ export default function ChefDashboard() {
           <View style={localStyles.statsGrid}>
             <DashboardCard
               title={strings.todaysRevenue}
-              value="$0"
+              value={"0"}
               icon="cash-outline"
               color={colors.primary}
               containerStyle={localStyles.statCard}

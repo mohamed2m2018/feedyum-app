@@ -214,7 +214,7 @@ const OrderCard = ({
             {getTotalItems()} items
           </ZText>
           <ZText type="B16" color={colors.primary}>
-            ${order.totalPrice?.toFixed(2) || '0.00'}
+            {order.totalPrice?.toFixed(2) || '0.00'}
           </ZText>
         </View>
         {order.specialInstructions && (

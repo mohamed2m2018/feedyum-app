@@ -71,9 +71,7 @@ const Login = ({navigation}) => {
           onSuccess: async res => {
             setAccessToken(res?.data?.token);
             setUser(res?.data?.user);
-            if (!request.defaults.headers.common.Authorization) {
-              request.defaults.headers.common.Authorization = res?.data?.token;
-            }
+            request.defaults.headers.common.Authorization = res?.data?.token;
             navigation.reset({
               index: 0,
               routes: [{name: StackNav.TabBar}],
@@ -249,9 +247,7 @@ const Login = ({navigation}) => {
         onSuccess: async res => {
           setAccessToken(res?.data?.token);
           setUser(res?.data?.user);
-          if (!request.defaults.headers.common.Authorization) {
-            request.defaults.headers.common.Authorization = res?.data?.token;
-          }
+          request.defaults.headers.common.Authorization = res?.data?.token;
           navigation.reset({
             index: 0,
             routes: [{name: StackNav.TabBar}],

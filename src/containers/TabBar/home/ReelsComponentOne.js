@@ -230,7 +230,7 @@ export default function ReelsComponentOne() {
               type="m14"
               containerStyle={localStyles.buttonTag}
               title={
-                filteredData?.[activeVideoIndex]?.kmAway
+                filteredData?.[activeVideoIndex]?.kmAway && filteredData?.[activeVideoIndex]?.kmAway !== null
                   ? filteredData?.[activeVideoIndex]?.kmAway?.toFixed(2) +
                     strings.kmAway
                   : strings.clickbranches
