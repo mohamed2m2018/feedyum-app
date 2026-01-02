@@ -23,8 +23,7 @@ class PromoCodeService {
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error('PromoCode validation error:', error);
-      throw new Error('Failed to validate promo code');
+throw new Error('Failed to validate promo code');
     }
   }
 
@@ -42,8 +41,7 @@ class PromoCodeService {
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error('PromoCode creation error:', error);
-      throw new Error('Failed to create promo code');
+throw new Error('Failed to create promo code');
     }
   }
 }

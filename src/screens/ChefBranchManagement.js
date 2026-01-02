@@ -47,8 +47,7 @@ const ChefBranchManagement = ({ navigation, userToken }) => {
         Alert.alert(strings.error, response.message || 'Failed to load branches');
       }
     } catch (error) {
-      console.error('Error fetching branches:', error);
-      Alert.alert(strings.error, 'Failed to load branches');
+Alert.alert(strings.error, 'Failed to load branches');
     } finally {
       setIsLoading(false);
     }
@@ -127,8 +126,7 @@ const ChefBranchManagement = ({ navigation, userToken }) => {
         Alert.alert(strings.error, response.message || 'Failed to delete branch');
       }
     } catch (error) {
-      console.error('Error deleting branch:', error);
-      Alert.alert(strings.error, 'Failed to delete branch');
+Alert.alert(strings.error, 'Failed to delete branch');
     }
   };
 

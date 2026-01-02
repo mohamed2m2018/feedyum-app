@@ -73,8 +73,7 @@ export default function ChatList({navigation}) {
     try {
       await refetchChats();
     } catch (error) {
-      console.error('Error refreshing chats:', error);
-    } finally {
+} finally {
       setRefreshing(false);
     }
   };

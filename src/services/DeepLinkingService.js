@@ -32,8 +32,7 @@ class DeepLinkingService {
         this.handleDeepLink(url);
       }
     } catch (error) {
-      console.error('Error getting initial URL:', error);
-    }
+}
   }
 
   addEventListeners() {
@@ -47,16 +46,13 @@ class DeepLinkingService {
 
   // Parse and handle deep link URLs
   handleDeepLink(url) {
-    console.log('Handling deep link:', url);
-    
-    try {
+try {
       const parsed = this.parseDeepLink(url);
       if (parsed) {
         this.navigateToScreen(parsed);
       }
     } catch (error) {
-      console.error('Error handling deep link:', error);
-    }
+}
   }
 
   parseDeepLink(url) {
@@ -262,11 +258,9 @@ class DeepLinkingService {
           break;
           
         default:
-          console.warn('Unknown deep link type:', type);
-      }
+}
     } catch (error) {
-      console.error('Error navigating from deep link:', error);
-    }
+}
   }
 
   // Navigation methods for different screens
@@ -667,9 +661,7 @@ class DeepLinkingService {
 
   // Handle notification-based navigation
   handleNotificationTap(notificationData) {
-    console.log('Handling notification tap:', notificationData);
-    
-    if (notificationData.deepLink) {
+if (notificationData.deepLink) {
       this.handleDeepLink(notificationData.deepLink);
     } else if (notificationData.type && notificationData.id) {
       // Legacy support for old notification format

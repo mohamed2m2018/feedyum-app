@@ -121,8 +121,7 @@ export default function ChatScreen({ route }) {
     {
       retry: 2,
       onError: (error) => {
-        console.error('Failed to fetch current user:', error);
-      }
+}
     }
   );
   const currentUser = userData?.data?.user;
@@ -135,8 +134,7 @@ export default function ChatScreen({ route }) {
       enabled: !!chefId,
       retry: 2,
       onError: (error) => {
-        console.error('Failed to fetch chef data:', error);
-      }
+}
     }
   );
   const chef = chefData?.data?.user;
@@ -310,8 +308,7 @@ export default function ChatScreen({ route }) {
       }, 500);
       
     } catch (error) {
-      console.error('Failed to send message:', error);
-    } finally {
+} finally {
       setLoading(false);
       Keyboard.dismiss();
     }
@@ -349,8 +346,7 @@ export default function ChatScreen({ route }) {
       }, 500);
       
     } catch (error) {
-      console.error('Failed to delete message:', error);
-      Alert.alert(strings.error, strings.failedToDeleteMessage);
+Alert.alert(strings.error, strings.failedToDeleteMessage);
     }
   };
 
@@ -358,14 +354,9 @@ export default function ChatScreen({ route }) {
 
   const scrollToMessage = useCallback((messageId) => {
     if (!messageId) return;
-    
-    console.log('Attempting to scroll to message:', messageId);
-    
-    // Find the message in the messages array
+// Find the message in the messages array
     const targetMessageIndex = messages.findIndex(msg => msg._id === messageId);
-    console.log('Message found at index:', targetMessageIndex, 'out of', messages.length, 'messages');
-    
-    if (targetMessageIndex !== -1) {
+if (targetMessageIndex !== -1) {
       const originalMessages = [...messages];
       
       // Step 1: Highlight the target message
@@ -403,8 +394,7 @@ export default function ChatScreen({ route }) {
       }, 500);
       
     } else {
-      console.log('Message not found in current messages array');
-      Alert.alert(
+Alert.alert(
         strings.messageNotFound,
         strings.messageNotVisible,
         [{ text: 'OK' }]
@@ -416,8 +406,7 @@ export default function ChatScreen({ route }) {
 
   const onPressProfile = () => {
     // Navigate to chef profile if needed
-    console.log('Navigate to chef profile:', chefId);
-  };
+};
 
   const renderSend = (props) => (
     <Send {...props} disabled={loading}>

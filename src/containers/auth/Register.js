@@ -29,7 +29,8 @@ import {
 } from '@react-native-google-signin/google-signin';
 import axios from 'axios';
 import request from '../../api/request';
-import OneSignal from 'react-native-onesignal';
+import {useQueryClient} from 'react-query';
+import { OneSignal } from 'react-native-onesignal';
 import {ALERT_TYPE, Dialog, Toast} from 'react-native-alert-notification';
 import {useStorage} from '../../utils/useStorage';
 
@@ -67,6 +68,7 @@ const RenderSocialBtn = memo(({item, index}) => {
 });
 const Register = ({navigation, route}) => {
   const colors = useSelector(state => state.theme.theme);
+  const queryClient = useQueryClient();
   const [isLoading, setisLoading] = useState(false);
 
   useEffect(() => {
@@ -116,8 +118,7 @@ const Register = ({navigation, route}) => {
       const phoneNumber = response.data.phoneNumbers[0].value;
       return phoneNumber;
     } catch (error) {
-      console.log('Error occurred:', error);
-    }
+}
   };
 
   const handleSubmit = (
@@ -145,8 +146,10 @@ const Register = ({navigation, route}) => {
       })
       .then(async res => {
         setAccessToken(res?.data?.token);
-        OneSignal.setExternalUserId(res?.data?.user?._id);
-        request.defaults.headers.common.Authorization = res?.data?.token;
+        // OneSignal v5
+        OneSignal.login(res?.data?.user?._id);
+        // Clear React Query cache to force fresh data fetch for this device
+        await queryClient.clear();
         setisLoading(false);
         navigation.reset({
           index: 0,
@@ -184,17 +187,13 @@ const Register = ({navigation, route}) => {
       setisLoading(false);
       if (error.code === statusCodes.SIGN_IN_CANCELLED) {
         // User cancelled the sign-in flow
-        console.log('Sign in cancelled');
-      } else if (error.code === statusCodes.IN_PROGRESS) {
+} else if (error.code === statusCodes.IN_PROGRESS) {
         // Sign-in is in progress
-        console.log('Sign in in progress');
-      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+} else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
         // Play services not available or outdated
-        console.log('Play services not available');
-      } else {
+} else {
         // Some other error occurred
-        console.log('Sign in error', error);
-      }
+}
     }
   };
 

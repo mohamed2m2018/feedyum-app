@@ -40,8 +40,7 @@ const ChefPaymentScreen = ({ navigation, userToken, route }) => {
         setShowPaymentModal(true);
       }
     } catch (error) {
-      console.error('Failed to fetch wallet info:', error);
-      Alert.alert('Error', 'Failed to load wallet information');
+Alert.alert('Error', 'Failed to load wallet information');
     } finally {
       setIsLoading(false);
     }
@@ -107,8 +106,7 @@ const ChefPaymentScreen = ({ navigation, userToken, route }) => {
         Alert.alert('Payment Failed', result.message || 'Payment could not be processed');
       }
     } catch (error) {
-      console.error('Payment processing error:', error);
-      Alert.alert('Error', 'Failed to process payment. Please try again.');
+Alert.alert('Error', 'Failed to process payment. Please try again.');
     } finally {
       setIsProcessingPayment(false);
     }

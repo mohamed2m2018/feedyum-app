@@ -72,12 +72,9 @@ export default function Search() {
   }, [isFocused, updateCurrentScreen]);
 
   const onSearchInput = text => {
-    console.log('Search: User typed:', text);
-    setSearch(text);
+setSearch(text);
     debounce(() => {
-      console.log('Search: Debounced search term:', text);
-      console.log('Search: Using', useSemanticSearch ? 'semantic search' : 'traditional search');
-      setDebouncedSearch(text);
+setDebouncedSearch(text);
     }, 300)();
   };
 
@@ -266,12 +263,9 @@ export default function Search() {
 
     select: res => {
       const dishes = res?.pages.flatMap(page => {
-        console.log('Search: Raw page data:', page.data);
-        console.log('Search: Dishes found:', page.data?.data?.dishes?.length || 0);
-        return page.data?.data?.dishes || [];
+return page.data?.data?.dishes || [];
       });
-      console.log('Search: Total dishes after flatMap:', dishes.length);
-      return dishes;
+return dishes;
     },
   });
 

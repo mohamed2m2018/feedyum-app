@@ -46,12 +46,7 @@ const DishDetailScreen = () => {
   const queryClient = useQueryClient();
 
   const {dishId, chefId} = route.params;
-
-  console.log('DishDetailScreen: Route params:', route.params);
-  console.log('DishDetailScreen: Dish ID:', dishId);
-  console.log('DishDetailScreen: Chef ID:', chefId);
-
-  const [quantity, setQuantity] = useState(1);
+const [quantity, setQuantity] = useState(1);
   const [selectedTab, setSelectedTab] = useState('reviews');
   const [scrollY] = useState(new Animated.Value(0));
   const [showFullDescription, setShowFullDescription] = useState(false);
@@ -69,16 +64,11 @@ const DishDetailScreen = () => {
   } = useQuery(
     ['dishDetail', dishId],
     async () => {
-      console.log('DishDetailScreen: Making API call to:', `/dishes/${dishId}`);
-      try {
+try {
         const response = await request.get(`/dishes/${dishId}`);
-        console.log('DishDetailScreen: API response:', response);
-        console.log('DishDetailScreen: Dish data:', response.data);
-        return response.data;
+return response.data;
       } catch (error) {
-        console.log('DishDetailScreen: API error:', error);
-        console.log('DishDetailScreen: Error response:', error.response);
-        throw error;
+throw error;
       }
     },
     {

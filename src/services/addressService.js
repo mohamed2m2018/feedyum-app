@@ -13,22 +13,17 @@ class AddressService {
       ]);
       return response.data;
     } catch (error) {
-      console.error('AddressService.getAddresses error:', error);
-      throw error;
+throw error;
     }
   }
 
   // Add new address
   async addAddress(addressData) {
     try {
-      console.log('AddressService: Adding address with data:', addressData);
-      const response = await request.post('/address/add_address', addressData);
-      console.log('AddressService: Add address API response:', response.data);
-      return response.data;
+const response = await request.post('/address/add_address', addressData);
+return response.data;
     } catch (error) {
-      console.error('AddressService: Add address error:', error);
-      console.error('AddressService: Error response:', error.response?.data);
-      throw error;
+throw error;
     }
   }
 
@@ -48,15 +43,12 @@ class AddressService {
   // Delete address
   async deleteAddress(addressId) {
     try {
-      console.log('AddressService: Deleting address with ID:', addressId);
-      const response = await request.delete('/address/', {
+const response = await request.delete('/address/', {
         data: { addressId }
       });
-      console.log('AddressService: Delete response:', response.data);
-      return response.data;
+return response.data;
     } catch (error) {
-      console.error('AddressService: Delete error:', error);
-      throw error;
+throw error;
     }
   }
 
@@ -71,8 +63,7 @@ class AddressService {
       ]);
       return response.data;
     } catch (error) {
-      console.error('AddressService.setCurrentLocation error:', error);
-      throw error;
+throw error;
     }
   }
 

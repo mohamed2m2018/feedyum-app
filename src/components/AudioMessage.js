@@ -42,10 +42,7 @@ const AudioMessage = ({
       Alert.alert(strings.noAudio, strings.noAudioFileAvailable);
       return;
     }
-
-    console.log('Audio playback toggle:', { isPlaying, audioUrl });
-    
-    if (isPlaying) {
+if (isPlaying) {
       setIsPlaying(false);
     } else {
       setIsLoading(true);
@@ -54,8 +51,7 @@ const AudioMessage = ({
   };
 
   const handleLoad = (data) => {
-    console.log('Audio loaded:', data);
-    const audioDuration = data.duration || initialDuration || 30;
+const audioDuration = data.duration || initialDuration || 30;
     setDuration(audioDuration);
     setIsLoading(false);
     setHasError(false);
@@ -66,14 +62,12 @@ const AudioMessage = ({
   };
 
   const handleEnd = () => {
-    console.log('Audio playback ended');
-    setIsPlaying(false);
+setIsPlaying(false);
     setCurrentTime(0);
   };
 
   const handleError = (error) => {
-    console.error('Audio playback error:', error);
-    setIsLoading(false);
+setIsLoading(false);
     setIsPlaying(false);
     setHasError(true);
     Alert.alert(strings.audioError, 'Failed to play audio file');

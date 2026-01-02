@@ -11,21 +11,18 @@ export const convertVideoToMP4 = async inputPath => {
       {
         compressionMethod: 'auto',
         getCancellationId: cancellationId =>
-          console.log('Compression ID:', cancellationId),
+,
         progressDivider: 10,
         downloadProgress: progress => {
-          console.log('Compression progress: ', progress);
-        },
+},
       },
       progress => {
-        console.log('Compression Progress: ', progress);
-      },
+},
     );
 
     return result;
   } catch (error) {
-    console.error('Video compression error:', error);
-    throw error;
+throw error;
   }
 };
 
@@ -38,8 +35,7 @@ export const generateThumbnail = async inputPath => {
 
     return uri;
   } catch (error) {
-    console.error('Thumbnail generation error:', error);
-    return null;
+return null;
   }
 };
 
@@ -54,8 +50,7 @@ export const compressImage = async (inputPath, quality = 0.8) => {
 
     return result;
   } catch (error) {
-    console.error('Image compression error:', error);
-    // Return original path if compression fails
+// Return original path if compression fails
     return inputPath;
   }
 };
@@ -67,14 +62,10 @@ export const validateImageFile = filePath => {
 };
 
 export const validateAudioFile = filePath => {
-  console.log('validateAudioFile called with:', filePath);
-  const validExtensions = ['.wav', '.mp3', '.m4a', '.aac'];
+const validExtensions = ['.wav', '.mp3', '.m4a', '.aac'];
   const extension = filePath.toLowerCase().substring(filePath.lastIndexOf('.'));
-  console.log('Extracted extension:', extension);
-  console.log('Valid extensions:', validExtensions);
-  const isValid = validExtensions.includes(extension);
-  console.log('Extension validation result:', isValid);
-  return isValid;
+const isValid = validExtensions.includes(extension);
+return isValid;
 };
 
 export const getFileSize = async filePath => {
@@ -82,8 +73,7 @@ export const getFileSize = async filePath => {
     const stats = await RNFS.stat(filePath);
     return stats.size;
   } catch (error) {
-    console.error('Error getting file size:', error);
-    return 0;
+return 0;
   }
 };
 
@@ -99,7 +89,7 @@ export const formatFileSize = bytes => {
 
 export const convertWavToMp3 = async inputPath => {
   try {
-    console.log('Preparing WAV file for upload (backend will convert):', inputPath);
+:', inputPath);
     
     // Just format the path properly for upload - backend will handle conversion
     let formattedPath = inputPath;
@@ -109,54 +99,34 @@ export const convertWavToMp3 = async inputPath => {
     } else if (Platform.OS === 'ios' && !inputPath.startsWith('file://') && !inputPath.startsWith('http')) {
       formattedPath = `file://${inputPath}`;
     }
-    
-    console.log('WAV file prepared for upload:', {
-      originalPath: inputPath,
-      formattedPath: formattedPath
-    });
-    
-    return formattedPath;
+return formattedPath;
     
   } catch (error) {
-    console.error('WAV preparation error:', error);
-    return inputPath;
+return inputPath;
   }
 };
 
 export const uploadAudioToS3 = async (audioPath, onProgress, duration) => {
   try {
-    console.log('Starting audio upload to S3:', audioPath);
-
-    // Convert WAV to MP3 for better compatibility
+// Convert WAV to MP3 for better compatibility
     const convertedAudioPath = await convertWavToMp3(audioPath);
 
     // Validate audio file
-    console.log('Validating audio file:', convertedAudioPath);
-    const isValid = validateAudioFile(convertedAudioPath);
-    console.log('Audio file validation result:', isValid);
-    
-    if (!isValid) {
-      console.error('Audio file validation failed for:', convertedAudioPath);
-      throw new Error('Invalid audio file format');
+const isValid = validateAudioFile(convertedAudioPath);
+if (!isValid) {
+throw new Error('Invalid audio file format');
     }
-    
-    console.log('Audio file validation passed');
-
-    // Get file stats from original path (without file:// prefix)
+// Get file stats from original path (without file:// prefix)
     const originalPath = audioPath.startsWith('file://')
       ? audioPath.replace('file://', '')
       : audioPath;
     const fileStats = await RNFS.stat(originalPath);
     const fileSize = fileStats.size;
-
-    console.log('Audio file size:', formatFileSize(fileSize));
+);
 
     // Create FormData for upload
-    console.log('Creating FormData for upload...');
-    const formData = new FormData();
-    console.log('FormData created successfully');
-
-    // Add the audio file (M4A format)
+const formData = new FormData();
+// Add the audio file (M4A format)
     const isM4A = convertedAudioPath.includes('.m4a');
     const isMP3 = convertedAudioPath.includes('.mp3');
 
@@ -181,15 +151,7 @@ export const uploadAudioToS3 = async (audioPath, onProgress, duration) => {
     formData.append('duration', duration ? duration.toString() : '10');
 
     // Upload to backend using the correct endpoint
-    console.log('Making POST request to /messages/upload-audio...');
-    console.log('FormData contents:', {
-      audioUri: convertedAudioPath,
-      audioType: audioType,
-      fileName: fileName,
-      duration: duration ? duration.toString() : '10'
-    });
-    
-    const response = await request.post('/messages/upload-audio', formData, {
+const response = await request.post('/messages/upload-audio', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -198,16 +160,12 @@ export const uploadAudioToS3 = async (audioPath, onProgress, duration) => {
         const progress = Math.round(
           (progressEvent.loaded * 100) / progressEvent.total,
         );
-        console.log('Upload progress:', progress + '%');
-        if (onProgress) {
+if (onProgress) {
           onProgress(progress);
         }
       },
     });
-
-    console.log('Audio upload successful:', response.data);
-
-    if (response.data && response.data.success && response.data.url) {
+if (response.data && response.data.success && response.data.url) {
       return {
         success: true,
         url: response.data.url,
@@ -219,9 +177,7 @@ export const uploadAudioToS3 = async (audioPath, onProgress, duration) => {
       throw new Error(response.data?.message || 'Invalid response from server');
     }
   } catch (error) {
-    console.error('Audio upload error:', error);
-
-    // Return more specific error information
+// Return more specific error information
     if (error.response) {
       const errorMessage =
         error.response.data?.message ||
@@ -244,27 +200,19 @@ export const compressAudio = async inputPath => {
     // or handle compression on the server side
 
     const fileStats = await RNFS.stat(inputPath);
-    console.log('Audio file info:', {
-      path: inputPath,
-      size: formatFileSize(fileStats.size),
+,
       modified: new Date(fileStats.mtime).toISOString(),
     });
 
     return inputPath;
   } catch (error) {
-    console.error('Audio compression error:', error);
-    return inputPath;
+return inputPath;
   }
 };
 
 export const convertWavForCompatibility = async inputPath => {
   try {
-    console.log(
-      'Converting WAV file for react-native-video compatibility:',
-      inputPath,
-    );
-
-    // Ensure proper file path formatting first
+// Ensure proper file path formatting first
     let formattedPath = inputPath;
 
     // Handle different path formats
@@ -285,11 +233,7 @@ export const convertWavForCompatibility = async inputPath => {
       ? inputPath.replace('file://', '')
       : inputPath;
     const fileStats = await RNFS.stat(originalPath);
-
-    console.log('Original WAV file info:', {
-      originalPath: inputPath,
-      formattedPath: formattedPath,
-      size: formatFileSize(fileStats.size),
+,
       modified: new Date(fileStats.mtime).toISOString(),
     });
 
@@ -304,23 +248,15 @@ export const convertWavForCompatibility = async inputPath => {
       // Return the new path with proper formatting
       const finalPath =
         Platform.OS === 'android' ? `file://${outputPath}` : outputPath;
-
-      console.log('Created compatible WAV file:', {
-        outputPath: finalPath,
-        exists: await RNFS.exists(outputPath),
+,
       });
 
       return finalPath;
     } catch (copyError) {
-      console.warn(
-        'Failed to create compatible copy, using original:',
-        copyError,
-      );
-      return formattedPath;
+return formattedPath;
     }
   } catch (error) {
-    console.error('WAV conversion error:', error);
-    // Return original path with basic formatting if conversion fails
+// Return original path with basic formatting if conversion fails
     let fallbackPath = inputPath;
     if (!inputPath.startsWith('file://') && !inputPath.startsWith('http')) {
       fallbackPath = `file://${inputPath}`;

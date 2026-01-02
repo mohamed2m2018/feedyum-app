@@ -269,8 +269,7 @@ const AddEditDishModal = ({
       })
       .catch(error => {
         if (error.code !== 'E_PICKER_CANCELLED') {
-          console.log('Camera error:', error);
-        }
+}
       });
   };
 
@@ -287,8 +286,7 @@ const AddEditDishModal = ({
       })
       .catch(error => {
         if (error.code !== 'E_PICKER_CANCELLED') {
-          console.log('Gallery error:', error);
-        }
+}
       });
   };
 

@@ -60,8 +60,7 @@ const ReelComponent = ({
       );
     } catch (error) {
       setisLoadingSomething(false);
-      console.error('Delete error:', error);
-      Alert.alert('Error', 
+Alert.alert('Error', 
         item?.reviewMode ? 'Failed to delete review. Please try again.' : 'Failed to delete post. Please try again.'
       );
     }

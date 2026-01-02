@@ -216,8 +216,7 @@ const ReelComponent = ({
     };
 
     Share.open(shareOptions).catch(err => {
-      err && console.log(err);
-    });
+      err && });
   };
 
   const handleContactPress = async () => {
@@ -475,18 +474,7 @@ const ReelComponent = ({
                   playInBackground={false}
                   disableFocus={true}
                   onError={error => {
-                    console.log('Video Error:', {
-                      error,
-                      uri,
-                      poster,
-                      index,
-                      activeVideoIndex,
-                      isFocused,
-                      paused: paused.paused,
-                      sliderPaused: paused.slider,
-                      // isloading
-                    });
-                  }}
+}}
                   seekColor={colors.primary}
                   muted={!isFocused}
                   paused={
@@ -523,260 +511,14 @@ const ReelComponent = ({
             )}
             
             {/* Debug: Log item data to see if dishes are present */}
-            {console.log('Reel item data:', {
-              id: item?._id,
-              title: item?.title,
-              dishes: item?.dishes,
-              dishesLength: item?.dishes?.length,
-              hasAttachedDishes: !!(item?.dishes && item.dishes.length > 0)
-            })}
-
-
-            {isOverlayVisible && (
-              <View
-                key={`item-${item?._id}`}
-                style={localStyles.bottomContainer}>
-                
-                {/* Stronger gradient for text readability */}
-                <LinearGradient
-                  colors={['rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, 0.85)']}
-                  style={{
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    height: 250,
-                  }}
-                />
-                <View style={styles.flex}>
-                  <Animated.View
-                    style={[
-                      localStyles.headerContainer,
-                      {
-                        transform: [{translateY: headerSlideAnim}],
-                        opacity: headerOpacityAnim,
-                      },
-                    ]}>
-                    <View style={localStyles.headerInnerContainer}>
-                      <TouchableOpacity onPress={handlePressProfile}>
-                        <Image
-                          resizeMode="cover"
-                          source={
-                            item?.author?.avatar
-                              ? {uri: item?.author?.avatar}
-                              : colors.dark
-                              ? images.userDark
-                              : images.userLight
-                          }
-                                                      style={{
-                              width: 42,
-                              height: 42,
-                              borderRadius: 21,
-                              borderWidth: 2,
-                              borderColor: 'white',
-                            }}
-                        />
-                      </TouchableOpacity>
-                                            <TouchableOpacity
-                        style={{marginLeft: 4, flex: 1}}
-                        onPress={() =>
-                          onPressProfile(
-                            item?.channelName,
-                            item?.avatarUri,
-                            item?.author?._id,
-                          )
-                        }>
-                        <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'}}>
-                          <ZText
-                            style={{
-                              fontSize: 12,
-                              fontWeight: 'bold',
-                              color: 'white',
-                              textShadowColor: 'rgba(0, 0, 0, 0.9)',
-                              textShadowOffset: {width: 1, height: 1},
-                              textShadowRadius: 3,
-                              flex: 1,
-                            }}
-                            numberOfLines={1}>
-                            {item?.author?.fullName || data?.fullName}
-                          </ZText>
-                          {/* Debug: Show rating data and always render something */}
-                          {console.log('Author rating debug:', {
-                            authorId: item?.author?._id,
-                            authorName: item?.author?.fullName,
-                            averageDishRating: item?.author?.averageDishRating,
-                            ratedDishesCount: item?.author?.ratedDishesCount,
-                            hasRating: item?.author?.ratedDishesCount > 0 && item?.author?.averageDishRating > 0
-                          })}
-                          {item?.author?.ratedDishesCount > 0 && item?.author?.averageDishRating > 0 ? (
-                            <View style={{flexDirection: 'row', alignItems: 'center', marginLeft: 8}}>
-                              <ZText style={{
-                                fontSize: 10,
-                                fontWeight: 'bold',
-                                color: '#FFD700',
-                                textShadowColor: 'rgba(0, 0, 0, 0.9)',
-                                textShadowOffset: {width: 1, height: 1},
-                                textShadowRadius: 2,
-                              }}>
-                                {item.author.averageDishRating.toFixed(1)}
-                              </ZText>
-                              <ZText style={{
-                                fontSize: 10,
-                                color: 'white',
-                                textShadowColor: 'rgba(0, 0, 0, 0.9)',
-                                textShadowOffset: {width: 1, height: 1},
-                                textShadowRadius: 2,
-                                marginLeft: 2,
-                              }}>
-                                ⭐
-                              </ZText>
-                            </View>
-                          ) : (
-                            <ZText style={{
-                              fontSize: 12,
-                              color: '#FFD700',
-                              textShadowColor: 'rgba(0, 0, 0, 0.9)',
-                              textShadowOffset: {width: 1, height: 1},
-                              textShadowRadius: 2,
-                              marginLeft: 8,
-                              fontWeight: 'bold',
-                            }}>
-                              -
-                            </ZText>
-                          )}
-                        </View>
-                      </TouchableOpacity>
-                                        </View>
-                    
-                    <ZText
-                      style={{
-                        fontSize: 13,
-                        color: 'white',
-                        marginTop: 4,
-                        lineHeight: 18,
-                        textShadowColor: 'rgba(0, 0, 0, 0.8)',
-                        textShadowOffset: {width: 1, height: 1},
-                        textShadowRadius: 2,
-                      }}
-                      numberOfLines={2}>
-                      {item?.title || 'Perfect lunch for today ☀️'}
-                    </ZText>
-                    
-                    {duration?.[0] && duration?.[0] !== 'undefined' && duration?.[0] !== undefined && (
-                      <ZText
-                        style={{
-                          fontSize: 12,
-                          color: 'white',
-                          marginTop: 6,
-                          textShadowColor: 'rgba(0, 0, 0, 0.8)',
-                          textShadowOffset: {width: 1, height: 1},
-                          textShadowRadius: 2,
-                        }}>
-                        ⏰ Receivable in {duration?.[0]} {duration?.[1]?.toLowerCase()}
-                      </ZText>
-                    )}
-                    <ZText
-                      style={localStyles.bold}
-                      align="left"
-                      type="b12"
-                      color={colors.white}>
-                      {item.title}
-                    </ZText>
-                    
-                    {/* Review-specific info */}
-                    {item?.reviewMode && (
-                      <View style={localStyles.reviewInfo}>
-                        <View style={localStyles.reviewRating}>
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <Ionicons
-                              key={star}
-                              name={item?.rating && item.rating > 0 
-                                ? (star <= item.rating ? 'star' : 'star-outline')
-                                : 'star'
-                              }
-                              size={moderateScale(12)}
-                              color={item?.rating && item.rating > 0 
-                                ? (star <= item.rating ? '#FFD700' : 'rgba(255, 255, 255, 0.5)')
-                                : 'rgba(255, 255, 255, 0.3)'
-                              }
-                              style={[
-                                styles.mr2,
-                                { opacity: item?.rating && item.rating > 0 ? 1 : 0.4 }
-                              ]}
-                            />
-                          ))}
-                          <ZText type="B12" color={colors.white} style={styles.ml4}>
-                            {item.rating}/5
-                          </ZText>
-                        </View>
-                      </View>
-                    )}
-                    <ZText type="m13" color={colors.white} style={styles.mv10}>
-                      {item?.caption?.length < 50 || isMoreDescriptionSeen
-                        ? item?.caption
-                        : item?.caption?.slice(0, 50) + '...'}
-                    </ZText>
-                    {item?.caption?.length > 50 && (
-                      <TouchableOpacity
-                        onPress={isMoreDescriptionSeen ? onPressLess : onPressMore}
-                        style={localStyles.button}>
-                        <ZText type="m14" color={colors.primary}>
-                          {item?.caption?.length < 50
-                            ? ''
-                            : isMoreDescriptionSeen
-                            ? strings.seeLessDescription
-                            : strings.seeMoreDescription}
-                        </ZText>
-                      </TouchableOpacity>
-                    )}
-
-                    {!item.avatarUri && (
-                      <View
-                        style={{
-                          direction: 'ltr',
-                          ...(I18nManager.isRTL &&
-                            Platform.OS === 'ios' && {transform: [{scaleX: -1}]}),
-                        }}>
-                        <Slider
-                          style={localStyles.seekBar}
-                          minimumValue={0}
-                          tapToSeek
-                          maximumValue={durationInSeconds}
-                          value={seekValueClick}
-                          minimumTrackTintColor={colors.primary}
-                          maximumTrackTintColor={colors.grey}
-                          thumbTintColor={colors.primary}
-                          onSlidingComplete={value => {
-                            if (activeVideoIndex === index) {
-                              videoRef?.current?.seek?.(value);
-                              setSeekValueClick(value);
+            {setSeekValueClick(value);
                             }
                           }}
                         />
                       </View>
                     )}
                     {/* Debug logging for author type */}
-                    {console.log('Author debug:', {
-                      authorId: item?.author?._id,
-                      authorName: item?.author?.fullName,
-                      authorType: item?.author?.type,
-                      hasMenu: item?.author?.hasMenu,
-                      shouldShowButton: item?.author?.type === 'chef' || item?.author?.hasMenu === true
-                    })}
-                    
-                    {/* Show Visit Menu button for chefs or users with menus */}
-                    {(item?.author?.type === 'chef' || item?.author?.hasMenu === true) && (
-                        <ZButton
-                          title="Visit Menu"
-                          textType={'b18'}
-                          color={colors.white}
-                          containerStyle={localStyles.buttonContainer}
-                          onPress={() => {
-                            navigation.navigate(StackNav.ChefMenu, {
-                              chefId: item?.author?._id,
-                              chefName: item?.author?.fullName,
-                            });
-                          }}
+                    {}}
                         />
                       )}
                   </Animated.View>

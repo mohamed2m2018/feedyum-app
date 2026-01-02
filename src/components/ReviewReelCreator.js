@@ -171,47 +171,35 @@ const ReviewReelCreator = ({route}) => {
       setIsLoading(false);
     } catch (error) {
       setIsLoading(false);
-      console.error('Media upload error:', error);
-      Alert.alert(strings.error, strings.failedToUploadMedia);
+Alert.alert(strings.error, strings.failedToUploadMedia);
     }
   };
 
   const handleSubmitReview = () => {
-    console.log('=== FRONTEND: Review submission started ===');
-    console.log('Selected media:', selectedMedia ? 'YES' : 'NO');
-    console.log('Caption length:', caption.trim().length);
-    console.log('Rating:', rating);
-    console.log('Review type:', reviewType);
-    console.log('Dish data:', dishData);
-    
-    if (!selectedMedia) {
-      console.log('ERROR: No media selected');
-      Alert.alert(strings.error, strings.pleaseSelectPhotoOrVideo);
+.length);
+if (!selectedMedia) {
+Alert.alert(strings.error, strings.pleaseSelectPhotoOrVideo);
       return;
     }
 
     if (!caption.trim()) {
-      console.log('ERROR: No caption provided');
-      Alert.alert(strings.error, strings.pleaseAddCaption);
+Alert.alert(strings.error, strings.pleaseAddCaption);
       return;
     }
 
     if (caption.trim().length < 10) {
-      console.log('ERROR: Caption too short');
-      Alert.alert(strings.error, strings.captionMustBe10Characters);
+Alert.alert(strings.error, strings.captionMustBe10Characters);
       return;
     }
 
     // Additional validation
     if (reviewType === 'dish' && !dishData?._id) {
-      console.log('ERROR: Missing dish data');
-      Alert.alert(strings.error, strings.dishDataMissing);
+Alert.alert(strings.error, strings.dishDataMissing);
       return;
     }
 
     if (reviewType === 'menu' && !menuData?._id) {
-      console.log('ERROR: Missing menu data');
-      Alert.alert(strings.error, strings.menuDataMissing);
+Alert.alert(strings.error, strings.menuDataMissing);
       return;
     }
 
@@ -242,22 +230,11 @@ const ReviewReelCreator = ({route}) => {
         isEdit: true
       })
     };
-
-    console.log('=== FRONTEND: Submitting review data ===');
-    console.log('Edit mode:', editMode);
-    console.log('Post data:', JSON.stringify(postData, null, 2));
-    console.log('DishData object:', dishData);
-    console.log('MenuData object:', menuData);
-
-    // Set the data and trigger submission
-    console.log('=== FRONTEND: Calling handleDataToBeSent ===');
-    handleDataToBeSent(postData);
-    
-    console.log('=== FRONTEND: Setting isFormFilled to true ===');
-    setisFormFilled(true);
-
-    console.log('=== FRONTEND: Navigating back ===');
-    // Navigate to For You screen - BackgroundUploadProvider now correctly navigates to TabNav.ForYou
+);
+// Set the data and trigger submission
+handleDataToBeSent(postData);
+setisFormFilled(true);
+// Navigate to For You screen - BackgroundUploadProvider now correctly navigates to TabNav.ForYou
     navigation.goBack();
   };
 

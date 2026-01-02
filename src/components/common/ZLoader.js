@@ -1,7 +1,6 @@
 import React from 'react';
-import LottieView from 'lottie-react-native';
 import {moderateScale, screenHeight, screenWidth} from '../../common/constants';
-import {View} from 'react-native';
+import {View, ActivityIndicator} from 'react-native';
 const ZLoader = ({height, top, bottom, left, right, overlay, absolute}) => {
   return (
     <View
@@ -12,7 +11,9 @@ const ZLoader = ({height, top, bottom, left, right, overlay, absolute}) => {
         width: screenWidth,
         zIndex: 1,
       }}>
-      <LottieView
+      <ActivityIndicator
+        size="large"
+        color="#E14C4C"
         style={{
           height: height ? moderateScale(height) : moderateScale(100),
           top: top ? moderateScale(top) : moderateScale(0),
@@ -20,9 +21,6 @@ const ZLoader = ({height, top, bottom, left, right, overlay, absolute}) => {
           left: left ? moderateScale(left) : moderateScale(0),
           right: right ? moderateScale(right) : moderateScale(0),
         }}
-        source={require('../../containers/auth/loader.json')}
-        autoPlay
-        loop
       />
     </View>
   );

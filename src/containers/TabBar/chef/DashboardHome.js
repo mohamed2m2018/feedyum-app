@@ -42,8 +42,7 @@ export default function DashboardHome() {
       await queryClient.invalidateQueries('dashboardStats');
       await queryClient.invalidateQueries('recentActivity');
     } catch (error) {
-      console.error('Error refreshing dashboard:', error);
-    } finally {
+} finally {
       setRefreshing(false);
     }
   };

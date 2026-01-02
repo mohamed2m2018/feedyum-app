@@ -112,8 +112,7 @@ const CheckoutScreen = ({ navigation, userToken }) => {
         Alert.alert('Error', data.message || 'Failed to place order');
       }
     } catch (error) {
-      console.error('Checkout error:', error);
-      Alert.alert('Error', 'Failed to process your order. Please try again.');
+Alert.alert('Error', 'Failed to process your order. Please try again.');
     } finally {
       setIsProcessingOrder(false);
     }

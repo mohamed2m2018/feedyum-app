@@ -1,8 +1,86 @@
 {
-  "name": "FoodTok",
-  "displayName": "FoodTok",
-  "react-native-google-mobile-ads": {
-    "android_app_id": "ca-app-pub-2374540952576524~2932466582",
-    "ios_app_id": "ca-app-pub-2374540952576524~8355035849"
+  "expo": {
+    "name": "FoodTok",
+    "slug": "foodtok",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "scheme": "foodtok",
+    "splash": {
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.foodtok.app",
+      "googleServicesFile": "./ios/GoogleService-Info.plist",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "FoodTok needs your location to show nearby restaurants",
+        "NSCameraUsageDescription": "FoodTok needs camera access for taking photos and videos",
+        "NSPhotoLibraryUsageDescription": "FoodTok needs access to your photos to upload images",
+        "NSPhotoLibraryAddUsageDescription": "FoodTok needs access to save photos to your library",
+        "NSMicrophoneUsageDescription": "FoodTok needs microphone access for recording videos"
+      }
+    },
+    "android": {
+      "package": "com.foodtok.app",
+      "versionCode": 1,
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.RECORD_AUDIO"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static",
+            "deploymentTarget": "15.0"
+          }
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow $(PRODUCT_NAME) to access your photos.",
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location."
+        }
+      ],
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-3940256099942544~3347511713",
+          "iosAppId": "ca-app-pub-3940256099942544~1458002511"
+        }
+      ],
+      [
+        "react-native-permissions",
+        {
+          "iosPermissions": [
+            "Camera",
+            "PhotoLibrary",
+            "LocationWhenInUse",
+            "Notifications",
+            "Microphone"
+          ]
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "your-eas-project-id"
+      }
+    }
   }
 }

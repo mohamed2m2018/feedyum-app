@@ -37,7 +37,7 @@ const App = () => {
   }
   const [language] = useStorage('language');
 
-  LogBox.ignoreAllLogs(true);
+  // LogBox.ignoreAllLogs(true);
   useEffect(() => {
     const handleLanguage = async () => {
       strings.setLanguage(language || 'en');

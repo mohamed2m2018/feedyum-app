@@ -34,8 +34,7 @@ const ChefWallet = ({ chefId, userToken }) => {
         setWalletData(data);
       }
     } catch (error) {
-      console.error('Failed to fetch wallet info:', error);
-    } finally {
+} finally {
       setIsLoading(false);
     }
   };
@@ -53,8 +52,7 @@ const ChefWallet = ({ chefId, userToken }) => {
         setShowPaymentModal(true);
       }
     } catch (error) {
-      console.error('Failed to check payment status:', error);
-    }
+}
   };
 
   const processPayment = async (amount) => {
@@ -85,8 +83,7 @@ const ChefWallet = ({ chefId, userToken }) => {
         Alert.alert('Payment Failed', data.message || 'Payment could not be processed');
       }
     } catch (error) {
-      console.error('Payment processing error:', error);
-      Alert.alert('Error', 'Failed to process payment. Please try again.');
+Alert.alert('Error', 'Failed to process payment. Please try again.');
     } finally {
       setIsProcessingPayment(false);
     }

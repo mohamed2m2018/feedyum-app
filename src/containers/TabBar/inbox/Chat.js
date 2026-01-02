@@ -48,13 +48,11 @@ export default function Chat({ navigation, route }) {
       socketRef.current = io(socketUrl); // Ensure the URL is correct
 
       socketRef.current.on('connect', () => {
-        console.log('Connected to socket.io server');
-        loadMessages(page);
+loadMessages(page);
       });
 
       socketRef.current.on('disconnect', () => {
-        console.log('Disconnected from socket.io server');
-      });
+});
 
       socketRef.current.on('chatHistory', (data) => {
         const messages = data.messages.map(msg => ({
@@ -132,8 +130,7 @@ export default function Chat({ navigation, route }) {
 
       socketRef.current.emit('sendMessage', messageData, (response) => {
         if (response.error) {
-          console.error('Message not sent:', response.error);
-        }
+}
       });
     });
 
@@ -165,9 +162,7 @@ export default function Chat({ navigation, route }) {
       createdAt: new Date(),
       user: { _id: userId },
     };
-    
-    console.log('Sending test audio message:', testAudioMessage);
-    onSend([testAudioMessage]);
+onSend([testAudioMessage]);
   };
 
   const onPressProfile = () => {

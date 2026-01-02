@@ -29,7 +29,7 @@ import ReelComponent from './ReelComponent';
 import request from '../../../api/request';
 import ReelsList from './ReelsList';
 import strings from '../../../i18n/strings';
-import OneSignal from 'react-native-onesignal';
+import { OneSignal } from 'react-native-onesignal';
 import {ALERT_TYPE, Toast} from 'react-native-alert-notification';
 import ZLoader from '../../../components/common/ZLoader';
 import {useLocation} from '../../../navigation/locationContext';
@@ -68,32 +68,35 @@ export default function ReelsComponent({amIFocused}) {
   React.useEffect(() => {
     // Handle notifications received while the app is in the foreground
 
-    OneSignal.setNotificationOpenedHandler(async notifReceivedEvent => {
+    const handleNotificationClick = (event) => {
+      const notification = event.notification;
       // Display or handle the notification as needed
       navigation.navigate(TabNav.FollowingTab);
       setTimeout(() => {
-        setStoryId(notifReceivedEvent?.notification?.additionalData?._id);
+        setStoryId(notification?.additionalData?._id);
       }, 300);
 
       queryClient.invalidateQueries({queryKey: 'user'});
       queryClient.invalidateQueries({queryKey: 'profile-stories'});
 
       setnotificationReceived(true);
-      if (notifReceivedEvent?.notification?.body?.includes('comment')) {
+      if (notification?.body?.includes('comment')) {
         setSelectedPostId(
-          notifReceivedEvent?.notification?.additionalData?._id,
+          notification?.additionalData?._id,
         );
         setTimeout(() => {
           commentSheetRef.current?.show();
         }, 300);
       }
-    });
+    };
 
-    OneSignal.setNotificationWillShowInForegroundHandler(
-      async notifReceivedEvent => {
+    const handleForegroundNotification = (event) => {
         // Display or handle the notification as needed
+        const notification = event.getNotification();
+        
+        // Build behavior preserved from legacy code:
         navigation.navigate(TabNav.FollowingTab);
-        const notification = await notifReceivedEvent.getNotification();
+        
         Toast.show({
           type: ALERT_TYPE.SUCCESS,
           title: strings.notification,
@@ -113,43 +116,23 @@ export default function ReelsComponent({amIFocused}) {
             if (notification?.body?.includes('comment')) {
               setSelectedPostId(notification.additionalData?._id);
               setTimeout(() => {
-                commentSheetRef.current?.show();
+                 commentSheetRef.current?.show();
               }, 300);
             }
             setnotificationReceived(true);
           },
         });
 
-        Toast.show({
-          type: ALERT_TYPE.SUCCESS,
-          title: strings.notification,
-          textBody: notification.body
-            ?.replace('got a comment', strings.gotAcomment)
-            ?.replace('got a like', strings.gotALike),
-          onPress: () => {
-            navigation.navigate(TabNav.ForYou);
+        // v5: Notification displays by default unless event.preventDefault() is called.
+    };
 
-            setStoryId(notification.additionalData?._id);
-
-            setTimeout(() => {
-              refetchStory();
-            }, 500);
-            queryClient.invalidateQueries({queryKey: 'user'});
-            queryClient.invalidateQueries({queryKey: 'profile-stories'});
-            if (notification?.body?.includes('comment')) {
-              setSelectedPostId(notification.additionalData?._id);
-              commentSheetRef.current?.show();
-            }
-            setnotificationReceived(true);
-          },
-        });
-        notifReceivedEvent.complete(notifReceivedEvent.getNotification());
-      },
-    );
+    OneSignal.Notifications.addEventListener('click', handleNotificationClick);
+    OneSignal.Notifications.addEventListener('foregroundWillDisplay', handleForegroundNotification);
 
     return () => {
       // Clean up OneSignal event handlers when the component unmounts
-      OneSignal.clearHandlers();
+      OneSignal.Notifications.removeEventListener('click', handleNotificationClick);
+      OneSignal.Notifications.removeEventListener('foregroundWillDisplay', handleForegroundNotification);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [commentSheetRef]);
@@ -320,8 +303,7 @@ export default function ReelsComponent({amIFocused}) {
             width: moderateScale(140), // Fixed width to match discover
           }}
           onAddressSelect={address => {
-            console.log('Selected delivery address:', address);
-            // You can add logic here to filter content by delivery area if needed
+// You can add logic here to filter content by delivery area if needed
           }}
         />
       </View>

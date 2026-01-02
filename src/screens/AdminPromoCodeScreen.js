@@ -105,8 +105,7 @@ const AdminPromoCodeScreen = ({ userToken }) => {
         Alert.alert('Error', data.message || 'Failed to create promo code');
       }
     } catch (error) {
-      console.error('Create promo code error:', error);
-      Alert.alert('Error', 'Failed to create promo code. Please try again.');
+Alert.alert('Error', 'Failed to create promo code. Please try again.');
     } finally {
       setIsCreating(false);
     }

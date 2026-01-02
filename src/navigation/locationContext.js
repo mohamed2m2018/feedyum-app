@@ -59,18 +59,15 @@ export const LocationProvider = ({children}) => {
               handleRequestPermission();
             },
             error => {
-              console.warn('Error getting location:', error.message);
-              handleRequestPermission();
+handleRequestPermission();
             },
             {enableHighAccuracy: true, timeout: 60000},
           );
         } else {
-          console.warn('Location permission denied');
-          handleRequestPermission();
+handleRequestPermission();
         }
       } catch (err) {
-        console.warn(err);
-      }
+}
     };
 
     requestLocationPermission();
@@ -86,11 +83,7 @@ export const LocationProvider = ({children}) => {
       };
       setDeliveryLocation(newDeliveryLocation);
       setUseDeliveryAddress(true);
-      console.log('🏠 Location updated for content filtering:', {
-        address: address.formattedAddress || address.nameLine,
-        coordinates: `${newDeliveryLocation.latitude}, ${newDeliveryLocation.longitude}`
-      });
-    } else {
+} else {
       setUseDeliveryAddress(false);
     }
   };
@@ -98,8 +91,7 @@ export const LocationProvider = ({children}) => {
   // Function to use device location
   const useDeviceLocation = () => {
     setUseDeliveryAddress(false);
-    console.log('📱 Switched back to device GPS location for content filtering');
-  };
+};
 
   // Determine which location to return
   const currentLocation = useDeliveryAddress && deliveryLocation ? deliveryLocation : location;

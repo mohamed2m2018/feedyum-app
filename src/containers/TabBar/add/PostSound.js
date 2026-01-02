@@ -36,9 +36,7 @@
 //     })();
 //   }, []);
 
-//   console.log('cameraFlash', devices);
-
-//   const onPressFlip = () => setCameraRotate(!cemeraRotate);
+//   //   const onPressFlip = () => setCameraRotate(!cemeraRotate);
 
 //   const onPressFlash = () => {
 //     if (supportsFlash) {

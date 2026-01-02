@@ -163,8 +163,7 @@ export default function OrderManagement() {
         const response = await request.get(`/orders/chef/${userId}`);
         return response.data;
       } catch (error) {
-        console.warn('Failed to fetch orders:', error.message);
-        throw error;
+throw error;
       }
     },
     {
@@ -238,8 +237,7 @@ export default function OrderManagement() {
     try {
       await queryClient.invalidateQueries('chefOrders');
     } catch (error) {
-      console.error('Error refreshing orders:', error);
-    } finally {
+} finally {
       setRefreshing(false);
     }
   };

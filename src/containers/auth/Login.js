@@ -18,10 +18,10 @@ import ZInput from '../../components/common/ZInput';
 import {validateEmail, validatePassword} from '../../utils/validators';
 import ZKeyBoardAvoidWrapper from '../../components/common/ZKeyBoardAvoidWrapper';
 import ZButton from '../../components/common/ZButton';
-import {useMutation} from 'react-query';
+import {useMutation, useQueryClient} from 'react-query';
 import request from '../../api/request';
 import {ALERT_TYPE, Toast} from 'react-native-alert-notification';
-import OneSignal from 'react-native-onesignal';
+import { OneSignal } from 'react-native-onesignal';
 import {
   GoogleSignin,
   statusCodes,
@@ -52,6 +52,7 @@ const RenderSocialBtn = memo(({item, index}) => {
 
 const Login = ({navigation}) => {
   const colors = useSelector(state => state.theme.theme);
+  const queryClient = useQueryClient();
   const [_, setAccessToken] = useStorage(ACCESS_TOKEN);
   const [__, setUser] = useStorage('user');
   const [___, setLanguage] = useStorage('language');
@@ -71,7 +72,8 @@ const Login = ({navigation}) => {
           onSuccess: async res => {
             setAccessToken(res?.data?.token);
             setUser(res?.data?.user);
-            request.defaults.headers.common.Authorization = res?.data?.token;
+            // Clear React Query cache to force fresh data fetch for this device
+            await queryClient.clear();
             navigation.reset({
               index: 0,
               routes: [{name: StackNav.TabBar}],
@@ -93,17 +95,13 @@ const Login = ({navigation}) => {
     } catch (error) {
       if (error.code === statusCodes.SIGN_IN_CANCELLED) {
         // User cancelled the sign-in flow
-        console.log('Sign in cancelled');
-      } else if (error.code === statusCodes.IN_PROGRESS) {
+} else if (error.code === statusCodes.IN_PROGRESS) {
         // Sign-in is in progress
-        console.log('Sign in in progress');
-      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+} else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
         // Play services not available or outdated
-        console.log('Play services not available');
-      } else {
+} else {
         // Some other error occurred
-        console.log('Sign in error', error);
-      }
+}
     }
   };
 
@@ -168,7 +166,8 @@ const Login = ({navigation}) => {
       });
     },
     onSuccess: data => {
-      OneSignal.setExternalUserId(data?.data?.user?._id);
+      // OneSignal v5
+      OneSignal.login(data?.data?.user?._id);
     },
   });
 
@@ -247,7 +246,8 @@ const Login = ({navigation}) => {
         onSuccess: async res => {
           setAccessToken(res?.data?.token);
           setUser(res?.data?.user);
-          request.defaults.headers.common.Authorization = res?.data?.token;
+          // Clear React Query cache to force fresh data fetch for this device
+          await queryClient.clear();
           navigation.reset({
             index: 0,
             routes: [{name: StackNav.TabBar}],

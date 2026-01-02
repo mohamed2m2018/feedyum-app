@@ -18,8 +18,7 @@ const TestImageComponent = () => {
   const unsplashUrl = 'https://images.unsplash.com/photo-1598103442097-8b74394b95c6?w=400&h=600&fit=crop';
 
   const handleImageLoad = (component) => {
-    console.log(`${component} image loaded successfully`);
-    if (component === 'standard') {
+if (component === 'standard') {
       setImageLoadState('loaded');
     } else {
       setFastImageLoadState('loaded');
@@ -27,8 +26,7 @@ const TestImageComponent = () => {
   };
 
   const handleImageError = (component, error) => {
-    console.log(`${component} image failed to load:`, error);
-    if (component === 'standard') {
+if (component === 'standard') {
       setImageLoadState('error');
     } else {
       setFastImageLoadState('error');

@@ -42,10 +42,7 @@ const OrderTracking = () => {
   const error = useSelector(selectOrderError);
 
   // Debug: Check if there's order data in route params
-  console.log('OrderTracking: Route params:', route.params);
-  console.log('OrderTracking: OrderId from params:', orderId);
-
-  const [refreshing, setRefreshing] = useState(false);
+const [refreshing, setRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(null);
   const intervalRef = useRef(null);
   const appStateRef = useRef(AppState.currentState);
@@ -55,32 +52,19 @@ const OrderTracking = () => {
     const testOrderId = orderId || '686cc4025633d8b417f7b70e'; // Real order ID from database
 
     if (testOrderId) {
-      console.log('OrderTracking: Fetching order with ID:', testOrderId);
-      dispatch(fetchOrderById(testOrderId))
+dispatch(fetchOrderById(testOrderId))
         .then(orderData => {
-          console.log('OrderTracking: Successfully fetched order:', orderData);
-          setLastUpdated(new Date());
+setLastUpdated(new Date());
         })
         .catch(error => {
-          console.error('OrderTracking: Failed to fetch order:', error);
-          console.error(
-            'OrderTracking: Error details:',
-            JSON.stringify(error, null, 2),
-          );
-        });
+});
     }
   }, [orderId, dispatch]);
 
   useEffect(() => {
-    console.log(
-      'OrderTracking: Current order data:',
-      JSON.stringify(currentOrder, null, 2),
+,
     );
-    console.log('OrderTracking: Loading state:', isLoading);
-    console.log('OrderTracking: Error state:', error);
-    console.log('OrderTracking: Route params:', route.params);
-    console.log('OrderTracking: OrderId from params:', orderId);
-  }, [currentOrder, isLoading, error, route.params, orderId]);
+}, [currentOrder, isLoading, error, route.params, orderId]);
 
   useEffect(() => {
     if (error) {
@@ -101,12 +85,10 @@ const OrderTracking = () => {
       // ) {
       //   intervalRef.current = setInterval(async () => {
       //     try {
-      //       console.log('OrderTracking: Polling for order updates...');
-      //       await dispatch(fetchOrderById(orderId));
+      //       //       await dispatch(fetchOrderById(orderId));
       //       setLastUpdated(new Date());
       //     } catch (error) {
-      //       console.error('OrderTracking: Polling error:', error);
-      //     }
+      //       //     }
       //   }, 60000);
       // }
     };
@@ -380,13 +362,7 @@ const OrderTracking = () => {
   };
 
   const renderOrderDetails = () => {
-    console.log('Rendering order details with data:', currentOrder);
-    console.log('currentOrder exists:', !!currentOrder);
-    console.log('currentOrder._id:', currentOrder?._id);
-    console.log('currentOrder.chef:', currentOrder?.chef);
-    console.log('currentOrder.user:', currentOrder?.user);
-
-    // If no order data, show loading state
+// If no order data, show loading state
     if (!currentOrder) {
       return (
         <View style={[localStyles.section, {backgroundColor: '#FFFFFF'}]}>

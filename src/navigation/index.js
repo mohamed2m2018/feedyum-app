@@ -29,7 +29,7 @@ export default function pAppNavigator() {
       // Initialize notification service with OneSignal app ID
       const notificationService = NotificationService.getInstance();
       // Note: Replace 'YOUR_ONESIGNAL_APP_ID' with your actual OneSignal App ID
-      notificationService.initialize(process.env.ONESIGNAL_APP_ID || 'YOUR_ONESIGNAL_APP_ID');
+      notificationService.initialize(process.env.ONESIGNAL_APP_ID || '8f642b9d-8d10-4b66-b43a-c1d0345ef13f');
 
       return cleanup;
     }
@@ -39,8 +39,7 @@ export default function pAppNavigator() {
     // Handle app state changes for deferred deep linking
     const handleAppStateChange = (nextAppState) => {
       if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
-        console.log('App has come to the foreground');
-        // Check for deferred deep links when app becomes active
+// Check for deferred deep links when app becomes active
         AppInitializer.handleAppStateChange(nextAppState);
       }
       appState.current = nextAppState;
@@ -347,16 +346,13 @@ export default function pAppNavigator() {
       fallback={<></>} // You can add a loading component here
       onReady={() => {
         // Navigation is ready, deep linking service can now handle navigation
-        console.log('Navigation container is ready');
-      }}
+}}
       onUnhandledAction={(action) => {
-        console.warn('Unhandled navigation action:', action);
-      }}
+}}
       onStateChange={(state) => {
         // Log navigation state changes for debugging
         if (__DEV__) {
-          console.log('Navigation state changed:', state);
-        }
+}
       }}
     >
       <ScreenProvider>

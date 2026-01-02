@@ -76,8 +76,7 @@ const ReviewsList = ({
         setPage(pageNum);
       }
     } catch (error) {
-      console.error('Error loading reviews:', error);
-      Alert.alert(strings.error, strings.failedToLoadReviews);
+Alert.alert(strings.error, strings.failedToLoadReviews);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -104,8 +103,7 @@ const ReviewsList = ({
       // Refresh the specific review or reload all reviews
       handleRefresh();
     } catch (error) {
-      console.error('Error marking helpful:', error);
-      Alert.alert(strings.error, strings.failedToMarkHelpful);
+Alert.alert(strings.error, strings.failedToMarkHelpful);
     }
   };
 
@@ -149,8 +147,7 @@ const ReviewsList = ({
       // Refresh the reviews list
       handleRefresh();
     } catch (error) {
-      console.error('Error deleting review:', error);
-      Alert.alert('Error', 'Failed to delete review. Please try again.');
+Alert.alert('Error', 'Failed to delete review. Please try again.');
     }
   };
 
@@ -159,8 +156,7 @@ const ReviewsList = ({
       await reviewService.reportReview(reviewId, reason);
       Alert.alert('Thank You', 'Your report has been submitted.');
     } catch (error) {
-      console.error('Error reporting review:', error);
-      Alert.alert('Error', 'Failed to report review');
+Alert.alert('Error', 'Failed to report review');
     }
   };
 

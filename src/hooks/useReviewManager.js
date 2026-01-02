@@ -31,8 +31,7 @@ export const useReviewManager = () => {
         }
       }
     } catch (error) {
-      console.error('Error checking for review prompts:', error);
-    }
+}
   }, []);
 
   // Handle when user completes an order
@@ -45,8 +44,7 @@ export const useReviewManager = () => {
         checkForReviewPrompts();
       }, 2000);
     } catch (error) {
-      console.error('Error handling completed order:', error);
-    }
+}
   }, [checkForReviewPrompts]);
 
   // Handle review prompt actions
@@ -68,8 +66,7 @@ export const useReviewManager = () => {
           Alert.alert(strings.unableToReview, response.message || strings.cannotReviewAtThisTime);
         }
       } catch (error) {
-        console.error('Error getting order review status:', error);
-        Alert.alert(strings.error, strings.unableToLoadReviewInfo);
+Alert.alert(strings.error, strings.unableToLoadReviewInfo);
       }
       
       // Increment prompt count
@@ -144,8 +141,7 @@ export const useReviewManager = () => {
         Alert.alert(strings.submissionError, result.message || strings.someReviewsCouldNotBeSubmitted);
       }
     } catch (error) {
-      console.error('Error submitting reviews:', error);
-      Alert.alert(strings.error, strings.failedToSubmitReviews);
+Alert.alert(strings.error, strings.failedToSubmitReviews);
     } finally {
       setReviewLoading(false);
     }

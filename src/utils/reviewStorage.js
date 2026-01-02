@@ -11,8 +11,7 @@ export const reviewStorage = {
       const reviewPrompts = data ? JSON.parse(data) : {};
       return reviewPrompts[orderId] || 0;
     } catch (error) {
-      console.error('Error getting review prompt count:', error);
-      return 0;
+return 0;
     }
   },
 
@@ -27,8 +26,7 @@ export const reviewStorage = {
       await AsyncStorage.setItem(REVIEW_STORAGE_KEY, JSON.stringify(reviewPrompts));
       return reviewPrompts[orderId];
     } catch (error) {
-      console.error('Error incrementing review prompt count:', error);
-      return 0;
+return 0;
     }
   },
 
@@ -38,8 +36,7 @@ export const reviewStorage = {
       const count = await this.getReviewPromptCount(orderId);
       return count < MAX_REVIEW_PROMPTS;
     } catch (error) {
-      console.error('Error checking review prompt eligibility:', error);
-      return false;
+return false;
     }
   },
 
@@ -53,8 +50,7 @@ export const reviewStorage = {
       
       await AsyncStorage.setItem(REVIEW_STORAGE_KEY, JSON.stringify(reviewPrompts));
     } catch (error) {
-      console.error('Error marking order as reviewed:', error);
-    }
+}
   },
 
   // Get all completed orders that need review prompts
@@ -63,8 +59,7 @@ export const reviewStorage = {
       const data = await AsyncStorage.getItem('completed_orders');
       return data ? JSON.parse(data) : [];
     } catch (error) {
-      console.error('Error getting orders needing review:', error);
-      return [];
+return [];
     }
   },
 
@@ -85,8 +80,7 @@ export const reviewStorage = {
         await AsyncStorage.setItem('completed_orders', JSON.stringify(orders));
       }
     } catch (error) {
-      console.error('Error adding completed order:', error);
-    }
+}
   },
 
   // Remove order from review queue
@@ -97,8 +91,7 @@ export const reviewStorage = {
       
       await AsyncStorage.setItem('completed_orders', JSON.stringify(filteredOrders));
     } catch (error) {
-      console.error('Error removing completed order:', error);
-    }
+}
   },
 
   // Clear all review data (for testing/debugging)
@@ -107,8 +100,7 @@ export const reviewStorage = {
       await AsyncStorage.removeItem(REVIEW_STORAGE_KEY);
       await AsyncStorage.removeItem('completed_orders');
     } catch (error) {
-      console.error('Error clearing review data:', error);
-    }
+}
   },
 
   // Get review statistics
@@ -128,8 +120,7 @@ export const reviewStorage = {
         reviewRate: totalOrders > 0 ? (reviewedOrders / totalOrders) * 100 : 0,
       };
     } catch (error) {
-      console.error('Error getting review stats:', error);
-      return {
+return {
         totalOrders: 0,
         reviewedOrders: 0,
         pendingOrders: 0,

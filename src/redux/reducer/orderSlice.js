@@ -158,25 +158,19 @@ export const clearCurrentOrder = () => ({
 // Async thunks for order operations
 export const placeOrder = (orderData) => async (dispatch) => {
   try {
-    console.log('Placing order with data:', orderData);
-    dispatch(setPlacing(true));
+dispatch(setPlacing(true));
     dispatch(clearError());
 
     const response = await request.post('/orders', orderData);
-    console.log('Order response:', response);
-    
-    const newOrder = response.data.order || response.data; // Handle different response formats
-    console.log('New order created:', newOrder);
-
-    if (newOrder) {
+const newOrder = response.data.order || response.data; // Handle different response formats
+if (newOrder) {
       dispatch(setCurrentOrder(newOrder));
       dispatch(addOrderToHistory(newOrder));
     }
 
     return newOrder;
   } catch (error) {
-    console.error('Order placement error:', error);
-    const errorMessage = error?.message || error?.response?.data?.message || 'Failed to place order';
+const errorMessage = error?.message || error?.response?.data?.message || 'Failed to place order';
     dispatch(setError(errorMessage));
     throw new Error(errorMessage);
   } finally {
@@ -201,23 +195,15 @@ export const fetchOrderHistory = () => async (dispatch) => {
 
 export const fetchOrderById = (orderId) => async (dispatch) => {
   try {
-    console.log('fetchOrderById: Starting request for order:', orderId);
-    dispatch(setLoading(true));
+dispatch(setLoading(true));
     dispatch(clearError());
 
     const response = await request.get(`/orders/${orderId}`);
-    console.log('fetchOrderById: Raw API response:', response);
-    console.log('fetchOrderById: Response data:', JSON.stringify(response.data, null, 2));
-    
-    dispatch(setCurrentOrder(response.data));
+dispatch(setCurrentOrder(response.data));
     
     return response.data;
   } catch (error) {
-    console.error('fetchOrderById: API error:', error);
-    console.error('fetchOrderById: Error response:', error.response);
-    console.error('fetchOrderById: Error data:', error.response?.data);
-    
-    const errorMessage = error.response?.data?.message || error.message || 'Failed to fetch order details';
+const errorMessage = error.response?.data?.message || error.message || 'Failed to fetch order details';
     dispatch(setError(errorMessage));
     throw error;
   } finally {

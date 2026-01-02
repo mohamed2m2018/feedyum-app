@@ -35,8 +35,7 @@ const ChefProfileScreen = ({ route, navigation }) => {
         Alert.alert(strings.error, data.message || strings.failedToLoadChefProfile);
       }
     } catch (error) {
-      console.error('Failed to fetch chef profile:', error);
-      Alert.alert(strings.error, strings.failedToLoadChefProfile);
+Alert.alert(strings.error, strings.failedToLoadChefProfile);
     } finally {
       setIsLoading(false);
     }

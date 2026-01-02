@@ -60,18 +60,13 @@ const SavedAddresses = () => {
           style: 'destructive',
           onPress: async () => {
             try {
-              console.log('SavedAddresses: Deleting address with ID:', addressId);
-              const result = await dispatch(deleteAddress(addressId));
-              console.log('SavedAddresses: Delete result:', result);
-              
-              // The deleteAddress action already calls getAddresses(), but let's be explicit
-              console.log('SavedAddresses: Refreshing addresses list');
-              dispatch(getAddresses());
+const result = await dispatch(deleteAddress(addressId));
+// The deleteAddress action already calls getAddresses(), but let's be explicit
+dispatch(getAddresses());
               
               Alert.alert(strings.success || 'Success', 'Address deleted successfully');
             } catch (error) {
-              console.error('SavedAddresses: Delete error:', error);
-              Alert.alert(strings.error, error.message || strings.failedToDeleteAddress || 'Failed to delete address');
+Alert.alert(strings.error, error.message || strings.failedToDeleteAddress || 'Failed to delete address');
             }
           },
         },

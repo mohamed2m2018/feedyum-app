@@ -49,8 +49,7 @@ const AttachedDishesComponent = ({
         const dishesResponse = await request.get(`/dishes/menu/${menuId}`);
         return dishesResponse.data || [];
       } catch (error) {
-        console.warn('Failed to fetch dishes:', error.message);
-        return [];
+return [];
       }
     },
     {

@@ -6,7 +6,6 @@ import {Platform} from 'react-native';
  * @param {string} value
  */
 export function Logger(tag = 'AD', type, value) {
-  console.log(`[${tag}][${type}]:`, value);
 }
 
 export function listItemsGenerator(num) {

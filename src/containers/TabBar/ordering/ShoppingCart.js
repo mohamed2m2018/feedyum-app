@@ -154,8 +154,7 @@ const ShoppingCart = () => {
 
               // Validate chef ID
               if (!chef?.id) {
-                console.error('❌ Chef ID is missing!');
-                Alert.alert(
+Alert.alert(
                   'Order Error',
                   'Chef information is missing. Clear cart and try again?',
                   [
@@ -175,8 +174,7 @@ const ShoppingCart = () => {
 
               // Validate cart items
               if (!cartItems || cartItems.length === 0) {
-                console.error('❌ Cart items are missing!');
-                Alert.alert(
+Alert.alert(
                   'Order Error',
                   'Your cart is empty. Please add items before placing an order.',
                   [{ text: 'OK' }]
@@ -227,21 +225,9 @@ const ShoppingCart = () => {
                 })(),
                 notes: specialInstructions || '', // Backend expects 'notes' not 'specialInstructions'
               };
-
-
-              
-              console.log('=== ORDER DATA DEBUG ===');
-              console.log('Chef ID being sent:', orderData.chefId);
-              console.log('Items being sent:', orderData.items);
-              console.log('Full order data:', orderData);
-              console.log('========================');
-              
-              // Place real order using Redux thunk
+// Place real order using Redux thunk
               const newOrder = await dispatch(placeOrder(orderData));
-              
-              console.log('Order placed successfully:', newOrder);
-              
-              if (newOrder && newOrder._id) {
+if (newOrder && newOrder._id) {
                 // Clear the cart after successful order
                 dispatch(clearCart());
                 
@@ -258,10 +244,7 @@ const ShoppingCart = () => {
               }
               
             } catch (error) {
-              console.error('Order placement failed:', error);
-              console.error('Error details:', JSON.stringify(error, null, 2));
-              
-              let errorMessage = 'Failed to place order. Please try again.';
+let errorMessage = 'Failed to place order. Please try again.';
               
               if (error?.message) {
                 errorMessage = error.message;

@@ -1,166 +1,103 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<dict>
-	<key>CFBundleDevelopmentRegion</key>
-	<string>en</string>
+  <dict>
+    <key>CADisableMinimumFrameDurationOnPhone</key>
+    <true/>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>$(DEVELOPMENT_LANGUAGE)</string>
+    <key>CFBundleDisplayName</key>
+    <string>FoodTok</string>
+    <key>CFBundleExecutable</key>
+    <string>$(EXECUTABLE_NAME)</string>
+    <key>CFBundleIdentifier</key>
+    <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundleName</key>
+    <string>$(PRODUCT_NAME)</string>
+    <key>CFBundlePackageType</key>
+    <string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.0.0</string>
+    <key>CFBundleSignature</key>
+    <string>????</string>
+    <key>CFBundleURLTypes</key>
+    <array>
+      <dict>
+        <key>CFBundleURLSchemes</key>
+        <array>
+          <string>foodtok</string>
+          <string>com.foodtok.app</string>
+        </array>
+      </dict>
+      <dict>
+        <key>CFBundleURLSchemes</key>
+        <array>
+          <string>com.googleusercontent.apps.123456-dummy</string>
+        </array>
+      </dict>
+      <dict>
+        <key>CFBundleURLSchemes</key>
+        <array>
+          <string>exp+foodtok</string>
+        </array>
+      </dict>
+    </array>
+    <key>CFBundleVersion</key>
+    <string>1</string>
     <key>GADApplicationIdentifier</key>
-	<string>ca-app-pub-2374540952576524~8355035849</string>
-	<key>CFBundleDisplayName</key>
-	<string>FoodTok</string>
-	<key>CFBundleExecutable</key>
-	<string>$(EXECUTABLE_NAME)</string>
-	<key>CFBundleIdentifier</key>
-	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
-	<key>CFBundleInfoDictionaryVersion</key>
-	<string>6.0</string>
-	<key>CFBundleName</key>
-	<string>$(PRODUCT_NAME)</string>
-	<key>CFBundlePackageType</key>
-	<string>APPL</string>
-	<key>CFBundleShortVersionString</key>
-	<string>$(MARKETING_VERSION)</string>
-	<key>CFBundleSignature</key>
-	<string>????</string>
-	<key>CFBundleVersion</key>
-	<string>$(CURRENT_PROJECT_VERSION)</string>
-	<key>LSRequiresIPhoneOS</key>
-	<true/>
-	
-	<!-- URL Schemes for Deep Linking -->
-	<key>CFBundleURLTypes</key>
-	<array>
-		<!-- Main app URL scheme -->
-		<dict>
-			<key>CFBundleURLName</key>
-			<string>com.foodtok.deeplink</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>foodtok</string>
-			</array>
-		</dict>
-		
-		<!-- Universal links support -->
-		<dict>
-			<key>CFBundleURLName</key>
-			<string>com.foodtok.universallink</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>https</string>
-			</array>
-		</dict>
-		
-		<!-- Reel sharing support -->
-		<dict>
-			<key>CFBundleURLName</key>
-			<string>com.foodtok.reel</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>foodtok-reel</string>
-			</array>
-		</dict>
-		
-		<!-- Profile sharing support -->
-		<dict>
-			<key>CFBundleURLName</key>
-			<string>com.foodtok.profile</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>foodtok-profile</string>
-			</array>
-		</dict>
-		
-		<!-- Menu sharing support -->
-		<dict>
-			<key>CFBundleURLName</key>
-			<string>com.foodtok.menu</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>foodtok-menu</string>
-			</array>
-		</dict>
-	</array>
-	
-	<!-- Associated Domains for Universal Links -->
-	<key>com.apple.developer.associated-domains</key>
-	<array>
-		<string>applinks:food2k.com</string>
-		<string>applinks:www.food2k.com</string>
-		<string>applinks:reel.food2k.com</string>
-		<string>applinks:menu.food2k.com</string>
-		<string>applinks:chef.food2k.com</string>
-	</array>
-
-	<!-- Custom query schemes for opening other apps -->
-	<key>LSApplicationQueriesSchemes</key>
-	<array>
-		<string>instagram</string>
-		<string>instagram-stories</string>
-		<string>tiktok</string>
-		<string>whatsapp</string>
-		<string>twitter</string>
-		<string>fb</string>
-		<string>snapchat</string>
-		<string>youtube</string>
-	</array>
-
-	<key>NSAppTransportSecurity</key>
-	<dict>
-		<key>NSExceptionDomains</key>
-		<dict>
-			<key>localhost</key>
-			<dict>
-				<key>NSExceptionAllowsInsecureHTTPLoads</key>
-				<true/>
-			</dict>
-		</dict>
-	</dict>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string/>
-	<key>UILaunchStoryboardName</key>
-	<string>LaunchScreen</string>
-	<key>UIRequiredDeviceCapabilities</key>
-	<array>
-		<string>armv7</string>
-	</array>
-	<key>UISupportedInterfaceOrientations</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
-	</array>
-	<key>UIViewControllerBasedStatusBarAppearance</key>
-	<false/>
-	<key>NSCameraUsageDescription</key>
-	<string>User has to access Camera to take user profile</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string/>
-	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>User Need to Acess Gellary for Upload Image</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>User has to access photo library for make profile in app</string>
-	<key>UIAppFonts</key>
-	<array>
-		<string>Urbanist-Bold.ttf</string>
-		<string>Urbanist-Medium.ttf</string>
-		<string>Urbanist-Regular.ttf</string>
-		<string>Urbanist-SemiBold.ttf</string>
-		<string>AntDesign.ttf</string>
-		<string>Entypo.ttf</string>
-		<string>EvilIcons.ttf</string>
-		<string>Feather.ttf</string>
-		<string>FontAwesome.ttf</string>
-		<string>FontAwesome5_Brands.ttf</string>
-		<string>FontAwesome5_Regular.ttf</string>
-		<string>FontAwesome5_Solid.ttf</string>
-		<string>Foundation.ttf</string>
-		<string>Ionicons.ttf</string>
-		<string>MaterialIcons.ttf</string>
-		<string>MaterialCommunityIcons.ttf</string>
-		<string>SimpleLineIcons.ttf</string>
-		<string>Octicons.ttf</string>
-		<string>Zocial.ttf</string>
-		<string>Fontisto.ttf</string>
-	</array>
-</dict>
+    <string>ca-app-pub-3940256099942544~1458002511</string>
+    <key>GADDelayAppMeasurementInit</key>
+    <false/>
+    <key>LSRequiresIPhoneOS</key>
+    <true/>
+    <key>NSAppTransportSecurity</key>
+    <dict>
+      <key>NSAllowsArbitraryLoads</key>
+      <false/>
+      <key>NSAllowsLocalNetworking</key>
+      <true/>
+    </dict>
+    <key>NSCameraUsageDescription</key>
+    <string>Allow $(PRODUCT_NAME) to access your camera.</string>
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>Allow $(PRODUCT_NAME) to access your location</string>
+    <key>NSLocationAlwaysUsageDescription</key>
+    <string>Allow $(PRODUCT_NAME) to access your location</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>Allow $(PRODUCT_NAME) to use your location.</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>FoodTok needs microphone access for recording videos</string>
+    <key>NSPhotoLibraryAddUsageDescription</key>
+    <string>FoodTok needs access to save photos to your library</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>Allow $(PRODUCT_NAME) to access your photos.</string>
+    <key>UILaunchStoryboardName</key>
+    <string>SplashScreen</string>
+    <key>UIRequiredDeviceCapabilities</key>
+    <array>
+      <string>arm64</string>
+    </array>
+    <key>UIRequiresFullScreen</key>
+    <false/>
+    <key>UIStatusBarStyle</key>
+    <string>UIStatusBarStyleDefault</string>
+    <key>UISupportedInterfaceOrientations</key>
+    <array>
+      <string>UIInterfaceOrientationPortrait</string>
+      <string>UIInterfaceOrientationPortraitUpsideDown</string>
+    </array>
+    <key>UISupportedInterfaceOrientations~ipad</key>
+    <array>
+      <string>UIInterfaceOrientationPortrait</string>
+      <string>UIInterfaceOrientationPortraitUpsideDown</string>
+      <string>UIInterfaceOrientationLandscapeLeft</string>
+      <string>UIInterfaceOrientationLandscapeRight</string>
+    </array>
+    <key>UIUserInterfaceStyle</key>
+    <string>Automatic</string>
+    <key>UIViewControllerBasedStatusBarAppearance</key>
+    <false/>
+  </dict>
 </plist>

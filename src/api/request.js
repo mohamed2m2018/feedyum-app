@@ -10,10 +10,6 @@ const BASE_URL = 'http://localhost:4800/api';
 
 client.defaults.baseURL = BASE_URL;
 
-MMKV.getString(ACCESS_TOKEN, (error, result) => {
-  client.defaults.headers.common.Authorization = result;
-});
-
 const onSuccess = function (response) {
   return response;
 };
@@ -30,8 +26,15 @@ const onError = function (error) {
 };
 
 client.interceptors.response.use(onSuccess, onError);
+
+// Read token from MMKV on EVERY request to ensure each device uses its own token
+// This fixes the issue where multiple simulators share the same in-memory token
 client.interceptors.request.use(
-  config => {
+  async config => {
+    const token = MMKV.getString(ACCESS_TOKEN);
+    if (token) {
+      config.headers.Authorization = token;
+    }
     return config;
   },
   error => Promise.reject(error),

@@ -2,8 +2,8 @@
 import { View } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import SplashScreen from 'react-native-splash-screen';
-import OneSignal from 'react-native-onesignal';
+import * as SplashScreen from 'expo-splash-screen';
+import { OneSignal } from 'react-native-onesignal';
 // Local Imports
 import { colors } from '../../themes';
 import { StackNav, TabNav } from '../../navigation/NavigationKeys';
@@ -13,6 +13,8 @@ import request from '../../api/request';
 import ZLoader from '../../components/common/ZLoader';
 import { useQuery } from 'react-query';
 import { useStorage } from '../../utils/useStorage';
+
+SplashScreen.preventAutoHideAsync();
 
 const Splash = ({ navigation }) => {
   const dispatch = useDispatch();
@@ -34,31 +36,33 @@ const Splash = ({ navigation }) => {
       }
     }
 
-    OneSignal.setNotificationOpenedHandler((notification) => {
-      const additionalData = notification.notification.additionalData;
+    // OneSignal v5 Event Listener
+    OneSignal.Notifications.addEventListener('click', (event) => {
+      const notification = event.notification;
+      const additionalData = notification.additionalData;
       if (additionalData && additionalData.screen === 'FollowingTab') {
         setInitialTab(TabNav.FollowingTab);
       }
     });
 
     if (access_token) {
-      request.defaults.headers.common.Authorization = access_token;
+      // Token is now read from MMKV on each request via interceptor
       setIsNavigating(true);
-      SplashScreen.hide();
+      await SplashScreen.hideAsync();
       navigation.reset({
         index: 0,
         routes: [{ name: StackNav.TabBar, params: { initialTab } }],
       });
     } else {
       if (appOpenFirstTime) {
-        SplashScreen.hide();
+        await SplashScreen.hideAsync();
         setIsNavigating(true);
         navigation.reset({
           index: 0,
           routes: [{ name: StackNav.Auth }],
         });
       } else {
-        SplashScreen.hide();
+        await SplashScreen.hideAsync();
         setIsNavigating(true);
         navigation.reset({
           index: 0,

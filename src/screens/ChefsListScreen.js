@@ -42,8 +42,7 @@ const ChefsListScreen = ({ navigation, userToken }) => {
               const profileData = await userService.getChefProfile(chef._id, userToken);
               return profileData.success ? profileData.chef : chef;
             } catch (error) {
-              console.error(`Failed to fetch profile for chef ${chef._id}:`, error);
-              return chef;
+return chef;
             }
           })
         );
@@ -53,8 +52,7 @@ const ChefsListScreen = ({ navigation, userToken }) => {
         Alert.alert(strings.error, data.message || strings.failedToLoadChefs);
       }
     } catch (error) {
-      console.error('Failed to fetch chefs:', error);
-      Alert.alert(strings.error, strings.failedToLoadChefs);
+Alert.alert(strings.error, strings.failedToLoadChefs);
     } finally {
       setIsLoading(false);
     }

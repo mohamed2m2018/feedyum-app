@@ -65,8 +65,7 @@ export default function Orders({navigation}) {
     try {
       await refetchOrders();
     } catch (error) {
-      console.error('Error refreshing orders:', error);
-    } finally {
+} finally {
       setRefreshing(false);
     }
   }, 1000)); // Debounce refresh to prevent multiple rapid calls

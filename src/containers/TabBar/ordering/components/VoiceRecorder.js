@@ -56,8 +56,7 @@ const VoiceRecorder = ({onSend, onCancel}) => {
         return true;
       }
     } catch (error) {
-      console.error('Permission request error:', error);
-      return false;
+return false;
     }
   };
 
@@ -68,8 +67,7 @@ const VoiceRecorder = ({onSend, onCancel}) => {
       setHasPermission(permissionGranted);
 
       if (!permissionGranted) {
-        console.log('Microphone permission not granted');
-        return;
+return;
       }
 
       // Initialize audio recorder with basic settings that work reliably
@@ -83,10 +81,8 @@ const VoiceRecorder = ({onSend, onCancel}) => {
 
       AudioRecord.init(options);
       setIsInitialized(true);
-      console.log('Audio recorder initialized successfully');
-    } catch (error) {
-      console.error('Audio recorder initialization error:', error);
-      setIsInitialized(false);
+} catch (error) {
+setIsInitialized(false);
       Alert.alert(
         'Initialization Error',
         'Failed to initialize audio recorder. Please restart the app and try again.',
@@ -107,8 +103,7 @@ const VoiceRecorder = ({onSend, onCancel}) => {
       pulseAnim.stopAnimation();
       waveAnim.stopAnimation();
     } catch (error) {
-      console.error('Cleanup error:', error);
-    }
+}
   };
 
   // Initialize permissions and audio recorder
@@ -202,10 +197,8 @@ const VoiceRecorder = ({onSend, onCancel}) => {
       setIsRecording(true);
       setRecordingTime(0);
       AudioRecord.start();
-      console.log('Recording started successfully');
-    } catch (error) {
-      console.error('Recording error:', error);
-      setIsRecording(false);
+} catch (error) {
+setIsRecording(false);
       Alert.alert(
         'Recording Error',
         'Failed to start recording. Please check microphone permissions and try again.',
@@ -221,42 +214,27 @@ const VoiceRecorder = ({onSend, onCancel}) => {
     try {
       const audioFile = await AudioRecord.stop();
       setIsRecording(false);
-
-      console.log('AudioRecord.stop() returned:', audioFile);
-      console.log('Audio file type:', typeof audioFile);
-      console.log('Audio file length:', audioFile ? audioFile.length : 'null/undefined');
-
-      if (audioFile && audioFile.length > 0) {
+returned:', audioFile);
+if (audioFile && audioFile.length > 0) {
         setAudioPath(audioFile);
-        console.log('Recording stopped successfully, file:', audioFile);
-        console.log('Recording duration:', recordingTime, 'seconds');
-        
-        // Check if file actually exists
+// Check if file actually exists
         try {
           const RNFS = require('react-native-fs');
           const exists = await RNFS.exists(audioFile);
-          console.log('Audio file exists on filesystem:', exists);
-          if (exists) {
+if (exists) {
             const stats = await RNFS.stat(audioFile);
-            console.log('Audio file stats:', {
-              size: stats.size,
-              path: audioFile
-            });
-          }
+}
         } catch (fsError) {
-          console.error('Error checking file:', fsError);
-        }
+}
       } else {
-        console.error('No audio file received from recording');
-        Alert.alert(
+Alert.alert(
           'Recording Error',
           'No audio was recorded. Please try again.',
           [{text: 'OK', onPress: () => cancelRecording()}],
         );
       }
     } catch (error) {
-      console.error('Stop recording error:', error);
-      setIsRecording(false);
+setIsRecording(false);
       Alert.alert(
         'Recording Error',
         'Failed to stop recording. Please try again.',
@@ -281,19 +259,13 @@ const VoiceRecorder = ({onSend, onCancel}) => {
   };
 
   const sendAudio = async () => {
-    console.log('=== SEND AUDIO BUTTON PRESSED ===');
-    console.log('Audio path:', audioPath);
-    console.log('Recording time:', recordingTime);
-    
-    if (!audioPath) {
-      console.log('ERROR: No audio path available');
-      Alert.alert('No Audio', 'No audio recording available to send.');
+if (!audioPath) {
+Alert.alert('No Audio', 'No audio recording available to send.');
       return;
     }
 
     if (recordingTime < 1) {
-      console.log('ERROR: Recording too short:', recordingTime);
-      Alert.alert(
+Alert.alert(
         strings.recordingTooShort,
         strings.recordAtLeastOneSecond,
       );
@@ -301,34 +273,20 @@ const VoiceRecorder = ({onSend, onCancel}) => {
     }
 
     try {
-      console.log('Starting upload process...');
-      setIsUploading(true);
+setIsUploading(true);
       setUploadProgress(0);
 
       // Convert M4A for compatibility first
-      console.log('Converting audio for compatibility...');
-      const compatibleAudioPath = await convertWavToMp3(audioPath);
-      console.log('Original audio path:', audioPath);
-      console.log('Compatible audio path:', compatibleAudioPath);
-
-      // Upload audio to S3 with actual duration
-      console.log('Calling uploadAudioToS3 with:', {
-        audioPath,
-        recordingTime
-      });
-      
-      const uploadResult = await uploadAudioToS3(
+const compatibleAudioPath = await convertWavToMp3(audioPath);
+// Upload audio to S3 with actual duration
+const uploadResult = await uploadAudioToS3(
         audioPath,
         progress => {
-          console.log('Upload progress:', progress + '%');
-          setUploadProgress(progress);
+setUploadProgress(progress);
         },
         recordingTime,
       );
-
-      console.log('Upload result received:', uploadResult);
-
-      if (uploadResult.success) {
+if (uploadResult.success) {
         const audioMessage = {
           _id: Math.round(Math.random() * 1000000),
           text: '',
@@ -337,9 +295,7 @@ const VoiceRecorder = ({onSend, onCancel}) => {
           duration: recordingTime,
           localPath: compatibleAudioPath, // Keep compatible local path as backup
         };
-
-        console.log('Sending audio message with S3 URL:', audioMessage);
-        onSend(audioMessage);
+onSend(audioMessage);
 
         // Reset state
         setAudioPath(null);
@@ -352,8 +308,7 @@ const VoiceRecorder = ({onSend, onCancel}) => {
         throw new Error('Upload failed');
       }
     } catch (error) {
-      console.error('Audio upload error:', error);
-      setIsUploading(false);
+setIsUploading(false);
       setUploadProgress(0);
 
       Alert.alert(
@@ -376,9 +331,7 @@ const VoiceRecorder = ({onSend, onCancel}) => {
                   duration: recordingTime,
                   isLocal: true,
                 };
-
-                console.log('Sending local audio message:', audioMessage);
-                onSend(audioMessage);
+onSend(audioMessage);
 
                 // Reset state
                 setAudioPath(null);
@@ -386,8 +339,7 @@ const VoiceRecorder = ({onSend, onCancel}) => {
                 setRecordingTime(0);
                 setIsPlaying(false);
               } catch (conversionError) {
-                console.error('WAV conversion error:', conversionError);
-                Alert.alert('Error', 'Failed to process audio file');
+Alert.alert('Error', 'Failed to process audio file');
               }
             },
           },
@@ -406,36 +358,29 @@ const VoiceRecorder = ({onSend, onCancel}) => {
       setIsPlaying(false);
     } else {
       // Start playing using Video component with compatible WAV format
-      console.log('Starting audio preview with path:', audioPath);
-
-      try {
+try {
         // Convert M4A for compatibility first if not already done
         if (!compatibleAudioPath) {
           const compatiblePath = await convertWavToMp3(audioPath);
-          console.log('Using compatible path for preview:', compatiblePath);
-          setCompatibleAudioPath(compatiblePath);
+setCompatibleAudioPath(compatiblePath);
         }
         setIsPlaying(true);
       } catch (error) {
-        console.error('Preview conversion error:', error);
-        Alert.alert('Preview Error', 'Failed to prepare audio for preview');
+Alert.alert('Preview Error', 'Failed to prepare audio for preview');
       }
     }
   };
 
   // Video component callbacks for preview
   const onPreviewLoad = data => {
-    console.log('Preview audio loaded:', data);
-  };
+};
 
   const onPreviewEnd = () => {
-    console.log('Preview audio ended');
-    setIsPlaying(false);
+setIsPlaying(false);
   };
 
   const onPreviewError = error => {
-    console.log('Preview audio error:', error);
-    setIsPlaying(false);
+setIsPlaying(false);
     Alert.alert('Preview Error', 'Failed to play audio preview');
   };
 

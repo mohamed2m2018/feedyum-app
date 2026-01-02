@@ -119,24 +119,19 @@ const AudioMessage = ({ audioPath, duration = 0, isCurrentUser = false }) => {
   }, [componentId]);
 
   const handlePlayPause = () => {
-    console.log(`Audio playback - Path: ${audioPath}, Duration: ${audioDuration}s, Current: ${currentTime}s`);
-    
-    if (isLoading || hasError) return;
+if (isLoading || hasError) return;
     
     if (!audioPath) {
-      console.log('No audio path available');
-      Alert.alert(strings.audioError, strings.noAudioFileAvailable);
+Alert.alert(strings.audioError, strings.noAudioFileAvailable);
       return;
     }
     
     if (isPlaying) {
       // Pause the current audio
-      console.log('Pausing current audio');
-      stopPlayback();
+stopPlayback();
     } else {
       // Start playing this audio
-      console.log('Starting audio playback');
-      setIsLoading(true);
+setIsLoading(true);
       setIsPlaying(true);
       setHasError(false);
       setCurrentTime(0);
@@ -151,8 +146,7 @@ const AudioMessage = ({ audioPath, duration = 0, isCurrentUser = false }) => {
 
   // Video component callbacks
   const onLoad = (data) => {
-    console.log('Audio loaded successfully:', data);
-    if (data.duration && data.duration > 0) {
+if (data.duration && data.duration > 0) {
       setAudioDuration(data.duration);
     } else if (duration > 0) {
       setAudioDuration(duration);
@@ -168,21 +162,18 @@ const AudioMessage = ({ audioPath, duration = 0, isCurrentUser = false }) => {
   };
 
   const onEnd = () => {
-    console.log('Audio playback ended');
-    stopPlayback();
+stopPlayback();
   };
 
   const onError = (error) => {
-    console.log('Audio error:', error);
-    setIsLoading(false);
+setIsLoading(false);
     setIsPlaying(false);
     setHasError(true);
     stopWaveAnimation();
     globalAudioManager.stop(componentId);
     
     // Log error but don't show alert to avoid spam
-    console.error('Failed to play audio file:', audioPath, error);
-  };
+};
 
   return (
     <View style={[

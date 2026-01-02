@@ -70,10 +70,8 @@ const VoiceRecorder = ({onSendAudio, onCancel}) => {
       };
 
       AudioRecord.init(options);
-      console.log('AudioRecord initialized successfully');
-    } catch (error) {
-      console.error('AudioRecord initialization error:', error);
-    }
+} catch (error) {
+}
   };
 
   const requestMicrophonePermission = async () => {
@@ -94,8 +92,7 @@ const VoiceRecorder = ({onSendAudio, onCancel}) => {
         setHasPermission(true);
       }
     } catch (err) {
-      console.warn('Permission error:', err);
-      setHasPermission(true);
+setHasPermission(true);
     }
   };
 
@@ -105,9 +102,7 @@ const VoiceRecorder = ({onSendAudio, onCancel}) => {
       setRecordTime(0);
 
       AudioRecord.start();
-      console.log('Recording started');
-
-      // Start pulse animation
+// Start pulse animation
       Animated.loop(
         Animated.sequence([
           Animated.timing(scaleAnimation, {
@@ -124,8 +119,7 @@ const VoiceRecorder = ({onSendAudio, onCancel}) => {
       ).start();
 
     } catch (error) {
-      console.error('Recording setup error:', error);
-      setIsRecording(false);
+setIsRecording(false);
       
       Alert.alert(
         'Recording Error', 
@@ -138,20 +132,16 @@ const VoiceRecorder = ({onSendAudio, onCancel}) => {
 
   const stopRecording = async () => {
     try {
-      console.log('Stopping recording...');
-      const audioFile = await AudioRecord.stop();
+const audioFile = await AudioRecord.stop();
       setIsRecording(false);
 
       Animated.spring(scaleAnimation, {
         toValue: 1,
         useNativeDriver: true,
       }).start();
-
-      console.log('Recording stopped, file path:', audioFile);
-      return audioFile;
+return audioFile;
     } catch (error) {
-      console.error('Failed to stop recording:', error);
-      setIsRecording(false);
+setIsRecording(false);
       return null;
     }
   };
@@ -170,8 +160,7 @@ const VoiceRecorder = ({onSendAudio, onCancel}) => {
 
     if (onSendAudio) {
       // For now, just send the local file path - this would need to be uploaded to server in production
-      console.log('Sending audio file:', audioFile);
-      onSendAudio(audioFile, recordTime);
+onSendAudio(audioFile, recordTime);
     }
   };
 

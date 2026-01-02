@@ -40,21 +40,36 @@ const FreeAddressSearch = ({
     return () => clearTimeout(timeoutId);
   }, [searchText]);
 
-  const searchAddresses = async (query) => {
+  const searchAddresses = async (query, retryCount = 0) => {
     setLoading(true);
     try {
+      // Create abort controller for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
       // Using Nominatim (OpenStreetMap) - completely free
       const response = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=eg&limit=5&addressdetails=1&extratags=1`,
         {
+          method: 'GET',
           headers: {
-            'User-Agent': 'FoodTokApp/1.0' // Required by Nominatim
-          }
+            'User-Agent': 'FoodTokApp/1.0 (Contact: support@foodtok.app)', // Required by Nominatim
+            'Accept': 'application/json',
+            'Accept-Language': 'en,ar'
+          },
+          signal: controller.signal
         }
       );
 
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
-        throw new Error('Search failed');
+        // Handle rate limiting (429) with retry
+        if (response.status === 429 && retryCount < 2) {
+await new Promise(resolve => setTimeout(resolve, 1500));
+          return searchAddresses(query, retryCount + 1);
+        }
+        throw new Error(`Server error: ${response.status}`);
       }
 
       const data = await response.json();
@@ -79,8 +94,17 @@ const FreeAddressSearch = ({
       setSuggestions(formattedSuggestions);
       setShowSuggestions(true);
     } catch (error) {
-      console.error('Address search error:', error);
-      Alert.alert(strings.error, 'Failed to search addresses. Please try again.');
+// Don't show alert for abort/timeout - user likely typed more
+      if (error.name === 'AbortError') {
+return;
+      }
+      
+      // Only show alert if it's not a network error (user might be offline)
+      if (error.message?.includes('Network request failed')) {
+        Alert.alert(strings.error || 'Error', 'No internet connection. Please check your network.');
+      } else {
+        // Silently fail for other errors to avoid annoying the user during typing
+}
       setSuggestions([]);
     } finally {
       setLoading(false);

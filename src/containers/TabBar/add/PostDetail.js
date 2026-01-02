@@ -110,11 +110,7 @@ export default function PostDetail() {
       onSuccess: res => {
         setLocations(res?.data?.locations);
       },
-      onError: err => console.log('err ', err),
-    },
-  );
-
-  const [isPhotoUploading, setisPhotoUploading] = useState(false);
+      onError: err => const [isPhotoUploading, setisPhotoUploading] = useState(false);
   const [localUri, setlocalUri] = useState('');
   const [phone, setPhone] = useState();
   const [locations, setLocations] = useState(locationsData?.data?.locations);
@@ -308,8 +304,7 @@ export default function PostDetail() {
       // BLOCKED or UNAVAILABLE
       return false;
     } catch (error) {
-      console.log('Camera permission error:', error);
-      return false;
+return false;
     }
   };
 
@@ -339,8 +334,7 @@ export default function PostDetail() {
       // BLOCKED or UNAVAILABLE
       return false;
     } catch (error) {
-      console.log('Photo library permission error:', error);
-      return false;
+return false;
     }
   };
 
@@ -368,8 +362,7 @@ export default function PostDetail() {
       maximumVideoDuration: 60,
     })
       .then(handleMedia)
-      .catch(err => console.log('err ', err));
-  };
+      .catch(err => };
 
   const handleCaptureImage = async () => {
     const hasPermission = await requestCameraPermission();
@@ -383,8 +376,7 @@ export default function PostDetail() {
       compressImageQuality: 1,
     })
       .then(handleMedia)
-      .catch(err => console.log('err ', err));
-  };
+      .catch(err => };
 
   const handlepickImage = async () => {
     try {
@@ -406,8 +398,7 @@ export default function PostDetail() {
       if (permissionError) {
         showPermissionAlert('Photo Library');
       } else if (code !== 'E_PICKER_CANCELLED') {
-        console.log('Image picker error: ', err);
-      }
+}
     }
   };
 
@@ -429,8 +420,7 @@ export default function PostDetail() {
       if (permissionError) {
         showPermissionAlert('Photo Library');
       } else if (code !== 'E_PICKER_CANCELLED') {
-        console.log('Video picker error: ', err);
-      }
+}
     }
   };
 

@@ -49,9 +49,7 @@ export function BackgroundUploadProvider({children}) {
         avatarUri: data.avatarUri,
         poster: data.poster,
       };
-      
-      console.log('Sending review reel data:', reviewReelData);
-      return request.post('/story/create-review-reel', reviewReelData);
+return request.post('/story/create-review-reel', reviewReelData);
     }
     return request.post('/story/add_story', data);
   };
@@ -135,10 +133,7 @@ export function BackgroundUploadProvider({children}) {
         onError: err => {
           Dialog.hide();
           setisFormFilled(false);
-          
-          console.error('Story creation error:', err);
-          
-          // Handle validation errors specifically
+// Handle validation errors specifically
           if (err.details && typeof err.details === 'object') {
             const errorMessages = Object.values(err.details).join(', ');
             Toast.show({
@@ -290,11 +285,9 @@ export function BackgroundUploadProvider({children}) {
             );
           });
           BackgroundUpload.addListener('error', uploadId, data => {
-            console.log(`${strings.uploadError} ${data.error}%`);
-          });
+});
           BackgroundUpload.addListener('cancelled', uploadId, data => {
-            console.log('Cancelled!', data);
-          });
+});
           BackgroundUpload.addListener('completed', uploadId, data => {
             // data includes responseCode: number and responseBody: Object
             const startTag = '<Location>';
@@ -318,8 +311,7 @@ export function BackgroundUploadProvider({children}) {
           });
         })
         .catch(err => {
-          console.log(`${strings.uploadError} ${err}`);
-        });
+});
       if (!isImage) {
         const optionsVideo = {
           type: 'multipart',
@@ -356,11 +348,9 @@ export function BackgroundUploadProvider({children}) {
               );
             });
             BackgroundUpload.addListener('error', uploadId, data => {
-              console.log(`${strings.uploadError} ${data.error}%`);
-            });
+});
             BackgroundUpload.addListener('cancelled', uploadId, data => {
-              console.log('Cancelled!', data);
-            });
+});
             BackgroundUpload.addListener('completed', uploadId, data => {
               // data includes responseCode: number and responseBody: Object
               const startTag = '<Location>';
@@ -381,8 +371,7 @@ export function BackgroundUploadProvider({children}) {
             });
           })
           .catch(err => {
-            console.log(`${strings.uploadError} ${err}`);
-          });
+});
       }
 
       setIsMediaUploading(false);
@@ -394,8 +383,7 @@ export function BackgroundUploadProvider({children}) {
         duration: 3000,
         hideOnPress: true,
       });
-      console.log(`${strings.uploadError} ${err}`);
-    }
+}
   };
 
   const providerValue = {

@@ -24,9 +24,7 @@ class SharingUtils {
       });
 
       if (result.action === Share.sharedAction) {
-        console.log('Content shared successfully:', type, contentId);
-        
-        // Track sharing analytics
+// Track sharing analytics
         this.trackSharing(type, contentId, result.activityType);
         
         return { success: true, action: result.action, activityType: result.activityType };
@@ -34,8 +32,7 @@ class SharingUtils {
         return { success: false, action: 'dismissed' };
       }
     } catch (error) {
-      console.error('Sharing error:', error);
-      Alert.alert('Sharing Error', 'Failed to share content. Please try again.');
+Alert.alert('Sharing Error', 'Failed to share content. Please try again.');
       return { success: false, error: error.message };
     }
   }
@@ -55,9 +52,7 @@ class SharingUtils {
         throw new Error(response.data.message || 'Failed to generate share data');
       }
     } catch (error) {
-      console.error('Error generating share data:', error);
-      
-      // Fallback: generate local share data
+// Fallback: generate local share data
       return this.generateFallbackShareData(type, contentId, customParams);
     }
   }
@@ -172,8 +167,7 @@ class SharingUtils {
       
       return { success: true };
     } catch (error) {
-      console.error('Copy link error:', error);
-      Alert.alert('Error', 'Failed to copy link to clipboard.');
+Alert.alert('Error', 'Failed to copy link to clipboard.');
       return { success: false, error: error.message };
     }
   }
@@ -199,8 +193,7 @@ class SharingUtils {
 
       return { success: true };
     } catch (error) {
-      console.error('Instagram sharing error:', error);
-      return { success: false, error: error.message };
+return { success: false, error: error.message };
     }
   }
 
@@ -220,8 +213,7 @@ class SharingUtils {
         return { success: false, error: 'WhatsApp not installed' };
       }
     } catch (error) {
-      console.error('WhatsApp sharing error:', error);
-      return { success: false, error: error.message };
+return { success: false, error: error.message };
     }
   }
 
@@ -245,19 +237,14 @@ class SharingUtils {
       
       return { success: true };
     } catch (error) {
-      console.error('Twitter sharing error:', error);
-      return { success: false, error: error.message };
+return { success: false, error: error.message };
     }
   }
 
   // Track sharing analytics
   static trackSharing(type, contentId, platform = 'native') {
     // Implement your analytics tracking here
-    console.log('Tracking share:', {
-      type,
-      contentId,
-      platform,
-      timestamp: new Date().toISOString()
+.toISOString()
     });
 
     // You can integrate with your analytics service here
@@ -304,8 +291,7 @@ class SharingUtils {
       case 'instagram-story':
         return this.shareToInstagram(type, contentId, contentData.imageUrl);
       default:
-        console.warn('Unknown share option:', option.key);
-        return { success: false, error: 'Unknown share option' };
+return { success: false, error: 'Unknown share option' };
     }
   }
 }

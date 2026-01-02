@@ -1,46 +1,17 @@
-/**
- * Metro configuration for React Native
- * https://github.com/facebook/react-native
- *
- * @format
- */
+const { getDefaultConfig } = require('expo/metro-config');
 
-const {getDefaultConfig} = require('metro-config');
+const config = getDefaultConfig(__dirname);
 
-module.exports = (async () => {
-  const {
-    resolver: {sourceExts, assetExts},
-  } = await getDefaultConfig();
-  return {
-    transformer: {
-      babelTransformerPath: require.resolve('react-native-svg-transformer'),
-      getTransformOptions: async () => ({
-        transform: {
-          experimentalImportSupport: false,
-          inlineRequires: false,
-        },
-      }),
-    },
-    minifierConfig: {
-      keep_classnames: true,
-      keep_fnames: true,
-      mangle: {
-        keep_classnames: true,
-        keep_fnames: true,
-      },
-      output: {
-        ascii_only: true,
-        quote_style: 3,
-      },
-      sourceMap: {
-        includeSources: true,
-      },
-      toplevel: true,
-      warnings: false,
-    },
-    resolver: {
-      assetExts: assetExts.filter(ext => ext !== 'svg'),
-      sourceExts: [...sourceExts, 'svg'],
-    },
-  };
-})();
+// Add SVG transformer
+config.transformer = {
+  ...config.transformer,
+  babelTransformerPath: require.resolve('react-native-svg-transformer'),
+};
+
+config.resolver = {
+  ...config.resolver,
+  assetExts: config.resolver.assetExts.filter(ext => ext !== 'svg'),
+  sourceExts: [...config.resolver.sourceExts, 'svg'],
+};
+
+module.exports = config;

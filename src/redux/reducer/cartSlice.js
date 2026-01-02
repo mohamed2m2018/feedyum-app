@@ -79,15 +79,7 @@ export default function cartReducer(state = initialState, action) {
       const dishId = objectIdToString(dish._id);
       
       // Debug logging
-      console.log('=== ADD_TO_CART DEBUG ===');
-      console.log('Original dish._id:', dish._id);
-      console.log('Converted dishId:', dishId);
-      console.log('Original chefId:', chefId);
-      console.log('Final chefId:', finalChefId);
-      console.log('Dish object:', dish);
-      console.log('========================');
-      
-      // If cart is empty or same chef, proceed
+// If cart is empty or same chef, proceed
       if (!state.chefId || state.chefId === finalChefId) {
         
         const existingItem = state.items.find(item => item.dishId === dishId);
@@ -299,8 +291,7 @@ export const saveCartToStorage = () => async (dispatch, getState) => {
     };
     useStorage.setItem('cart', JSON.stringify(cartData));
   } catch (error) {
-    console.error('Failed to save cart to storage:', error);
-  }
+}
 };
 
 export const loadCartFromStorageAsync = () => async (dispatch) => {
@@ -311,8 +302,7 @@ export const loadCartFromStorageAsync = () => async (dispatch) => {
       dispatch(loadCartFromStorage(JSON.parse(savedCart)));
     }
   } catch (error) {
-    console.error('Failed to load cart from storage:', error);
-    dispatch(setError('Failed to load saved cart'));
+dispatch(setError('Failed to load saved cart'));
   } finally {
     dispatch(setLoading(false));
   }
@@ -323,8 +313,7 @@ export const clearCartFromStorage = () => async (dispatch) => {
     useStorage.removeItem('cart');
     dispatch(clearCart());
   } catch (error) {
-    console.error('Failed to clear cart from storage:', error);
-  }
+}
 };
 
 // Selectors

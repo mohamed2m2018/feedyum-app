@@ -11,9 +11,7 @@ const VoiceRecordingTest = () => {
   const [testMessages, setTestMessages] = useState([]);
 
   const handleVoiceMessage = (voiceMessage) => {
-    console.log('Test: Received voice message:', voiceMessage);
-    
-    // Add the voice message to our test list
+// Add the voice message to our test list
     const newMessage = {
       ...voiceMessage,
       id: Date.now(),
@@ -30,8 +28,7 @@ const VoiceRecordingTest = () => {
   };
 
   const handleCancel = () => {
-    console.log('Test: Voice recording cancelled');
-  };
+};
 
   return (
     <View style={[styles.container, { backgroundColor: colors.backgroundColor }]}>

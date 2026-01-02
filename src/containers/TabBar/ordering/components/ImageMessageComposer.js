@@ -70,8 +70,7 @@ const ImageMessageComposer = ({ onSend, onCancel }) => {
       });
       setIsVisible(false);
     } catch (error) {
-      console.error('Image processing error:', error);
-      Alert.alert(strings.processingError, strings.failedToProcessImage);
+Alert.alert(strings.processingError, strings.failedToProcessImage);
     } finally {
       setIsProcessing(false);
     }
@@ -85,8 +84,7 @@ const ImageMessageComposer = ({ onSend, onCancel }) => {
       cropping: true,
       compressImageQuality: 0.8,
     }).then(processImage).catch(error => {
-      console.log('Camera error:', error);
-      setIsVisible(false);
+setIsVisible(false);
     });
   };
 
@@ -98,8 +96,7 @@ const ImageMessageComposer = ({ onSend, onCancel }) => {
       cropping: true,
       compressImageQuality: 0.8,
     }).then(processImage).catch(error => {
-      console.log('Gallery error:', error);
-      setIsVisible(false);
+setIsVisible(false);
     });
   };
 

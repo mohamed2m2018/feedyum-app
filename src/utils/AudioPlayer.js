@@ -41,14 +41,11 @@ class AudioPlayer {
 
       this.currentAudio = audioPath;
       this.isPlaying = true;
-
-      console.log('Playing audio:', audioPath);
-      this.emit('play', { audioPath });
+this.emit('play', { audioPath });
 
       return true;
     } catch (error) {
-      console.error('Audio play error:', error);
-      this.emit('error', error);
+this.emit('error', error);
       return false;
     }
   }

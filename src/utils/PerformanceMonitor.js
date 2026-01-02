@@ -12,8 +12,7 @@ class PerformanceMonitor {
     this.timers[key] = {
       start: Date.now(),
       interactions: InteractionManager.runAfterInteractions(() => {
-        console.log(`${key} - interactions complete`);
-      })
+})
     };
   }
 
@@ -29,13 +28,9 @@ class PerformanceMonitor {
       timestamp: Date.now(),
       ...additionalData
     };
-    
-    console.log(`Performance: ${key} took ${duration}ms`, additionalData);
-    
-    // Log slow operations (>2 seconds)
+// Log slow operations (>2 seconds)
     if (duration > 2000) {
-      console.warn(`SLOW OPERATION: ${key} took ${duration}ms`, additionalData);
-    }
+}
     
     delete this.timers[key];
     return duration;
@@ -69,8 +64,7 @@ class PerformanceMonitor {
   logMemoryUsage(context = '') {
     if (__DEV__ && global.performance && global.performance.memory) {
       const { usedJSHeapSize, totalJSHeapSize, jsHeapSizeLimit } = global.performance.memory;
-      console.log(`Memory Usage ${context}:`, {
-        used: Math.round(usedJSHeapSize / 1024 / 1024),
+,
         total: Math.round(totalJSHeapSize / 1024 / 1024),
         limit: Math.round(jsHeapSizeLimit / 1024 / 1024),
       });
@@ -80,8 +74,7 @@ class PerformanceMonitor {
   // Bundle size monitoring
   logBundleSize() {
     if (__DEV__) {
-      console.log('Bundle size monitoring enabled in development');
-    }
+}
   }
 }
 

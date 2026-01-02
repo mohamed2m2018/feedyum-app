@@ -73,20 +73,15 @@ const AddressSelectionModal = ({
           style: 'destructive',
           onPress: async () => {
             try {
-              console.log('AddressSelectionModal: Deleting address with ID:', addressId);
-              const result = await dispatch(deleteAddress(addressId));
-              console.log('AddressSelectionModal: Delete result:', result);
-              
-              // Refresh addresses after deletion
+const result = await dispatch(deleteAddress(addressId));
+// Refresh addresses after deletion
               if (onAddressUpdated) {
-                console.log('AddressSelectionModal: Calling onAddressUpdated callback');
-                onAddressUpdated();
+onAddressUpdated();
               }
               
               Alert.alert(strings.success || 'Success', 'Address deleted successfully');
             } catch (error) {
-              console.error('AddressSelectionModal: Delete error:', error);
-              Alert.alert(strings.error, error.message || strings.failedToDeleteAddress || 'Failed to delete address');
+Alert.alert(strings.error, error.message || strings.failedToDeleteAddress || 'Failed to delete address');
             }
           },
         },
@@ -142,23 +137,19 @@ const AddressSelectionModal = ({
     onClose();
     navigation.navigate(StackNav.MapLocationPicker, {
       onLocationSelect: async (address) => {
-        console.log('AddressSelectionModal: New address added:', address);
-        
-        // Update location context with the new address
+// Update location context with the new address
         if (location?.updateDeliveryLocation) {
           location.updateDeliveryLocation(address);
         }
         
         // Refresh addresses list to show the new address
         if (onAddressUpdated) {
-          console.log('AddressSelectionModal: Refreshing addresses list');
-          await onAddressUpdated();
+await onAddressUpdated();
         }
         
         // Small delay to ensure address list is updated
         setTimeout(() => {
-          console.log('AddressSelectionModal: Selecting new address');
-          onAddressSelect(address);
+onAddressSelect(address);
         }, 100);
       }
     });

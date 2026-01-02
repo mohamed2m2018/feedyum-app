@@ -120,8 +120,7 @@ export default function MenuManagement() {
           error?.response?.status === 404 ||
           error?.message?.includes('Menu not found')
         ) {
-          console.log('Creating menu for chef...');
-          menuResponse = await request.post('/menus', {
+menuResponse = await request.post('/menus', {
             name: 'My Restaurant Menu',
             description: 'Welcome to my restaurant!',
           });
@@ -139,8 +138,7 @@ export default function MenuManagement() {
 
       return menuId;
     } catch (error) {
-      console.error('Error ensuring menu:', error);
-      throw error;
+throw error;
     }
   };
 
@@ -317,8 +315,7 @@ export default function MenuManagement() {
         return response.data;
       } catch (error) {
         // If sections endpoint fails, return empty array (will use defaults)
-        console.warn('Failed to fetch sections:', error.message);
-        return [];
+return [];
       }
     },
     {
@@ -356,8 +353,7 @@ export default function MenuManagement() {
         const dishesResponse = await request.get(`/dishes/chef/${userId}`);
         return dishesResponse.data || [];
       } catch (error) {
-        console.warn('Failed to fetch dishes:', error.message);
-        return [];
+return [];
       }
     },
     {
@@ -385,23 +381,13 @@ export default function MenuManagement() {
     }) || [];
 
   // Debug logging
-  console.log('MenuManagement Debug:', {
-    userId,
-    dishesCount: dishesData?.length || 0,
-    filteredCount: filteredDishes.length,
-    selectedSection,
-    searchQuery,
-    firstDish: dishesData?.[0],
-  });
-
-  const onRefresh = async () => {
+const onRefresh = async () => {
     setRefreshing(true);
     try {
       await queryClient.invalidateQueries('menuSections');
       await queryClient.invalidateQueries('menuDishes');
     } catch (error) {
-      console.error('Error refreshing menu:', error);
-    } finally {
+} finally {
       setRefreshing(false);
     }
   };
@@ -468,8 +454,7 @@ export default function MenuManagement() {
         textBody: `Dish ${dish.visible ? 'hidden' : 'made visible'}`,
       });
     } catch (error) {
-      console.error('Error toggling dish visibility:', error);
-      Toast.show({
+Toast.show({
         type: ALERT_TYPE.DANGER,
         title: 'Error',
         textBody:

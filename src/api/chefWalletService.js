@@ -20,8 +20,7 @@ class ChefWalletService {
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error('Wallet info fetch error:', error);
-      throw new Error('Failed to fetch wallet information');
+throw new Error('Failed to fetch wallet information');
     }
   }
 
@@ -36,8 +35,7 @@ class ChefWalletService {
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error('Payment check error:', error);
-      throw new Error('Failed to check payment status');
+throw new Error('Failed to check payment status');
     }
   }
 
@@ -59,8 +57,7 @@ class ChefWalletService {
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error('Payment processing error:', error);
-      throw new Error('Failed to process payment');
+throw new Error('Failed to process payment');
     }
   }
 }

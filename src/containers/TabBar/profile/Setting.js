@@ -26,7 +26,7 @@ import {useQuery, useQueryClient} from 'react-query';
 import request from '../../../api/request';
 import {GoogleSignin} from '@react-native-google-signin/google-signin';
 import {useHandleAuth} from '../../../utils/useHandleAuth';
-import OneSignal from 'react-native-onesignal';
+import { OneSignal } from 'react-native-onesignal';
 import {ALERT_TYPE, Toast} from 'react-native-alert-notification';
 import {useStorage} from '../../../utils/useStorage';
 import AppInitializer from '../../../services/AppInitializer';
@@ -192,7 +192,8 @@ export default Setting = ({navigation}) => {
       // Clear AsyncStorage-stored session/notification data
       await AppInitializer.handleUserLogout();
       googleSignOut();
-      OneSignal.removeExternalUserId();
+      // OneSignal v5
+      OneSignal.logout();
       setTimeout(() => {
         navigation.reset({
           index: 0,

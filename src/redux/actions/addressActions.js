@@ -48,11 +48,8 @@ export const addAddress = (addressData) => async (dispatch) => {
   dispatch({ type: ADDRESS_ACTIONS.ADD_ADDRESS_REQUEST });
   
   try {
-    console.log('Redux addAddress: Sending data to service:', addressData);
-    const response = await addressService.addAddress(addressData);
-    console.log('Redux addAddress: Service response:', response);
-    
-    dispatch({
+const response = await addressService.addAddress(addressData);
+dispatch({
       type: ADDRESS_ACTIONS.ADD_ADDRESS_SUCCESS,
       payload: response.address
     });
@@ -63,8 +60,7 @@ export const addAddress = (addressData) => async (dispatch) => {
     // Return the response so components can access it
     return { success: true, payload: response.address };
   } catch (error) {
-    console.error('Redux addAddress: Error:', error);
-    dispatch({
+dispatch({
       type: ADDRESS_ACTIONS.ADD_ADDRESS_FAILURE,
       payload: error.response?.data?.message || 'Failed to add address'
     });
@@ -104,8 +100,7 @@ export const deleteAddress = (addressId) => async (dispatch) => {
     dispatch(getAddresses());
     return { success: true, data: response };
   } catch (error) {
-    console.error('Delete address error:', error);
-    dispatch({
+dispatch({
       type: ADDRESS_ACTIONS.DELETE_ADDRESS_FAILURE,
       payload: error.response?.data?.message || 'Failed to delete address'
     });

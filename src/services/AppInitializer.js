@@ -12,9 +12,7 @@ class AppInitializer {
     }
 
     try {
-      console.log('Initializing FoodTok app services...');
-
-      // Initialize deep linking service
+// Initialize deep linking service
       const deepLinkingService = DeepLinkingService.getInstance();
       
       // Initialize notification service
@@ -28,25 +26,18 @@ class AppInitializer {
       await this.restoreUserNotificationData();
 
       this.isInitialized = true;
-      console.log('FoodTok app initialization complete');
-
-    } catch (error) {
-      console.error('App initialization error:', error);
-    }
+} catch (error) {
+}
   }
 
   static async handleDeferredDeepLinks() {
     try {
-      console.log('Checking for deferred deep links...');
-
-      // Check for deferred deep link data stored by web fallback
+// Check for deferred deep link data stored by web fallback
       const deferredLinkData = await AsyncStorage.getItem('foodtok_deferred_link');
       const deferredToken = await AsyncStorage.getItem('foodtok_deferred_token');
 
       if (deferredLinkData) {
-        console.log('Found deferred deep link data');
-        
-        const linkData = JSON.parse(deferredLinkData);
+const linkData = JSON.parse(deferredLinkData);
         const currentTime = Date.now();
         const linkAge = currentTime - (linkData.timestamp || 0);
         
@@ -54,9 +45,7 @@ class AppInitializer {
         const maxAge = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
         
         if (linkAge < maxAge) {
-          console.log('Processing deferred deep link:', linkData);
-          
-          // Wait a bit for the app to fully initialize
+// Wait a bit for the app to fully initialize
           setTimeout(() => {
             this.processDeferredLink(linkData);
           }, 2000);
@@ -64,27 +53,21 @@ class AppInitializer {
           // Track deferred deep link success
           this.trackDeferredLinkOpened(linkData);
         } else {
-          console.log('Deferred deep link expired, ignoring');
-        }
+}
 
         // Clean up stored deferred link data
         await AsyncStorage.removeItem('foodtok_deferred_link');
         await AsyncStorage.removeItem('foodtok_deferred_token');
       } else {
-        console.log('No deferred deep links found');
-      }
+}
     } catch (error) {
-      console.error('Error handling deferred deep links:', error);
-    }
+}
   }
 
   static processDeferredLink(linkData) {
     try {
       const { type, contentId, deepLink } = linkData;
-      
-      console.log(`Processing deferred ${type} link for content ${contentId}`);
-      
-      // Use the deep linking service to handle the link
+// Use the deep linking service to handle the link
       const deepLinkingService = DeepLinkingService.getInstance();
       
       if (deepLink) {
@@ -104,8 +87,7 @@ class AppInitializer {
       this.showDeferredLinkWelcome(type, contentId);
 
     } catch (error) {
-      console.error('Error processing deferred link:', error);
-    }
+}
   }
 
   static showDeferredLinkWelcome(type, contentId) {
@@ -123,9 +105,7 @@ class AppInitializer {
     const message = messages[type] || 'Welcome to FoodTok! 🎉';
     
     // You can implement a toast or modal here
-    console.log('Deferred link welcome:', message);
-    
-    // Example with react-native-toast-message (if installed)
+// Example with react-native-toast-message (if installed)
     // Toast.show({
     //   type: 'success',
     //   text1: 'Welcome to FoodTok! 🎉',
@@ -146,10 +126,7 @@ class AppInitializer {
         app_name: 'FoodTok',
         timestamp: new Date().toISOString()
       };
-
-      console.log('Tracking deferred link analytics:', analyticsData);
-
-      // Send to your analytics service
+// Send to your analytics service
       // Analytics.track('deferred_deep_link_opened', analyticsData);
       
       // Send to backend analytics
@@ -160,8 +137,7 @@ class AppInitializer {
       // }).catch(console.error);
 
     } catch (error) {
-      console.error('Error tracking deferred link:', error);
-    }
+}
   }
 
   static async restoreUserNotificationData() {
@@ -171,22 +147,18 @@ class AppInitializer {
 
       if (userData && authToken) {
         const user = JSON.parse(userData);
-        console.log('Restoring user notification data for:', user.fullName);
-        
-        // Restore user ID and tags for notifications
+// Restore user ID and tags for notifications
         const notificationService = NotificationService.getInstance();
         await notificationService.setUserId(user._id);
         await notificationService.updateUserTags(user);
       }
     } catch (error) {
-      console.error('Error restoring user notification data:', error);
-    }
+}
   }
 
   static async handleUserLogin(userData, authToken) {
     try {
-      console.log('Setting up notifications for user login:', userData.fullName);
-      // Always update Authorization header on login to avoid stale tokens
+// Always update Authorization header on login to avoid stale tokens
       if (authToken) {
         const request = (await import('../api/request')).default;
         request.defaults.headers.common.Authorization = authToken;
@@ -200,63 +172,42 @@ class AppInitializer {
       const notificationService = NotificationService.getInstance();
       await notificationService.setUserId(userData._id);
       await notificationService.updateUserTags(userData);
-
-      console.log('User login notification setup complete');
-    } catch (error) {
-      console.error('Error handling user login:', error);
-    }
+} catch (error) {
+}
   }
 
   static async handleUserLogout() {
     try {
-      console.log('Cleaning up user data on logout');
-
-      // Clear stored user data
+// Clear stored user data
       await AsyncStorage.removeItem('user_data');
       await AsyncStorage.removeItem('auth_token');
 
       // Clear notification data
       const notificationService = NotificationService.getInstance();
       await notificationService.clearUserData();
-
-      console.log('User logout cleanup complete');
-    } catch (error) {
-      console.error('Error handling user logout:', error);
-    }
+} catch (error) {
+}
   }
 
   static async handleUserProfileUpdate(userData) {
     try {
-      console.log('Updating user notification data:', userData.fullName);
-
-      // Update stored user data
+// Update stored user data
       await AsyncStorage.setItem('user_data', JSON.stringify(userData));
 
       // Update notification tags
       const notificationService = NotificationService.getInstance();
       await notificationService.updateUserTags(userData);
-
-      console.log('User profile update complete');
-    } catch (error) {
-      console.error('Error handling user profile update:', error);
-    }
+} catch (error) {
+}
   }
 
   static async testNotification() {
     try {
       const notificationService = NotificationService.getInstance();
       const deviceState = await notificationService.getDeviceState();
-      
-      console.log('Notification test results:', {
-        hasPermission: deviceState.hasNotificationPermission,
-        userId: deviceState.userId,
-        pushToken: deviceState.pushToken ? 'Present' : 'Missing'
-      });
-
-      return deviceState;
+return deviceState;
     } catch (error) {
-      console.error('Error testing notifications:', error);
-      return null;
+return null;
     }
   }
 
@@ -265,9 +216,7 @@ class AppInitializer {
   }
 
   static handleNotificationOpen(notificationData) {
-    console.log('Handling notification open:', notificationData);
-    
-    const deepLinkingService = DeepLinkingService.getInstance();
+const deepLinkingService = DeepLinkingService.getInstance();
     deepLinkingService.handleNotificationTap(notificationData);
   }
 
@@ -288,8 +237,7 @@ class AppInitializer {
         webFallbackUrl: shareLinks.universalLink
       };
     } catch (error) {
-      console.error('Error generating deferred share link:', error);
-      throw error;
+throw error;
     }
   }
 
@@ -321,8 +269,7 @@ class AppInitializer {
       
       return !hasUserData && !hasSeenOnboarding && isRecent;
     } catch (error) {
-      console.error('Error checking fresh install:', error);
-      return false;
+return false;
     }
   }
 
@@ -331,8 +278,7 @@ class AppInitializer {
     try {
       await AsyncStorage.setItem('has_seen_onboarding', 'true');
     } catch (error) {
-      console.error('Error marking onboarding complete:', error);
-    }
+}
   }
 }
 

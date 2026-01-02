@@ -46,7 +46,7 @@ export default function HashtagCategory({selectedTag, isLocationChanging}) {
     isLoading: isBatchLoading,
     error: batchError,
     hasData
-  } = useDiscoverCategory(selectedTag, location, user?._id);
+  } = useDiscoverCategory(selectedTag, location, user?._id && typeof user._id === 'string' ? user._id : undefined);
 
   // Fallback to individual API calls if batch fails or for pagination
   const {
@@ -130,17 +130,8 @@ export default function HashtagCategory({selectedTag, isLocationChanging}) {
 
   // Combine users and dishes based on the logic you described
   const kitchensWithTaggedContent = React.useMemo(() => {
-    console.log('[DISCOVER CATEGORY]', selectedTag + ':', {
-      finalUsers: finalUsers.length,
-      finalDishes: finalDishes.length,
-      hasData,
-      batchError,
-      data: { users: finalUsers, dishes: finalDishes }
-    });
-    
-    if (!finalUsers.length && !finalDishes.length) {
-      console.log('[DISCOVER CATEGORY] No users or dishes, returning empty array');
-      return [];
+if (!finalUsers.length && !finalDishes.length) {
+return [];
     }
     
     const kitchenMap = new Map();
@@ -175,9 +166,7 @@ export default function HashtagCategory({selectedTag, isLocationChanging}) {
     
     // 2. Add dishes that match the category (whether attached to reels or not)
     finalDishes.forEach(dish => {
-      console.log('[DISCOVER CATEGORY] Processing dish:', dish);
-      
-      // Handle different dish structures from API
+// Handle different dish structures from API
       let chefId, chefInfo;
       
       if (dish.chef && dish.chef._id) {
@@ -189,8 +178,7 @@ export default function HashtagCategory({selectedTag, isLocationChanging}) {
         chefId = dish.user_id._id || dish.user_id;
         chefInfo = dish.user_id;
       } else {
-        console.log('[DISCOVER CATEGORY] Skipping dish - no chef info:', dish);
-        return;
+return;
       }
       
       // If this chef is not already in our map, add them
@@ -237,10 +225,7 @@ export default function HashtagCategory({selectedTag, isLocationChanging}) {
       (kitchen.stories && kitchen.stories.length > 0) || 
       (kitchen.dishes && kitchen.dishes.length > 0)
     );
-    
-    console.log('[DISCOVER CATEGORY] Final kitchens for', selectedTag + ':', filteredResult.length, filteredResult);
-    
-    return filteredResult;
+return filteredResult;
   }, [finalUsers, finalDishes]);
 
   // Function to get dishes for a specific chef

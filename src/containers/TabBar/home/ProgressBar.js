@@ -122,14 +122,12 @@ class ProgressBar extends Component {
   _handlePanResponderGrant = (e, gestureState) => {
     //users first press down on the processbar
     this.props.startSeekVideo();
-    console.log(gestureState.x0)
-    this._processStyle.style.width = gestureState.x0 -15;
+this._processStyle.style.width = gestureState.x0 -15;
     this._updateProgress();
     var _time =
       this._getProgressPercentage(this._processStyle.style.width, width) *
       this.props.duration;
-    console.log(_time);
-    this.props.endSeekVideo(_time);
+this.props.endSeekVideo(_time);
   };
 
   _handlePanResponderMove = (e, gestureState) => {
@@ -139,8 +137,7 @@ class ProgressBar extends Component {
     var _time =
       this._getProgressPercentage(this._processStyle.style.width, width) *
       this.props.duration;
-    console.log(_time);
-    this.props.endSeekVideo(_time);
+this.props.endSeekVideo(_time);
   };
 
   _handlePanResponderEnd = (e, gestureState) => {
@@ -148,8 +145,7 @@ class ProgressBar extends Component {
     var _time =
       this._getProgressPercentage(this._processStyle.style.width, width) *
       this.props.duration;
-    console.log(_time);
-    this.props.endSeekVideo(_time);
+this.props.endSeekVideo(_time);
   };
 
   _handlePanResponderTerminate = (e, gestureState) => {

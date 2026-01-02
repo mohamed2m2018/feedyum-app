@@ -55,8 +55,7 @@ const PromoCodeInput = ({
         Alert.alert('Invalid Promo Code', data.message || 'This promo code is not valid');
       }
     } catch (error) {
-      console.error('Promo code validation error:', error);
-      Alert.alert('Error', 'Failed to validate promo code. Please try again.');
+Alert.alert('Error', 'Failed to validate promo code. Please try again.');
     } finally {
       setIsValidating(false);
     }

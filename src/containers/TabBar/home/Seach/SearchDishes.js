@@ -33,11 +33,7 @@ const SearchDishes = ({
   const navigation = useNavigation();
 
   // Debug logging
-  console.log('SearchDishes: Received dishes:', dishes?.length || 0);
-  console.log('SearchDishes: isFetching:', isFetching);
-  console.log('SearchDishes: First dish:', dishes?.[0]);
-
-  const handleDishPress = (dish) => {
+const handleDishPress = (dish) => {
     navigation.navigate(StackNav.DishDetailScreen, { 
       dishId: dish._id,
       dish: dish 

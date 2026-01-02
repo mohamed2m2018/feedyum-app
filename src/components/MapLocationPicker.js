@@ -141,24 +141,18 @@ const MapLocationPicker = () => {
     };
 
     try {
-      console.log('MapLocationPicker: Saving address data:', locationData);
-      const response = await dispatch(addAddress(locationData));
-      console.log('MapLocationPicker: Add address response:', response);
-      
-      if (onLocationSelect) {
+const response = await dispatch(addAddress(locationData));
+if (onLocationSelect) {
         if (response && response.payload) {
-          console.log('MapLocationPicker: Calling onLocationSelect with:', response.payload);
-          onLocationSelect(response.payload);
+onLocationSelect(response.payload);
         } else {
-          console.error('MapLocationPicker: No response payload received');
-          Alert.alert(strings.error, 'Address was saved but response is invalid');
+Alert.alert(strings.error, 'Address was saved but response is invalid');
         }
       }
       
       navigation.goBack();
     } catch (error) {
-      console.error('MapLocationPicker: Error saving address:', error);
-      Alert.alert(strings.error, error.message || strings.failedToSaveLocation);
+Alert.alert(strings.error, error.message || strings.failedToSaveLocation);
     } finally {
       setLoading(false);
     }

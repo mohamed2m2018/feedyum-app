@@ -3,9 +3,7 @@ import request from '../api/request';
 
 // Single optimized hook for ALL Discover screen data
 export const useDiscoverBatch = (coordinates, userId) => {
-  console.log('[DISCOVER BATCH HOOK] Called with:', { coordinates, userId });
-  
-  return useQuery(
+return useQuery(
     ['discover-batch', coordinates?.latitude || coordinates?.lat, coordinates?.longitude || coordinates?.long, userId],
     async () => {
       const params = new URLSearchParams();
@@ -18,23 +16,19 @@ export const useDiscoverBatch = (coordinates, userId) => {
         params.append('long', coordinates.long);
       }
       
-      if (userId) {
+      if (userId && typeof userId === 'string') {
         params.append('userId', userId);
       }
       
       const url = `/discover/batch?${params.toString()}`;
-      console.log('[DISCOVER BATCH] Fetching all data from:', url);
-      
-      const response = await request.get(url);
+const response = await request.get(url);
       
       const data = response.data;
       
       if (!data.success) {
         throw new Error(data.error || 'Failed to fetch discover data');
       }
-      
-      console.log(`[DISCOVER BATCH] Success! Loaded in ${data.loadTime}ms`, data.data);
-      return data.data; // Return just the category data
+return data.data; // Return just the category data
     },
     {
       enabled: true, // Always enabled - API works without parameters
@@ -51,15 +45,7 @@ export const useDiscoverBatch = (coordinates, userId) => {
 // Helper hook to extract specific category data
 export const useDiscoverCategory = (categoryName, coordinates, userId) => {
   const { data, isLoading, error, refetch } = useDiscoverBatch(coordinates, userId);
-  
-  console.log(`[DISCOVER CATEGORY] ${categoryName}:`, {
-    data: data?.[categoryName],
-    isLoading,
-    error,
-    hasData: !!data?.[categoryName]
-  });
-  
-  return {
+return {
     users: data?.[categoryName]?.users || [],
     dishes: data?.[categoryName]?.dishes || [],
     isLoading,

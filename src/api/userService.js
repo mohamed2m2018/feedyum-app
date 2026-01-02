@@ -16,8 +16,7 @@ class UserService {
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error('User profile fetch error:', error);
-      throw new Error('Failed to fetch user profile');
+throw new Error('Failed to fetch user profile');
     }
   }
 
@@ -32,8 +31,7 @@ class UserService {
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error('Chef profile fetch error:', error);
-      throw new Error('Failed to fetch chef profile');
+throw new Error('Failed to fetch chef profile');
     }
   }
 
@@ -48,8 +46,7 @@ class UserService {
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error('User fetch error:', error);
-      throw new Error('Failed to fetch user');
+throw new Error('Failed to fetch user');
     }
   }
 
@@ -64,8 +61,7 @@ class UserService {
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error('User search error:', error);
-      throw new Error('Failed to search users');
+throw new Error('Failed to search users');
     }
   }
 
@@ -80,8 +76,7 @@ class UserService {
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error('Get all users error:', error);
-      throw new Error('Failed to fetch users');
+throw new Error('Failed to fetch users');
     }
   }
 
@@ -96,8 +91,7 @@ class UserService {
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error('Chef menu fetch error:', error);
-      throw new Error('Failed to fetch chef menu');
+throw new Error('Failed to fetch chef menu');
     }
   }
 }

@@ -57,9 +57,7 @@ const ChefMenu = () => {
   // Define fetch function first
   const fetchChefMenu = async chefId => {
     try {
-      console.log('Fetching menu for chef:', chefId);
-
-      let menu = null;
+let menu = null;
       let dishes = [];
       let chef = null;
 
@@ -67,19 +65,15 @@ const ChefMenu = () => {
       try {
         const menuResponse = await request.get(`/menus/chef/${chefId}`);
         menu = menuResponse.data;
-        console.log('Menu response:', menu);
-      } catch (menuError) {
-        console.log('No menu found for chef:', menuError.message);
-      }
+} catch (menuError) {
+}
 
       // Get chef information
       try {
         const chefResponse = await request.get(`/user/${chefId}`);
         chef = chefResponse.data;
-        console.log('Chef info:', chef);
-      } catch (chefError) {
-        console.log('Could not fetch chef info:', chefError.message);
-        // If we can't get chef info, create a basic chef object
+} catch (chefError) {
+// If we can't get chef info, create a basic chef object
         chef = {
           _id: chefId,
           fullName: chefName || strings.unknownChef,
@@ -92,8 +86,7 @@ const ChefMenu = () => {
         const dishesResponse = await request.get(`/dishes/chef/${chefId}`);
         dishes = dishesResponse.data || [];
       } catch (dishError) {
-        console.log('Could not fetch dishes from chef:', dishError.message);
-        dishes = [];
+dishes = [];
       }
 
       return {
@@ -102,8 +95,7 @@ const ChefMenu = () => {
         chef,
       };
     } catch (error) {
-      console.error('Error in fetchChefMenu:', error);
-      throw error;
+throw error;
     }
   };
 
@@ -118,12 +110,9 @@ const ChefMenu = () => {
     cacheTime: 1000 * 60 * 10, // 10 minutes
     retry: 2,
     onError: error => {
-      console.error('Menu fetch error:', error);
-    },
+},
     onSuccess: data => {
-      console.log('Menu data fetched successfully:', data);
-      
-      // Auto-scroll to specific dish if provided
+// Auto-scroll to specific dish if provided
       if (scrollToDishId && data?.dishes && flatListRef.current) {
         // Defer until interactions complete to ensure list has measured content
         InteractionManager.runAfterInteractions(() => {
@@ -140,8 +129,7 @@ const ChefMenu = () => {
                 });
                 hasAttemptedScrollRef.current = true;
               } catch (e) {
-                console.log('Initial scrollToIndex threw, will retry:', e?.message);
-              }
+}
             }
           }, 300);
         });
@@ -203,8 +191,7 @@ const ChefMenu = () => {
         if (attempt < 5) {
           setTimeout(() => tryScroll(attempt + 1), 200);
         } else {
-          console.log('Failed to scroll to dish after retries:', err?.message);
-        }
+}
       }
     };
 
@@ -241,8 +228,7 @@ const ChefMenu = () => {
       );
     } catch (error) {
       Alert.alert(strings.error, strings.failedToAddItemToCart);
-      console.error('Add to cart error:', error);
-    }
+}
   };
 
   const handleCartPress = () => {
@@ -782,13 +768,11 @@ const ChefMenu = () => {
                     viewPosition: 0.1,
                   });
                 } catch (e2) {
-                  console.log('Retry scrollToIndex failed:', e2?.message);
-                }
+}
               }, 250);
             }
           } catch (e) {
-            console.log('onScrollToIndexFailed handler error:', e?.message);
-          }
+}
         }}
       />
 

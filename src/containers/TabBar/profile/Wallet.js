@@ -67,8 +67,7 @@ export default function Wallet({navigation}) {
       enabled: !!user?._id,
       retry: 2,
       onError: error => {
-        console.error('Failed to fetch wallet info:', error);
-      },
+},
     },
   );
 

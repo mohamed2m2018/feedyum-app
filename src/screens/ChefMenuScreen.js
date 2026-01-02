@@ -43,8 +43,7 @@ const ChefMenuScreen = ({ route, navigation }) => {
         Alert.alert('No Menu', 'This chef has not created a menu yet.');
       }
     } catch (error) {
-      console.error('Failed to fetch menu:', error);
-      Alert.alert('Error', 'Failed to load menu');
+Alert.alert('Error', 'Failed to load menu');
     } finally {
       setIsLoading(false);
     }
