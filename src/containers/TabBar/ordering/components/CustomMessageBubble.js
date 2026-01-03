@@ -7,24 +7,28 @@ import {
   Modal,
   TouchableWithoutFeedback,
   Text,
+  Image,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import ZText from '../../../../components/common/ZText';
 import { moderateScale } from '../../../../common/constants';
 import strings from '../../../../i18n/strings';
 
-const CustomMessageBubble = ({ 
-  props, 
-  colors, 
-  currentUser, 
-  onDeleteMessage
+const CustomMessageBubble = ({
+  props,
+  colors,
+  currentUser,
+  onDeleteMessage,
+  onEditMessage // New prop for editing
 }) => {
   const [showOptions, setShowOptions] = useState(false);
-  const isCurrentUser = props.currentMessage.user._id === currentUser._id;
+  const isCurrentUser = String(props.currentMessage.user._id) === String(currentUser._id);
   const isDeleted = props.currentMessage.isDeleted;
+  const hasImage = !!props.currentMessage.image;
+  const hasText = !!props.currentMessage.text;
 
-  const handleLongPress = () => {
-    if (!isDeleted) {
+  const handleOptionsPress = () => {
+    if (!isDeleted && isCurrentUser) {
       setShowOptions(true);
     }
   };
@@ -36,8 +40,8 @@ const CustomMessageBubble = ({
       strings.areYouSureDeleteMessage,
       [
         { text: strings.cancel, style: 'cancel' },
-        { 
-          text: strings.delete, 
+        {
+          text: strings.delete,
           style: 'destructive',
           onPress: () => onDeleteMessage(props.currentMessage._id)
         }
@@ -45,68 +49,92 @@ const CustomMessageBubble = ({
     );
   };
 
-  const renderDeletedMessage = () => (
-    <View style={[
-      styles.deletedContainer,
-      { backgroundColor: colors.grayScale2 }
-    ]}>
-      <Ionicons 
-        name="trash-outline" 
-        size={moderateScale(16)} 
-        color={colors.grayScale7} 
-      />
-      <ZText type="M12" color={colors.grayScale7} style={styles.deletedText}>
-        This message was deleted
-      </ZText>
-    </View>
-  );
-
-  if (isDeleted) {
-    return (
-      <View style={styles.messageContainer}>
-        {renderDeletedMessage()}
-      </View>
-    );
-  }
+  const handleEdit = () => {
+    setShowOptions(false);
+    onEditMessage(props.currentMessage);
+  };
 
   const renderCustomBubble = () => {
     const message = props.currentMessage;
     const isHighlighted = message.highlighted;
     if (message?.system && message?.type === 'order_summary') {
-      // Let parent render system message component
       return null;
     }
-    
+
+    // Bubble validation to prevent crashes
+    if (!message) return null;
+
     const bubbleStyle = [
       styles.bubble,
-      isCurrentUser ? 
-        { 
-          backgroundColor: isHighlighted ? '#FFE066' : colors.primary, 
-          alignSelf: 'flex-end',
+      isCurrentUser ?
+        {
+          backgroundColor: isHighlighted ? '#FFE066' : colors.primary,
+          // alignSelf handled by container
           borderWidth: isHighlighted ? 2 : 0,
           borderColor: isHighlighted ? colors.primary : 'transparent'
-        } : 
-        { 
-          backgroundColor: isHighlighted ? '#FFE066' : colors.inputBg, 
-          alignSelf: 'flex-start',
+        } :
+        {
+          backgroundColor: isHighlighted ? '#FFE066' : colors.inputBg,
+          // alignSelf handled by container
           borderWidth: isHighlighted ? 2 : 0,
           borderColor: isHighlighted ? colors.primary : 'transparent'
         }
     ];
 
     return (
-      <TouchableOpacity
-        onLongPress={handleLongPress}
-        activeOpacity={0.8}
-        style={bubbleStyle}
-      >
-        <Text style={[
-          styles.messageText,
-          { color: isCurrentUser ? (isHighlighted ? colors.textColor : colors.white) : colors.textColor }
-        ]}>
-          {message.text}
-        </Text>
-      </TouchableOpacity>
+      <View style={[styles.bubbleWrapper, isCurrentUser ? styles.wrapperRight : styles.wrapperLeft, { width: '100%' }]}>
+        {isCurrentUser && !isDeleted && (
+          <TouchableOpacity onPress={handleOptionsPress} style={styles.optionsButtonTrigger}>
+            <Ionicons name="ellipsis-vertical" size={moderateScale(16)} color={colors.grayScale5 || '#808080'} />
+          </TouchableOpacity>
+        )}
+
+        <TouchableOpacity
+          activeOpacity={0.9}
+          style={bubbleStyle}
+          disabled={true} // Disable touch on bubble itself as we have the menu button
+        >
+          {message.image && (
+            <View style={[styles.imageContainer, { borderRadius: moderateScale(8), overflow: 'hidden' }]}>
+              <Image
+                source={{ uri: message.image }}
+                style={styles.messageImage}
+                resizeMode="cover"
+              />
+            </View>
+          )}
+          {message.text ? (
+            <Text style={[
+              styles.messageText,
+              {
+                color: isCurrentUser ? (isHighlighted ? colors.textColor : colors.white) : colors.textColor,
+                marginTop: message.image ? moderateScale(8) : 0
+              }
+            ]}>
+              {message.text}
+            </Text>
+          ) : null}
+          {message.isEdited && (
+            <Text style={[
+              styles.editedText,
+              {
+                color: isCurrentUser ? (isHighlighted ? colors.textColor : 'rgba(255, 255, 255, 0.7)') : colors.grayScale5
+              }
+            ]}>
+              (edited)
+            </Text>
+          )}
+          {/* Time Display */}
+          <Text style={[
+            styles.timeText,
+            {
+              color: isCurrentUser ? (isHighlighted ? colors.textColor : 'rgba(255, 255, 255, 0.7)') : colors.grayScale5
+            }
+          ]}>
+            {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </Text>
+        </TouchableOpacity>
+      </View >
     );
   };
 
@@ -122,15 +150,27 @@ const CustomMessageBubble = ({
       >
         <TouchableWithoutFeedback onPress={() => setShowOptions(false)}>
           <View style={styles.modalOverlay}>
-            <View style={[styles.optionsContainer, { backgroundColor: colors.backgroundColor }]}>
+            <View style={[styles.optionsContainer, { backgroundColor: colors.backgroundColor || '#FFFFFF' }]}>
               {isCurrentUser && (
-                <TouchableOpacity
-                  style={styles.optionButton}
-                  onPress={handleDelete}
-                >
-                  <Ionicons name="trash-outline" size={moderateScale(20)} color={colors.red} />
-                  <ZText type="M16" color={colors.red}>{strings.delete}</ZText>
-                </TouchableOpacity>
+                <>
+                  {hasText && !hasImage && (
+                    <TouchableOpacity
+                      style={styles.optionButton}
+                      onPress={handleEdit}
+                    >
+                      <Ionicons name="create-outline" size={moderateScale(20)} color={colors.textColor || '#000000'} />
+                      <ZText type="M16" color={colors.textColor || '#000000'} style={{ marginLeft: moderateScale(10) }}>{strings.edit || 'Edit'}</ZText>
+                    </TouchableOpacity>
+                  )}
+
+                  <TouchableOpacity
+                    style={styles.optionButton}
+                    onPress={handleDelete}
+                  >
+                    <Ionicons name="trash-outline" size={moderateScale(20)} color={colors.red || '#FF3B30'} />
+                    <ZText type="M16" color={colors.red || '#FF3B30'} style={{ marginLeft: moderateScale(10) }}>{strings.delete || 'Delete'}</ZText>
+                  </TouchableOpacity>
+                </>
               )}
             </View>
           </View>
@@ -139,7 +179,9 @@ const CustomMessageBubble = ({
     </View>
   );
 };
-
+// ... styles ...
+// ... styles removed ...
+// ...
 const styles = StyleSheet.create({
   messageContainer: {
     marginVertical: moderateScale(2),
@@ -180,6 +222,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: moderateScale(16),
     borderBottomWidth: 1,
+    borderColor: '#F0F0F0',
+  },
+  bubbleWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: moderateScale(2),
+  },
+  wrapperRight: {
+    justifyContent: 'flex-end',
+    // Removed alignSelf: 'flex-end' to check if width: 100% helps
+  },
+  wrapperLeft: {
+    justifyContent: 'flex-start',
+    alignSelf: 'flex-start',
+  },
+  optionsButtonTrigger: {
+    padding: moderateScale(8),
+    marginRight: moderateScale(4),
   },
   bubble: {
     borderRadius: moderateScale(12),
@@ -191,6 +251,27 @@ const styles = StyleSheet.create({
   messageText: {
     fontSize: moderateScale(14),
     lineHeight: moderateScale(18),
+  },
+  editedText: {
+    fontSize: moderateScale(10),
+    fontStyle: 'italic',
+    marginTop: moderateScale(2),
+    alignSelf: 'flex-end',
+  },
+  timeText: {
+    fontSize: moderateScale(10),
+    marginTop: moderateScale(4),
+    alignSelf: 'flex-end',
+    opacity: 0.8,
+  },
+  imageContainer: {
+    marginBottom: moderateScale(4),
+    borderRadius: moderateScale(8),
+    overflow: 'hidden',
+  },
+  messageImage: {
+    width: moderateScale(200),
+    height: moderateScale(150),
   },
 });
 

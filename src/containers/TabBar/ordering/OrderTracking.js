@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useRef} from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   StyleSheet,
@@ -8,16 +8,16 @@ import {
   AppState,
   Text,
 } from 'react-native';
-import {useSelector, useDispatch} from 'react-redux';
-import {useNavigation, useRoute} from '@react-navigation/native';
+import { useSelector, useDispatch } from 'react-redux';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import ZText from '../../../components/common/ZText';
 import ZHeader from '../../../components/common/ZHeader';
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
 import ZButton from '../../../components/common/ZButton';
 import ZLoader from '../../../components/common/ZLoader';
-import {moderateScale} from '../../../common/constants';
-import {styles} from '../../../themes';
+import { moderateScale } from '../../../common/constants';
+import { styles } from '../../../themes';
 import strings from '../../../i18n/strings';
 import {
   fetchOrderById,
@@ -28,21 +28,24 @@ import {
   setCurrentOrder,
   updateOrderStatus,
 } from '../../../redux/reducer/orderSlice';
-import {StackNav} from '../../../navigation/NavigationKeys';
+import { StackNav } from '../../../navigation/NavigationKeys';
 
 const OrderTracking = () => {
   const colors = useSelector(state => state.theme.theme);
   const dispatch = useDispatch();
   const navigation = useNavigation();
   const route = useRoute();
-  const {orderId} = route.params || {};
+  const { orderId } = route.params || {};
 
   const currentOrder = useSelector(selectCurrentOrder);
   const isLoading = useSelector(selectOrderLoading);
   const error = useSelector(selectOrderError);
 
   // Debug: Check if there's order data in route params
-const [refreshing, setRefreshing] = useState(false);
+
+
+
+  const [refreshing, setRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(null);
   const intervalRef = useRef(null);
   const appStateRef = useRef(AppState.currentState);
@@ -52,24 +55,34 @@ const [refreshing, setRefreshing] = useState(false);
     const testOrderId = orderId || '686cc4025633d8b417f7b70e'; // Real order ID from database
 
     if (testOrderId) {
-dispatch(fetchOrderById(testOrderId))
+
+      dispatch(fetchOrderById(testOrderId))
         .then(orderData => {
-setLastUpdated(new Date());
+
+          setLastUpdated(new Date());
         })
         .catch(error => {
-});
+          console.error('OrderTracking: Failed to fetch order:', error);
+          console.error(
+            'OrderTracking: Error details:',
+            JSON.stringify(error, null, 2),
+          );
+        });
     }
   }, [orderId, dispatch]);
 
   useEffect(() => {
-,
-    );
-}, [currentOrder, isLoading, error, route.params, orderId]);
+
+
+
+
+
+  }, [currentOrder, isLoading, error, route.params, orderId]);
 
   useEffect(() => {
     if (error) {
       Alert.alert(strings.error, error, [
-        {text: 'OK', onPress: () => dispatch(clearError())},
+        { text: 'OK', onPress: () => dispatch(clearError()) },
       ]);
     }
   }, [error, dispatch]);
@@ -78,19 +91,21 @@ setLastUpdated(new Date());
   useEffect(() => {
     const startPolling = () => {
       // Polling disabled - users can manually refresh if needed
-      // if (
-      //   orderId &&
-      //   currentOrder &&
-      //   !['delivered', 'cancelled'].includes(currentOrder.status)
-      // ) {
-      //   intervalRef.current = setInterval(async () => {
-      //     try {
-      //       //       await dispatch(fetchOrderById(orderId));
-      //       setLastUpdated(new Date());
-      //     } catch (error) {
-      //       //     }
-      //   }, 60000);
-      // }
+      if (
+        orderId &&
+        currentOrder &&
+        !['delivered', 'cancelled', 'completed'].includes(currentOrder.status)
+      ) {
+        intervalRef.current = setInterval(async () => {
+          try {
+
+            await dispatch(fetchOrderById(orderId));
+            setLastUpdated(new Date());
+          } catch (error) {
+            console.error('OrderTracking: Polling error:', error);
+          }
+        }, 60000);
+      }
     };
 
     const stopPolling = () => {
@@ -103,7 +118,7 @@ setLastUpdated(new Date());
     // Start polling when order is active
     if (
       currentOrder &&
-      !['delivered', 'cancelled'].includes(currentOrder.status)
+      !['delivered', 'cancelled', 'completed'].includes(currentOrder.status)
     ) {
       startPolling();
     } else {
@@ -123,7 +138,7 @@ setLastUpdated(new Date());
         }
         if (
           currentOrder &&
-          !['delivered', 'cancelled'].includes(currentOrder.status)
+          !['delivered', 'cancelled', 'completed'].includes(currentOrder.status)
         ) {
           startPolling();
         }
@@ -173,13 +188,14 @@ setLastUpdated(new Date());
         return colors.warning || '#FF9800';
       case 'chef_review':
         return colors.info || '#2196F3';
-      case 'accepted':
+      case 'confirmed':
         return colors.success || '#4CAF50';
       case 'preparing':
         return colors.info || '#2196F3';
       case 'ready':
         return colors.success || '#4CAF50';
       case 'delivered':
+      case 'completed':
         return colors.success || '#4CAF50';
       case 'cancelled':
         return colors.error || '#F44336';
@@ -194,13 +210,14 @@ setLastUpdated(new Date());
         return strings.orderPlaced;
       case 'chef_review':
         return strings.chefReviewing;
-      case 'accepted':
+      case 'confirmed':
         return strings.orderAccepted;
       case 'preparing':
         return strings.preparing;
       case 'ready':
         return strings.readyForPickupDelivery;
       case 'delivered':
+      case 'completed':
         return strings.delivered;
       case 'cancelled':
         return strings.cancelled;
@@ -218,7 +235,7 @@ setLastUpdated(new Date());
     }
 
     // Show timestamp for current status only
-    if (status === currentOrder.status) {
+    if (status === currentOrder.status || (status === 'delivered' && currentOrder.status === 'completed')) {
       return currentOrder.updated_at || currentOrder.created_at;
     }
 
@@ -230,12 +247,16 @@ setLastUpdated(new Date());
     // Provide estimated times for future statuses based on current status
     const statusOrder = [
       'pending',
-      'accepted',
+      'confirmed',
       'preparing',
       'ready',
       'delivered',
     ];
-    const currentIndex = statusOrder.indexOf(currentStatus);
+
+    // Map completed to delivered for calculation
+    const effectiveCurrentStatus = currentStatus === 'completed' ? 'delivered' : currentStatus;
+
+    const currentIndex = statusOrder.indexOf(effectiveCurrentStatus);
     const statusIndex = statusOrder.indexOf(status);
 
     if (statusIndex <= currentIndex) return null;
@@ -248,17 +269,22 @@ setLastUpdated(new Date());
   };
 
   const renderStatusTimeline = () => {
-    const statuses = ['pending', 'accepted', 'preparing', 'ready', 'delivered'];
-    const currentStatusIndex = statuses.indexOf(currentOrder?.status);
+    const statuses = ['pending', 'confirmed', 'preparing', 'ready', 'delivered'];
+
+    // Validate current status
+    let effectiveStatus = currentOrder?.status;
+    if (effectiveStatus === 'completed') effectiveStatus = 'delivered';
+
+    const currentStatusIndex = statuses.indexOf(effectiveStatus);
 
     return (
       <View style={localStyles.timelineContainer}>
         <View style={localStyles.timelineHeader}>
-          <Text style={{fontSize: 16, fontWeight: 'bold', color: '#000000'}}>
+          <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#000000' }}>
             {strings.orderProgress}
           </Text>
           {lastUpdated && (
-            <Text style={{fontSize: 12, color: '#666666'}}>
+            <Text style={{ fontSize: 12, color: '#666666' }}>
               Last updated: {lastUpdated.toLocaleTimeString()}
             </Text>
           )}
@@ -362,10 +388,16 @@ setLastUpdated(new Date());
   };
 
   const renderOrderDetails = () => {
-// If no order data, show loading state
+
+
+
+
+
+
+    // If no order data, show loading state
     if (!currentOrder) {
       return (
-        <View style={[localStyles.section, {backgroundColor: '#FFFFFF'}]}>
+        <View style={[localStyles.section, { backgroundColor: '#FFFFFF' }]}>
           <Text
             style={{
               fontSize: 16,
@@ -376,7 +408,7 @@ setLastUpdated(new Date());
             Order Details
           </Text>
           <View style={localStyles.loadingContainer}>
-            <Text style={{fontSize: 14, color: '#666666', textAlign: 'center'}}>
+            <Text style={{ fontSize: 14, color: '#666666', textAlign: 'center' }}>
               {strings.loadingOrderDetails}
             </Text>
           </View>
@@ -385,7 +417,7 @@ setLastUpdated(new Date());
     }
 
     return (
-      <View style={[localStyles.section, {backgroundColor: '#FFFFFF'}]}>
+      <View style={[localStyles.section, { backgroundColor: '#FFFFFF' }]}>
         <Text
           style={{
             fontSize: 16,
@@ -398,7 +430,7 @@ setLastUpdated(new Date());
 
         <View style={localStyles.orderInfo}>
           <View style={localStyles.infoRow}>
-            <Text style={{color: '#666666', fontSize: 14}}>{strings.orderId}</Text>
+            <Text style={{ color: '#666666', fontSize: 14 }}>{strings.orderId}</Text>
             <Text
               style={{
                 color: '#000000',
@@ -415,7 +447,7 @@ setLastUpdated(new Date());
           </View>
 
           <View style={localStyles.infoRow}>
-            <Text style={{color: '#666666', fontSize: 14}}>{strings.chef}</Text>
+            <Text style={{ color: '#666666', fontSize: 14 }}>{strings.chef}</Text>
             <Text
               style={{
                 color: '#000000',
@@ -424,14 +456,14 @@ setLastUpdated(new Date());
               }}>
               {currentOrder.chef
                 ? currentOrder.chef.fullName ||
-                  currentOrder.chef.username ||
-                  strings.unknownChef
+                currentOrder.chef.username ||
+                strings.unknownChef
                 : 'Loading...'}
             </Text>
           </View>
 
           <View style={localStyles.infoRow}>
-            <Text style={{color: '#666666', fontSize: 14}}>{strings.customer}</Text>
+            <Text style={{ color: '#666666', fontSize: 14 }}>{strings.customer}</Text>
             <Text
               style={{
                 color: '#000000',
@@ -440,14 +472,14 @@ setLastUpdated(new Date());
               }}>
               {currentOrder.user
                 ? currentOrder.user.fullName ||
-                  currentOrder.user.username ||
-                  strings.unknownCustomer
+                currentOrder.user.username ||
+                strings.unknownCustomer
                 : 'Loading...'}
             </Text>
           </View>
 
           <View style={localStyles.infoRow}>
-            <Text style={{color: '#666666', fontSize: 14}}>{strings.orderDate}</Text>
+            <Text style={{ color: '#666666', fontSize: 14 }}>{strings.orderDate}</Text>
             <Text
               style={{
                 color: '#000000',
@@ -461,7 +493,7 @@ setLastUpdated(new Date());
           </View>
 
           <View style={localStyles.infoRow}>
-            <Text style={{color: '#666666', fontSize: 14}}>{strings.orderTime}</Text>
+            <Text style={{ color: '#666666', fontSize: 14 }}>{strings.orderTime}</Text>
             <Text
               style={{
                 color: '#000000',
@@ -475,8 +507,8 @@ setLastUpdated(new Date());
           </View>
 
           <View style={localStyles.infoRow}>
-            <Text style={{color: '#666666', fontSize: 14}}>{strings.status}</Text>
-            <Text style={{color: '#FB9400', fontSize: 14, fontWeight: 'bold'}}>
+            <Text style={{ color: '#666666', fontSize: 14 }}>{strings.status}</Text>
+            <Text style={{ color: '#FB9400', fontSize: 14, fontWeight: 'bold' }}>
               {getStatusText(currentOrder.status) || strings.unknown}
             </Text>
           </View>
@@ -488,7 +520,7 @@ setLastUpdated(new Date());
   const renderOrderItems = () => {
     if (!currentOrder) {
       return (
-        <View style={[localStyles.section, {backgroundColor: '#FFFFFF'}]}>
+        <View style={[localStyles.section, { backgroundColor: '#FFFFFF' }]}>
           <Text
             style={{
               fontSize: 16,
@@ -499,7 +531,7 @@ setLastUpdated(new Date());
             Order Items
           </Text>
           <View style={localStyles.loadingContainer}>
-            <Text style={{fontSize: 14, color: '#666666', textAlign: 'center'}}>
+            <Text style={{ fontSize: 14, color: '#666666', textAlign: 'center' }}>
               {strings.loadingOrderItems}
             </Text>
           </View>
@@ -508,7 +540,7 @@ setLastUpdated(new Date());
     }
 
     return (
-      <View style={[localStyles.section, {backgroundColor: '#FFFFFF'}]}>
+      <View style={[localStyles.section, { backgroundColor: '#FFFFFF' }]}>
         <Text
           style={{
             fontSize: 16,
@@ -524,28 +556,28 @@ setLastUpdated(new Date());
             <View key={index} style={localStyles.orderItem}>
               <View style={localStyles.itemInfo}>
                 <Text
-                  style={{fontSize: 14, fontWeight: 'bold', color: '#000000'}}>
+                  style={{ fontSize: 14, fontWeight: 'bold', color: '#000000' }}>
                   {item.dish?.name || strings.unknownDish}
                 </Text>
                 {item.dish?.description && (
                   <Text
-                    style={{fontSize: 12, color: '#666666'}}
+                    style={{ fontSize: 12, color: '#666666' }}
                     numberOfLines={2}>
                     {item.dish.description}
                   </Text>
                 )}
                 <View style={localStyles.itemQuantityPrice}>
-                  <Text style={{fontSize: 12, color: '#666666'}}>
+                  <Text style={{ fontSize: 12, color: '#666666' }}>
                     Qty: {item.quantity || 1}
                   </Text>
-                  <Text style={{fontSize: 12, color: '#666666'}}>
+                  <Text style={{ fontSize: 12, color: '#666666' }}>
                     {(item.dish?.price || 0).toFixed(2)} each
                   </Text>
                 </View>
               </View>
               <View style={localStyles.itemPriceContainer}>
                 <Text
-                  style={{fontSize: 14, fontWeight: 'bold', color: '#FF4D67'}}>
+                  style={{ fontSize: 14, fontWeight: 'bold', color: '#FF4D67' }}>
                   {((item.dish?.price || 0) * (item.quantity || 1)).toFixed(2)}
                 </Text>
               </View>
@@ -553,7 +585,7 @@ setLastUpdated(new Date());
           ))
         ) : (
           <View style={localStyles.loadingContainer}>
-            <Text style={{fontSize: 14, color: '#666666', textAlign: 'center'}}>
+            <Text style={{ fontSize: 14, color: '#666666', textAlign: 'center' }}>
               {strings.noItemsFound}
             </Text>
           </View>
@@ -565,7 +597,7 @@ setLastUpdated(new Date());
   const renderPricingSummary = () => {
     if (!currentOrder) {
       return (
-        <View style={[localStyles.section, {backgroundColor: '#FFFFFF'}]}>
+        <View style={[localStyles.section, { backgroundColor: '#FFFFFF' }]}>
           <Text
             style={{
               fontSize: 16,
@@ -576,7 +608,7 @@ setLastUpdated(new Date());
             Pricing Summary
           </Text>
           <View style={localStyles.loadingContainer}>
-            <Text style={{fontSize: 14, color: '#666666', textAlign: 'center'}}>
+            <Text style={{ fontSize: 14, color: '#666666', textAlign: 'center' }}>
               {strings.loadingPricingInformation}
             </Text>
           </View>
@@ -585,7 +617,7 @@ setLastUpdated(new Date());
     }
 
     return (
-      <View style={[localStyles.section, {backgroundColor: '#FFFFFF'}]}>
+      <View style={[localStyles.section, { backgroundColor: '#FFFFFF' }]}>
         <Text
           style={{
             fontSize: 16,
@@ -597,26 +629,35 @@ setLastUpdated(new Date());
         </Text>
 
         <View style={localStyles.pricingRow}>
-          <Text style={{fontSize: 14, color: '#000000'}}>{strings.subtotal}</Text>
-          <Text style={{fontSize: 14, fontWeight: 'bold', color: '#000000'}}>
+          <Text style={{ fontSize: 14, color: '#000000' }}>{strings.subtotal}</Text>
+          <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#000000' }}>
             {currentOrder.subtotal?.toFixed(2) || '0.00'}
           </Text>
         </View>
 
         <View style={localStyles.pricingRow}>
-          <Text style={{fontSize: 14, color: '#000000'}}>{strings.deliveryFee}</Text>
-          <Text style={{fontSize: 14, fontWeight: 'bold', color: '#000000'}}>
+          <Text style={{ fontSize: 14, color: '#000000' }}>{strings.deliveryFee}</Text>
+          <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#000000' }}>
             {currentOrder.deliveryFee
               ? currentOrder.deliveryFee.toFixed(2)
               : '0.00'}
           </Text>
         </View>
 
+        <View style={localStyles.pricingRow}>
+          <Text style={{ fontSize: 14, color: '#000000' }}>{strings.serviceFee || 'Service Fee'}</Text>
+          <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#000000' }}>
+            {currentOrder.serviceFee
+              ? currentOrder.serviceFee.toFixed(2)
+              : '0.00'}
+          </Text>
+        </View>
+
         <View style={[localStyles.pricingRow, localStyles.totalRow]}>
-          <Text style={{fontSize: 16, fontWeight: 'bold', color: '#000000'}}>
+          <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#000000' }}>
             {strings.total}
           </Text>
-          <Text style={{fontSize: 16, fontWeight: 'bold', color: '#FF4D67'}}>
+          <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#FF4D67' }}>
             {currentOrder.totalPrice?.toFixed(2) || '0.00'}
           </Text>
         </View>
@@ -625,7 +666,7 @@ setLastUpdated(new Date());
   };
 
   const renderDeliveryInfo = () => (
-    <View style={[localStyles.section, {backgroundColor: '#FFFFFF'}]}>
+    <View style={[localStyles.section, { backgroundColor: '#FFFFFF' }]}>
       <Text
         style={{
           fontSize: 16,
@@ -646,18 +687,18 @@ setLastUpdated(new Date());
           <View style={localStyles.addressText}>
             {currentOrder.deliveryAddress.nameLine && (
               <Text
-                style={{fontSize: 14, fontWeight: 'bold', color: '#000000'}}>
+                style={{ fontSize: 14, fontWeight: 'bold', color: '#000000' }}>
                 {currentOrder.deliveryAddress.nameLine}
               </Text>
             )}
             {currentOrder.deliveryAddress.location && (
-              <Text style={{fontSize: 12, color: '#666666'}}>
+              <Text style={{ fontSize: 12, color: '#666666' }}>
                 Lat: {currentOrder.deliveryAddress.location.lat}, Long:{' '}
                 {currentOrder.deliveryAddress.location.long}
               </Text>
             )}
             {currentOrder.deliveryAddress.isPrimary && (
-              <Text style={{fontSize: 12, color: '#FF4D67'}}>
+              <Text style={{ fontSize: 12, color: '#FF4D67' }}>
                 Primary Address
               </Text>
             )}
@@ -672,7 +713,7 @@ setLastUpdated(new Date());
             size={moderateScale(20)}
             color={'#666666'}
           />
-          <Text style={{fontSize: 14, color: '#666666', marginLeft: 12}}>
+          <Text style={{ fontSize: 14, color: '#666666', marginLeft: 12 }}>
             No delivery address provided
           </Text>
         </View>
@@ -681,10 +722,10 @@ setLastUpdated(new Date());
       {((currentOrder?.specialInstructions && currentOrder.specialInstructions.trim() !== '') ||
         (currentOrder?.notes && currentOrder.notes.trim() !== '')) && (
           <View style={localStyles.instructionsContainer}>
-            <Text style={{fontSize: 14, fontWeight: 'bold', color: '#000000'}}>
+            <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#000000' }}>
               {strings.specialInstructions}
             </Text>
-            <Text style={{fontSize: 14, color: '#666666', marginTop: 4}}>
+            <Text style={{ fontSize: 14, color: '#666666', marginTop: 4 }}>
               {currentOrder.specialInstructions || currentOrder.notes}
             </Text>
           </View>
@@ -692,12 +733,12 @@ setLastUpdated(new Date());
 
       {((!currentOrder?.specialInstructions || currentOrder.specialInstructions.trim() === '') &&
         (!currentOrder?.notes || currentOrder.notes.trim() === '')) && (
-        <View style={localStyles.noInstructionsContainer}>
-          <Text style={{fontSize: 14, color: '#666666'}}>
-            No special instructions provided
-          </Text>
-        </View>
-      )}
+          <View style={localStyles.noInstructionsContainer}>
+            <Text style={{ fontSize: 14, color: '#666666' }}>
+              No special instructions provided
+            </Text>
+          </View>
+        )}
     </View>
   );
 
@@ -759,7 +800,7 @@ setLastUpdated(new Date());
           color={'#FFFFFF'}
           containerStyle={[
             localStyles.chatButton,
-            {backgroundColor: '#FF4D67'},
+            { backgroundColor: '#FF4D67' },
           ]}
           onPress={handleChatWithChef}
         />

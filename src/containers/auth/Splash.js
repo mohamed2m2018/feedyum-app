@@ -20,12 +20,22 @@ const Splash = ({ navigation }) => {
   const dispatch = useDispatch();
   const [themeColor] = useStorage(THEME);
   const [appOpenFirstTime] = useStorage(APP_OPEN_FIRST_TIME);
+  const [_, setUser] = useStorage('user');
   const [access_token] = useStorage(ACCESS_TOKEN);
 
   const [isNavigating, setIsNavigating] = useState(false);
   const [initialTab, setInitialTab] = useState(TabNav.Discover);
 
-  useQuery('user', () => request.get('/user'), { retry: 1, cacheTime: Infinity });
+  useQuery('user', () => request.get('/user'), {
+    retry: 1,
+    cacheTime: Infinity,
+    enabled: !!access_token,
+    onSuccess: (data) => {
+      if (data?.data?.user) {
+        setUser(data.data.user);
+      }
+    }
+  });
 
   const asyncProcess = async () => {
     if (themeColor) {

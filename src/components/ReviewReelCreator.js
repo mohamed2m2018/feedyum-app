@@ -171,35 +171,42 @@ const ReviewReelCreator = ({route}) => {
       setIsLoading(false);
     } catch (error) {
       setIsLoading(false);
-Alert.alert(strings.error, strings.failedToUploadMedia);
+      console.error('Media upload error:', error);
+      Alert.alert(strings.error, strings.failedToUploadMedia);
     }
   };
 
   const handleSubmitReview = () => {
-.length);
-if (!selectedMedia) {
-Alert.alert(strings.error, strings.pleaseSelectPhotoOrVideo);
+
+    
+    if (!selectedMedia) {
+
+      Alert.alert(strings.error, strings.pleaseSelectPhotoOrVideo);
       return;
     }
 
     if (!caption.trim()) {
-Alert.alert(strings.error, strings.pleaseAddCaption);
+
+      Alert.alert(strings.error, strings.pleaseAddCaption);
       return;
     }
 
     if (caption.trim().length < 10) {
-Alert.alert(strings.error, strings.captionMustBe10Characters);
+
+      Alert.alert(strings.error, strings.captionMustBe10Characters);
       return;
     }
 
     // Additional validation
     if (reviewType === 'dish' && !dishData?._id) {
-Alert.alert(strings.error, strings.dishDataMissing);
+
+      Alert.alert(strings.error, strings.dishDataMissing);
       return;
     }
 
     if (reviewType === 'menu' && !menuData?._id) {
-Alert.alert(strings.error, strings.menuDataMissing);
+
+      Alert.alert(strings.error, strings.menuDataMissing);
       return;
     }
 
@@ -230,11 +237,18 @@ Alert.alert(strings.error, strings.menuDataMissing);
         isEdit: true
       })
     };
-);
-// Set the data and trigger submission
-handleDataToBeSent(postData);
-setisFormFilled(true);
-// Navigate to For You screen - BackgroundUploadProvider now correctly navigates to TabNav.ForYou
+
+
+
+    // Set the data and trigger submission
+
+    handleDataToBeSent(postData);
+    
+
+    setisFormFilled(true);
+
+
+    // Navigate to For You screen - BackgroundUploadProvider now correctly navigates to TabNav.ForYou
     navigation.goBack();
   };
 

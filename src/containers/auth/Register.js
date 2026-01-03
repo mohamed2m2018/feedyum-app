@@ -118,7 +118,8 @@ const Register = ({navigation, route}) => {
       const phoneNumber = response.data.phoneNumbers[0].value;
       return phoneNumber;
     } catch (error) {
-}
+
+    }
   };
 
   const handleSubmit = (
@@ -187,13 +188,17 @@ const Register = ({navigation, route}) => {
       setisLoading(false);
       if (error.code === statusCodes.SIGN_IN_CANCELLED) {
         // User cancelled the sign-in flow
-} else if (error.code === statusCodes.IN_PROGRESS) {
+
+      } else if (error.code === statusCodes.IN_PROGRESS) {
         // Sign-in is in progress
-} else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+
+      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
         // Play services not available or outdated
-} else {
+
+      } else {
         // Some other error occurred
-}
+
+      }
     }
   };
 

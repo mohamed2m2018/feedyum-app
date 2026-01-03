@@ -25,8 +25,8 @@ const response = await request.get(url);
       
       const data = response.data;
       
-      if (!data.success) {
-        throw new Error(data.error || 'Failed to fetch discover data');
+      if (!data || !data.success) {
+        throw new Error(data?.error || 'Failed to fetch discover data');
       }
 return data.data; // Return just the category data
     },

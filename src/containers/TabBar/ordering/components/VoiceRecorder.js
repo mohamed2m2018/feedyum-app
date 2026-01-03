@@ -56,7 +56,8 @@ const VoiceRecorder = ({onSend, onCancel}) => {
         return true;
       }
     } catch (error) {
-return false;
+      console.error('Permission request error:', error);
+      return false;
     }
   };
 
@@ -67,7 +68,8 @@ return false;
       setHasPermission(permissionGranted);
 
       if (!permissionGranted) {
-return;
+
+        return;
       }
 
       // Initialize audio recorder with basic settings that work reliably
@@ -81,8 +83,10 @@ return;
 
       AudioRecord.init(options);
       setIsInitialized(true);
-} catch (error) {
-setIsInitialized(false);
+
+    } catch (error) {
+      console.error('Audio recorder initialization error:', error);
+      setIsInitialized(false);
       Alert.alert(
         'Initialization Error',
         'Failed to initialize audio recorder. Please restart the app and try again.',
@@ -103,7 +107,8 @@ setIsInitialized(false);
       pulseAnim.stopAnimation();
       waveAnim.stopAnimation();
     } catch (error) {
-}
+      console.error('Cleanup error:', error);
+    }
   };
 
   // Initialize permissions and audio recorder
@@ -197,8 +202,10 @@ setIsInitialized(false);
       setIsRecording(true);
       setRecordingTime(0);
       AudioRecord.start();
-} catch (error) {
-setIsRecording(false);
+
+    } catch (error) {
+      console.error('Recording error:', error);
+      setIsRecording(false);
       Alert.alert(
         'Recording Error',
         'Failed to start recording. Please check microphone permissions and try again.',
@@ -214,27 +221,36 @@ setIsRecording(false);
     try {
       const audioFile = await AudioRecord.stop();
       setIsRecording(false);
-returned:', audioFile);
-if (audioFile && audioFile.length > 0) {
+
+
+
+      if (audioFile && audioFile.length > 0) {
         setAudioPath(audioFile);
-// Check if file actually exists
+
+        
+        // Check if file actually exists
         try {
           const RNFS = require('react-native-fs');
           const exists = await RNFS.exists(audioFile);
-if (exists) {
+
+          if (exists) {
             const stats = await RNFS.stat(audioFile);
-}
+
+          }
         } catch (fsError) {
-}
+          console.error('Error checking file:', fsError);
+        }
       } else {
-Alert.alert(
+        console.error('No audio file received from recording');
+        Alert.alert(
           'Recording Error',
           'No audio was recorded. Please try again.',
           [{text: 'OK', onPress: () => cancelRecording()}],
         );
       }
     } catch (error) {
-setIsRecording(false);
+      console.error('Stop recording error:', error);
+      setIsRecording(false);
       Alert.alert(
         'Recording Error',
         'Failed to stop recording. Please try again.',
@@ -259,13 +275,17 @@ setIsRecording(false);
   };
 
   const sendAudio = async () => {
-if (!audioPath) {
-Alert.alert('No Audio', 'No audio recording available to send.');
+
+    
+    if (!audioPath) {
+
+      Alert.alert('No Audio', 'No audio recording available to send.');
       return;
     }
 
     if (recordingTime < 1) {
-Alert.alert(
+
+      Alert.alert(
         strings.recordingTooShort,
         strings.recordAtLeastOneSecond,
       );
@@ -273,20 +293,30 @@ Alert.alert(
     }
 
     try {
-setIsUploading(true);
+
+      setIsUploading(true);
       setUploadProgress(0);
 
       // Convert M4A for compatibility first
-const compatibleAudioPath = await convertWavToMp3(audioPath);
-// Upload audio to S3 with actual duration
-const uploadResult = await uploadAudioToS3(
+
+      const compatibleAudioPath = await convertWavToMp3(audioPath);
+
+
+      // Upload audio to S3 with actual duration
+
+      
+      const uploadResult = await uploadAudioToS3(
         audioPath,
         progress => {
-setUploadProgress(progress);
+
+          setUploadProgress(progress);
         },
         recordingTime,
       );
-if (uploadResult.success) {
+
+
+
+      if (uploadResult.success) {
         const audioMessage = {
           _id: Math.round(Math.random() * 1000000),
           text: '',
@@ -295,7 +325,9 @@ if (uploadResult.success) {
           duration: recordingTime,
           localPath: compatibleAudioPath, // Keep compatible local path as backup
         };
-onSend(audioMessage);
+
+
+        onSend(audioMessage);
 
         // Reset state
         setAudioPath(null);
@@ -308,7 +340,8 @@ onSend(audioMessage);
         throw new Error('Upload failed');
       }
     } catch (error) {
-setIsUploading(false);
+      console.error('Audio upload error:', error);
+      setIsUploading(false);
       setUploadProgress(0);
 
       Alert.alert(
@@ -331,7 +364,9 @@ setIsUploading(false);
                   duration: recordingTime,
                   isLocal: true,
                 };
-onSend(audioMessage);
+
+
+                onSend(audioMessage);
 
                 // Reset state
                 setAudioPath(null);
@@ -339,7 +374,8 @@ onSend(audioMessage);
                 setRecordingTime(0);
                 setIsPlaying(false);
               } catch (conversionError) {
-Alert.alert('Error', 'Failed to process audio file');
+                console.error('WAV conversion error:', conversionError);
+                Alert.alert('Error', 'Failed to process audio file');
               }
             },
           },
@@ -358,29 +394,36 @@ Alert.alert('Error', 'Failed to process audio file');
       setIsPlaying(false);
     } else {
       // Start playing using Video component with compatible WAV format
-try {
+
+
+      try {
         // Convert M4A for compatibility first if not already done
         if (!compatibleAudioPath) {
           const compatiblePath = await convertWavToMp3(audioPath);
-setCompatibleAudioPath(compatiblePath);
+
+          setCompatibleAudioPath(compatiblePath);
         }
         setIsPlaying(true);
       } catch (error) {
-Alert.alert('Preview Error', 'Failed to prepare audio for preview');
+        console.error('Preview conversion error:', error);
+        Alert.alert('Preview Error', 'Failed to prepare audio for preview');
       }
     }
   };
 
   // Video component callbacks for preview
   const onPreviewLoad = data => {
-};
+
+  };
 
   const onPreviewEnd = () => {
-setIsPlaying(false);
+
+    setIsPlaying(false);
   };
 
   const onPreviewError = error => {
-setIsPlaying(false);
+
+    setIsPlaying(false);
     Alert.alert('Preview Error', 'Failed to play audio preview');
   };
 

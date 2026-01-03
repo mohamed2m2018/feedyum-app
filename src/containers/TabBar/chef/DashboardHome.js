@@ -29,6 +29,12 @@ export default function DashboardHome() {
     isLoading: statsLoading,
     error: statsError,
   } = useDashboardStats();
+  
+  console.log('DashboardHome Render:', { 
+    dashboardStats, 
+    statsLoading, 
+    statsError 
+  });
 
   const {
     data: recentActivity = [],

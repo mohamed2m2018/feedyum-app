@@ -11,18 +11,21 @@ export const convertVideoToMP4 = async inputPath => {
       {
         compressionMethod: 'auto',
         getCancellationId: cancellationId =>
-,
+          (()=>{})(),
         progressDivider: 10,
         downloadProgress: progress => {
-},
+
+        },
       },
       progress => {
-},
+
+      },
     );
 
     return result;
   } catch (error) {
-throw error;
+    console.error('Video compression error:', error);
+    throw error;
   }
 };
 
@@ -35,7 +38,8 @@ export const generateThumbnail = async inputPath => {
 
     return uri;
   } catch (error) {
-return null;
+    console.error('Thumbnail generation error:', error);
+    return null;
   }
 };
 
@@ -50,7 +54,8 @@ export const compressImage = async (inputPath, quality = 0.8) => {
 
     return result;
   } catch (error) {
-// Return original path if compression fails
+    console.error('Image compression error:', error);
+    // Return original path if compression fails
     return inputPath;
   }
 };
@@ -62,10 +67,13 @@ export const validateImageFile = filePath => {
 };
 
 export const validateAudioFile = filePath => {
-const validExtensions = ['.wav', '.mp3', '.m4a', '.aac'];
+
+  const validExtensions = ['.wav', '.mp3', '.m4a', '.aac'];
   const extension = filePath.toLowerCase().substring(filePath.lastIndexOf('.'));
-const isValid = validExtensions.includes(extension);
-return isValid;
+
+  const isValid = validExtensions.includes(extension);
+
+  return isValid;
 };
 
 export const getFileSize = async filePath => {
@@ -73,7 +81,8 @@ export const getFileSize = async filePath => {
     const stats = await RNFS.stat(filePath);
     return stats.size;
   } catch (error) {
-return 0;
+    console.error('Error getting file size:', error);
+    return 0;
   }
 };
 
@@ -89,7 +98,7 @@ export const formatFileSize = bytes => {
 
 export const convertWavToMp3 = async inputPath => {
   try {
-:', inputPath);
+
     
     // Just format the path properly for upload - backend will handle conversion
     let formattedPath = inputPath;
@@ -99,34 +108,51 @@ export const convertWavToMp3 = async inputPath => {
     } else if (Platform.OS === 'ios' && !inputPath.startsWith('file://') && !inputPath.startsWith('http')) {
       formattedPath = `file://${inputPath}`;
     }
-return formattedPath;
+    
+
+    
+    return formattedPath;
     
   } catch (error) {
-return inputPath;
+    console.error('WAV preparation error:', error);
+    return inputPath;
   }
 };
 
 export const uploadAudioToS3 = async (audioPath, onProgress, duration) => {
   try {
-// Convert WAV to MP3 for better compatibility
+
+
+    // Convert WAV to MP3 for better compatibility
     const convertedAudioPath = await convertWavToMp3(audioPath);
 
     // Validate audio file
-const isValid = validateAudioFile(convertedAudioPath);
-if (!isValid) {
-throw new Error('Invalid audio file format');
+
+    const isValid = validateAudioFile(convertedAudioPath);
+
+    
+    if (!isValid) {
+      console.error('Audio file validation failed for:', convertedAudioPath);
+      throw new Error('Invalid audio file format');
     }
-// Get file stats from original path (without file:// prefix)
+    
+
+
+    // Get file stats from original path (without file:// prefix)
     const originalPath = audioPath.startsWith('file://')
       ? audioPath.replace('file://', '')
       : audioPath;
     const fileStats = await RNFS.stat(originalPath);
     const fileSize = fileStats.size;
-);
+
+
 
     // Create FormData for upload
-const formData = new FormData();
-// Add the audio file (M4A format)
+
+    const formData = new FormData();
+
+
+    // Add the audio file (M4A format)
     const isM4A = convertedAudioPath.includes('.m4a');
     const isMP3 = convertedAudioPath.includes('.mp3');
 
@@ -151,7 +177,10 @@ const formData = new FormData();
     formData.append('duration', duration ? duration.toString() : '10');
 
     // Upload to backend using the correct endpoint
-const response = await request.post('/messages/upload-audio', formData, {
+
+
+    
+    const response = await request.post('/messages/upload-audio', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -160,12 +189,16 @@ const response = await request.post('/messages/upload-audio', formData, {
         const progress = Math.round(
           (progressEvent.loaded * 100) / progressEvent.total,
         );
-if (onProgress) {
+
+        if (onProgress) {
           onProgress(progress);
         }
       },
     });
-if (response.data && response.data.success && response.data.url) {
+
+
+
+    if (response.data && response.data.success && response.data.url) {
       return {
         success: true,
         url: response.data.url,
@@ -177,7 +210,99 @@ if (response.data && response.data.success && response.data.url) {
       throw new Error(response.data?.message || 'Invalid response from server');
     }
   } catch (error) {
-// Return more specific error information
+    console.error('Audio upload error:', error);
+
+    // Return more specific error information
+    if (error.response) {
+      const errorMessage =
+        error.response.data?.message ||
+        error.response.statusText ||
+        'Upload failed';
+      throw new Error(`Upload failed: ${errorMessage}`);
+    } else if (error.request) {
+      throw new Error('Network error: Unable to reach server');
+    } else {
+      throw new Error(`Upload error: ${error.message}`);
+    }
+  }
+};
+
+export const uploadImageToS3 = async (imagePath, onProgress) => {
+  try {
+    console.log('Starting image upload:', imagePath);
+
+    // Validate image file
+    if (!validateImageFile(imagePath)) {
+      throw new Error('Invalid image file format');
+    }
+
+    // Format path properly
+    let formattedPath = imagePath;
+    if (Platform.OS === 'android' && !imagePath.startsWith('file://') && !imagePath.startsWith('http')) {
+      formattedPath = `file://${imagePath}`;
+    } else if (Platform.OS === 'ios' && !imagePath.startsWith('file://') && !imagePath.startsWith('http')) {
+      formattedPath = `file://${imagePath}`;
+    }
+
+    // Get file stats
+    const originalPath = imagePath.startsWith('file://')
+      ? imagePath.replace('file://', '')
+      : imagePath;
+    const fileStats = await RNFS.stat(originalPath);
+    const fileSize = fileStats.size;
+
+    console.log('Image file stats:', { size: fileSize, path: formattedPath });
+
+    // Create FormData for upload
+    const formData = new FormData();
+
+    // Determine file extension and type
+    const extension = imagePath.toLowerCase().substring(imagePath.lastIndexOf('.'));
+    let imageType = 'image/jpeg';
+    if (extension === '.png') imageType = 'image/png';
+    else if (extension === '.gif') imageType = 'image/gif';
+    else if (extension === '.webp') imageType = 'image/webp';
+
+    const fileName = `chat_image_${Date.now()}${extension}`;
+
+    formData.append('image', {
+      uri: formattedPath,
+      type: imageType,
+      name: fileName,
+    });
+
+    console.log('Uploading image to server...');
+
+    const response = await request.post('/messages/upload-image', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      timeout: 60000, // 60 second timeout for images
+      onUploadProgress: progressEvent => {
+        const progress = Math.round(
+          (progressEvent.loaded * 100) / progressEvent.total,
+        );
+        if (onProgress) {
+          onProgress(progress);
+        }
+      },
+    });
+
+    console.log('Image upload response:', response.data);
+
+    if (response.data && response.data.success && response.data.url) {
+      return {
+        success: true,
+        url: response.data.url,
+        size: fileSize,
+        localPath: formattedPath,
+      };
+    } else {
+      throw new Error(response.data?.message || 'Invalid response from server');
+    }
+  } catch (error) {
+    console.error('Image upload error:', error);
+
     if (error.response) {
       const errorMessage =
         error.response.data?.message ||
@@ -200,19 +325,20 @@ export const compressAudio = async inputPath => {
     // or handle compression on the server side
 
     const fileStats = await RNFS.stat(inputPath);
-,
-      modified: new Date(fileStats.mtime).toISOString(),
-    });
+
 
     return inputPath;
   } catch (error) {
-return inputPath;
+    console.error('Audio compression error:', error);
+    return inputPath;
   }
 };
 
 export const convertWavForCompatibility = async inputPath => {
   try {
-// Ensure proper file path formatting first
+
+
+    // Ensure proper file path formatting first
     let formattedPath = inputPath;
 
     // Handle different path formats
@@ -233,9 +359,8 @@ export const convertWavForCompatibility = async inputPath => {
       ? inputPath.replace('file://', '')
       : inputPath;
     const fileStats = await RNFS.stat(originalPath);
-,
-      modified: new Date(fileStats.mtime).toISOString(),
-    });
+
+
 
     // Check if we need to create a more compatible version
     // For react-native-video, we want to ensure the WAV file has proper headers
@@ -248,15 +373,20 @@ export const convertWavForCompatibility = async inputPath => {
       // Return the new path with proper formatting
       const finalPath =
         Platform.OS === 'android' ? `file://${outputPath}` : outputPath;
-,
-      });
+
+
 
       return finalPath;
     } catch (copyError) {
-return formattedPath;
+      console.warn(
+        'Failed to create compatible copy, using original:',
+        copyError,
+      );
+      return formattedPath;
     }
   } catch (error) {
-// Return original path with basic formatting if conversion fails
+    console.error('WAV conversion error:', error);
+    // Return original path with basic formatting if conversion fails
     let fallbackPath = inputPath;
     if (!inputPath.startsWith('file://') && !inputPath.startsWith('http')) {
       fallbackPath = `file://${inputPath}`;

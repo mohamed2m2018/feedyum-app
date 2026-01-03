@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -9,19 +9,19 @@ import {
   Alert,
   TextInput,
 } from 'react-native';
-import {useSelector, useDispatch} from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import ZText from '../../../../components/common/ZText';
 import ZHeader from '../../../../components/common/ZHeader';
 import ZSafeAreaView from '../../../../components/common/ZSafeAreaView';
 import ZButton from '../../../../components/common/ZButton';
-import {moderateScale} from '../../../../common/constants';
-import {styles} from '../../../../themes';
+import { moderateScale } from '../../../../common/constants';
+import { styles } from '../../../../themes';
 import images from '../../../../assets/images';
-import {updateOrderStatusAsync} from '../../../../redux/reducer/orderSlice';
+import { updateOrderStatusAsync } from '../../../../redux/reducer/orderSlice';
 import strings from '../../../../i18n/strings';
 
-const OrderReviewModal = ({visible, order, onClose, onAccept, onReject}) => {
+const OrderReviewModal = ({ visible, order, onClose, onAccept, onReject }) => {
   const colors = useSelector(state => state.theme.theme);
   const dispatch = useDispatch();
 
@@ -57,7 +57,7 @@ const OrderReviewModal = ({visible, order, onClose, onAccept, onReject}) => {
       strings.acceptOrder,
       strings.acceptOrderWithFee.replace('{fee}', fee.toFixed(2)),
       [
-        {text: strings.cancel, style: 'cancel'},
+        { text: strings.cancel, style: 'cancel' },
         {
           text: strings.accept,
           onPress: async () => {
@@ -66,8 +66,8 @@ const OrderReviewModal = ({visible, order, onClose, onAccept, onReject}) => {
 
               // Update order status to accepted with delivery fee
               await dispatch(
-                updateOrderStatusAsync(order._id, 'accepted', fee),
-              ).unwrap();
+                updateOrderStatusAsync(order._id, 'confirmed', fee),
+              );
 
               // Call parent callback
               if (onAccept) {
@@ -79,7 +79,7 @@ const OrderReviewModal = ({visible, order, onClose, onAccept, onReject}) => {
               Alert.alert(
                 'Error',
                 error.message || strings.failedToAcceptOrder,
-                [{text: 'OK'}],
+                [{ text: 'OK' }],
               );
             } finally {
               setIsProcessing(false);
@@ -95,7 +95,7 @@ const OrderReviewModal = ({visible, order, onClose, onAccept, onReject}) => {
       strings.rejectOrder,
       strings.rejectOrderConfirmation,
       [
-        {text: strings.cancel, style: 'cancel'},
+        { text: strings.cancel, style: 'cancel' },
         {
           text: strings.reject,
           style: 'destructive',
@@ -106,7 +106,7 @@ const OrderReviewModal = ({visible, order, onClose, onAccept, onReject}) => {
               // Update order status to cancelled
               await dispatch(
                 updateOrderStatusAsync(order._id, 'cancelled'),
-              ).unwrap();
+              );
 
               // Call parent callback
               if (onReject) {
@@ -118,7 +118,7 @@ const OrderReviewModal = ({visible, order, onClose, onAccept, onReject}) => {
               Alert.alert(
                 'Error',
                 error.message || strings.failedToRejectOrder,
-                [{text: 'OK'}],
+                [{ text: 'OK' }],
               );
             } finally {
               setIsProcessing(false);
@@ -136,7 +136,7 @@ const OrderReviewModal = ({visible, order, onClose, onAccept, onReject}) => {
   };
 
   const renderCustomerInfo = () => (
-    <View style={[localStyles.section, {backgroundColor: colors.white}]}>
+    <View style={[localStyles.section, { backgroundColor: colors.inputBg }]}>
       <ZText
         type="B16"
         color={colors.textColor}
@@ -148,7 +148,7 @@ const OrderReviewModal = ({visible, order, onClose, onAccept, onReject}) => {
         <Image
           source={
             order?.user?.avatar
-              ? {uri: order.user.avatar}
+              ? { uri: order.user.avatar }
               : colors.dark
                 ? images.userDark
                 : images.userLight
@@ -158,9 +158,6 @@ const OrderReviewModal = ({visible, order, onClose, onAccept, onReject}) => {
         <View style={localStyles.customerDetails}>
           <ZText type="B16" color={colors.textColor}>
             {order?.user?.fullName || strings.unknownCustomer}
-          </ZText>
-          <ZText type="M14" color={colors.grayScale7}>
-            {order?.user?.email || strings.noEmailProvided}
           </ZText>
           {order?.user?.phone && (
             <TouchableOpacity style={localStyles.phoneContainer}>
@@ -183,7 +180,7 @@ const OrderReviewModal = ({visible, order, onClose, onAccept, onReject}) => {
   );
 
   const renderDeliveryAddress = () => (
-    <View style={[localStyles.section, {backgroundColor: colors.white}]}>
+    <View style={[localStyles.section, { backgroundColor: colors.inputBg }]}>
       <ZText
         type="B16"
         color={colors.textColor}
@@ -198,13 +195,8 @@ const OrderReviewModal = ({visible, order, onClose, onAccept, onReject}) => {
           color={colors.primary}
         />
         <View style={localStyles.addressText}>
-          <ZText type="M14" color={colors.textColor}>
-            {order?.deliveryAddress?.street || 'No street address'}
-          </ZText>
-          <ZText type="M14" color={colors.textColor}>
-            {order?.deliveryAddress?.city || 'No city'},{' '}
-            {order?.deliveryAddress?.state || 'No state'}{' '}
-            {order?.deliveryAddress?.zipCode || ''}
+          <ZText type="M14" color={colors.textColor} numberOfLines={2}>
+            {order?.deliveryAddress?.nameLine || 'No address provided'}
           </ZText>
         </View>
       </View>
@@ -223,7 +215,7 @@ const OrderReviewModal = ({visible, order, onClose, onAccept, onReject}) => {
   );
 
   const renderOrderItems = () => (
-    <View style={[localStyles.section, {backgroundColor: colors.white}]}>
+    <View style={[localStyles.section, { backgroundColor: colors.inputBg }]}>
       <ZText
         type="B16"
         color={colors.textColor}
@@ -235,7 +227,7 @@ const OrderReviewModal = ({visible, order, onClose, onAccept, onReject}) => {
         <View key={index} style={localStyles.orderItem}>
           <Image
             source={
-              item.dish?.image ? {uri: item.dish.image} : images.dishPlaceholder
+              item.dish?.image ? { uri: item.dish.image } : images.dishPlaceholder
             }
             style={localStyles.itemImage}
           />
@@ -247,11 +239,11 @@ const OrderReviewModal = ({visible, order, onClose, onAccept, onReject}) => {
               Quantity: {item.quantity}
             </ZText>
             <ZText type="M12" color={colors.grayScale7}>
-              Price: {(item.price?.toFixed(2) || '0.00')} each
+              Price: {(item.price || item.dish?.price || 0).toFixed(2)} each
             </ZText>
           </View>
           <ZText type="B14" color={colors.primary}>
-            {((item.price || 0) * (item.quantity || 0)).toFixed(2)}
+            {((item.price || item.dish?.price || 0) * (item.quantity || 0)).toFixed(2)}
           </ZText>
         </View>
       ))}
@@ -259,68 +251,68 @@ const OrderReviewModal = ({visible, order, onClose, onAccept, onReject}) => {
   );
 
   const renderDeliveryFeeInput = () => (
-    <View style={[localStyles.section, {backgroundColor: colors.white}]}>
+    <View style={[localStyles.section, {
+      backgroundColor: colors.inputBg,
+      borderColor: colors.primary,
+      borderWidth: 1, // Highlight this section
+    }]}>
       <ZText
         type="B16"
-        color={colors.textColor}
+        color={colors.primary} // Make title primary color
         style={localStyles.sectionTitle}>
-        Set Delivery Fee
+        Set Delivery Details
       </ZText>
 
-      <View style={localStyles.inputContainer}>
-        <ZText
-          type="M14"
-          color={colors.textColor}
-          style={localStyles.inputLabel}>
-          Delivery Fee
-        </ZText>
-        <TextInput
-          style={[
-            localStyles.feeInput,
-            {
-              backgroundColor: colors.inputBg,
-              borderColor: colors.bColor,
-              color: colors.textColor,
-            },
-          ]}
-          value={deliveryFee}
-          onChangeText={setDeliveryFee}
-          placeholder="0.00"
-          placeholderTextColor={colors.grayScale7}
-          keyboardType="decimal-pad"
-          returnKeyType="done"
-        />
-      </View>
+      <View style={localStyles.rowContainer}>
+        <View style={[localStyles.inputWrapper, { marginRight: moderateScale(10) }]}>
+          <ZText type="M14" color={colors.textColor} style={localStyles.inputLabel}>
+            Delivery Fee ($)
+          </ZText>
+          <TextInput
+            style={[
+              localStyles.feeInput,
+              {
+                backgroundColor: colors.backgroundColor, // Contrast against section bg
+                borderColor: deliveryFee ? colors.primary : colors.bColor,
+                color: colors.textColor,
+              },
+            ]}
+            value={deliveryFee}
+            onChangeText={setDeliveryFee}
+            placeholder="0.00"
+            placeholderTextColor={colors.grayScale7}
+            keyboardType="decimal-pad"
+            returnKeyType="done"
+          />
+        </View>
 
-      <View style={localStyles.inputContainer}>
-        <ZText
-          type="M14"
-          color={colors.textColor}
-          style={localStyles.inputLabel}>
-          Estimated Delivery Time (minutes)
-        </ZText>
-        <TextInput
-          style={[
-            localStyles.feeInput,
-            {
-              backgroundColor: colors.inputBg,
-              borderColor: colors.bColor,
-              color: colors.textColor,
-            },
-          ]}
-          value={estimatedTime}
-          onChangeText={setEstimatedTime}
-          placeholder="30"
-          placeholderTextColor={colors.grayScale7}
-          keyboardType="number-pad"
-          returnKeyType="done"
-        />
+        <View style={localStyles.inputWrapper}>
+          <ZText type="M14" color={colors.textColor} style={localStyles.inputLabel}>
+            Time (mins)
+          </ZText>
+          <TextInput
+            style={[
+              localStyles.feeInput,
+              {
+                backgroundColor: colors.backgroundColor,
+                borderColor: colors.bColor,
+                color: colors.textColor,
+              },
+            ]}
+            value={estimatedTime}
+            onChangeText={setEstimatedTime}
+            placeholder="30"
+            placeholderTextColor={colors.grayScale7}
+            keyboardType="number-pad"
+            returnKeyType="done"
+          />
+        </View>
       </View>
     </View>
   );
 
   const renderPricingSummary = () => (
-    <View style={[localStyles.section, {backgroundColor: colors.white}]}>
+    <View style={[localStyles.section, { backgroundColor: colors.inputBg }]}>
       <ZText
         type="B16"
         color={colors.textColor}
@@ -395,7 +387,7 @@ const OrderReviewModal = ({visible, order, onClose, onAccept, onReject}) => {
         <View
           style={[
             localStyles.actionContainer,
-            {backgroundColor: colors.backgroundColor},
+            { backgroundColor: colors.backgroundColor },
           ]}>
           <ZButton
             title={isProcessing ? strings.processingOrder : strings.rejectOrderButton}
@@ -404,7 +396,7 @@ const OrderReviewModal = ({visible, order, onClose, onAccept, onReject}) => {
             containerStyle={[
               localStyles.actionButton,
               localStyles.rejectButton,
-              {borderColor: colors.error},
+              { borderColor: colors.error },
             ]}
             onPress={handleRejectOrder}
             disabled={isProcessing}
@@ -416,10 +408,10 @@ const OrderReviewModal = ({visible, order, onClose, onAccept, onReject}) => {
             color={colors.white}
             containerStyle={[
               localStyles.actionButton,
-              {backgroundColor: colors.primary},
+              { backgroundColor: colors.primary },
             ]}
             onPress={handleAcceptOrder}
-            disabled={isProcessing || !deliveryFee}
+            disabled={isProcessing}
           />
         </View>
       </ZSafeAreaView>
@@ -435,7 +427,7 @@ const localStyles = StyleSheet.create({
     margin: moderateScale(16),
     padding: moderateScale(16),
     borderRadius: moderateScale(12),
-    backgroundColor: '#FFFFFF', // Background color for shadow efficiency
+    backgroundColor: '#FFFFFF', // This will be overridden by inline styles
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -539,6 +531,13 @@ const localStyles = StyleSheet.create({
   rejectButton: {
     backgroundColor: 'transparent',
     borderWidth: 1,
+  },
+  rowContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  inputWrapper: {
+    flex: 1,
   },
 });
 

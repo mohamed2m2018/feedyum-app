@@ -136,7 +136,10 @@ export default function ReelsComponentOne() {
         }
         updateViewsMutation.mutate(res?.data?.story?._id);
       },
-      onError: err => useEffect(() => {
+      onError: () => {},
+    },
+  );
+  useEffect(() => {
     setExtraData(e => !e);
   }, [activeVideoIndex, isFocused]);
 

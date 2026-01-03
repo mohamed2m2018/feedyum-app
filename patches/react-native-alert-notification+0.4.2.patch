@@ -1,0 +1,68 @@
+diff --git a/node_modules/react-native-alert-notification/src/containers/Dialog.tsx b/node_modules/react-native-alert-notification/src/containers/Dialog.tsx
+index a6afe15..361c81e 100644
+--- a/node_modules/react-native-alert-notification/src/containers/Dialog.tsx
++++ b/node_modules/react-native-alert-notification/src/containers/Dialog.tsx
+@@ -7,10 +7,12 @@ export type IConfigDialog = {
+   type: ALERT_TYPE;
+   title?: string;
+   textBody?: string;
+-  button?: string;
++  buttonOne?: string;
++  buttonTwo?: string;
+   autoClose?: number | boolean;
+   closeOnOverlayTap?: boolean;
+-  onPressButton?: () => void;
++  onPressButtonOne?: () => void;
++  onPressButtonTwo?: () => void;
+   onShow?: () => void;
+   onHide?: () => void;
+ };
+@@ -178,13 +180,22 @@ export class Dialog extends React.Component<IProps, IState> {
+    */
+   private _buttonRender = (): JSX.Element => {
+     const { styles } = this.state;
+-    const { type, onPressButton, button } = this.state.config!;
+-    if (button) {
++    const { type, onPressButtonOne, buttonOne, onPressButtonTwo, buttonTwo } = this.state.config!;
++    if (buttonOne && buttonTwo) {
+       return (
+-        <TouchableOpacity style={StyleSheet.flatten([styles.button, styles[type]])} onPress={onPressButton ?? this._close}>
+-          <Text style={styles.buttonLabel}>{button}</Text>
++        <View style={styles.row}>
++        <TouchableOpacity style={StyleSheet.flatten([styles.button, styles[type]])} onPress={onPressButtonOne ?? this._close}>
++          <Text style={styles.buttonLabel}>{buttonOne}</Text>
+         </TouchableOpacity>
++         <TouchableOpacity style={StyleSheet.flatten([styles.button, styles[type]])} onPress={onPressButtonTwo ?? this._close}>
++         <Text style={styles.buttonLabel}>{buttonOne}</Text>
++       </TouchableOpacity>
++       </View>
+       );
++    }else if(buttonOne) {
++      return    <TouchableOpacity style={StyleSheet.flatten([styles.button, styles[type]])} onPress={onPressButtonOne ?? this._close}>
++          <Text style={styles.buttonLabel}>{buttonOne}</Text>
++        </TouchableOpacity>
+     }
+     return <></>;
+   };
+@@ -310,8 +321,11 @@ const __styles = (isDark: boolean) =>
+     [ALERT_TYPE.WARNING]: {
+       backgroundColor: Color.get('warning', isDark),
+     },
+-    [ALERT_TYPE.INFO]: {
+-      backgroundColor: Color.get('info', isDark),
++    row: {
++      flexDirection: 'row',
++      justifyContent: 'space-between',
++      width: '95%',
++      alignSelf: 'center',
+     },
+     backendImage: {
+       position: 'absolute',
+@@ -340,7 +354,4 @@ const __styles = (isDark: boolean) =>
+     [`${ALERT_TYPE.WARNING}Image`]: {
+       tintColor: Color.get('warning', isDark),
+     },
+-    [`${ALERT_TYPE.INFO}Image`]: {
+-      tintColor: Color.get('info', isDark),
+-    },
+   });

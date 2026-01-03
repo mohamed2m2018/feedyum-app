@@ -1,4 +1,4 @@
-import { OneSignal } from 'react-native-onesignal';
+import OneSignal from 'react-native-onesignal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DeepLinkingService from './DeepLinkingService';
 
@@ -18,149 +18,151 @@ class NotificationService {
     if (NotificationService.isInitialized) return;
 
     try {
-      // OneSignal Initialization (v5)
-      OneSignal.initialize(oneSignalAppId);
-      
-      // Level 6 = VERBOSE, 0 = NONE
-      OneSignal.Debug.setLogLevel(6);
+      // OneSignal Initialization
+      OneSignal.setLogLevel(6, 0);
+      OneSignal.setAppId(oneSignalAppId);
 
-      // Request permission immediately or deferred? 
-      // Existing code did promptForPushNotificationsWithUserResponse
-      OneSignal.Notifications.requestPermission(true).then((response) => {
-});
+      // OneSignal iOS Settings
+      OneSignal.promptForPushNotificationsWithUserResponse(response => {
+
+      });
 
       // Setup notification handlers
       this.setupNotificationHandlers();
       
       NotificationService.isInitialized = true;
-');
+
     } catch (error) {
-}
+      console.error('Error initializing NotificationService:', error);
+    }
   }
 
   setupNotificationHandlers() {
-    // Handle notification received while app is open (Foreground)
-    // v5: 'foregroundWillDisplay'
-    OneSignal.Notifications.addEventListener('foregroundWillDisplay', (event) => {
-const notification = event.getNotification();
-const data = notification.additionalData;
-// In v5, to show the notification, you just don't preventDefault.
-      // Or explicitly event.getNotification().display() if you intercepted it?
-      // "If you want to display the notification, call event.getNotification().display()" is v4 style completion?
-      // v5 documentation says: "The notification will display unless you call event.preventDefault()"
-      // So detailed logging is fine, then let it show.
-    });
+    // Handle notification received while app is open
+    OneSignal.setNotificationWillShowInForegroundHandler(notificationReceivedEvent => {
 
-    // Handle notification opened/tapped (Click)
-    // v5: 'click'
-    OneSignal.Notifications.addEventListener('click', (event) => {
-const notification = event.notification;
+      
+      const notification = notificationReceivedEvent.getNotification();
+
       
       const data = notification.additionalData;
+
+
+      // Show the notification
+      notificationReceivedEvent.complete(notification);
+    });
+
+    // Handle notification opened/tapped
+    OneSignal.setNotificationOpenedHandler(notification => {
+
+      
+      const data = notification.notification.additionalData;
       if (data) {
         this.handleNotificationTap(data);
       }
     });
 
     // Handle in-app message actions
-    // v5: 'click' event on InAppMessages namespace
-    OneSignal.InAppMessages.addEventListener('click', (event) => {
-});
+    OneSignal.setInAppMessageClickHandler(event => {
+
+    });
   }
 
   // Handle notification tap with deep linking
   handleNotificationTap(data) {
-// Use deep linking service to navigate
+
+    
+    // Use deep linking service to navigate
     const deepLinkingService = DeepLinkingService.getInstance();
     deepLinkingService.handleNotificationTap(data);
   }
 
   // Set user ID for targeting notifications
-  // v5: OneSignal.login("externalId")
   async setUserId(userId) {
     try {
-      OneSignal.login(userId.toString());
+      OneSignal.setExternalUserId(userId.toString());
       await AsyncStorage.setItem('onesignal_user_id', userId.toString());
-:', userId);
+
     } catch (error) {
-}
+      console.error('Error setting OneSignal user ID:', error);
+    }
   }
 
   // Remove user ID (logout)
-  // v5: OneSignal.logout()
   async removeUserId() {
     try {
-      OneSignal.logout();
+      OneSignal.removeExternalUserId();
       await AsyncStorage.removeItem('onesignal_user_id');
-');
+
     } catch (error) {
-}
+      console.error('Error removing OneSignal user ID:', error);
+    }
   }
 
   // Get device push token
-  // v5: OneSignal.User.pushSubscription.getPushSubscriptionId() / getToken()
   async getDeviceState() {
     try {
-        // This is tricky mapping. v4 getDeviceState returned { userId, pushToken, ... }
-        // v5 separates these.
-        const id = OneSignal.User.pushSubscription.getId();
-        const token = OneSignal.User.pushSubscription.getToken();
-        const optedIn = OneSignal.User.pushSubscription.getOptedIn();
-        
-        return {
-            userId: id,
-            pushToken: token,
-            isSubscribed: optedIn,
-            hasNotificationPermission: OneSignal.Notifications.hasPermission()
-        };
+      const deviceState = await OneSignal.getDeviceState();
+      return deviceState;
     } catch (error) {
-return null;
+      console.error('Error getting device state:', error);
+      return null;
     }
   }
 
   // Send tag for user segmentation
-  // v5: OneSignal.User.addTag(key, value)
   async sendTag(key, value) {
     try {
-      OneSignal.User.addTag(key, value);
-} catch (error) {
-}
+      OneSignal.sendTag(key, value);
+
+    } catch (error) {
+      console.error('Error sending OneSignal tag:', error);
+    }
   }
 
   // Send multiple tags
-  // v5: OneSignal.User.addTags(tagsObject)
   async sendTags(tags) {
     try {
-      OneSignal.User.addTags(tags);
-} catch (error) {
-}
+      OneSignal.sendTags(tags);
+
+    } catch (error) {
+      console.error('Error sending OneSignal tags:', error);
+    }
   }
 
   // Delete tags
-  // v5: OneSignal.User.removeTags(keysArray)
   async deleteTags(tags) {
     try {
-      OneSignal.User.removeTags(tags);
-} catch (error) {
-}
+      OneSignal.deleteTags(tags);
+
+    } catch (error) {
+      console.error('Error deleting OneSignal tags:', error);
+    }
   }
 
   // Check notification permission status
   async getNotificationPermissionStatus() {
     try {
-      return OneSignal.Notifications.hasPermission();
+      const deviceState = await OneSignal.getDeviceState();
+      return deviceState?.hasNotificationPermission || false;
     } catch (error) {
-return false;
+      console.error('Error checking notification permission:', error);
+      return false;
     }
   }
 
   // Request notification permission
   async requestNotificationPermission() {
     try {
-      const response = await OneSignal.Notifications.requestPermission(true);
-      return response;
+      return new Promise((resolve) => {
+        OneSignal.promptForPushNotificationsWithUserResponse(response => {
+
+          resolve(response);
+        });
+      });
     } catch (error) {
-return false;
+      console.error('Error requesting notification permission:', error);
+      return false;
     }
   }
 
@@ -242,8 +244,11 @@ return false;
         'location_city',
         'location_country'
       ]);
-} catch (error) {
-}
+      
+
+    } catch (error) {
+      console.error('Error clearing user notification data:', error);
+    }
   }
 }
 

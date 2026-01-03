@@ -30,20 +30,18 @@ import {StackNav} from '../../../navigation/NavigationKeys';
 import request from '../../../api/request';
 import images from '../../../assets/images';
 import {
-  addToCart,
-  selectCartItemCount,
   selectCartError,
   clearError,
 } from '../../../redux/reducer/cartSlice';
+import {useStorage} from '../../../utils/useStorage';
 
 const {width: screenWidth, height: screenHeight} = Dimensions.get('window');
 
 const DishDetailScreen = () => {
   const colors = useSelector(state => state.theme.theme);
-  const dispatch = useDispatch();
-  const navigation = useNavigation();
   const route = useRoute();
   const queryClient = useQueryClient();
+  const [user] = useStorage('user');
 
   const {dishId, chefId} = route.params;
 const [quantity, setQuantity] = useState(1);
@@ -740,7 +738,17 @@ throw error;
     });
   };
 
-  const renderBottomSection = () => (
+  const renderBottomSection = () => {
+    // Hide cart controls if current user is the chef/owner of the dish
+    const currentUserId = user?._id?.toString();
+    const dishOwnerId = (dishData?.user_id || chefId)?.toString();
+    
+
+
+    const isOwner = currentUserId === dishOwnerId;
+    if (isOwner) return null;
+
+    return (
     <View style={[localStyles.bottomSection, {backgroundColor: colors.white}]}>
 
 
@@ -784,7 +792,6 @@ throw error;
         </View>
       </View>
 
-      {/* Add to Cart Button */}
       <ZButton
         title={`Add to Cart - ${(dishData?.price * quantity).toFixed(0)} EGP`}
         onPress={handleAddToCart}
@@ -792,7 +799,8 @@ throw error;
         disabled={!dishData?.visible}
       />
     </View>
-  );
+    );
+  };
 
   if (dishLoading) {
     return (

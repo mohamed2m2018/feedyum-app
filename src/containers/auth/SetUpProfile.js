@@ -37,7 +37,7 @@ import ZButton from '../../components/common/ZButton';
 import request from '../../api/request';
 import {ALERT_TYPE, Toast} from 'react-native-alert-notification';
 import {useQuery, useQueryClient} from 'react-query';
-import { OneSignal } from 'react-native-onesignal';
+import OneSignal from 'react-native-onesignal';
 import {RNS3} from 'react-native-aws3';
 import ZText from '../../components/common/ZText';
 import {useStorage} from '../../utils/useStorage';
@@ -90,7 +90,11 @@ const SetUpProfile = props => {
       enabled: !!editUser?.data?.user?._id,
       refetchOnMount: true,
       onSuccess: res => setLocations(res?.data?.locations),
-      onError: err => useEffect(() => {
+      onError: () => {},
+    },
+  );
+
+  useEffect(() => {
     if (!isEdit) {
       setFullName(undefined);
       setGender(undefined);
@@ -164,8 +168,7 @@ const SetUpProfile = props => {
       })
       .then(async res => {
         setAccessToken(res?.data?.token);
-        // OneSignal v5
-        OneSignal.login(res?.data?.user?._id);
+        OneSignal.setExternalUserId(res?.data?.user?._id);
         // Clear React Query cache to force fresh data fetch for this device
         await queryClient.clear();
         navigation.reset({
@@ -228,7 +231,8 @@ const SetUpProfile = props => {
         })
         .catch(error => {
           setisPhotoUploading(false);
-});
+
+        });
     });
   };
 

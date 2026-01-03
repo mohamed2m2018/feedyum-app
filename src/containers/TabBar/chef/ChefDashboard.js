@@ -11,6 +11,7 @@ import ZHeader from '../../../components/common/ZHeader';
 import ZText from '../../../components/common/ZText';
 import ZButton from '../../../components/common/ZButton';
 import DashboardCard from './components/DashboardCard';
+import {useDashboardStats} from './hooks/useDashboardData';
 import {styles} from '../../../themes';
 import {moderateScale} from '../../../common/constants';
 import {StackNav} from '../../../navigation/NavigationKeys';
@@ -20,13 +21,12 @@ export default function ChefDashboard() {
   const colors = useSelector(state => state.theme.theme);
   const navigation = useNavigation();
   const [refreshing, setRefreshing] = useState(false);
+  const { data: stats, refetch } = useDashboardStats();
 
-  const onRefresh = () => {
+  const onRefresh = async () => {
     setRefreshing(true);
-    // Simulate refresh - will be replaced with actual API calls
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 1000);
+    await refetch();
+    setRefreshing(false);
   };
 
   const navigateToSection = (sectionName) => {
@@ -74,7 +74,7 @@ export default function ChefDashboard() {
           <View style={localStyles.statsGrid}>
             <DashboardCard
               title={strings.todaysRevenue}
-              value={"0"}
+              value={`$${stats?.todayRevenue?.toFixed(2) || '0.00'}`}
               icon="cash-outline"
               color={colors.primary}
               containerStyle={localStyles.statCard}
@@ -82,7 +82,7 @@ export default function ChefDashboard() {
             />
             <DashboardCard
               title={strings.pendingOrders}
-              value="0"
+              value={stats?.pendingOrders?.toString() || '0'}
               icon="time-outline"
               color={colors.orange}
               containerStyle={localStyles.statCard}
@@ -92,7 +92,7 @@ export default function ChefDashboard() {
           <View style={localStyles.statsGrid}>
             <DashboardCard
               title={strings.totalDishes}
-              value="0"
+              value={stats?.totalDishes?.toString() || '0'}
               icon="restaurant-outline"
               color={colors.blue}
               containerStyle={localStyles.statCard}
@@ -100,7 +100,7 @@ export default function ChefDashboard() {
             />
             <DashboardCard
               title={strings.completedOrders}
-              value="0"
+              value={stats?.completedOrders?.toString() || '0'}
               icon="checkmark-circle-outline"
               color={colors.primary}
               containerStyle={localStyles.statCard}

@@ -21,11 +21,14 @@ const onError = function (error) {
   if (error?.response) {
     return Promise.reject(error?.response?.data);
   } else {
-    return error.message;
+    return Promise.reject(error);
   }
 };
 
 client.interceptors.response.use(onSuccess, onError);
+
+// Generate a random runtime ID to identify the specific simulator/session instance in logs
+const RUNTIME_ID = Math.floor(Math.random() * 10000);
 
 // Read token from MMKV on EVERY request to ensure each device uses its own token
 // This fixes the issue where multiple simulators share the same in-memory token
@@ -34,6 +37,9 @@ client.interceptors.request.use(
     const token = MMKV.getString(ACCESS_TOKEN);
     if (token) {
       config.headers.Authorization = token;
+
+    } else {
+
     }
     return config;
   },

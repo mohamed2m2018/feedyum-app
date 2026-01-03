@@ -1,5 +1,5 @@
 // Library imports
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -8,11 +8,11 @@ import {
   RefreshControl,
   ScrollView,
 } from 'react-native';
-import {useSelector} from 'react-redux';
-import {useNavigation} from '@react-navigation/native';
+import { useSelector } from 'react-redux';
+import { useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {useQuery, useQueryClient, useMutation} from 'react-query';
-import {Toast, ALERT_TYPE} from 'react-native-alert-notification';
+import { useQuery, useQueryClient, useMutation } from 'react-query';
+import { Toast, ALERT_TYPE } from 'react-native-alert-notification';
 
 // Local imports
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
@@ -22,13 +22,14 @@ import ZLoader from '../../../components/common/ZLoader';
 import OrderCard from './components/OrderCard';
 import OrderDetailsModal from './components/OrderDetailsModal';
 import OrderReviewModal from './components/OrderReviewModal';
+import RejectReasonModal from '../ordering/components/RejectReasonModal';
 import request from '../../../api/request';
 import strings from '../../../i18n/strings';
-import {moderateScale} from '../../../common/constants';
-import {StackNav} from '../../../navigation/NavigationKeys';
+import { moderateScale } from '../../../common/constants';
+import { StackNav } from '../../../navigation/NavigationKeys';
 
 // Components moved outside to avoid React warnings
-const StatusTab = ({status, isSelected, onPress, colors}) => (
+const StatusTab = ({ status, isSelected, onPress, colors }) => (
   <TouchableOpacity
     style={[
       localStyles.statusTab,
@@ -36,7 +37,8 @@ const StatusTab = ({status, isSelected, onPress, colors}) => (
         backgroundColor: isSelected
           ? status.color + '15'
           : (colors.inputBg || '#FFFFFF'), // Fallback to white for shadow efficiency
-        borderColor: isSelected ? status.color : colors.bColor,
+        borderWidth: isSelected ? 2 : 1,
+        borderColor: isSelected ? status.color : (colors.grayScale7 || '#616161'),
         shadowColor: isSelected ? status.color : '#000',
         shadowOffset: {
           width: 0,
@@ -50,8 +52,8 @@ const StatusTab = ({status, isSelected, onPress, colors}) => (
     onPress={onPress}
     activeOpacity={0.7}>
     <View style={localStyles.statusTabContent}>
-      <ZText 
-        type={isSelected ? "B14" : "M14"} 
+      <ZText
+        type={isSelected ? "B14" : "M14"}
         color={isSelected ? status.color : colors.grayScale7}
       >
         {status.label}
@@ -62,11 +64,11 @@ const StatusTab = ({status, isSelected, onPress, colors}) => (
             localStyles.statusBadge,
             {
               backgroundColor: isSelected ? status.color : colors.grayScale4,
-              transform: [{scale: isSelected ? 1.05 : 1}],
+              transform: [{ scale: isSelected ? 1.05 : 1 }],
             },
           ]}>
-          <ZText 
-            type="B12" 
+          <ZText
+            type="B12"
             color={isSelected ? colors.white : colors.white}
           >
             {status.count}
@@ -77,7 +79,7 @@ const StatusTab = ({status, isSelected, onPress, colors}) => (
   </TouchableOpacity>
 );
 
-const EmptyState = ({selectedStatus, colors}) => (
+const EmptyState = ({ selectedStatus, colors }) => (
   <View style={localStyles.emptyContainer}>
     <Ionicons name="receipt-outline" size={moderateScale(64)} color={colors.grayScale4} />
     <ZText type="B18" color={colors.grayScale7} style={localStyles.emptyTitle}>
@@ -91,7 +93,7 @@ const EmptyState = ({selectedStatus, colors}) => (
   </View>
 );
 
-const LoadingState = ({colors}) => (
+const LoadingState = ({ colors }) => (
   <View style={localStyles.loadingContainer}>
     <ZLoader />
     <ZText
@@ -103,7 +105,7 @@ const LoadingState = ({colors}) => (
   </View>
 );
 
-const ErrorState = ({onRetry, colors}) => (
+const ErrorState = ({ onRetry, colors }) => (
   <View style={localStyles.errorContainer}>
     <Ionicons
       name="alert-circle-outline"
@@ -114,7 +116,7 @@ const ErrorState = ({onRetry, colors}) => (
       Failed to load orders
     </ZText>
     <TouchableOpacity
-      style={[localStyles.retryButton, {borderColor: colors.redColor}]}
+      style={[localStyles.retryButton, { borderColor: colors.redColor }]}
       onPress={onRetry}>
       <ZText type="M14" color={colors.redColor}>
         Retry
@@ -134,20 +136,22 @@ export default function OrderManagement() {
   // Modal state
   const [orderDetailsVisible, setOrderDetailsVisible] = useState(false);
   const [orderReviewVisible, setOrderReviewVisible] = useState(false);
+  const [rejectModalVisible, setRejectModalVisible] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
 
   // Order status options
   const statusOptions = [
-    {label: 'All', value: 'all', color: colors.textColor, count: 0},
-    {label: strings.pending, value: 'pending', color: colors.orange, count: 0},
-    {label: strings.preparing, value: 'preparing', color: colors.blue, count: 0},
-    {label: strings.ready, value: 'ready', color: colors.yellow, count: 0},
-    {label: strings.completed, value: 'completed', color: colors.primary, count: 0},
-    {label: strings.cancelled, value: 'cancelled', color: colors.redColor, count: 0},
+    { label: 'All', value: 'all', color: colors.textColor, count: 0 },
+    { label: strings.pending, value: 'pending', color: colors.orange, count: 0 },
+    { label: 'Accepted', value: 'confirmed', color: colors.green, count: 0 }, // Backend status is confirmed
+    { label: strings.preparing, value: 'preparing', color: colors.blue, count: 0 },
+    { label: strings.ready, value: 'ready', color: colors.yellow, count: 0 },
+    { label: strings.completed, value: 'completed', color: colors.primary, count: 0 },
+    { label: strings.cancelled, value: 'cancelled', color: colors.redColor, count: 0 },
   ];
 
   // Fetch current user first
-  const {data: userData} = useQuery('user', () => request.get('/user'));
+  const { data: userData } = useQuery('user', () => request.get('/user'));
   const userId = userData?.data?.user?._id;
 
   // Fetch orders - using real API data
@@ -163,12 +167,12 @@ export default function OrderManagement() {
         const response = await request.get(`/orders/chef/${userId}`);
         return response.data;
       } catch (error) {
-throw error;
+        throw error;
       }
     },
     {
       enabled: !!userId,
-      refetchInterval: false, // Disable automatic refresh - use manual refresh instead
+      refetchInterval: 30000, // Auto-refresh every 30 seconds
       staleTime: 2 * 60 * 1000, // Consider data stale after 2 minutes
       cacheTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
       refetchOnWindowFocus: false,
@@ -179,9 +183,18 @@ throw error;
   // Extract orders from response
   const ordersData = ordersResponse?.orders || [];
 
+  const tabsScrollViewRef = React.useRef(null);
+
+  const scrollToTab = (statusValue) => {
+    const index = statusOptions.findIndex(s => s.value === statusValue);
+    if (index >= 0 && tabsScrollViewRef.current) {
+      tabsScrollViewRef.current.scrollTo({ x: index * 100, animated: true });
+    }
+  };
+
   // Update order status mutation - using real API
   const updateOrderStatusMutation = useMutation(
-    async ({orderId, status, deliveryFee, serviceFee}) => {
+    async ({ orderId, status, deliveryFee, serviceFee }) => {
       try {
         // Update order status with real API call
         const response = await request.put(`/orders/${orderId}/status`, {
@@ -202,6 +215,12 @@ throw error;
           title: 'Success',
           textBody: `Order status updated to ${variables.status}`,
         });
+
+        // Auto-switch tab and scroll
+        if (variables.status !== 'cancelled') {
+          setSelectedStatus(variables.status);
+          scrollToTab(variables.status);
+        }
       },
       onError: error => {
         Toast.show({
@@ -223,7 +242,7 @@ throw error;
   // Calculate status counts
   const statusCounts = statusOptions.map(status => {
     if (status.value === 'all') {
-      return {...status, count: ordersData?.length || 0};
+      return { ...status, count: ordersData?.length || 0 };
     }
     return {
       ...status,
@@ -237,7 +256,7 @@ throw error;
     try {
       await queryClient.invalidateQueries('chefOrders');
     } catch (error) {
-} finally {
+    } finally {
       setRefreshing(false);
     }
   };
@@ -269,16 +288,37 @@ throw error;
     setSelectedOrder(null);
   };
 
-  const handleAcceptOrder = (order, deliveryFee) => {
-    // Order acceptance is handled by the OrderReviewModal
-    // Just refresh the orders list
-    queryClient.invalidateQueries('chefOrders');
+  const handleRejectOrder = (order) => {
+    setSelectedOrder(order);
+    setRejectModalVisible(true);
   };
 
-  const handleRejectOrder = (order) => {
-    // Order rejection is handled by the OrderReviewModal
-    // Just refresh the orders list
+  const handleConfirmReject = (reason) => {
+    if (selectedOrder) {
+      updateOrderStatusMutation.mutate({
+        orderId: selectedOrder._id,
+        status: 'cancelled',
+        notes: reason
+      });
+      setRejectModalVisible(false);
+      setSelectedOrder(null);
+    }
+  };
+
+  const handleRequestAccept = (order) => {
+    setSelectedOrder(order);
+    setOrderReviewVisible(true);
+  };
+
+  const handleAcceptOrder = async (order, fee) => {
+    // The modal handles the API call. We just need to refresh.
     queryClient.invalidateQueries('chefOrders');
+    setOrderReviewVisible(false);
+    setSelectedOrder(null);
+
+    // Switch to Accepted tab
+    setSelectedStatus('confirmed');
+    scrollToTab('confirmed');
   };
 
   const handleChatWithCustomer = (order) => {
@@ -289,12 +329,14 @@ throw error;
     });
   };
 
-  const renderOrderItem = ({item}) => (
+  const renderOrderItem = ({ item }) => (
     <OrderCard
       order={item}
       onStatusChange={handleStatusChange}
       onViewDetails={handleViewOrderDetails}
       onChatWithCustomer={handleChatWithCustomer}
+      onReject={handleRejectOrder}
+      onAccept={handleRequestAccept}
       containerStyle={localStyles.orderCard}
     />
   );
@@ -319,7 +361,7 @@ throw error;
       <View style={localStyles.container}>
         {/* Summary Header */}
         {!ordersLoading && ordersData.length > 0 && (
-          <View style={[localStyles.summaryContainer, {backgroundColor: colors.inputBg || '#FFFFFF'}]}>
+          <View style={[localStyles.summaryContainer, { backgroundColor: colors.inputBg || '#FFFFFF' }]}>
             <View style={localStyles.summaryRow}>
               <View style={localStyles.summaryItem}>
                 <ZText type="B20" color={colors.primary}>
@@ -359,6 +401,7 @@ throw error;
 
         {/* Status Filter Tabs */}
         <ScrollView
+          ref={tabsScrollViewRef}
           horizontal
           showsHorizontalScrollIndicator={false}
           style={localStyles.statusTabsContainer}
@@ -404,10 +447,10 @@ throw error;
         {!ordersLoading && !ordersError && (
           <View style={localStyles.realTimeIndicator}>
             <View
-              style={[localStyles.indicator, {backgroundColor: colors.primary}]}
+              style={[localStyles.indicator, { backgroundColor: colors.primary }]}
             />
             <ZText type="R12" color={colors.grayScale7}>
-              Manual refresh available
+              Live updates active
             </ZText>
           </View>
         )}
@@ -428,6 +471,17 @@ throw error;
         onClose={handleCloseOrderReview}
         onAccept={handleAcceptOrder}
         onReject={handleRejectOrder}
+      />
+
+      {/* Reject Reason Modal */}
+      <RejectReasonModal
+        visible={rejectModalVisible}
+        onClose={() => {
+          setRejectModalVisible(false);
+          setSelectedOrder(null);
+        }}
+        colors={colors}
+        onConfirm={handleConfirmReject}
       />
     </ZSafeAreaView>
   );

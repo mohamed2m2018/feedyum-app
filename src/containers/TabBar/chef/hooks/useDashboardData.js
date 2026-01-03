@@ -9,16 +9,15 @@ export const useDashboardStats = () => {
   return useQuery(
     'dashboardStats',
     async () => {
-      // For now, return mock data since the backend endpoints don't exist yet
-      // TODO: Replace with real API calls when backend is ready
-      return {
-        todayRevenue: 245.50,
-        pendingOrders: 3,
-        totalOrders: 28,
-        completedOrders: 25,
-        totalDishes: 12,
-        todayOrdersCount: 5,
-      };
+      try {
+        console.log('Fetching chef stats...');
+        const response = await request.get('/orders/chef/stats');
+        console.log('Chef Stats Response:', response.data);
+        return response.data?.stats;
+      } catch (err) {
+        console.error('Error fetching chef stats:', err);
+        throw err;
+      }
     },
     {
       refetchInterval: false, // Disable auto-refresh - use manual refresh instead

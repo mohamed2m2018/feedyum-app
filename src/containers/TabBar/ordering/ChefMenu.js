@@ -34,6 +34,7 @@ import {
   selectCartError,
   clearError,
 } from '../../../redux/reducer/cartSlice';
+import {useStorage} from '../../../utils/useStorage';
 
 const ChefMenu = () => {
   const colors = useSelector(state => state.theme.theme);
@@ -41,6 +42,7 @@ const ChefMenu = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const {chefId, scrollToDishId, chefName, averageDishRating: headerAvg = 0, ratedDishesCount: headerCount = 0} = route.params;
+  const [user] = useStorage('user');
 
 
 
@@ -370,7 +372,7 @@ throw error;
 
             {/* Action Section */}
             <View style={localStyles.actionSection}>
-              {isAvailable ? (
+              {user?._id?.toString() === chefId?.toString() ? null : isAvailable ? (
                 currentQuantity > 0 ? (
                   <View style={localStyles.quantityController}>
                     <TouchableOpacity

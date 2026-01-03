@@ -35,11 +35,7 @@ export default function Discover({navigation}) {
   useEffect(() => {
     if (location?.latitude && location?.longitude) {
       setIsLocationChanging(true);
-      console.log('Location changed in Discover:', {
-        lat: location.latitude,
-        long: location.longitude,
-        address: location.selectedAddress
-      });
+
       
       // Reset loading state after a brief moment to let React Query handle the refetch
       const timer = setTimeout(() => {
@@ -194,7 +190,7 @@ export default function Discover({navigation}) {
                 maxWidth: moderateScale(160) // Increased max width
               }}
               onAddressSelect={(address) => {
-                console.log('Selected delivery address in discover:', address);
+
                 // React Query will automatically refetch when location context changes
               }}
             />

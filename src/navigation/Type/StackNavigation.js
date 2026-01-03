@@ -121,6 +121,7 @@ export default function StackNavigation() {
         headerShown: false,
         // mode: 'modal',
         transparentCard: true,
+        detachInactiveScreens: false, // Prevent ref freezing issues
       }}
       initialRouteName={StackNav.Splash}>
       <Stack.Screen
@@ -306,6 +307,7 @@ export default function StackNavigation() {
       <Stack.Screen
         name={StackNav.ChatScreen}
         component={StackRoute.ChatScreen}
+        options={{ animation: 'none' }}
       />
       <Stack.Screen
         name={StackNav.ChatList}

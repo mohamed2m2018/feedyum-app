@@ -110,7 +110,11 @@ export default function PostDetail() {
       onSuccess: res => {
         setLocations(res?.data?.locations);
       },
-      onError: err => const [isPhotoUploading, setisPhotoUploading] = useState(false);
+      onError: () => {},
+    },
+  );
+
+  const [isPhotoUploading, setisPhotoUploading] = useState(false);
   const [localUri, setlocalUri] = useState('');
   const [phone, setPhone] = useState();
   const [locations, setLocations] = useState(locationsData?.data?.locations);
@@ -304,7 +308,8 @@ export default function PostDetail() {
       // BLOCKED or UNAVAILABLE
       return false;
     } catch (error) {
-return false;
+
+      return false;
     }
   };
 
@@ -334,7 +339,8 @@ return false;
       // BLOCKED or UNAVAILABLE
       return false;
     } catch (error) {
-return false;
+
+      return false;
     }
   };
 
@@ -362,7 +368,8 @@ return false;
       maximumVideoDuration: 60,
     })
       .then(handleMedia)
-      .catch(err => };
+      .catch(() => {});
+  };
 
   const handleCaptureImage = async () => {
     const hasPermission = await requestCameraPermission();
@@ -376,7 +383,8 @@ return false;
       compressImageQuality: 1,
     })
       .then(handleMedia)
-      .catch(err => };
+      .catch(() => {});
+  };
 
   const handlepickImage = async () => {
     try {
@@ -398,7 +406,8 @@ return false;
       if (permissionError) {
         showPermissionAlert('Photo Library');
       } else if (code !== 'E_PICKER_CANCELLED') {
-}
+
+      }
     }
   };
 
@@ -420,7 +429,8 @@ return false;
       if (permissionError) {
         showPermissionAlert('Photo Library');
       } else if (code !== 'E_PICKER_CANCELLED') {
-}
+
+      }
     }
   };
 

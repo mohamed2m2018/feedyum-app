@@ -21,6 +21,7 @@ import ZButton from '../../components/common/ZButton';
 import {useMutation, useQueryClient} from 'react-query';
 import request from '../../api/request';
 import {ALERT_TYPE, Toast} from 'react-native-alert-notification';
+import AppInitializer from '../../services/AppInitializer';
 import { OneSignal } from 'react-native-onesignal';
 import {
   GoogleSignin,
@@ -71,7 +72,10 @@ const Login = ({navigation}) => {
         {
           onSuccess: async res => {
             setAccessToken(res?.data?.token);
+            setAccessToken(res?.data?.token);
             setUser(res?.data?.user);
+            await AppInitializer.handleUserLogin(res?.data?.user, res?.data?.token);
+            // Clear React Query cache to force fresh data fetch for this device
             // Clear React Query cache to force fresh data fetch for this device
             await queryClient.clear();
             navigation.reset({
@@ -95,13 +99,17 @@ const Login = ({navigation}) => {
     } catch (error) {
       if (error.code === statusCodes.SIGN_IN_CANCELLED) {
         // User cancelled the sign-in flow
-} else if (error.code === statusCodes.IN_PROGRESS) {
+
+      } else if (error.code === statusCodes.IN_PROGRESS) {
         // Sign-in is in progress
-} else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+
+      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
         // Play services not available or outdated
-} else {
+
+      } else {
         // Some other error occurred
-}
+
+      }
     }
   };
 
@@ -245,7 +253,10 @@ const Login = ({navigation}) => {
       {
         onSuccess: async res => {
           setAccessToken(res?.data?.token);
+          setAccessToken(res?.data?.token);
           setUser(res?.data?.user);
+          await AppInitializer.handleUserLogin(res?.data?.user, res?.data?.token);
+          // Clear React Query cache to force fresh data fetch for this device
           // Clear React Query cache to force fresh data fetch for this device
           await queryClient.clear();
           navigation.reset({

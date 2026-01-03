@@ -1,17 +1,17 @@
 // Library imports
 import React from 'react';
-import {View, StyleSheet, TouchableOpacity} from 'react-native';
-import {useSelector} from 'react-redux';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { useSelector } from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 // Local imports
 import ZText from '../../../../components/common/ZText';
 import ZButton from '../../../../components/common/ZButton';
-import {moderateScale} from '../../../../common/constants';
-import {styles} from '../../../../themes';
+import { moderateScale } from '../../../../common/constants';
+import { styles } from '../../../../themes';
 import strings from '../../../../i18n/strings';
 
-const StatusBadge = ({status, colors}) => {
+const StatusBadge = ({ status, colors }) => {
   const getStatusConfig = () => {
     switch (status) {
       case 'pending':
@@ -20,6 +20,13 @@ const StatusBadge = ({status, colors}) => {
           backgroundColor: colors.orange + '20',
           text: 'Pending',
           icon: 'time-outline',
+        };
+      case 'confirmed':
+        return {
+          color: colors.green, // Use green for Accepted
+          backgroundColor: colors.green + '20',
+          text: 'Accepted', // Display explicitly as Accepted
+          icon: 'checkmark-circle-outline',
         };
       case 'preparing':
         return {
@@ -65,7 +72,7 @@ const StatusBadge = ({status, colors}) => {
     <View
       style={[
         localStyles.statusBadge,
-        {backgroundColor: config.backgroundColor},
+        { backgroundColor: config.backgroundColor },
       ]}>
       <Ionicons
         name={config.icon}
@@ -80,12 +87,49 @@ const StatusBadge = ({status, colors}) => {
   );
 };
 
-const StatusUpdateButtons = ({order, onStatusChange, colors}) => {
+const StatusUpdateButtons = ({ order, onStatusChange, onReject, onAccept, colors }) => {
+  if (order.status === 'pending') {
+    return (
+      <View style={{ flexDirection: 'row', gap: moderateScale(8) }}>
+        <ZButton
+          title={strings.reject}
+          onPress={() => onReject && onReject(order)}
+          textType="S14"
+          color={colors.error}
+          containerStyle={[
+            localStyles.statusButton,
+            {
+              backgroundColor: colors.white,
+              borderColor: colors.error,
+              borderWidth: 1,
+              flex: 1,
+            },
+          ]}
+        />
+        <ZButton
+          title={strings.accept}
+          onPress={() => onAccept ? onAccept(order) : onStatusChange(order, 'confirmed')}
+          textType="S14"
+          color={colors.white}
+          containerStyle={[
+            localStyles.statusButton,
+            {
+              backgroundColor: colors.primary,
+              flex: 1,
+            },
+          ]}
+        />
+      </View>
+    );
+  }
+
   const getNextStatus = () => {
     switch (order.status) {
-      case 'pending':
+      case 'confirmed':
         return 'preparing';
-      case 'preparing':
+      case 'preparing': // Should we skip confirmed? Logic in backend implies pending->confirmed->preparing.
+        // If frontend was doing pending->preparing, I'll align with backend.
+        // Assuming 'confirmed' is correct next step from 'pending'.
         return 'ready';
       case 'ready':
         return 'completed';
@@ -96,7 +140,7 @@ const StatusUpdateButtons = ({order, onStatusChange, colors}) => {
 
   const getButtonText = () => {
     switch (order.status) {
-      case 'pending':
+      case 'confirmed':
         return strings.startPreparing;
       case 'preparing':
         return strings.markReady;
@@ -122,7 +166,7 @@ const StatusUpdateButtons = ({order, onStatusChange, colors}) => {
       color={colors.white}
       containerStyle={[
         localStyles.statusButton,
-        {backgroundColor: colors.primary},
+        { backgroundColor: colors.primary },
       ]}
     />
   );
@@ -133,6 +177,8 @@ const OrderCard = ({
   onStatusChange,
   onViewDetails,
   onChatWithCustomer,
+  onReject,
+  onAccept,
   containerStyle,
 }) => {
   const colors = useSelector(state => state.theme.theme);
@@ -161,7 +207,7 @@ const OrderCard = ({
       ]}
       onPress={() => onViewDetails && onViewDetails(order)}
       activeOpacity={0.8}>
-      
+
       {/* Order Header */}
       <View style={localStyles.header}>
         <View style={localStyles.orderInfo}>
@@ -188,6 +234,19 @@ const OrderCard = ({
             {order.user?.fullName || 'Unknown Customer'}
           </ZText>
         </View>
+        {order.status === 'ready' && order.user?.phone && (
+          <TouchableOpacity style={localStyles.phoneInfo}>
+            <Ionicons
+              name="call-outline"
+              size={moderateScale(16)}
+              color={colors.primary}
+              style={localStyles.customerIcon}
+            />
+            <ZText type="M14" color={colors.primary}>
+              {order.user.phone}
+            </ZText>
+          </TouchableOpacity>
+        )}
         {order.deliveryAddress?.nameLine && (
           <View style={localStyles.addressInfo}>
             <Ionicons
@@ -245,12 +304,12 @@ const OrderCard = ({
               title={strings.chat}
               onPress={() => onChatWithCustomer(order)}
               textType="S14"
-              color={colors.blue}
+              color={colors.primary}
+              bgColor={colors.primary + '15'}
               containerStyle={[
                 localStyles.chatButton,
                 {
-                  backgroundColor: colors.blue + '15',
-                  borderColor: colors.blue,
+                  borderColor: colors.primary,
                   borderWidth: 1,
                 },
               ]}
@@ -258,19 +317,21 @@ const OrderCard = ({
                 <Ionicons
                   name="chatbubble-outline"
                   size={moderateScale(16)}
-                  color={colors.blue}
+                  color={colors.primary}
                   style={localStyles.buttonIcon}
                 />
               }
             />
           )}
-          
+
           {/* Status Update Button */}
           {onStatusChange && (
             <View style={localStyles.statusButtonContainer}>
               <StatusUpdateButtons
                 order={order}
                 onStatusChange={onStatusChange}
+                onReject={onReject}
+                onAccept={onAccept}
                 colors={colors}
               />
             </View>
@@ -327,6 +388,11 @@ const localStyles = StyleSheet.create({
   },
   customerName: {
     flex: 1,
+  },
+  phoneInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: moderateScale(4),
   },
   addressInfo: {
     flexDirection: 'row',

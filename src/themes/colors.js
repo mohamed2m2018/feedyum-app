@@ -51,6 +51,7 @@ export const commonColor = {
   gray: '#35383F99',
   yellow: '#FFD300',
   darkColor: '#1F222A',
+  green: '#00C566',
 };
 
 export const colors = {

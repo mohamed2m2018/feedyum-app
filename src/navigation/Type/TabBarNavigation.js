@@ -186,7 +186,8 @@ export default function TabBarNavigation({route, navigation}) {
         listeners={{
           tabPress: e => {
             // Additional work on tab press for FollowingTab
-            // },
+            // console.log('Following tab pressed');
+          },
         }}
       />
 

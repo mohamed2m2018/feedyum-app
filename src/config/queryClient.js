@@ -64,13 +64,16 @@ export const QueryConfigs = {
 export const performanceConfig = {
   // Log slow queries (>2 seconds)
   onError: (error, query) => {
-},
+    console.warn('Query error:', {
+      queryKey: query.queryKey,
+      error: error.message,
+    });
+  },
   
   onSuccess: (data, query) => {
     // Log performance metrics for monitoring
     if (query.state.dataUpdateCount === 1) {
-- query.state.dataUpdatedAt,
-      });
+
     }
   },
 };

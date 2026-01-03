@@ -100,21 +100,37 @@ setIsVisible(false);
     });
   };
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!selectedImage) {
       showImagePicker();
       return;
     }
 
-    const imageMessage = {
-      _id: Math.round(Math.random() * 1000000),
-      text: messageText.trim(),
-      createdAt: new Date(),
-      image: selectedImage.path,
-    };
+    setIsProcessing(true);
+    try {
+      // Upload image to S3 first
+      const { uploadImageToS3 } = require('../../../../utils/UploadUtils');
+      const uploadResult = await uploadImageToS3(selectedImage.path);
+      
+      if (!uploadResult.success || !uploadResult.url) {
+        throw new Error('Failed to upload image');
+      }
 
-    onSend(imageMessage);
-    resetComposer();
+      const imageMessage = {
+        _id: Math.round(Math.random() * 1000000),
+        text: messageText.trim(),
+        createdAt: new Date(),
+        image: uploadResult.url, // Use S3 URL instead of local path
+      };
+
+      onSend(imageMessage);
+      resetComposer();
+    } catch (error) {
+      console.error('Image upload error:', error);
+      Alert.alert(strings.error, 'Failed to upload image. Please try again.');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const resetComposer = () => {

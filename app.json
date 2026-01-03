@@ -23,7 +23,8 @@
       }
     },
     "android": {
-      "package": "com.foodtok.app",
+      "package": "com.foodtok",
+      "googleServicesFile": "./google-services.json",
       "versionCode": 1,
       "permissions": [
         "android.permission.ACCESS_COARSE_LOCATION",
@@ -41,6 +42,9 @@
           "ios": {
             "useFrameworks": "static",
             "deploymentTarget": "15.0"
+          },
+          "android": {
+            "kotlinVersion": "1.8.10"
           }
         }
       ],
@@ -79,7 +83,7 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "your-eas-project-id"
+        "projectId": "45f7cdb3-9f58-43fa-827a-5f29e58b3a67"
       }
     }
   }

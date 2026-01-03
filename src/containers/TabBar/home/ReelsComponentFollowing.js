@@ -89,6 +89,9 @@ export default function ReelsComponent({amIFocused}) {
         const allStoriesWithAds = [];
         let storyCounter = 0;
         for (const page of res.pages) {
+          // Skip pages with missing or invalid data
+          if (!page?.data?.stories) continue;
+          
           for (const story of page.data.stories) {
             allStoriesWithAds.push(story);
             storyCounter++;

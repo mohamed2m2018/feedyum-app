@@ -25,7 +25,7 @@ const StatusPill = ({ status, colors }) => {
   };
   const c = map[normalized] || { bg: colors.inputBg, fg: colors.textColor };
   return (
-    <View style={[styles.statusPill, { backgroundColor: c.bg }]}> 
+    <View style={[styles.statusPill, { backgroundColor: c.bg }]}>
       <ZText type="M12" color={c.fg}>
         {String(status || 'PENDING').toUpperCase()}
       </ZText>
@@ -44,7 +44,7 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
-const OrderSummaryCard = ({ order, colors, onPressPrimary, initialCollapsed = true, onClose, autoPeek = true, peekDurationMs = 900 }) => {
+const OrderSummaryCard = ({ order, colors, onPressPrimary, initialCollapsed = true, onClose, autoPeek = true, peekDurationMs = 900, isChef, onAccept, onReject }) => {
   const [collapsed, setCollapsed] = useState(!!initialCollapsed);
   const [contentOpacity] = useState(new Animated.Value(initialCollapsed ? 0 : 1));
   const hasPeekedRef = useRef(false);
@@ -69,7 +69,7 @@ const OrderSummaryCard = ({ order, colors, onPressPrimary, initialCollapsed = tr
     }).start(() => {
       setCollapsed(true);
     });
-  };     
+  };
 
   useEffect(() => {
     if (autoPeek && collapsed && !hasPeekedRef.current) {
@@ -78,7 +78,7 @@ const OrderSummaryCard = ({ order, colors, onPressPrimary, initialCollapsed = tr
       const t = setTimeout(() => collapse(), peekDurationMs);
       return () => clearTimeout(t);
     }
-  }, []); 
+  }, []);
 
 
   const containerStyle = collapsed
@@ -87,7 +87,7 @@ const OrderSummaryCard = ({ order, colors, onPressPrimary, initialCollapsed = tr
 
   const renderDetails = () => (
     <View>
-      <View style={styles.itemsContainer}> 
+      <View style={styles.itemsContainer}>
         {showItems.map((it, idx) => {
           const imageUri = typeof it?.image === 'string' ? it.image : (it?.image?.url || it?.image?.uri || '');
           return (
@@ -111,13 +111,13 @@ const OrderSummaryCard = ({ order, colors, onPressPrimary, initialCollapsed = tr
         })}
 
         {extraCount > 0 && (
-          <View style={[styles.extraRow, { backgroundColor: colors.inputBg }]}> 
+          <View style={[styles.extraRow, { backgroundColor: colors.inputBg }]}>
             <ZText type="M12" color={colors.grayScale7}>+{extraCount} more item(s)</ZText>
           </View>
         )}
       </View>
 
-      <View style={styles.pricesContainer}> 
+      <View style={styles.pricesContainer}>
         <PriceRow label="Subtotal" value={order?.subtotal} colors={colors} />
         {order?.deliveryFee !== undefined && (
           <PriceRow label="Delivery" value={order?.deliveryFee} colors={colors} />
@@ -136,17 +136,28 @@ const OrderSummaryCard = ({ order, colors, onPressPrimary, initialCollapsed = tr
       </View>
 
       {!!order?.address && (
-        <View style={[styles.addressContainer, { backgroundColor: colors.inputBg }]}> 
+        <View style={[styles.addressContainer, { backgroundColor: colors.inputBg }]}>
           <ZText type="M12" color={colors.grayScale7} numberOfLines={2}>
             {order?.address}
           </ZText>
         </View>
       )}
 
-      <View style={styles.actionsRow}> 
-        <TouchableOpacity style={[styles.primaryBtn, { backgroundColor: colors.primary }]} onPress={onPressPrimary}>
-          <ZText type="B14" color={colors.white}>Track order</ZText>
-        </TouchableOpacity>
+      <View style={styles.actionsRow}>
+        {isChef && order?.status === 'pending' ? (
+          <>
+            <TouchableOpacity style={[styles.secondaryBtn, { borderColor: colors.error, marginRight: moderateScale(10) }]} onPress={onReject}>
+              <ZText type="B14" color={colors.error}>Reject</ZText>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.primaryBtn, { backgroundColor: colors.primary }]} onPress={onAccept}>
+              <ZText type="B14" color={colors.white}>Accept Order</ZText>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <TouchableOpacity style={[styles.primaryBtn, { backgroundColor: colors.primary }]} onPress={onPressPrimary}>
+            <ZText type="B14" color={colors.white}>Track order</ZText>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
