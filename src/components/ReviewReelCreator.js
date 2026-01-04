@@ -1,4 +1,4 @@
-import React, {useState, useRef, useEffect} from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -8,25 +8,26 @@ import {
   Platform,
   TextInput,
 } from 'react-native';
-import {useSelector} from 'react-redux';
-import {useNavigation} from '@react-navigation/native';
+import { useSelector } from 'react-redux';
+import { useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import ImagePicker from 'react-native-image-crop-picker';
-import {useMutation, useQueryClient} from 'react-query';
-import {useBackgroundUpload} from '../providers/BackgroundUploadProvider';
+import { useMutation, useQueryClient } from 'react-query';
+import { useBackgroundUpload } from '../providers/BackgroundUploadProvider';
 
 import ZSafeAreaView from './common/ZSafeAreaView';
 import ZText from './common/ZText';
 import ZButton from './common/ZButton';
 import ZLoader from './common/ZLoader';
-import {moderateScale} from '../common/constants';
-import {styles} from '../themes';
+import MediaSelectionModal from './modals/MediaSelectionModal';
+import { moderateScale } from '../common/constants';
+import { styles } from '../themes';
 import request from '../api/request';
 import strings from '../i18n/strings';
 
-const {width: screenWidth, height: screenHeight} = Dimensions.get('window');
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
-const ReviewReelCreator = ({route}) => {
+const ReviewReelCreator = ({ route }) => {
   const colors = useSelector(state => state.theme.theme);
   const navigation = useNavigation();
   const queryClient = useQueryClient();
@@ -35,19 +36,20 @@ const ReviewReelCreator = ({route}) => {
     setisFormFilled,
     uploadData,
   } = useBackgroundUpload();
-  
+
   const [isMediaUploading, setIsMediaUploading] = useState(false);
   const [localUri, setLocalUri] = useState('');
-  
+  const [isModalVisible, setIsModalVisible] = useState(false);
+
   // Handle both create and edit modes
   const {
-    dishData, 
-    menuData, 
+    dishData,
+    menuData,
     reviewType = 'dish',
     editMode = false,
     reviewData = null
   } = route.params;
-  
+
   const [selectedMedia, setSelectedMedia] = useState(null);
   const [mediaType, setMediaType] = useState(null); // 'video' or 'image'
   const [caption, setCaption] = useState(editMode ? (reviewData?.caption || '') : '');
@@ -58,10 +60,10 @@ const ReviewReelCreator = ({route}) => {
   useEffect(() => {
     if (editMode && reviewData) {
       if (reviewData.uri) {
-        setSelectedMedia({path: reviewData.uri, mime: 'video/mp4'});
+        setSelectedMedia({ path: reviewData.uri, mime: 'video/mp4' });
         setMediaType('video');
       } else if (reviewData.avatarUri) {
-        setSelectedMedia({path: reviewData.avatarUri, mime: 'image/jpeg'});
+        setSelectedMedia({ path: reviewData.avatarUri, mime: 'image/jpeg' });
         setMediaType('image');
       }
     }
@@ -69,28 +71,7 @@ const ReviewReelCreator = ({route}) => {
 
 
   const handleSelectMedia = () => {
-    Alert.alert(
-      'Create Review Post',
-      'Choose how you want to create your review',
-      [
-        {
-          text: 'Record Video',
-          onPress: recordVideo,
-        },
-        {
-          text: 'Take Photo',
-          onPress: takePhoto,
-        },
-        {
-          text: 'Choose from Gallery',
-          onPress: pickFromGallery,
-        },
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-      ],
-    );
+    setIsModalVisible(true);
   };
 
   const recordVideo = async () => {
@@ -101,10 +82,10 @@ const ReviewReelCreator = ({route}) => {
         quality: 0.8,
         duration: 60, // 60 seconds max
       });
-      
+
       setSelectedMedia(video);
       setMediaType('video');
-      
+
       // Upload the media immediately
       await handleMediaUpload(video, false);
     } catch (error) {
@@ -122,10 +103,10 @@ const ReviewReelCreator = ({route}) => {
         mediaType: 'photo',
         quality: 0.8,
       });
-      
+
       setSelectedMedia(image);
       setMediaType('image');
-      
+
       // Upload the media immediately
       await handleMediaUpload(image, true);
     } catch (error) {
@@ -143,11 +124,11 @@ const ReviewReelCreator = ({route}) => {
         mediaType: 'any',
         quality: 0.8,
       });
-      
+
       const isImage = media.mime.startsWith('image/');
       setSelectedMedia(media);
       setMediaType(isImage ? 'image' : 'video');
-      
+
       // Upload the media immediately
       await handleMediaUpload(media, isImage);
     } catch (error) {
@@ -178,7 +159,7 @@ const ReviewReelCreator = ({route}) => {
 
   const handleSubmitReview = () => {
 
-    
+
     if (!selectedMedia) {
 
       Alert.alert(strings.error, strings.pleaseSelectPhotoOrVideo);
@@ -243,7 +224,7 @@ const ReviewReelCreator = ({route}) => {
     // Set the data and trigger submission
 
     handleDataToBeSent(postData);
-    
+
 
     setisFormFilled(true);
 
@@ -253,20 +234,20 @@ const ReviewReelCreator = ({route}) => {
   };
 
   const renderHeader = () => (
-    <View style={[localStyles.header, {backgroundColor: colors.backgroundColor}]}>
+    <View style={[localStyles.header, { backgroundColor: colors.backgroundColor }]}>
       <TouchableOpacity
         style={localStyles.headerButton}
         onPress={() => navigation.goBack()}>
         <Ionicons name="close" size={moderateScale(24)} color={colors.textColor} />
       </TouchableOpacity>
-      
+
       <ZText type="B18" color={colors.textColor}>
-        {editMode 
-          ? 'Edit Review' 
+        {editMode
+          ? 'Edit Review'
           : `Review ${reviewType === 'dish' ? dishData?.name : menuData?.name}`
         }
       </ZText>
-      
+
       <View style={localStyles.headerButton} />
     </View>
   );
@@ -280,18 +261,18 @@ const ReviewReelCreator = ({route}) => {
           color={colors.primary}
           style={localStyles.videoIcon}
         />
-        
+
         <ZText type="B20" color={colors.textColor} style={localStyles.selectionTitle}>
           Create Your Review Post
         </ZText>
-        
+
         <ZText type="M16" color={colors.grayScale5} style={localStyles.selectionSubtitle}>
           Share your experience with {reviewType === 'dish' ? dishData?.name : menuData?.name}
         </ZText>
-        
+
         <View style={localStyles.videoButtons}>
           <TouchableOpacity
-            style={[localStyles.videoButton, {backgroundColor: colors.primary}]}
+            style={[localStyles.videoButton, { backgroundColor: colors.primary }]}
             onPress={handleSelectMedia}
             disabled={isLoading}>
             <Ionicons name="camera" size={moderateScale(24)} color={colors.white} />
@@ -300,7 +281,7 @@ const ReviewReelCreator = ({route}) => {
             </ZText>
           </TouchableOpacity>
         </View>
-        
+
         <ZText type="M12" color={colors.grayScale5} style={localStyles.videoNote}>
           You can add photos or videos (max 60 seconds for videos)
         </ZText>
@@ -309,21 +290,21 @@ const ReviewReelCreator = ({route}) => {
   );
 
   const renderReviewForm = () => (
-    <View style={[localStyles.reviewForm, {backgroundColor: colors.backgroundColor}]}>
+    <View style={[localStyles.reviewForm, { backgroundColor: colors.backgroundColor }]}>
       {/* Media Preview */}
       <View style={localStyles.videoPreviewSection}>
         <ZText type="B16" color={colors.textColor} style={localStyles.sectionTitle}>
           Your Review {mediaType === 'video' ? 'Video' : 'Photo'}
         </ZText>
         <View style={localStyles.videoPreview}>
-          <Ionicons 
-            name={mediaType === 'video' ? 'videocam' : 'image'} 
-            size={moderateScale(40)} 
-            color={colors.primary} 
+          <Ionicons
+            name={mediaType === 'video' ? 'videocam' : 'image'}
+            size={moderateScale(40)}
+            color={colors.primary}
           />
           <ZText type="M14" color={colors.textColor} style={styles.mt8}>
-            {isMediaUploading 
-              ? 'Uploading...' 
+            {isMediaUploading
+              ? 'Uploading...'
               : `${mediaType === 'video' ? 'Video' : 'Photo'} Ready`
             }
           </ZText>
@@ -380,9 +361,9 @@ const ReviewReelCreator = ({route}) => {
           maxLength={500}
           textAlignVertical="top"
         />
-        <ZText 
-          type="M12" 
-          color={caption.length < 10 ? '#FF4D67' : colors.grayScale5} 
+        <ZText
+          type="M12"
+          color={caption.length < 10 ? '#FF4D67' : colors.grayScale5}
           style={localStyles.characterCount}
         >
           {caption.length}/500 {caption.length < 10 ? '(minimum 10 characters)' : ''}
@@ -391,10 +372,10 @@ const ReviewReelCreator = ({route}) => {
 
       {/* Submit Button */}
       <ZButton
-        title={isLoading || isMediaUploading 
-          ? 'Processing...' 
-          : editMode 
-            ? 'Update Review' 
+        title={isLoading || isMediaUploading
+          ? 'Processing...'
+          : editMode
+            ? 'Update Review'
             : 'Post Review'
         }
         onPress={handleSubmitReview}
@@ -409,18 +390,26 @@ const ReviewReelCreator = ({route}) => {
   return (
     <ZSafeAreaView>
       {renderHeader()}
-      
+
       {!selectedMedia ? (
         renderVideoSelection()
       ) : (
         renderReviewForm()
       )}
-      
+
       {isLoading && (
         <View style={localStyles.loadingOverlay}>
           <ZLoader />
         </View>
       )}
+
+      <MediaSelectionModal
+        visible={isModalVisible}
+        onClose={() => setIsModalVisible(false)}
+        onRecordVideo={recordVideo}
+        onTakePhoto={takePhoto}
+        onPickFromGallery={pickFromGallery}
+      />
     </ZSafeAreaView>
   );
 };

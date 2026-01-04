@@ -1,13 +1,13 @@
 // Library imports
 import React from 'react';
-import {View, StyleSheet, TouchableOpacity, Image} from 'react-native';
-import {useSelector} from 'react-redux';
+import { View, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { useSelector } from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 // Local imports
 import ZText from '../../../../components/common/ZText';
-import {moderateScale} from '../../../../common/constants';
-import {styles} from '../../../../themes';
+import { moderateScale } from '../../../../common/constants';
+import { styles } from '../../../../themes';
 import StarRating from '../../../../components/StarRating';
 
 const DishCard = ({
@@ -60,7 +60,7 @@ const DishCard = ({
           style={localStyles.dishImage}
           resizeMode="cover"
         />
-        {!dish.visible && (
+        {dish.visible === false && (
           <View style={localStyles.hiddenOverlay}>
             <ZText type="S12" color={colors.white}>
               HIDDEN
@@ -109,21 +109,21 @@ const DishCard = ({
           style={[
             localStyles.actionButton,
             {
-              backgroundColor: dish.visible
+              backgroundColor: dish.visible !== false
                 ? colors.primary
                 : colors.grayScale4,
             },
           ]}
           onPress={handleToggleVisibility}>
           <Ionicons
-            name={dish.visible ? 'eye' : 'eye-off'}
+            name={dish.visible !== false ? 'eye' : 'eye-off'}
             size={moderateScale(16)}
             color={colors.white}
           />
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[localStyles.actionButton, {backgroundColor: colors.blue}]}
+          style={[localStyles.actionButton, { backgroundColor: colors.blue }]}
           onPress={handleEdit}>
           <Ionicons
             name="create-outline"
@@ -133,7 +133,7 @@ const DishCard = ({
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[localStyles.actionButton, {backgroundColor: colors.redColor}]}
+          style={[localStyles.actionButton, { backgroundColor: colors.redColor }]}
           onPress={handleDelete}>
           <Ionicons
             name="trash-outline"

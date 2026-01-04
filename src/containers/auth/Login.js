@@ -1,26 +1,26 @@
 // Library Imports
-import {StyleSheet, View, TouchableOpacity, I18nManager} from 'react-native';
-import React, {memo, useEffect} from 'react';
-import {useSelector} from 'react-redux';
+import { StyleSheet, View, TouchableOpacity, I18nManager } from 'react-native';
+import React, { memo, useEffect } from 'react';
+import { useSelector } from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import RNRestart from 'react-native-restart';
 
 // Local Imports
 import strings from '../../i18n/strings';
-import {colors, styles} from '../../themes';
+import { colors, styles } from '../../themes';
 import ZText from '../../components/common/ZText';
-import {ACCESS_TOKEN, getHeight, moderateScale} from '../../common/constants';
+import { ACCESS_TOKEN, getHeight, moderateScale } from '../../common/constants';
 import ZSafeAreaView from '../../components/common/ZSafeAreaView';
-import {Google_Icon} from '../../assets/svgs';
+import { Google_Icon } from '../../assets/svgs';
 
-import {StackNav} from '../../navigation/NavigationKeys';
+import { StackNav } from '../../navigation/NavigationKeys';
 import ZInput from '../../components/common/ZInput';
-import {validateEmail, validatePassword} from '../../utils/validators';
+import { validateEmail, validatePassword } from '../../utils/validators';
 import ZKeyBoardAvoidWrapper from '../../components/common/ZKeyBoardAvoidWrapper';
 import ZButton from '../../components/common/ZButton';
-import {useMutation, useQueryClient} from 'react-query';
+import { useMutation, useQueryClient } from 'react-query';
 import request from '../../api/request';
-import {ALERT_TYPE, Toast} from 'react-native-alert-notification';
+import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
 import AppInitializer from '../../services/AppInitializer';
 import { OneSignal } from 'react-native-onesignal';
 import {
@@ -28,9 +28,9 @@ import {
   statusCodes,
 } from '@react-native-google-signin/google-signin';
 import ZHeader from '../../components/common/ZHeader';
-import {useStorage} from '../../utils/useStorage';
+import { useStorage } from '../../utils/useStorage';
 
-const RenderSocialBtn = memo(({item, index}) => {
+const RenderSocialBtn = memo(({ item, index }) => {
   return (
     <>
       <TouchableOpacity
@@ -51,7 +51,7 @@ const RenderSocialBtn = memo(({item, index}) => {
   );
 });
 
-const Login = ({navigation}) => {
+const Login = ({ navigation }) => {
   const colors = useSelector(state => state.theme.theme);
   const queryClient = useQueryClient();
   const [_, setAccessToken] = useStorage(ACCESS_TOKEN);
@@ -61,7 +61,7 @@ const Login = ({navigation}) => {
   const onPressSignInWithGoogle = async () => {
     try {
       await GoogleSignin.hasPlayServices();
-      const {user} = await GoogleSignin.signIn();
+      const { user } = await GoogleSignin.signIn();
       // Use the information as needed
       await mutate(
         {
@@ -80,7 +80,7 @@ const Login = ({navigation}) => {
             await queryClient.clear();
             navigation.reset({
               index: 0,
-              routes: [{name: StackNav.TabBar}],
+              routes: [{ name: StackNav.TabBar }],
             });
           },
           onError: () => {
@@ -152,7 +152,7 @@ const Login = ({navigation}) => {
   GoogleSignin.configure({
     // Add your web client ID here
     webClientId:
-      '461220795216-310np2q6hf96uurinsk99ulbet2a9jf3.apps.googleusercontent.com',
+      '366063482945-m3nacq9l697asg8f6ss2tabvt05i03d6.apps.googleusercontent.com',
     offlineAccess: true,
     scopes: [
       'profile',
@@ -165,7 +165,7 @@ const Login = ({navigation}) => {
     return request.post('/user/login', data);
   };
 
-  const {isLoading, mutate} = useMutation(login, {
+  const { isLoading, mutate } = useMutation(login, {
     onError: err => {
       Toast.show({
         type: ALERT_TYPE.DANGER,
@@ -193,12 +193,12 @@ const Login = ({navigation}) => {
   }, [email, password, emailError, passwordError]);
 
   const onChangedEmail = val => {
-    const {msg} = validateEmail(val.trim());
+    const { msg } = validateEmail(val.trim());
     setEmail(val.trim());
     setEmailError(msg);
   };
   const onChangedPassword = val => {
-    const {msg} = validatePassword(val.trim());
+    const { msg } = validatePassword(val.trim());
     setPassword(val.trim());
     setPasswordError(msg);
   };
@@ -261,7 +261,7 @@ const Login = ({navigation}) => {
           await queryClient.clear();
           navigation.reset({
             index: 0,
-            routes: [{name: StackNav.TabBar}],
+            routes: [{ name: StackNav.TabBar }],
           });
         },
       },
@@ -307,7 +307,7 @@ const Login = ({navigation}) => {
             insideLeftIcon={() => <EmailIcon />}
             toGetTextFieldValue={onChangedEmail}
             inputContainerStyle={[
-              {backgroundColor: colors.inputBg},
+              { backgroundColor: colors.inputBg },
               localStyles.inputContainerStyle,
               emailInputStyle,
             ]}
@@ -324,7 +324,7 @@ const Login = ({navigation}) => {
             insideLeftIcon={() => <PasswordIcon />}
             toGetTextFieldValue={onChangedPassword}
             inputContainerStyle={[
-              {backgroundColor: colors.inputBg},
+              { backgroundColor: colors.inputBg },
               localStyles.inputContainerStyle,
               passwordInputStyle,
             ]}
@@ -342,7 +342,7 @@ const Login = ({navigation}) => {
             color={colors.white}
             containerStyle={[
               localStyles.signBtnContainer,
-              isSubmitDisabled && {opacity: 0.5},
+              isSubmitDisabled && { opacity: 0.5 },
             ]}
             onPress={onPressSignWithPassword}
             disabled={isSubmitDisabled}
@@ -400,10 +400,10 @@ const Login = ({navigation}) => {
             </ZText>
           </TouchableOpacity>
           <View
-            style={{flexDirection: 'row', alignSelf: 'center', marginTop: 100}}>
+            style={{ flexDirection: 'row', alignSelf: 'center', marginTop: 100 }}>
             <TouchableOpacity
               onPress={onPressEnglish}
-              style={[localStyles.signUpContainer, {marginRight: 10}]}>
+              style={[localStyles.signUpContainer, { marginRight: 10 }]}>
               <ZText
                 type={'s14'}
                 color={I18nManager.isRTL ? colors.textColor : colors.primary}>

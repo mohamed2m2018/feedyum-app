@@ -8,18 +8,18 @@ import {
 } from 'react-native';
 import React from 'react';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {useSelector} from 'react-redux';
-import {useNavigation} from '@react-navigation/native';
+import { useSelector } from 'react-redux';
+import { useNavigation } from '@react-navigation/native';
 import millify from 'millify';
 
 // Local import
 import images from '../assets/images';
-import {getHeight, moderateScale} from '../common/constants';
+import { getHeight, moderateScale } from '../common/constants';
 import ZText from '../components/common/ZText';
-import {styles} from '../themes';
-import {StackNav} from '../navigation/NavigationKeys';
+import { styles } from '../themes';
+import { StackNav } from '../navigation/NavigationKeys';
 import request from '../api/request';
-import {useQueryClient} from 'react-query';
+import { useQueryClient } from 'react-query';
 import strings from '../i18n/strings';
 import { optimizeImageUrl, ImagePresets } from '../utils/imageOptimizer';
 
@@ -42,25 +42,25 @@ const ReelComponent = ({
     try {
       setisLoadingSomething(true);
       await request.delete(`story/deleteById/${id}`);
-      
+
       // Invalidate all relevant queries to refresh the UI
       queryClient.invalidateQueries('stories');
       queryClient.invalidateQueries('user');
-      await queryClient.invalidateQueries({queryKey: 'profile-stories'});
-      await queryClient.invalidateQueries({queryKey: 'profile-reviews'});
-      queryClient.invalidateQueries({queryKey: 'stories_following'});
-      queryClient.invalidateQueries({queryKey: 'search_user'});
-      queryClient.invalidateQueries({queryKey: 'followStatistics'});
-      
+      await queryClient.invalidateQueries({ queryKey: 'profile-stories' });
+      await queryClient.invalidateQueries({ queryKey: 'profile-reviews' });
+      queryClient.invalidateQueries({ queryKey: 'stories_following' });
+      queryClient.invalidateQueries({ queryKey: 'search_user' });
+      queryClient.invalidateQueries({ queryKey: 'followStatistics' });
+
       setisLoadingSomething(false);
-      
+
       // Show success feedback
-      Alert.alert('Success', 
+      Alert.alert('Success',
         item?.reviewMode ? 'Review deleted successfully' : 'Post deleted successfully'
       );
     } catch (error) {
       setisLoadingSomething(false);
-Alert.alert('Error', 
+      Alert.alert('Error',
         item?.reviewMode ? 'Failed to delete review. Please try again.' : 'Failed to delete post. Please try again.'
       );
     }
@@ -100,16 +100,16 @@ Alert.alert('Error',
         source={
           reelUrl
             ? {
-                uri: optimizeImageUrl(
-                  item?.poster || item?.avatarUri || reelUrl,
-                  ImagePresets.REEL_POSTER
-                ),
-              }
+              uri: optimizeImageUrl(
+                item?.poster || item?.avatarUri || reelUrl,
+                ImagePresets.REEL_POSTER
+              ),
+            }
             : images.post
         }
         style={localStyles.postImgStyle}
         resizeMode="cover"
-        imageStyle={{borderRadius: moderateScale(10)}}>
+        imageStyle={{ borderRadius: moderateScale(10) }}>
         {!!isPlay && (
           <View style={localStyles.playIconStyle}>
             <Ionicons
@@ -184,7 +184,7 @@ Alert.alert('Error',
       )}
 
       {/* Review Badge */}
-      {item?.reviewMode && (
+      {item?.reviewMode && !isDeleteAllowed && (
         <View style={localStyles.reviewBadge}>
           <Ionicons
             name="star"
@@ -198,7 +198,7 @@ Alert.alert('Error',
       )}
 
       {/* Rating Badge for Reviews */}
-      {item?.reviewMode && item?.rating && (
+      {item?.reviewMode && item?.rating && !isDeleteAllowed && (
         <View style={localStyles.ratingBadge}>
           <ZText type="B12" color={colors.white}>
             {item.rating}
@@ -213,25 +213,25 @@ Alert.alert('Error',
       )}
 
       <View style={styles.textContainer}>
-        <ZText style={[localStyles.titleText, {color: colors.textColor}]} numberOfLines={2}>
+        <ZText style={[localStyles.titleText, { color: colors.textColor }]} numberOfLines={2}>
           {item?.title}
         </ZText>
         {!!item?.price && (
-          <ZText style={[localStyles.priceText, {color: colors.textColor}]}>
+          <ZText style={[localStyles.priceText, { color: colors.textColor }]}>
             {item?.price} LE
           </ZText>
         )}
-        {item?.reviewMode && (
+        {item?.reviewMode && !isDeleteAllowed && (
           <View style={localStyles.ratingContainer}>
             {[1, 2, 3, 4, 5].map((star) => (
               <Ionicons
                 key={star}
-                name={item?.rating && item.rating > 0 
+                name={item?.rating && item.rating > 0
                   ? (star <= item.rating ? 'star' : 'star-outline')
                   : 'star'
                 }
                 size={moderateScale(12)}
-                color={item?.rating && item.rating > 0 
+                color={item?.rating && item.rating > 0
                   ? (star <= item.rating ? '#FFD700' : colors.grayScale5)
                   : (colors.grayScale4 || "#CCCCCC")
                 }

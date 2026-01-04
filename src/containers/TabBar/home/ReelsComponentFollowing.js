@@ -1,36 +1,36 @@
 // Libraries import
-import {Platform, StyleSheet, TouchableOpacity, View} from 'react-native';
-import React, {useCallback, useEffect, useRef, useState} from 'react';
+import { Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Description from '../../../components/models/Descriptions';
 import Locations from '../../../components/models/Locations';
 import Comment from '../../../components/models/Comment';
-import {useSelector} from 'react-redux';
+import { useSelector } from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import {useIsFocused, useNavigation} from '@react-navigation/native';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
 
 // Local import
-import {styles} from '../../../themes';
+import { styles } from '../../../themes';
 import {
   getHeight,
   isAndroid,
   moderateScale,
   screenFullHeight,
 } from '../../../common/constants';
-import {StackNav, TabNav} from '../../../navigation/NavigationKeys';
-import {useInfiniteQuery, useMutation} from 'react-query';
+import { StackNav, TabNav } from '../../../navigation/NavigationKeys';
+import { useInfiniteQuery, useMutation } from 'react-query';
 import ReelComponent from './ReelComponent';
 import request from '../../../api/request';
-import {BannerAd, BannerAdSize, TestIds} from 'react-native-google-mobile-ads';
+import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
 import ReelsList from './ReelsList';
 import strings from '../../../i18n/strings';
-import {useLocation} from '../../../navigation/locationContext';
+import { useLocation } from '../../../navigation/locationContext';
 import ZButton from '../../../components/common/ZButton';
-import {useStorage} from '../../../utils/useStorage';
+import { useStorage } from '../../../utils/useStorage';
 import { useOptimizedFollowingReels } from '../../../hooks/useOptimizedQueries';
 import { optimizeImageUrl, prefetchImages } from '../../../utils/imageOptimizer';
 
-export default function ReelsComponent({amIFocused}) {
+export default function ReelsComponent({ amIFocused }) {
   const colors = useSelector(state => state.theme.theme);
   const isFocused = useIsFocused() && amIFocused;
   const commentSheetRef = useRef('');
@@ -49,6 +49,7 @@ export default function ReelsComponent({amIFocused}) {
   const [selectedGov, setselectedGov] = useState('');
   const [categoryIds, setcategoryIds] = useState([]);
   const [user] = useStorage('user');
+  const [isCommentOpen, setIsCommentOpen] = useState(false);
 
   const location = useLocation();
 
@@ -67,7 +68,7 @@ export default function ReelsComponent({amIFocused}) {
     isFetching,
   } = useInfiniteQuery(
     ['stories_following', user?._id, categoryIds?.toLocaleString(), location?.latitude, location?.longitude],
-    ({pageParam = 1}) => fetchReelsFollowing(pageParam),
+    ({ pageParam = 1 }) => fetchReelsFollowing(pageParam),
     {
       retry: 0,
       getNextPageParam: (lastPage, allPages) => {
@@ -79,7 +80,7 @@ export default function ReelsComponent({amIFocused}) {
       },
       onSuccess: res => {
         if (res?.pageParams?.length === 1) {
-          flatListRef.current?.scrollToOffset({offset: 0});
+          flatListRef.current?.scrollToOffset({ offset: 0 });
         }
         if (!res?.pages?.[0]?.data) {
           // Check if data exists
@@ -91,20 +92,20 @@ export default function ReelsComponent({amIFocused}) {
         for (const page of res.pages) {
           // Skip pages with missing or invalid data
           if (!page?.data?.stories) continue;
-          
+
           for (const story of page.data.stories) {
             allStoriesWithAds.push(story);
             storyCounter++;
 
             if (storyCounter % 5 === 0) {
-              allStoriesWithAds.push({_id: `ad-${storyCounter}`, type: 'ad'});
+              allStoriesWithAds.push({ _id: `ad-${storyCounter}`, type: 'ad' });
             }
           }
         }
 
         // Ensure at least one ad even for less than 5 stories
         if (allStoriesWithAds.length > 0 && storyCounter < 5) {
-          allStoriesWithAds.push({_id: 'ad-end', type: 'ad'});
+          allStoriesWithAds.push({ _id: 'ad-end', type: 'ad' });
         }
 
         if (allStoriesWithAds.length > 1) {
@@ -122,7 +123,7 @@ export default function ReelsComponent({amIFocused}) {
 
   useEffect(() => {
     setExtraData(e => !e);
-  }, [activeVideoIndex, isFocused]);
+  }, [activeVideoIndex, isFocused, isCommentOpen]);
 
   const onPressSearch = () => navigation.navigate(TabNav.Search);
 
@@ -131,8 +132,14 @@ export default function ReelsComponent({amIFocused}) {
     locationSheetRef.current?.show();
   };
 
+  const onPressComment = item => {
+    setSelectedPostId(item?._id);
+    if (setIsCommentOpen) setIsCommentOpen(true);
+    commentSheetRef.current?.show();
+  };
+
   const renderReelComponent = useCallback(
-    ({item, index}) => {
+    ({ item, index }) => {
       return (
         <ReelComponent
           item={item}
@@ -149,14 +156,16 @@ export default function ReelsComponent({amIFocused}) {
           setSelectedPostId={setSelectedPostId}
           commentSheetRef={commentSheetRef}
           setselectedDescription={setselectedDescription}
+          isCommentOpen={isCommentOpen}
+          setIsCommentOpen={setIsCommentOpen}
           descriptionSheetRef={descriptionSheetRef}
         />
       );
     },
-    [layoutHeight, user, activeVideoIndex, isFocused],
+    [layoutHeight, user, activeVideoIndex, isFocused, isCommentOpen],
   );
 
-  const viewConfig = useRef({viewAreaCoveragePercentThreshold: 50}).current;
+  const viewConfig = useRef({ viewAreaCoveragePercentThreshold: 50 }).current;
 
   const updateViews = async s =>
     request.post('/views', {
@@ -166,7 +175,7 @@ export default function ReelsComponent({amIFocused}) {
 
   const updateViewsMutation = useMutation(updateViews);
 
-  const viewableItemsChanged = useRef(({viewableItems}) => {
+  const viewableItemsChanged = useRef(({ viewableItems }) => {
     if (viewableItems?.length) {
       setActiveVideoIndex(viewableItems[0].index);
     }
@@ -180,7 +189,7 @@ export default function ReelsComponent({amIFocused}) {
   const onSetLayout = e => setLayoutHeight(e.nativeEvent.layout.height);
 
   return (
-    <View style={[localStyles.outerContainer, {color: colors.backgroundColor}]}>
+    <View style={[localStyles.outerContainer, { color: colors.backgroundColor }]}>
       {filteredData?.[activeVideoIndex]?.type !== 'ad' && (
         <View style={localStyles.headerContainer3}>
           <ZButton
@@ -194,7 +203,7 @@ export default function ReelsComponent({amIFocused}) {
             title={
               filteredData?.[activeVideoIndex]?.kmAway && filteredData?.[activeVideoIndex]?.kmAway !== null
                 ? filteredData?.[activeVideoIndex]?.kmAway?.toFixed(2) +
-                  strings.kmAway
+                strings.kmAway
                 : strings.clickbranches
             }
           />
@@ -256,12 +265,15 @@ export default function ReelsComponent({amIFocused}) {
         isFetchingNextPage={isFetchingNextPage}
         hasNextPage={hasNextPage}
         fetchNextPage={fetchNextPage}
+        isCommentOpen={isCommentOpen}
       />
 
       <Comment
         SheetRef={commentSheetRef}
         postId={selectedPostId || filteredData?.[0]?._id}
         currentUserId={user?._id}
+        onOpen={() => setIsCommentOpen(true)}
+        onClose={() => setIsCommentOpen(false)}
       />
       <Description
         SheetRef={descriptionSheetRef}

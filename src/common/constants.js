@@ -1,5 +1,6 @@
-import {Dimensions, Platform, StatusBar} from 'react-native';
+import { Dimensions, Platform, StatusBar } from 'react-native';
 import strings from '../i18n/strings';
+export const API_BASE_URL = 'http://192.168.1.104:4800/api';
 
 let iPhoneX = screenHeight === 812 ? true : false;
 
@@ -42,9 +43,9 @@ export const ACCESS_TOKEN = 'ACCESS_TOKEN';
 export const REGISTRATION_COMPLETED = 'REGISTRATION_COMPLETED';
 
 export const GenderData = [
-  {label: strings.male, value: 'male'},
-  {label: strings.female, value: 'female'},
-  {label: strings.other, value: 'other'},
+  { label: strings.male, value: 'male' },
+  { label: strings.female, value: 'female' },
+  { label: strings.other, value: 'other' },
 ];
 
 export function getVideoExtension(url) {

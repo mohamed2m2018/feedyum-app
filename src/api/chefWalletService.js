@@ -1,63 +1,35 @@
-import { API_BASE_URL } from '../config/constants';
+import request from './request';
 
 class ChefWalletService {
-  constructor() {
-    this.baseURL = API_BASE_URL || 'http://localhost:4800/api';
-  }
-
-  async getWalletInfo(chefId, userToken) {
+  async getWalletInfo(chefId) {
     try {
-      const url = chefId 
-        ? `${this.baseURL}/chef-wallet/info/${chefId}`
-        : `${this.baseURL}/chef-wallet/info`;
-        
-      const response = await fetch(url, {
-        headers: {
-          'Authorization': `Bearer ${userToken}`,
-        },
-      });
-
-      const data = await response.json();
-      return data;
+      const url = chefId ? `/chef-wallet/info/${chefId}` : '/chef-wallet/info';
+      const response = await request.get(url);
+      return response.data;
     } catch (error) {
-throw new Error('Failed to fetch wallet information');
+      throw error;
     }
   }
 
-  async checkPaymentRequired(userToken) {
+  async checkPaymentRequired() {
     try {
-      const response = await fetch(`${this.baseURL}/chef-wallet/payment-required`, {
-        headers: {
-          'Authorization': `Bearer ${userToken}`,
-        },
-      });
-
-      const data = await response.json();
-      return data;
+      const response = await request.get('/chef-wallet/payment-required');
+      return response.data;
     } catch (error) {
-throw new Error('Failed to check payment status');
+      throw error;
     }
   }
 
-  async processPayment(amount, paymentMethod, transactionId, userToken) {
+  async processPayment(amount, paymentMethod, transactionId) {
     try {
-      const response = await fetch(`${this.baseURL}/chef-wallet/payment`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${userToken}`,
-        },
-        body: JSON.stringify({
-          amount,
-          paymentMethod,
-          transactionId,
-        }),
+      const response = await request.post('/chef-wallet/payment', {
+        amount,
+        paymentMethod,
+        transactionId,
       });
-
-      const data = await response.json();
-      return data;
+      return response.data;
     } catch (error) {
-throw new Error('Failed to process payment');
+      throw error;
     }
   }
 }

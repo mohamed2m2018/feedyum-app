@@ -7,33 +7,34 @@ import {
   TouchableOpacity,
   View,
   RefreshControl,
+  Alert,
 } from 'react-native';
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
 
 // Local import
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
-import {useSelector} from 'react-redux';
-import {styles} from '../../../themes';
-import {getHeight, moderateScale} from '../../../common/constants';
+import { useSelector } from 'react-redux';
+import { styles } from '../../../themes';
+import { getHeight, moderateScale } from '../../../common/constants';
 import ZText from '../../../components/common/ZText';
-import {StackNav, TabNav} from '../../../navigation/NavigationKeys';
+import { StackNav, TabNav } from '../../../navigation/NavigationKeys';
 import strings from '../../../i18n/strings';
 import images from '../../../assets/images';
 import ZButton from '../../../components/common/ZButton';
-import {Inbox_Dark} from '../../../assets/svgs';
+import { Inbox_Dark } from '../../../assets/svgs';
 import ReelComponent from '../../../components/ReelComponent';
-import {useQuery} from 'react-query';
+import { useQuery } from 'react-query';
 import request from '../../../api/request';
-import {Toast, ALERT_TYPE} from 'react-native-alert-notification';
-import {useHandleAuth} from '../../../utils/useHandleAuth';
-import {useIsFocused} from '@react-navigation/native';
-import {useScreen} from '../../../navigation/screenContext';
+import { Toast, ALERT_TYPE } from 'react-native-alert-notification';
+import { useHandleAuth } from '../../../utils/useHandleAuth';
+import { useIsFocused } from '@react-navigation/native';
+import { useScreen } from '../../../navigation/screenContext';
 import ZLoader from '../../../components/common/ZLoader';
 
-export default function Profile({navigation}) {
+export default function Profile({ navigation }) {
   const UserDetail = (postsNo, followersNo, followingNo, viewsNo) => [
     {
       title: strings.post,
@@ -72,7 +73,7 @@ export default function Profile({navigation}) {
 
   const [isLoadingSomething, setisLoadingSomething] = useState();
 
-  const {data, refetch} = useQuery('user', () => request.get('/user'), {retry: 1});
+  const { data, refetch } = useQuery('user', () => request.get('/user'), { retry: 1 });
 
   const user = data?.data?.user;
   const getUserViews = () => request.get(`/views/user/${user?._id}`);
@@ -80,12 +81,12 @@ export default function Profile({navigation}) {
   const getFollowStatistics = () =>
     request.get(`/follow/statistics/${user?._id}`);
 
-  const {data: followStatistics, refetch: refetchFollowStats} = useQuery(
+  const { data: followStatistics, refetch: refetchFollowStats } = useQuery(
     ['followStatistics', user?._id],
     () => getFollowStatistics(user?._id),
   );
 
-  const {data: views, refetch: refetchViews} = useQuery(['userViews', user?._id], getUserViews, {
+  const { data: views, refetch: refetchViews } = useQuery(['userViews', user?._id], getUserViews, {
     refetchInterval: 30000,
   });
 
@@ -99,17 +100,20 @@ export default function Profile({navigation}) {
     });
 
   const fetchReviewPosts = () =>
+    // If user is a chef, fetch reviews RECEIVED (reviews of their dishes/menu)
+    // If not a chef, fetch reviews AUTHORED (reviews they wrote)
     request.get(`/story/author?id=${user?._id}`, {
       params: {
         limit: 10,
         page: reviewsPage,
-        reviewsOnly: true, // Only get review posts
+        reviewsOnly: user?.type !== 'chef', // Get authored reviews for regular users
+        receivedReviews: user?.type === 'chef', // Get received reviews for chefs
       },
     });
 
   const [storiesData, setstoriesData] = useState([]);
   const [reviewsData, setReviewsData] = useState([]);
-  
+
   const {
     data: queryData,
     isLoading,
@@ -162,6 +166,45 @@ export default function Profile({navigation}) {
     },
   });
 
+  const onDeletePost = (id) => {
+    Alert.alert('Delete Post', 'Are you sure you want to delete this post?', [
+      {
+        text: 'Cancel',
+        style: 'cancel',
+      },
+      {
+        text: 'Delete',
+        onPress: async () => {
+          try {
+            setisLoadingSomething(true);
+            const { data } = await request.delete(`/story/${id}`);
+            if (data?.success) {
+              if (selectedTab === 'posts') {
+                refetchPosts();
+              } else {
+                refetchReviews();
+              }
+              Toast.show({
+                type: ALERT_TYPE.SUCCESS,
+                title: strings?.success || 'Success',
+                textBody: 'Post deleted successfully',
+              });
+            }
+          } catch (error) {
+            Toast.show({
+              type: ALERT_TYPE.DANGER,
+              title: strings?.error || 'Error',
+              textBody: error?.response?.data?.message || 'Something went wrong',
+            });
+          } finally {
+            setisLoadingSomething(false);
+          }
+        },
+        style: 'destructive',
+      },
+    ]);
+  };
+
   const onRefresh = async () => {
     setRefreshing(true);
     try {
@@ -187,7 +230,7 @@ export default function Profile({navigation}) {
   const onPressSetting = () => navigation.navigate(StackNav.Setting);
 
   // eslint-disable-next-line react/no-unstable-nested-components
-  const RenderUserDetail = ({item}) => {
+  const RenderUserDetail = ({ item }) => {
     return (
       <TouchableOpacity onPress={item.onPress} style={[styles.itemsCenter, localStyles.statsContainer]}>
         <ZText type="b24" align={'center'} style={localStyles.statsNumber}>
@@ -213,16 +256,16 @@ export default function Profile({navigation}) {
           />
         </TouchableOpacity>
       </View>
-      
+
       <View style={styles.itemsCenter}>
         <TouchableOpacity onPress={() => onPressEditProfile(false)}>
           <Image
             source={
               user?.avatar
-                ? {uri: user?.avatar}
+                ? { uri: user?.avatar }
                 : colors.dark
-                ? images.userDark
-                : images.userLight
+                  ? images.userDark
+                  : images.userLight
             }
             style={localStyles.userImage}
           />
@@ -265,7 +308,7 @@ export default function Profile({navigation}) {
           </TouchableOpacity>
         </View>
       </View>
-      
+
       <View style={[styles.flexRow, styles.justifyEvenly]}>
         {UserDetail(
           user?.postsNo,
@@ -276,10 +319,10 @@ export default function Profile({navigation}) {
           <RenderUserDetail item={item} key={index} />
         ))}
       </View>
-      
+
       <View style={localStyles.actionButtonsContainer}>
         <TouchableOpacity
-          style={[localStyles.iconButton, {borderColor: colors.primary}]}
+          style={[localStyles.iconButton, { borderColor: colors.primary }]}
           onPress={() => onPressEditProfile(false)}
         >
           <MaterialIcon
@@ -293,7 +336,7 @@ export default function Profile({navigation}) {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[localStyles.iconButton, {borderColor: colors.primary}]}
+          style={[localStyles.iconButton, { borderColor: colors.primary }]}
           onPress={() => navigation.navigate(StackNav.ChatList)}
         >
           <Ionicons
@@ -308,7 +351,7 @@ export default function Profile({navigation}) {
 
         {user?.type === 'chef' && (
           <TouchableOpacity
-            style={[localStyles.iconButton, localStyles.primaryButton, {backgroundColor: colors.primary, borderColor: colors.primary}]}
+            style={[localStyles.iconButton, localStyles.primaryButton, { backgroundColor: colors.primary, borderColor: colors.primary }]}
             onPress={() => navigation.navigate(StackNav.ChefDashboard)}
           >
             <MaterialIcon
@@ -324,7 +367,7 @@ export default function Profile({navigation}) {
 
         {/* WALLET BUTTON */}
         <TouchableOpacity
-          style={[localStyles.iconButton, {borderColor: colors.primary}]}
+          style={[localStyles.iconButton, { borderColor: colors.primary }]}
           onPress={() => navigation.navigate(StackNav.Wallet)}
         >
           <Ionicons
@@ -343,15 +386,15 @@ export default function Profile({navigation}) {
         <LinearGradient
           colors={colors.dark ? ['#1C1C1E', '#2C2C2E'] : ['#F8F9FA', '#FFFFFF']}
           style={localStyles.tabBar}
-          start={{x: 0, y: 0}}
-          end={{x: 1, y: 0}}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
         >
           <TouchableOpacity
             style={[
               localStyles.tab,
               selectedTab === 'posts' && [
                 localStyles.activeTab,
-                {backgroundColor: colors.primary}
+                { backgroundColor: colors.primary }
               ]
             ]}
             onPress={() => setSelectedTab('posts')}
@@ -361,8 +404,8 @@ export default function Profile({navigation}) {
               <LinearGradient
                 colors={[colors.primary, colors.primary + '90']}
                 style={localStyles.activeTabGradient}
-                start={{x: 0, y: 0}}
-                end={{x: 1, y: 1}}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
               />
             )}
             <Ionicons
@@ -385,7 +428,7 @@ export default function Profile({navigation}) {
               {strings.posts}
             </ZText>
             {selectedTab === 'posts' && (
-              <View style={[localStyles.tabIndicator, {backgroundColor: colors.white}]} />
+              <View style={[localStyles.tabIndicator, { backgroundColor: colors.white }]} />
             )}
           </TouchableOpacity>
 
@@ -394,7 +437,7 @@ export default function Profile({navigation}) {
               localStyles.tab,
               selectedTab === 'reviews' && [
                 localStyles.activeTab,
-                {backgroundColor: colors.primary}
+                { backgroundColor: colors.primary }
               ]
             ]}
             onPress={() => setSelectedTab('reviews')}
@@ -404,8 +447,8 @@ export default function Profile({navigation}) {
               <LinearGradient
                 colors={[colors.primary, colors.primary + '90']}
                 style={localStyles.activeTabGradient}
-                start={{x: 0, y: 0}}
-                end={{x: 1, y: 1}}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
               />
             )}
             <Ionicons
@@ -428,7 +471,7 @@ export default function Profile({navigation}) {
               {strings.reviews}
             </ZText>
             {selectedTab === 'reviews' && (
-              <View style={[localStyles.tabIndicator, {backgroundColor: colors.white}]} />
+              <View style={[localStyles.tabIndicator, { backgroundColor: colors.white }]} />
             )}
           </TouchableOpacity>
         </LinearGradient>
@@ -436,10 +479,10 @@ export default function Profile({navigation}) {
     </View>
   );
 
-  const {isGuest, handleAuthToast} = useHandleAuth();
+  const { isGuest, handleAuthToast } = useHandleAuth();
 
   const isFocused = useIsFocused();
-  const {updateCurrentScreen} = useScreen();
+  const { updateCurrentScreen } = useScreen();
 
   useEffect(() => {
     if (isFocused) {
@@ -456,7 +499,7 @@ export default function Profile({navigation}) {
   const currentFetching = selectedTab === 'posts' ? isFetching : reviewsFetching;
   const currentQueryData = selectedTab === 'posts' ? queryData : reviewQueryData;
 
-  const renderPostItem = ({item, index}) => (
+  const renderPostItem = ({ item, index }) => (
     <View style={localStyles.gridItem}>
       <ReelComponent
         data={item?.views}
@@ -476,16 +519,17 @@ export default function Profile({navigation}) {
         item={item}
         isPlay={!item?.avatarUri}
         isDeleteAllowed={true}
+        onDelete={onDeletePost}
       />
     </View>
   );
 
   const emptyComponent = () => (
     <View style={localStyles.emptyContainer}>
-      <Ionicons 
-        name={selectedTab === 'posts' ? 'grid-outline' : 'star-outline'} 
-        size={moderateScale(64)} 
-        color={colors.grayScale4} 
+      <Ionicons
+        name={selectedTab === 'posts' ? 'grid-outline' : 'star-outline'}
+        size={moderateScale(64)}
+        color={colors.grayScale4}
       />
       <ZText
         style={localStyles.emptyTitle}
@@ -497,7 +541,7 @@ export default function Profile({navigation}) {
         style={localStyles.emptySubtitle}
         type={'M14'}
         color={colors.grayScale5}>
-        {selectedTab === 'posts' 
+        {selectedTab === 'posts'
           ? strings.startSharingCulinaryCreations
           : strings.shareYourFoodExperiences}
       </ZText>
@@ -523,7 +567,7 @@ export default function Profile({navigation}) {
           {isLoadingSomething && (
             <ZLoader overlay={true} absolute top={440} left={-10} />
           )}
-          
+
           <FlatList
             data={currentData}
             renderItem={renderPostItem}
@@ -541,9 +585,9 @@ export default function Profile({navigation}) {
             onEndReachedThreshold={0.9}
             ListFooterComponent={
               currentFetching && !currentLoading ? (
-                <ActivityIndicator 
-                  size={'large'} 
-                  color={colors.primary} 
+                <ActivityIndicator
+                  size={'large'}
+                  color={colors.primary}
                   style={localStyles.loadingIndicator}
                 />
               ) : null
@@ -682,7 +726,7 @@ const localStyles = StyleSheet.create({
     minWidth: moderateScale(80),
   },
   activeTab: {
-    transform: [{scale: 1.02}],
+    transform: [{ scale: 1.02 }],
   },
   activeTabGradient: {
     position: 'absolute',

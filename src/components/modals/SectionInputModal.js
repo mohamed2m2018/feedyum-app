@@ -1,4 +1,4 @@
-import React, {useState, useMemo, useEffect} from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -11,14 +11,14 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import {useSelector} from 'react-redux';
+import { useSelector } from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {moderateScale, getHeight} from '../../common/constants';
+import { moderateScale, getHeight } from '../../common/constants';
 import ZText from '../common/ZText';
 import ZButton from '../common/ZButton';
 import strings from '../../i18n/strings';
 
-const {height: screenHeight} = Dimensions.get('window');
+const { height: screenHeight } = Dimensions.get('window');
 
 const SectionInputModal = ({
   visible,
@@ -89,9 +89,9 @@ const SectionInputModal = ({
     return iconMap[sectionName] || '📂';
   };
 
-  const renderSectionItem = ({item, index}) => {
+  const renderSectionItem = ({ item, index }) => {
     const isSelected = customSection === item.name;
-    
+
     return (
       <TouchableOpacity
         style={[
@@ -112,38 +112,38 @@ const SectionInputModal = ({
                   backgroundColor: isSelected ? colors.primary + '30' : colors.primary + '10',
                 }
               ]}>
-              <ZText 
-                type="B16" 
+              <ZText
+                type="B16"
                 color={colors.primary}
                 style={styles.sectionEmoji}>
                 {getSectionIcon(item.name)}
               </ZText>
             </View>
           </View>
-          
+
           <View style={styles.sectionTextContainer}>
-            <ZText 
-              type={isSelected ? "B16" : "M16"} 
+            <ZText
+              type={isSelected ? "B16" : "M16"}
               color={isSelected ? colors.primary : colors.textColor}
               style={styles.sectionName}>
               {item.name}
             </ZText>
             {item.description && (
-              <ZText 
-                type="R12" 
+              <ZText
+                type="R12"
                 color={colors.grayScale7}
                 style={styles.sectionDescription}>
                 {item.description}
               </ZText>
             )}
           </View>
-          
+
           {isSelected && (
             <View style={styles.selectedIndicator}>
-              <Ionicons 
-                name="checkmark-circle" 
-                size={moderateScale(20)} 
-                color={colors.primary} 
+              <Ionicons
+                name="checkmark-circle"
+                size={moderateScale(20)}
+                color={colors.primary}
               />
             </View>
           )}
@@ -158,31 +158,31 @@ const SectionInputModal = ({
       transparent
       animationType="none"
       onRequestClose={onClose}>
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         style={styles.keyboardContainer}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-        <View style={[styles.overlay, {backgroundColor: colors.black + '50'}]}>
+        behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}>
+        <View style={[styles.overlay, { backgroundColor: colors.black + '50' }]}>
           <Animated.View
             style={[
               styles.modalContainer,
               {
                 backgroundColor: colors.backgroundColor,
-                transform: [{translateY: slideAnim}],
+                transform: [{ translateY: slideAnim }],
               }
             ]}>
             {/* Header */}
-            <View style={[styles.header, {borderBottomColor: colors.bColor}]}>
+            <View style={[styles.header, { borderBottomColor: colors.bColor }]}>
               <TouchableOpacity
                 style={styles.closeButton}
                 onPress={onClose}
-                hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
-                <Ionicons 
-                  name="close" 
-                  size={moderateScale(24)} 
-                  color={colors.grayScale7} 
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                <Ionicons
+                  name="close"
+                  size={moderateScale(24)}
+                  color={colors.grayScale7}
                 />
               </TouchableOpacity>
-              
+
               <View style={styles.headerTextContainer}>
                 <ZText type="B20" color={colors.textColor} style={styles.title}>
                   {title}
@@ -198,7 +198,7 @@ const SectionInputModal = ({
               <ZText type="M14" color={colors.textColor} style={styles.inputLabel}>
                 {strings.sectionName || "Section Name"}
               </ZText>
-              <View style={[styles.textInputContainer, {backgroundColor: colors.inputBg, borderColor: colors.bColor}]}>
+              <View style={[styles.textInputContainer, { backgroundColor: colors.inputBg, borderColor: colors.bColor }]}>
                 <TextInput
                   style={[
                     styles.textInput,
@@ -217,10 +217,10 @@ const SectionInputModal = ({
                   <TouchableOpacity
                     onPress={() => setCustomSection('')}
                     style={styles.clearInputButton}>
-                    <Ionicons 
-                      name="close-circle" 
-                      size={moderateScale(18)} 
-                      color={colors.grayScale7} 
+                    <Ionicons
+                      name="close-circle"
+                      size={moderateScale(18)}
+                      color={colors.grayScale7}
                     />
                   </TouchableOpacity>
                 )}
@@ -237,7 +237,7 @@ const SectionInputModal = ({
                   {filteredSections.length} {strings.sections || "sections"}
                 </ZText>
               </View>
-              
+
               {filteredSections.length > 0 ? (
                 <FlatList
                   data={filteredSections}
@@ -249,19 +249,19 @@ const SectionInputModal = ({
                 />
               ) : (
                 <View style={styles.emptyStateContainer}>
-                  <Ionicons 
-                    name="folder-outline" 
-                    size={moderateScale(48)} 
-                    color={colors.grayScale5} 
+                  <Ionicons
+                    name="folder-outline"
+                    size={moderateScale(48)}
+                    color={colors.grayScale5}
                   />
                   <ZText type="B16" color={colors.grayScale7} style={styles.emptyTitle}>
-                    {customSection.trim() ? 
-                      (strings.createNewSection || "Create new section") : 
+                    {customSection.trim() ?
+                      (strings.createNewSection || "Create new section") :
                       (strings.noSectionsFound || "No sections found")
                     }
                   </ZText>
                   <ZText type="R14" color={colors.grayScale5} style={styles.emptySubtitle}>
-                    {customSection.trim() ? 
+                    {customSection.trim() ?
                       (strings.newSectionWillBeCreated || "This will create a new section") :
                       (strings.startTypingSection || "Start typing to create a section")
                     }
@@ -271,14 +271,14 @@ const SectionInputModal = ({
             </View>
 
             {/* Action Buttons */}
-            <View style={[styles.buttonContainer, {borderTopColor: colors.bColor}]}>
+            <View style={[styles.buttonContainer, { borderTopColor: colors.bColor }]}>
               <View style={styles.buttonRow}>
                 <ZButton
                   title={strings.cancel}
                   color={colors.grayScale7}
                   textType="B16"
                   onPress={onClose}
-                  containerStyle={[styles.button, styles.cancelButton, {backgroundColor: colors.grayScale1}]}
+                  containerStyle={[styles.button, styles.cancelButton, { backgroundColor: colors.grayScale1 }]}
                 />
                 <ZButton
                   title={strings.confirm || "Confirm"}
@@ -287,7 +287,7 @@ const SectionInputModal = ({
                   onPress={handleConfirm}
                   disabled={!customSection.trim()}
                   containerStyle={[
-                    styles.button, 
+                    styles.button,
                     styles.confirmButton,
                     {
                       backgroundColor: customSection.trim() ? colors.primary : colors.grayScale5,

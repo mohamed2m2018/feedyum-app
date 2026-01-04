@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   I18nManager,
   Linking,
@@ -8,7 +8,7 @@ import {
   View,
   Animated,
 } from 'react-native';
-import {Image} from 'react-native';
+import { Image } from 'react-native';
 import {
   getHeight,
   isAndroid,
@@ -17,27 +17,27 @@ import {
   screenHeight,
 } from '../../../common/constants';
 import ZButton from '../../../components/common/ZButton';
-import {useSelector} from 'react-redux';
-import {VideoItem} from './VideoItem';
+import { useSelector } from 'react-redux';
+import { VideoItem } from './VideoItem';
 import ZText from '../../../components/common/ZText';
-import {styles} from '../../../themes';
+import { styles } from '../../../themes';
 import LinearGradient from 'react-native-linear-gradient';
 import images from '../../../assets/images';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Entypo from 'react-native-vector-icons/Entypo';
 import request from '../../../api/request';
-import {useMutation, useQuery, useQueryClient} from 'react-query';
+import { useMutation, useQuery, useQueryClient } from 'react-query';
 import millify from 'millify';
 import pluralize from 'pluralize';
 import Video from 'react-native-video';
 import Slider from '@react-native-community/slider';
 import Share from 'react-native-share';
 import FastImage from 'react-native-fast-image';
-import {useNavigation} from '@react-navigation/native';
-import {StackNav, TabNav} from '../../../navigation/NavigationKeys';
-import {AdView} from './ads/AdView';
+import { useNavigation } from '@react-navigation/native';
+import { StackNav, TabNav } from '../../../navigation/NavigationKeys';
+import { AdView } from './ads/AdView';
 import DoubleClick from 'react-native-double-tap';
-import {useAnalytics} from '@segment/analytics-react-native';
+import { useAnalytics } from '@segment/analytics-react-native';
 import AttachedDishesDisplay from '../../../components/common/AttachedDishesDisplay';
 import DeepLinkingService from '../../../services/DeepLinkingService';
 import ImageZoomModal from '../../../components/common/ImageZoomModal';
@@ -55,17 +55,19 @@ const ReelComponent = ({
   isFromReelsOne,
   setSelectedPostId,
   commentSheetRef,
-  setselectedDescription,
   descriptionSheetRef,
   isFocused,
+  isCommentOpen,
+  setIsCommentOpen,
 }) => {
   const colors = useSelector(state => state.theme.theme);
   const [indexState] = useState(index);
   const queryClient = useQueryClient();
   const [isMoreDescriptionSeen, setIsMoreDescriptionSeen] = useState(false);
-  const {track} = useAnalytics();
+  const { track } = useAnalytics();
   const onPressComment = () => {
     setSelectedPostId(item?._id);
+    if (setIsCommentOpen) setIsCommentOpen(true);
     commentSheetRef.current?.show();
   };
   useEffect(() => {
@@ -73,7 +75,7 @@ const ReelComponent = ({
       setSeekValueClick(0);
       setIsLike(false);
       setIsMoreDescriptionSeen(false);
-      setpaused({slider: false, paused: false});
+      setpaused({ slider: false, paused: false });
     }
   }, [indexState, index]);
 
@@ -95,7 +97,7 @@ const ReelComponent = ({
         ])
       );
       pulseAnimation.start();
-      
+
       return () => pulseAnimation.stop();
     }
   }, [item?.reviewMode, activeVideoIndex, index, pulseAnim]);
@@ -103,7 +105,7 @@ const ReelComponent = ({
   const [seekValueClick, setSeekValueClick] = useState(0);
   const [isOverlayVisible, setIsOverlayVisible] = useState(true);
 
-  
+
   // Animation for review badge pulse effect
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
@@ -158,15 +160,15 @@ const ReelComponent = ({
       removeLikeMutation.mutate(id);
     }
     if (isFromReelsOne) {
-      queryClient.invalidateQueries({queryKey: 'stories'});
-      queryClient.invalidateQueries({queryKey: 'stories_following'});
+      queryClient.invalidateQueries({ queryKey: 'stories' });
+      queryClient.invalidateQueries({ queryKey: 'stories_following' });
     }
   };
   const navigation = useNavigation();
 
   const [isLike, setIsLike] = useState(false);
   const [showImageZoom, setShowImageZoom] = useState(false);
-  
+
   const onPressProfile = (userName, userImage, id) => {
     if (id === data?.data?.user?._id) {
       navigation.navigate(TabNav.Profile);
@@ -182,7 +184,7 @@ const ReelComponent = ({
   const videoRef = useRef();
   const [durationInSeconds, setDurationInSeconds] = useState(0);
 
-  const [paused, setpaused] = useState({slider: true, paused: true});
+  const [paused, setpaused] = useState({ slider: true, paused: true });
 
   useEffect(() => {
     if (layoutHeight) {
@@ -216,7 +218,7 @@ const ReelComponent = ({
     };
 
     Share.open(shareOptions).catch(err => {
-      err && (() => {})();
+      err && (() => { })();
     });
   };
 
@@ -236,23 +238,23 @@ const ReelComponent = ({
 
     item?.linkToGo
       ? Linking.openURL(
-          item?.linkToGo?.includes('http') ||
-            item?.linkToGo?.toLocaleLowerCase()?.includes('wwww')
-            ? item?.linkToGo
-            : 'https://' + item?.linkToGo,
-        )
+        item?.linkToGo?.includes('http') ||
+          item?.linkToGo?.toLocaleLowerCase()?.includes('wwww')
+          ? item?.linkToGo
+          : 'https://' + item?.linkToGo,
+      )
       : Linking.openURL(
-          'whatsapp://send?text=' +
-            'Hi, I am redirected from food2k.com, and I want to ask about: ' +
-            item.title +
-            ' ' +
-            withCoupon +
-            '\n' +
-            link +
-            '\n' +
-            '&phone=2' +
-            item?.author?.phone,
-        );
+        'whatsapp://send?text=' +
+        'Hi, I am redirected from food2k.com, and I want to ask about: ' +
+        item.title +
+        ' ' +
+        withCoupon +
+        '\n' +
+        link +
+        '\n' +
+        '&phone=2' +
+        item?.author?.phone,
+      );
   };
 
   const fetchCommentsCount = async () => {
@@ -260,7 +262,7 @@ const ReelComponent = ({
     return response.data;
   };
 
-  const {data: commentsCount} = useQuery(
+  const { data: commentsCount } = useQuery(
     ['commentsCount' + item?._id],
     () => fetchCommentsCount(item?._id),
     {
@@ -273,24 +275,34 @@ const ReelComponent = ({
   useEffect(() => {
     let timeout;
 
-    if (index === activeVideoIndex && !!item.avatarUri && isFocused) {
+    if (index === activeVideoIndex && !!item.avatarUri && isFocused && !isCommentOpen && !showImageZoom) {
+      console.log('Auto-scroll EFFECT START. index:', index, 'active:', activeVideoIndex, 'focused:', isFocused, 'commentOpen:', isCommentOpen, 'zoomed:', showImageZoom);
       timeout = setTimeout(() => {
         flatListRef.current.scrollToIndex({
           animated: true,
           index: index + 1,
         });
+        console.log('Auto-scroll SCROLL CALLED');
       }, 10000);
-      return () => clearTimeout(timeout);
+      return () => {
+        console.log('Auto-scroll EFFECT CLEANUP (Clear Timeout). index:', index);
+        clearTimeout(timeout);
+      };
+    } else {
+      console.log('Auto-scroll EFFECT SKIPPED. Condition met? index:', index, 'active:', activeVideoIndex, 'focused:', isFocused, 'commentOpen:', isCommentOpen, 'zoomed:', showImageZoom);
     }
-  }, [isFocused, index, activeVideoIndex, flatListRef, item.avatarUri]);
+  }, [isFocused, index, activeVideoIndex, flatListRef, item.avatarUri, isCommentOpen, showImageZoom]);
 
-  const handlePressProfile = () =>
+  const handlePressProfile = () => {
+    // Navigate to author's profile, not the current user's profile unless they match
+    // Correctly using author._id from the item
     onPressProfile(item?.channelName, item?.avatarUri, item?.author?._id);
+  };
 
   const imageStyles = useMemo(
     () => [
       localStyles.imageContainer,
-      {backgroundColor: colors.backgroundColor},
+      { backgroundColor: colors.backgroundColor },
     ],
     [colors.backgroundColor],
   );
@@ -311,7 +323,7 @@ const ReelComponent = ({
     );
 
   const handleOnLoad = useCallback(
-    ({duration: durationToBeSet}) => {
+    ({ duration: durationToBeSet }) => {
       setDurationInSeconds(durationToBeSet);
       if (activeVideoIndex === index) {
         videoRef?.current?.seek?.(seekValueClick);
@@ -320,7 +332,7 @@ const ReelComponent = ({
     [activeVideoIndex, index, seekValueClick],
   );
 
-  const onProgress = ({currentTime}) => {
+  const onProgress = ({ currentTime }) => {
     if ((!paused.slider || !paused.pause) && activeVideoIndex === index) {
       setSeekValueClick(currentTime);
     }
@@ -329,6 +341,8 @@ const ReelComponent = ({
   const maxDiscount = item?.author?.discount?.maxAmount
     ? strings.max + ' ' + item?.author?.discount?.maxAmount + ' ' + strings.EGP
     : '';
+
+
 
   return (
     <View>
@@ -339,28 +353,40 @@ const ReelComponent = ({
             backgroundColor: colors.backgroundColor,
           }}>
           <DoubleClick
+            delay={200}
             singleTap={() => {
-              setpaused(p => ({
-                slider: p.slider,
-                paused: !p.paused,
-              }));
+              if (item?.avatarUri) {
+                setShowImageZoom(true);
+              } else {
+                setpaused(prev => ({
+                  ...prev,
+                  paused: !prev.paused
+                }));
+              }
             }}
             doubleTap={() => {
               likeRef?.current?.[index]?.(item?._id);
             }}
-            onPressOut={()=>{
+            onPressOut={() => {
               setIsOverlayVisible(true)
             }}
             onLongPress={() => {
               setIsOverlayVisible(false);
             }}>
+            {/* Play/Pause Overlay Icon - Shows when video is paused */}
+            {paused.paused && !item?.avatarUri && (
+              <View style={[StyleSheet.absoluteFill, { justifyContent: 'center', alignItems: 'center', zIndex: 10 }]}>
+                <Ionicons name="play" size={60} color="rgba(255, 255, 255, 0.6)" />
+              </View>
+            )}
+
             {/* Review Badge - positioned at top right */}
             {item?.reviewMode && (
               <>
                 {/* Review Glow Effect */}
                 <View style={localStyles.reviewGlowEffect} />
-                
-                <Animated.View 
+
+                <Animated.View
                   style={[
                     localStyles.reviewBadge,
                     { transform: [{ scale: pulseAnim }] }
@@ -368,8 +394,8 @@ const ReelComponent = ({
                 >
                   <LinearGradient
                     colors={['rgba(255, 215, 0, 0.95)', 'rgba(255, 77, 103, 0.95)', 'rgba(138, 43, 226, 0.9)']}
-                    start={{x: 0, y: 0}}
-                    end={{x: 1, y: 1}}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
                     style={localStyles.reviewBadgeGradient}
                   >
                     <View style={localStyles.reviewBadgeGlass}>
@@ -388,12 +414,12 @@ const ReelComponent = ({
                             {[1, 2, 3, 4, 5].map((star) => (
                               <Ionicons
                                 key={star}
-                                name={item.rating && item.rating > 0 
+                                name={item.rating && item.rating > 0
                                   ? (star <= item.rating ? 'star' : 'star-outline')
                                   : 'star'
                                 }
                                 size={moderateScale(10)}
-                                color={item.rating && item.rating > 0 
+                                color={item.rating && item.rating > 0
                                   ? (star <= item.rating ? '#FFD700' : 'rgba(255, 255, 255, 0.6)')
                                   : 'rgba(255, 255, 255, 0.3)'
                                 }
@@ -412,28 +438,7 @@ const ReelComponent = ({
               </>
             )}
 
-            {item?.avatarUri ? (
-              <TouchableOpacity
-                activeOpacity={0.9}
-                onPress={() => setShowImageZoom(true)}
-                style={imageStyles}>
-                <FastImage
-                  source={{
-                    uri: poster,
-                  }}
-                  resizeMode="contain"
-                  style={imageStyles}
-                />
-                {/* Zoom indicator */}
-                <View style={localStyles.zoomIndicator}>
-                  <Ionicons
-                    name="expand-outline"
-                    size={moderateScale(20)}
-                    color="rgba(255, 255, 255, 0.8)"
-                  />
-                </View>
-              </TouchableOpacity>
-            ) : !!item?.uri &&
+            {!!item?.uri &&
               (activeVideoIndex === index ||
                 activeVideoIndex === index + 1 ||
                 activeVideoIndex === index - 1) &&
@@ -443,7 +448,7 @@ const ReelComponent = ({
                   source={{
                     uri,
                   }}
-                  onSeek={({currentTime}) => {
+                  onSeek={({ currentTime }) => {
                     setSeekValueClick(currentTime);
                   }}
                   ref={videoRef}
@@ -451,7 +456,8 @@ const ReelComponent = ({
                   hideShutterView
                   onLoad={handleOnLoad}
                   onEnd={() => {
-                    if (activeVideoIndex === index && isFocused) {
+                    if (activeVideoIndex === index && isFocused && !isCommentOpen) {
+                      console.log('Auto-scroll TIMEOUT EXECUTED. index:', index, 'isCommentOpen (in closure):', isCommentOpen);
                       if (flatListRef.current) {
                         flatListRef.current.scrollToIndex({
                           animated: true,
@@ -483,12 +489,31 @@ const ReelComponent = ({
                     activeVideoIndex !== index ||
                     !isFocused ||
                     paused.paused ||
-                    paused.slider
+                    paused.slider ||
+                    isCommentOpen
                     // isloading
                   }
                   useTextureView={true}
                 />
               </>
+            ) : item?.avatarUri ? (
+              <View style={imageStyles}>
+                <FastImage
+                  source={{
+                    uri: poster,
+                  }}
+                  resizeMode="contain"
+                  style={imageStyles}
+                />
+                {/* Zoom indicator */}
+                <View style={localStyles.zoomIndicator}>
+                  <Ionicons
+                    name="expand-outline"
+                    size={moderateScale(20)}
+                    color="rgba(255, 255, 255, 0.8)"
+                  />
+                </View>
+              </View>
             ) : (
               <Image
                 source={{
@@ -511,7 +536,7 @@ const ReelComponent = ({
                 containerStyle={localStyles.dishesDisplayContainer}
               />
             )}
-            
+
             {/* Debug: Log item data to see if dishes are present */}
 
 
@@ -520,7 +545,7 @@ const ReelComponent = ({
               <View
                 key={`item-${item?._id}`}
                 style={localStyles.bottomContainer}>
-                
+
                 {/* Stronger gradient for text readability */}
                 <LinearGradient
                   colors={['rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, 0.85)']}
@@ -537,7 +562,7 @@ const ReelComponent = ({
                     style={[
                       localStyles.headerContainer,
                       {
-                        transform: [{translateY: headerSlideAnim}],
+                        transform: [{ translateY: headerSlideAnim }],
                         opacity: headerOpacityAnim,
                       },
                     ]}>
@@ -547,22 +572,22 @@ const ReelComponent = ({
                           resizeMode="cover"
                           source={
                             item?.author?.avatar
-                              ? {uri: item?.author?.avatar}
+                              ? { uri: item?.author?.avatar }
                               : colors.dark
-                              ? images.userDark
-                              : images.userLight
+                                ? images.userDark
+                                : images.userLight
                           }
-                                                      style={{
-                              width: 42,
-                              height: 42,
-                              borderRadius: 21,
-                              borderWidth: 2,
-                              borderColor: 'white',
-                            }}
+                          style={{
+                            width: 42,
+                            height: 42,
+                            borderRadius: 21,
+                            borderWidth: 2,
+                            borderColor: 'white',
+                          }}
                         />
                       </TouchableOpacity>
-                                            <TouchableOpacity
-                        style={{marginLeft: 4, flex: 1}}
+                      <TouchableOpacity
+                        style={{ marginLeft: 4, flex: 1 }}
                         onPress={() =>
                           onPressProfile(
                             item?.channelName,
@@ -570,14 +595,14 @@ const ReelComponent = ({
                             item?.author?._id,
                           )
                         }>
-                        <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'}}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                           <ZText
                             style={{
                               fontSize: 12,
                               fontWeight: 'bold',
                               color: 'white',
                               textShadowColor: 'rgba(0, 0, 0, 0.9)',
-                              textShadowOffset: {width: 1, height: 1},
+                              textShadowOffset: { width: 1, height: 1 },
                               textShadowRadius: 3,
                               flex: 1,
                             }}
@@ -587,13 +612,13 @@ const ReelComponent = ({
                           {/* Debug: Show rating data and always render something */}
 
                           {item?.author?.ratedDishesCount > 0 && item?.author?.averageDishRating > 0 ? (
-                            <View style={{flexDirection: 'row', alignItems: 'center', marginLeft: 8}}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 8 }}>
                               <ZText style={{
                                 fontSize: 10,
                                 fontWeight: 'bold',
                                 color: '#FFD700',
                                 textShadowColor: 'rgba(0, 0, 0, 0.9)',
-                                textShadowOffset: {width: 1, height: 1},
+                                textShadowOffset: { width: 1, height: 1 },
                                 textShadowRadius: 2,
                               }}>
                                 {item.author.averageDishRating.toFixed(1)}
@@ -602,7 +627,7 @@ const ReelComponent = ({
                                 fontSize: 10,
                                 color: 'white',
                                 textShadowColor: 'rgba(0, 0, 0, 0.9)',
-                                textShadowOffset: {width: 1, height: 1},
+                                textShadowOffset: { width: 1, height: 1 },
                                 textShadowRadius: 2,
                                 marginLeft: 2,
                               }}>
@@ -614,7 +639,7 @@ const ReelComponent = ({
                               fontSize: 12,
                               color: '#FFD700',
                               textShadowColor: 'rgba(0, 0, 0, 0.9)',
-                              textShadowOffset: {width: 1, height: 1},
+                              textShadowOffset: { width: 1, height: 1 },
                               textShadowRadius: 2,
                               marginLeft: 8,
                               fontWeight: 'bold',
@@ -624,8 +649,8 @@ const ReelComponent = ({
                           )}
                         </View>
                       </TouchableOpacity>
-                                        </View>
-                    
+                    </View>
+
                     <ZText
                       style={{
                         fontSize: 13,
@@ -633,13 +658,13 @@ const ReelComponent = ({
                         marginTop: 4,
                         lineHeight: 18,
                         textShadowColor: 'rgba(0, 0, 0, 0.8)',
-                        textShadowOffset: {width: 1, height: 1},
+                        textShadowOffset: { width: 1, height: 1 },
                         textShadowRadius: 2,
                       }}
                       numberOfLines={2}>
                       {item?.title || 'Perfect lunch for today ☀️'}
                     </ZText>
-                    
+
                     {duration?.[0] && duration?.[0] !== 'undefined' && duration?.[0] !== undefined && (
                       <ZText
                         style={{
@@ -647,7 +672,7 @@ const ReelComponent = ({
                           color: 'white',
                           marginTop: 6,
                           textShadowColor: 'rgba(0, 0, 0, 0.8)',
-                          textShadowOffset: {width: 1, height: 1},
+                          textShadowOffset: { width: 1, height: 1 },
                           textShadowRadius: 2,
                         }}>
                         ⏰ Receivable in {duration?.[0]} {duration?.[1]?.toLowerCase()}
@@ -660,7 +685,7 @@ const ReelComponent = ({
                       color={colors.white}>
                       {item.title}
                     </ZText>
-                    
+
                     {/* Review-specific info */}
                     {item?.reviewMode && (
                       <View style={localStyles.reviewInfo}>
@@ -668,12 +693,12 @@ const ReelComponent = ({
                           {[1, 2, 3, 4, 5].map((star) => (
                             <Ionicons
                               key={star}
-                              name={item?.rating && item.rating > 0 
+                              name={item?.rating && item.rating > 0
                                 ? (star <= item.rating ? 'star' : 'star-outline')
                                 : 'star'
                               }
                               size={moderateScale(12)}
-                              color={item?.rating && item.rating > 0 
+                              color={item?.rating && item.rating > 0
                                 ? (star <= item.rating ? '#FFD700' : 'rgba(255, 255, 255, 0.5)')
                                 : 'rgba(255, 255, 255, 0.3)'
                               }
@@ -702,18 +727,19 @@ const ReelComponent = ({
                           {item?.caption?.length < 50
                             ? ''
                             : isMoreDescriptionSeen
-                            ? strings.seeLessDescription
-                            : strings.seeMoreDescription}
+                              ? strings.seeLessDescription
+                              : strings.seeMoreDescription}
                         </ZText>
                       </TouchableOpacity>
                     )}
 
-                    {!item.avatarUri && (
+                    {/* Seeker - Only show for videos (no avatarUri) */}
+                    {!item?.avatarUri && (
                       <View
                         style={{
                           direction: 'ltr',
                           ...(I18nManager.isRTL &&
-                            Platform.OS === 'ios' && {transform: [{scaleX: -1}]}),
+                            Platform.OS === 'ios' && { transform: [{ scaleX: -1 }] }),
                         }}>
                         <Slider
                           style={localStyles.seekBar}
@@ -735,22 +761,22 @@ const ReelComponent = ({
                     )}
                     {/* Debug logging for author type */}
 
-                    
+
                     {/* Show Visit Menu button for chefs or users with menus */}
                     {(item?.author?.type === 'chef' || item?.author?.hasMenu === true) && (
-                        <ZButton
-                          title="Visit Menu"
-                          textType={'b18'}
-                          color={colors.white}
-                          containerStyle={localStyles.buttonContainer}
-                          onPress={() => {
-                            navigation.navigate(StackNav.ChefMenu, {
-                              chefId: item?.author?._id,
-                              chefName: item?.author?.fullName,
-                            });
-                          }}
-                        />
-                      )}
+                      <ZButton
+                        title="Visit Menu"
+                        textType={'b18'}
+                        color={colors.white}
+                        containerStyle={localStyles.buttonContainer}
+                        onPress={() => {
+                          navigation.navigate(StackNav.ChefMenu, {
+                            chefId: item?.author?._id,
+                            chefName: item?.author?.fullName,
+                          });
+                        }}
+                      />
+                    )}
                   </Animated.View>
                 </View>
                 <View style={localStyles.verticalContainer}>
@@ -781,7 +807,7 @@ const ReelComponent = ({
               </View>
             )}
 
-            {paused.paused && !paused.slider && !item?.avatarUri && (
+            {paused.paused && !paused.slider && (
               <View
                 style={[
                   localStyles.pauseIconContainer,
@@ -818,15 +844,16 @@ const ReelComponent = ({
               />
             )} */}
         </>
-      )}
-      
+      )
+      }
+
       {/* Image Zoom Modal */}
       <ImageZoomModal
         visible={showImageZoom}
         imageUri={poster}
         onClose={() => setShowImageZoom(false)}
       />
-    </View>
+    </View >
   );
 };
 
@@ -905,7 +932,7 @@ const localStyles = StyleSheet.create({
   },
   buttonContainer: {
     height: getHeight(50),
-                      borderRadius: moderateScale(20),
+    borderRadius: moderateScale(20),
     width: '100%',
     alignSelf: 'center',
   },
@@ -1016,7 +1043,7 @@ const localStyles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.2)',
     shadowColor: 'rgba(0, 0, 0, 0.3)',
-    shadowOffset: {width: 0, height: 4},
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
     shadowRadius: 10,
     elevation: 8,

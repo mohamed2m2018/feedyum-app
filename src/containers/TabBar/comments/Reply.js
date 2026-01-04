@@ -1,21 +1,23 @@
-import React from 'react';
-import {View, Text, Image, TouchableOpacity} from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, Image, TouchableOpacity, StyleSheet, I18nManager } from 'react-native';
 import commentStyling from './CommentStyling';
 import TimeAgo from 'javascript-time-ago';
-import {useMutation, useQuery, useQueryClient} from 'react-query';
-import {useNavigation} from '@react-navigation/native';
-import {StackNav, TabNav} from '../../../navigation/NavigationKeys';
+import { useMutation, useQuery, useQueryClient } from 'react-query';
+import { useNavigation } from '@react-navigation/native';
+import { StackNav, TabNav } from '../../../navigation/NavigationKeys';
 import request from '../../../api/request';
-import {moderateScale} from '../../../common/constants';
+import { moderateScale } from '../../../common/constants';
 import Feather from 'react-native-vector-icons/Feather';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import millify from 'millify';
 
 const Reply = props => {
-  const {reply} = props;
+  const { reply } = props;
   const timeAgo = new TimeAgo('en-US');
   const date = new Date(reply?.created_at);
   const time = timeAgo.format(date);
 
-  const {data} = useQuery('user', () => request.get('/user'), {retry: 1});
+  const { data } = useQuery('user', () => request.get('/user'), { retry: 1 });
 
   const user = data?.data?.user;
 
@@ -59,7 +61,7 @@ const Reply = props => {
         <TouchableOpacity onPress={navigateToProfile}>
           <Image
             style={commentStyling.replyImage}
-            source={{uri: reply?.user_id?.avatar}}
+            source={{ uri: reply?.user_id?.avatar }}
           />
         </TouchableOpacity>
 
@@ -89,14 +91,14 @@ const Reply = props => {
         <Text
           style={[
             commentStyling.footerElement,
-            {color: props.theme.textColor},
+            { color: props.theme.textColor },
           ]}>
           {time}
         </Text>
         <Text
           style={[
             commentStyling.footerElement,
-            {color: props.theme.textColor},
+            { color: props.theme.textColor },
           ]}>
           {reply.date}
         </Text>

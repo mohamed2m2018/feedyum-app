@@ -131,6 +131,7 @@ export default {
   report: 'Report',
   follow: 'Follow',
   message: 'Message',
+  reply: 'Reply',
   suggested: 'Suggested',
   setting: 'Setting',
   privacy: 'Privacy',
@@ -188,7 +189,7 @@ export default {
   draft: 'Draft',
   shareDesc: 'Automatically share to:',
   writeHere: 'Write here...',
-  
+
   // Address Management
   chooseDeliveryLocation: 'Choose delivery location',
   savedAddresses: 'Saved Addresses',

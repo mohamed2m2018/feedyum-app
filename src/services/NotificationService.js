@@ -1,4 +1,4 @@
-import OneSignal from 'react-native-onesignal';
+import { OneSignal } from 'react-native-onesignal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DeepLinkingService from './DeepLinkingService';
 
@@ -19,17 +19,14 @@ class NotificationService {
 
     try {
       // OneSignal Initialization
-      OneSignal.setLogLevel(6, 0);
-      OneSignal.setAppId(oneSignalAppId);
+      OneSignal.initialize(oneSignalAppId);
 
-      // OneSignal iOS Settings
-      OneSignal.promptForPushNotificationsWithUserResponse(response => {
-
-      });
+      // Request permission
+      OneSignal.Notifications.requestPermission(true);
 
       // Setup notification handlers
       this.setupNotificationHandlers();
-      
+
       NotificationService.isInitialized = true;
 
     } catch (error) {
@@ -38,40 +35,28 @@ class NotificationService {
   }
 
   setupNotificationHandlers() {
-    // Handle notification received while app is open
-    OneSignal.setNotificationWillShowInForegroundHandler(notificationReceivedEvent => {
+    // Check if handlers are already attached to avoid duplication (optional logic could go here)
+    // For OneSignal v5, we use OneSignal.Notifications.addEventListener
 
-      
-      const notification = notificationReceivedEvent.getNotification();
-
-      
-      const data = notification.additionalData;
-
-
-      // Show the notification
-      notificationReceivedEvent.complete(notification);
-    });
-
-    // Handle notification opened/tapped
-    OneSignal.setNotificationOpenedHandler(notification => {
-
-      
-      const data = notification.notification.additionalData;
+    // Handle notification clicks
+    OneSignal.Notifications.addEventListener('click', (event) => {
+      const data = event.notification.additionalData;
       if (data) {
         this.handleNotificationTap(data);
       }
     });
 
-    // Handle in-app message actions
-    OneSignal.setInAppMessageClickHandler(event => {
-
+    // Handle foreground notifications
+    OneSignal.Notifications.addEventListener('foregroundWillDisplay', (event) => {
+      // You can prevent default here via event.preventDefault() if needed specific logic
+      // For now, allow it to show
     });
   }
 
   // Handle notification tap with deep linking
   handleNotificationTap(data) {
 
-    
+
     // Use deep linking service to navigate
     const deepLinkingService = DeepLinkingService.getInstance();
     deepLinkingService.handleNotificationTap(data);
@@ -80,7 +65,7 @@ class NotificationService {
   // Set user ID for targeting notifications
   async setUserId(userId) {
     try {
-      OneSignal.setExternalUserId(userId.toString());
+      OneSignal.login(userId.toString());
       await AsyncStorage.setItem('onesignal_user_id', userId.toString());
 
     } catch (error) {
@@ -91,7 +76,7 @@ class NotificationService {
   // Remove user ID (logout)
   async removeUserId() {
     try {
-      OneSignal.removeExternalUserId();
+      OneSignal.logout();
       await AsyncStorage.removeItem('onesignal_user_id');
 
     } catch (error) {
@@ -102,8 +87,9 @@ class NotificationService {
   // Get device push token
   async getDeviceState() {
     try {
-      const deviceState = await OneSignal.getDeviceState();
-      return deviceState;
+      const id = OneSignal.User.pushSubscription.getPushSubscriptionId();
+      const optedIn = OneSignal.User.pushSubscription.getOptedIn();
+      return { pushToken: id, isSubscribed: optedIn };
     } catch (error) {
       console.error('Error getting device state:', error);
       return null;
@@ -113,7 +99,7 @@ class NotificationService {
   // Send tag for user segmentation
   async sendTag(key, value) {
     try {
-      OneSignal.sendTag(key, value);
+      OneSignal.User.addTag(key, value);
 
     } catch (error) {
       console.error('Error sending OneSignal tag:', error);
@@ -123,7 +109,7 @@ class NotificationService {
   // Send multiple tags
   async sendTags(tags) {
     try {
-      OneSignal.sendTags(tags);
+      OneSignal.User.addTags(tags);
 
     } catch (error) {
       console.error('Error sending OneSignal tags:', error);
@@ -133,7 +119,7 @@ class NotificationService {
   // Delete tags
   async deleteTags(tags) {
     try {
-      OneSignal.deleteTags(tags);
+      OneSignal.User.removeTags(tags);
 
     } catch (error) {
       console.error('Error deleting OneSignal tags:', error);
@@ -170,7 +156,7 @@ class NotificationService {
   static createNotificationData(type, id, params = {}) {
     const deepLinkingService = DeepLinkingService.getInstance();
     const deepLink = DeepLinkingService.generateDeepLink(type, id, params);
-    
+
     return {
       type,
       id,
@@ -218,7 +204,7 @@ class NotificationService {
     if (user.type === 'chef') {
       tags.is_chef = 'true';
       tags.chef_verified = user.isVerified ? 'true' : 'false';
-      
+
       if (user.cuisineTypes && user.cuisineTypes.length > 0) {
         tags.cuisine_types = user.cuisineTypes.join(',');
       }
@@ -233,18 +219,18 @@ class NotificationService {
   async clearUserData() {
     try {
       await this.removeUserId();
-      
+
       // Clear relevant tags
       await this.deleteTags([
         'user_type',
-        'user_id', 
+        'user_id',
         'is_chef',
         'chef_verified',
         'cuisine_types',
         'location_city',
         'location_country'
       ]);
-      
+
 
     } catch (error) {
       console.error('Error clearing user notification data:', error);

@@ -1,12 +1,12 @@
 import axios from 'axios';
-import {ACCESS_TOKEN} from '../common/constants';
-import {MMKVLoader} from 'react-native-mmkv-storage';
+import { ACCESS_TOKEN, API_BASE_URL } from '../common/constants';
+import { MMKVLoader } from 'react-native-mmkv-storage';
 
 const client = axios.create();
 
 const MMKV = new MMKVLoader().initialize();
 
-const BASE_URL = 'http://localhost:4800/api';
+const BASE_URL = API_BASE_URL;
 
 client.defaults.baseURL = BASE_URL;
 

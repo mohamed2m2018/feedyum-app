@@ -1,5 +1,5 @@
 // Library imports
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -10,12 +10,12 @@ import {
   TextInput,
   Alert,
 } from 'react-native';
-import {useSelector} from 'react-redux';
-import {useNavigation, useNavigationState, useRoute} from '@react-navigation/native';
-import {StackNav} from '../../../navigation/NavigationKeys';
+import { useSelector } from 'react-redux';
+import { useNavigation, useNavigationState, useRoute } from '@react-navigation/native';
+import { StackNav } from '../../../navigation/NavigationKeys';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {useQuery, useQueryClient, useMutation} from 'react-query';
-import {Toast, ALERT_TYPE} from 'react-native-alert-notification';
+import { useQuery, useQueryClient, useMutation } from 'react-query';
+import { Toast, ALERT_TYPE } from 'react-native-alert-notification';
 
 // Local imports
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
@@ -26,10 +26,10 @@ import ZButton from '../../../components/common/ZButton';
 import DishCard from './components/DishCard';
 import AddEditDishModal from './components/AddEditDishModal';
 import request from '../../../api/request';
-import {moderateScale} from '../../../common/constants';
+import { moderateScale } from '../../../common/constants';
 
 // Components moved outside to avoid React warnings
-const SectionTab = ({section, isSelected, onPress, colors}) => (
+const SectionTab = ({ section, isSelected, onPress, colors }) => (
   <TouchableOpacity
     style={[
       localStyles.sectionTab,
@@ -46,7 +46,7 @@ const SectionTab = ({section, isSelected, onPress, colors}) => (
   </TouchableOpacity>
 );
 
-const EmptyState = ({searchQuery, colors, onAddDish}) => (
+const EmptyState = ({ searchQuery, colors, onAddDish }) => (
   <View style={localStyles.emptyContainer}>
     <Ionicons
       name="restaurant-outline"
@@ -75,7 +75,7 @@ const EmptyState = ({searchQuery, colors, onAddDish}) => (
             name="add"
             size={moderateScale(18)}
             color={colors.white}
-            style={{marginRight: moderateScale(8)}}
+            style={{ marginRight: moderateScale(8) }}
           />
         }
         onPress={onAddDish}
@@ -120,7 +120,7 @@ export default function MenuManagement() {
           error?.response?.status === 404 ||
           error?.message?.includes('Menu not found')
         ) {
-menuResponse = await request.post('/menus', {
+          menuResponse = await request.post('/menus', {
             name: 'My Restaurant Menu',
             description: 'Welcome to my restaurant!',
           });
@@ -138,7 +138,7 @@ menuResponse = await request.post('/menus', {
 
       return menuId;
     } catch (error) {
-throw error;
+      throw error;
     }
   };
 
@@ -192,18 +192,18 @@ throw error;
         if (error?.response?.status === 401) {
           throw new Error('Authentication failed - please log in again');
         }
-        
+
         // Check if it's a validation error
         if (error?.response?.status === 400) {
           throw new Error(error?.response?.data?.message || 'Validation failed');
         }
-        
+
         // Check if it's a server error
         if (error?.response?.status === 500) {
           const errorMessage = error?.response?.data?.error || error?.response?.data?.message || 'Server error';
           throw new Error(`Server error: ${errorMessage}`);
         }
-        
+
         throw error;
       }
     },
@@ -234,20 +234,30 @@ throw error;
   );
 
   const updateDishMutation = useMutation(
-    async ({dishId, dishData}) => {
-      // Update dish with real API call
-      const response = await request.put(`/dishes/${dishId}`, {
-        ...dishData,
+    async ({ dishId, dishData }) => {
+      // Explicitly clean and format data for update
+      const requestData = {
+        name: dishData.name?.trim(),
+        description: dishData.description?.trim(),
+        price: parseFloat(dishData.price),
+        category: (dishData.category || '').trim(),
         categories: Array.isArray(dishData.categories) ? dishData.categories : ((dishData.category && dishData.category.trim()) ? [dishData.category.trim()] : []),
-        sectionName: dishData.section, // Send section name to backend
-      });
+        sectionName: dishData.section?.trim(), // Send section name to backend
+        image: dishData.image || '',
+        cookingTime: dishData.cookingTime,
+        ingredients: dishData.ingredients,
+        visible: dishData.visible
+      };
+
+      // Update dish with real API call
+      const response = await request.put(`/dishes/${dishId}`, requestData);
 
       return response.data;
     },
     {
       onSuccess: () => {
         // Invalidate broadly to ensure refetch regardless of captured userId
-        queryClient.invalidateQueries('menuDishes');
+        queryClient.invalidateQueries(['menuDishes']);
         queryClient.invalidateQueries('menuSections');
         setModalVisible(false);
         setEditingDish(null);
@@ -300,13 +310,13 @@ throw error;
   );
 
   // Fetch current user first
-  const {data: userData} = useQuery('user', () => request.get('/user'));
+  const { data: userData } = useQuery('user', () => request.get('/user'));
   const userId = userData?.data?.user?._id;
 
 
 
   // Fetch menu sections - using real API call
-  const {data: sectionsData, isLoading: sectionsLoading} = useQuery(
+  const { data: sectionsData, isLoading: sectionsLoading } = useQuery(
     ['menuSections', userId],
     async () => {
       try {
@@ -315,7 +325,7 @@ throw error;
         return response.data;
       } catch (error) {
         // If sections endpoint fails, return empty array (will use defaults)
-return [];
+        return [];
       }
     },
     {
@@ -326,15 +336,15 @@ return [];
   // Prefer sections from API. If empty, derive from dishes to ensure UI shows the new section immediately
   const derivedSections = (Array.isArray(dishesData)
     ? Array.from(
-        new Map(
-          dishesData
-            .map(d => {
-              const name = d?.section?.name || d?.section || d?.category;
-              return name ? [name.toLowerCase(), { name }] : null;
-            })
-            .filter(Boolean),
-        ).values(),
-      )
+      new Map(
+        dishesData
+          .map(d => {
+            const name = d?.section?.name || d?.section || d?.category;
+            return name ? [name.toLowerCase(), { name }] : null;
+          })
+          .filter(Boolean),
+      ).values(),
+    )
     : []);
   const finalSections = (sectionsData && sectionsData.length > 0)
     ? sectionsData
@@ -353,7 +363,7 @@ return [];
         const dishesResponse = await request.get(`/dishes/chef/${userId}`);
         return dishesResponse.data || [];
       } catch (error) {
-return [];
+        return [];
       }
     },
     {
@@ -381,13 +391,13 @@ return [];
     }) || [];
 
   // Debug logging
-const onRefresh = async () => {
+  const onRefresh = async () => {
     setRefreshing(true);
     try {
       await queryClient.invalidateQueries('menuSections');
       await queryClient.invalidateQueries('menuDishes');
     } catch (error) {
-} finally {
+    } finally {
       setRefreshing(false);
     }
   };
@@ -440,21 +450,25 @@ const onRefresh = async () => {
 
   const handleToggleVisibility = async dish => {
     try {
+      // Treat undefined as visible (true)
+      const currentVisibility = dish.visible !== false;
+      const newVisibility = !currentVisibility;
+
       // Update dish visibility with real API call
+      // Only send the field we want to update to avoid backend validation errors
+      // with populated fields like 'section'
       const response = await request.put(`/dishes/${dish._id}`, {
-        ...dish,
-        visible: !dish.visible,
-        sectionName: dish.section?.name || dish.section,
+        visible: newVisibility,
       });
 
       queryClient.invalidateQueries(['menuDishes', userId]);
       Toast.show({
         type: ALERT_TYPE.SUCCESS,
         title: 'Success',
-        textBody: `Dish ${dish.visible ? 'hidden' : 'made visible'}`,
+        textBody: `Dish ${newVisibility ? 'made visible' : 'hidden'}`,
       });
     } catch (error) {
-Toast.show({
+      Toast.show({
         type: ALERT_TYPE.DANGER,
         title: 'Error',
         textBody:
@@ -465,7 +479,7 @@ Toast.show({
     }
   };
 
-  const renderDishItem = ({item}) => (
+  const renderDishItem = ({ item }) => (
     <View style={localStyles.dishItemContainer}>
       <DishCard
         dish={item}
@@ -477,7 +491,7 @@ Toast.show({
   );
 
   const sections = [
-    {name: 'All', value: 'all'},
+    { name: 'All', value: 'all' },
     ...(finalSections?.map(section => ({
       name: section.name,
       value: section.name,
@@ -507,7 +521,7 @@ Toast.show({
         <View
           style={[
             localStyles.searchContainer,
-            {backgroundColor: colors.inputBg},
+            { backgroundColor: colors.inputBg },
           ]}>
           <Ionicons
             name="search-outline"
@@ -516,7 +530,7 @@ Toast.show({
             style={localStyles.searchIcon}
           />
           <TextInput
-            style={[localStyles.searchInput, {color: colors.textColor}]}
+            style={[localStyles.searchInput, { color: colors.textColor }]}
             placeholder="Search dishes..."
             placeholderTextColor={colors.grayScale7}
             value={searchQuery}

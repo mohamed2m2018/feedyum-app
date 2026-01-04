@@ -48,7 +48,7 @@
     "react-native": "0.74.5",
     "react-native-actions-sheet": "^0.9.7",
     "react-native-admob-native-ads": "^0.7.6",
-    "react-native-alert-notification": "^0.4.1",
+    "react-native-alert-notification": "^0.4.2",
     "react-native-audio-record": "^0.2.2",
     "react-native-aws3": "^0.0.9",
     "react-native-background-upload": "^6.6.0",

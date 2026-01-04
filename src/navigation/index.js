@@ -1,11 +1,11 @@
-import React, {useEffect, useRef} from 'react';
-import {NavigationContainer} from '@react-navigation/native';
-import {AppState} from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { AppState } from 'react-native';
 import StackNavigation from './Type/StackNavigation';
-import {useSelector} from 'react-redux';
-import {BackgroundUploadProvider} from '../providers/BackgroundUploadProvider';
-import {LocationProvider} from './locationContext';
-import {ScreenProvider} from './screenContext';
+import { useSelector } from 'react-redux';
+import { BackgroundUploadProvider } from '../providers/BackgroundUploadProvider';
+import { LocationProvider } from './locationContext';
+import { ScreenProvider } from './screenContext';
 import DeepLinkingService from '../services/DeepLinkingService';
 import NotificationService from '../services/NotificationService';
 import AppInitializer from '../services/AppInitializer';
@@ -16,7 +16,7 @@ export default function pAppNavigator() {
   const color = useSelector(state => state.theme.theme);
 
   const colors = {
-    colors: {background: color.backgroundColor},
+    colors: { background: color.backgroundColor },
   };
 
   useEffect(() => {
@@ -26,10 +26,7 @@ export default function pAppNavigator() {
       const deepLinkingService = DeepLinkingService.getInstance();
       const cleanup = deepLinkingService.initialize();
 
-      // Initialize notification service with OneSignal app ID
-      const notificationService = NotificationService.getInstance();
-      // Note: Replace 'YOUR_ONESIGNAL_APP_ID' with your actual OneSignal App ID
-      notificationService.initialize(process.env.ONESIGNAL_APP_ID || '8f642b9d-8d10-4b66-b43a-c1d0345ef13f');
+
 
       return cleanup;
     }
@@ -39,7 +36,7 @@ export default function pAppNavigator() {
     // Handle app state changes for deferred deep linking
     const handleAppStateChange = (nextAppState) => {
       if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
-// Check for deferred deep links when app becomes active
+        // Check for deferred deep links when app becomes active
         AppInitializer.handleAppStateChange(nextAppState);
       }
       appState.current = nextAppState;
@@ -133,7 +130,7 @@ export default function pAppNavigator() {
         },
 
         // Direct screen navigation (outside TabBar)
-        
+
         // Reel/Video screens
         ReelsComponent: {
           path: '/reel/:postId',
@@ -173,7 +170,7 @@ export default function pAppNavigator() {
             userId: (userId) => userId,
           },
         },
-        
+
         // Chef specific screens
         ChefDashboard: 'chef/dashboard',
         ChefMenu: {
@@ -185,7 +182,7 @@ export default function pAppNavigator() {
         MenuManagement: 'chef/menu-management',
         OrderManagement: 'chef/orders',
         Analytics: 'chef/analytics',
-        
+
         // Menu and dish screens
         MenuDetailScreen: {
           path: '/menu/:menuId',
@@ -199,7 +196,7 @@ export default function pAppNavigator() {
             dishId: (dishId) => dishId,
           },
         },
-        
+
         // Order related screens
         OrderTracking: {
           path: '/order/:orderId/track',
@@ -208,7 +205,7 @@ export default function pAppNavigator() {
           },
         },
         ShoppingCart: 'cart',
-        
+
         // Chat screens
         ChatScreen: {
           path: '/chat/:otherUserId',
@@ -218,7 +215,7 @@ export default function pAppNavigator() {
         },
         ChatList: 'chat',
         Message: 'messages',
-        
+
         // Search and discovery
         Search: {
           path: '/search',
@@ -318,18 +315,18 @@ export default function pAppNavigator() {
         NotFound: '*',
       },
     },
-    
+
     // Custom URL matching for complex patterns
     getInitialURL: async () => {
       // Handle app launch from deep link
       const url = await DeepLinkingService.getInstance().getInitialURL?.();
       return url;
     },
-    
+
     // Handle incoming URLs while app is running
     subscribe: (listener) => {
       const linkingListener = DeepLinkingService.getInstance().addEventListeners?.();
-      
+
       return () => {
         if (linkingListener) {
           linkingListener();
@@ -339,20 +336,20 @@ export default function pAppNavigator() {
   };
 
   return (
-    <NavigationContainer 
+    <NavigationContainer
       ref={navigationRef}
       theme={colors}
       linking={linking}
       fallback={<></>} // You can add a loading component here
       onReady={() => {
         // Navigation is ready, deep linking service can now handle navigation
-}}
+      }}
       onUnhandledAction={(action) => {
-}}
+      }}
       onStateChange={(state) => {
         // Log navigation state changes for debugging
         if (__DEV__) {
-}
+        }
       }}
     >
       <ScreenProvider>

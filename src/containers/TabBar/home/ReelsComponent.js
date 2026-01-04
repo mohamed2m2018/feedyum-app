@@ -1,25 +1,25 @@
 // Libraries import
-import {StyleSheet, TouchableOpacity, View} from 'react-native';
-import React, {useCallback, useEffect, useRef, useState} from 'react';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Description from '../../../components/models/Descriptions';
 import Locations from '../../../components/models/Locations';
 import Comment from '../../../components/models/Comment';
-import {useSelector} from 'react-redux';
+import { useSelector } from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
-import {useIsFocused, useNavigation, useRoute} from '@react-navigation/native';
+import { useIsFocused, useNavigation, useRoute } from '@react-navigation/native';
 import DeepLinkingService from '../../../services/DeepLinkingService';
 
 // Local import
-import {styles} from '../../../themes';
+import { styles } from '../../../themes';
 import {
   getHeight,
   isAndroid,
   moderateScale,
   screenFullHeight,
 } from '../../../common/constants';
-import {StackNav, TabNav} from '../../../navigation/NavigationKeys';
+import { StackNav, TabNav } from '../../../navigation/NavigationKeys';
 import {
   QueryClient,
   useMutation,
@@ -30,16 +30,16 @@ import request from '../../../api/request';
 import ReelsList from './ReelsList';
 import strings from '../../../i18n/strings';
 import { OneSignal } from 'react-native-onesignal';
-import {ALERT_TYPE, Toast} from 'react-native-alert-notification';
+import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
 import ZLoader from '../../../components/common/ZLoader';
-import {useLocation} from '../../../navigation/locationContext';
+import { useLocation } from '../../../navigation/locationContext';
 import ZButton from '../../../components/common/ZButton';
-import {useStorage} from '../../../utils/useStorage';
+import { useStorage } from '../../../utils/useStorage';
 import AddressDropdown from '../../../components/AddressDropdown';
 import { useOptimizedReels, useOptimizedStory } from '../../../hooks/useOptimizedQueries';
 import { optimizeImageUrl, prefetchImages } from '../../../utils/imageOptimizer';
 
-export default function ReelsComponent({amIFocused}) {
+export default function ReelsComponent({ amIFocused }) {
   const [storyId, setStoryId] = useState();
   const colors = useSelector(state => state.theme.theme);
   const isFocused = useIsFocused() && amIFocused;
@@ -62,6 +62,7 @@ export default function ReelsComponent({amIFocused}) {
   const [queryClient] = React.useState(() => new QueryClient());
   const [categoryIds, setcategoryIds] = useState([]);
   const [user] = useStorage('user');
+  const [isCommentOpen, setIsCommentOpen] = useState(false);
 
   const location = useLocation();
 
@@ -76,8 +77,8 @@ export default function ReelsComponent({amIFocused}) {
         setStoryId(notification?.additionalData?._id);
       }, 300);
 
-      queryClient.invalidateQueries({queryKey: 'user'});
-      queryClient.invalidateQueries({queryKey: 'profile-stories'});
+      queryClient.invalidateQueries({ queryKey: 'user' });
+      queryClient.invalidateQueries({ queryKey: 'profile-stories' });
 
       setnotificationReceived(true);
       if (notification?.body?.includes('comment')) {
@@ -91,39 +92,39 @@ export default function ReelsComponent({amIFocused}) {
     };
 
     const handleForegroundNotification = (event) => {
-        // Display or handle the notification as needed
-        const notification = event.getNotification();
-        
-        // Build behavior preserved from legacy code:
-        navigation.navigate(TabNav.FollowingTab);
-        
-        Toast.show({
-          type: ALERT_TYPE.SUCCESS,
-          title: strings.notification,
-          textBody: notification.body
-            ?.replace('got a comment', strings.gotAcomment)
-            ?.replace('got a like', strings.gotALike),
-          onPress: () => {
-            navigation.navigate(TabNav.ForYou);
+      // Display or handle the notification as needed
+      const notification = event.getNotification();
 
-            setStoryId(notification.additionalData?._id);
+      // Build behavior preserved from legacy code:
+      navigation.navigate(TabNav.FollowingTab);
 
+      Toast.show({
+        type: ALERT_TYPE.SUCCESS,
+        title: strings.notification,
+        textBody: notification.body
+          ?.replace('got a comment', strings.gotAcomment)
+          ?.replace('got a like', strings.gotALike),
+        onPress: () => {
+          navigation.navigate(TabNav.ForYou);
+
+          setStoryId(notification.additionalData?._id);
+
+          setTimeout(() => {
+            refetchStory();
+          }, 500);
+          queryClient.invalidateQueries({ queryKey: 'user' });
+          queryClient.invalidateQueries({ queryKey: 'profile-stories' });
+          if (notification?.body?.includes('comment')) {
+            setSelectedPostId(notification.additionalData?._id);
             setTimeout(() => {
-              refetchStory();
-            }, 500);
-            queryClient.invalidateQueries({queryKey: 'user'});
-            queryClient.invalidateQueries({queryKey: 'profile-stories'});
-            if (notification?.body?.includes('comment')) {
-              setSelectedPostId(notification.additionalData?._id);
-              setTimeout(() => {
-                 commentSheetRef.current?.show();
-              }, 300);
-            }
-            setnotificationReceived(true);
-          },
-        });
+              commentSheetRef.current?.show();
+            }, 300);
+          }
+          setnotificationReceived(true);
+        },
+      });
 
-        // v5: Notification displays by default unless event.preventDefault() is called.
+      // v5: Notification displays by default unless event.preventDefault() is called.
     };
 
     OneSignal.Notifications.addEventListener('click', handleNotificationClick);
@@ -158,21 +159,21 @@ export default function ReelsComponent({amIFocused}) {
 
     const allStoriesWithAds = [];
     let storyCounter = 0;
-    
+
     for (const page of reelsData.pages) {
       for (const story of page.stories) {
         allStoriesWithAds.push(story);
         storyCounter++;
 
         if (storyCounter % 5 === 0) {
-          allStoriesWithAds.push({_id: `ad-${storyCounter}`, type: 'ad'});
+          allStoriesWithAds.push({ _id: `ad-${storyCounter}`, type: 'ad' });
         }
       }
     }
 
     // Ensure at least one ad even for less than 5 stories
     if (allStoriesWithAds.length > 0 && storyCounter < 5) {
-      allStoriesWithAds.push({_id: 'ad-end', type: 'ad'});
+      allStoriesWithAds.push({ _id: 'ad-end', type: 'ad' });
     }
 
     setFilteredData(allStoriesWithAds);
@@ -184,7 +185,7 @@ export default function ReelsComponent({amIFocused}) {
         .filter(item => item.type !== 'ad')
         .map(story => story.poster || story.avatarUri)
         .filter(Boolean);
-      
+
       prefetchImages(imagesToPrefetch, { concurrent: 2 });
     }
   }, [reelsData]);
@@ -206,7 +207,7 @@ export default function ReelsComponent({amIFocused}) {
       if (filtered.length) {
         setFilteredData([storyData.story, ...filtered]);
       }
-      flatListRef.current?.scrollToOffset({offset: 0});
+      flatListRef.current?.scrollToOffset({ offset: 0 });
       updateViewsMutation.mutate(storyData.story._id);
       setActiveVideoIndex(0);
       setStoryId(null);
@@ -214,7 +215,7 @@ export default function ReelsComponent({amIFocused}) {
   }, [storyData, filteredData]);
   useEffect(() => {
     setExtraData(e => !e);
-  }, [activeVideoIndex, isFocused, notificationReceived]);
+  }, [activeVideoIndex, isFocused, isCommentOpen, notificationReceived]);
 
   const onPressSearch = () => navigation.navigate(TabNav.Search);
 
@@ -246,7 +247,7 @@ export default function ReelsComponent({amIFocused}) {
   };
 
   const renderReelComponent = useCallback(
-    ({item, index}) => {
+    ({ item, index }) => {
       return (
         <ReelComponent
           item={item}
@@ -263,14 +264,16 @@ export default function ReelsComponent({amIFocused}) {
           setSelectedPostId={setSelectedPostId}
           commentSheetRef={commentSheetRef}
           setselectedDescription={setselectedDescription}
+          isCommentOpen={isCommentOpen}
+          setIsCommentOpen={setIsCommentOpen}
           descriptionSheetRef={descriptionSheetRef}
         />
       );
     },
-    [layoutHeight, user, activeVideoIndex, isFocused],
+    [layoutHeight, user, activeVideoIndex, isFocused, isCommentOpen],
   );
 
-  const viewConfig = useRef({viewAreaCoveragePercentThreshold: 50}).current;
+  const viewConfig = useRef({ viewAreaCoveragePercentThreshold: 50 }).current;
 
   const updateViews = async s =>
     request.post('/views', {
@@ -280,7 +283,7 @@ export default function ReelsComponent({amIFocused}) {
 
   const updateViewsMutation = useMutation(updateViews);
 
-  const viewableItemsChanged = useRef(({viewableItems}) => {
+  const viewableItemsChanged = useRef(({ viewableItems }) => {
     if (viewableItems?.length) {
       setActiveVideoIndex(viewableItems[0].index);
     }
@@ -294,7 +297,7 @@ export default function ReelsComponent({amIFocused}) {
   const onSetLayout = e => setLayoutHeight(e.nativeEvent.layout.height);
 
   return (
-    <View style={[localStyles.outerContainer, {backgroundColor: colors.backgroundColor}]}>
+    <View style={[localStyles.outerContainer, { backgroundColor: colors.backgroundColor }]}>
       {/* Address Dropdown for Delivery Location */}
       <View style={localStyles.addressDropdownContainer}>
         <AddressDropdown
@@ -303,7 +306,7 @@ export default function ReelsComponent({amIFocused}) {
             width: moderateScale(140), // Fixed width to match discover
           }}
           onAddressSelect={address => {
-// You can add logic here to filter content by delivery area if needed
+            // You can add logic here to filter content by delivery area if needed
           }}
         />
       </View>
@@ -321,7 +324,7 @@ export default function ReelsComponent({amIFocused}) {
             title={
               filteredData?.[activeVideoIndex]?.kmAway && filteredData?.[activeVideoIndex]?.kmAway !== null
                 ? filteredData?.[activeVideoIndex]?.kmAway?.toFixed(2) +
-                  strings.kmAway
+                strings.kmAway
                 : strings.clickbranches
             }
           />
@@ -365,12 +368,15 @@ export default function ReelsComponent({amIFocused}) {
         isFetchingNextPage={isFetchingNextPage}
         hasNextPage={hasNextPage}
         fetchNextPage={fetchNextPage}
+        isCommentOpen={isCommentOpen}
       />
 
       <Comment
         SheetRef={commentSheetRef}
         postId={selectedPostId || filteredData?.[0]?._id}
         currentUserId={user?._id}
+        onOpen={() => setIsCommentOpen(true)}
+        onClose={() => setIsCommentOpen(false)}
       />
       <Description
         SheetRef={descriptionSheetRef}

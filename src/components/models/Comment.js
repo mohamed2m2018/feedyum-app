@@ -6,22 +6,22 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useRef, useState} from 'react';
+import React, { useRef, useState } from 'react';
 import ActionSheet from 'react-native-actions-sheet';
-import {useSelector} from 'react-redux';
+import { useSelector } from 'react-redux';
 import Feather from 'react-native-vector-icons/Feather';
 import request from '../../api/request';
 // Local import
-import {styles} from '../../themes';
-import {moderateScale} from '../../common/constants';
+import { styles } from '../../themes';
+import { moderateScale } from '../../common/constants';
 import ZText from '../common/ZText';
 import ZInput from '../common/ZInput';
 import strings from '../../i18n/strings';
-import {useInfiniteQuery, useMutation, useQueryClient} from 'react-query';
+import { useInfiniteQuery, useMutation, useQueryClient } from 'react-query';
 import Spinner from 'react-native-loading-spinner-overlay';
-import {ALERT_TYPE, Toast} from 'react-native-alert-notification';
+import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
 import CommentsList from '../../containers/TabBar/comments/CommentsList';
-import {useHandleAuth} from '../../utils/useHandleAuth';
+import { useHandleAuth } from '../../utils/useHandleAuth';
 
 // const CommentRender = ({
 //   item,
@@ -84,7 +84,7 @@ import {useHandleAuth} from '../../utils/useHandleAuth';
 //   );
 // };
 
-export default function Comment({SheetRef, postId}) {
+export default function Comment({ SheetRef, postId, onOpen, onClose }) {
   const colors = useSelector(state => state.theme.theme);
   const inputRef = useRef();
 
@@ -111,12 +111,15 @@ export default function Comment({SheetRef, postId}) {
     isFetchingNextPage,
     fetchNextPage,
     isLoading,
+    refetch,
   } = useInfiniteQuery(
     ['comments', postId],
-    ({pageParam = 1}) => fetchCommentsByPostId(pageParam),
+    ({ pageParam = 1 }) => fetchCommentsByPostId(pageParam),
     {
-      enabled: !!postId?.length,
+      enabled: !!postId,
       retry: false,
+      staleTime: 0,
+      cacheTime: 0,
       getNextPageParam: (lastPage, allPages) => {
         const nextPage =
           lastPage?.currentPage < lastPage?.totalPages
@@ -126,6 +129,7 @@ export default function Comment({SheetRef, postId}) {
       },
       select: res => res?.pages.flatMap(page => page.comments),
       onError: err => {
+        console.log('Query Error:', err);
         if (
           err[Object.keys(err)?.[0]] !== 'Error fetching comments from database'
         ) {
@@ -136,11 +140,14 @@ export default function Comment({SheetRef, postId}) {
           });
         }
       },
+      onSuccess: (data) => console.log('Query Success, Data length:', data?.pages?.length, 'First page comments:', data?.pages?.[0]?.comments?.length),
     },
   );
 
+  console.log('CommentModal Render: postId=', postId, 'isLoading:', isLoading, 'isFetching:', isFetching, 'Data pages:', data?.pages?.length);
+
   const queryClient = useQueryClient();
-  const {handleAuthToast} = useHandleAuth();
+  const { handleAuthToast } = useHandleAuth();
 
   const addComment = async commentText => {
     const response = await request.post('/comment', {
@@ -150,12 +157,12 @@ export default function Comment({SheetRef, postId}) {
     return response.data;
   };
 
-  const {mutate, isLoading: isLoadingAddComments} = useMutation(
+  const { mutate, isLoading: isLoadingAddComments } = useMutation(
     content => addComment(content),
     {
       onSuccess: () => {
-        queryClient.invalidateQueries({queryKey: 'comments'});
-        queryClient.invalidateQueries({queryKey: 'commentsCount' + postId});
+        refetch();
+        queryClient.invalidateQueries(['commentsCount' + postId]);
         setAddChat('');
       },
     },
@@ -227,77 +234,95 @@ export default function Comment({SheetRef, postId}) {
 
   return (
     <ActionSheet
-      // gestureEnabled
+      gestureEnabled
       ref={SheetRef}
       key={internalKey}
       onBeforeClose={async () => {
         await Keyboard.dismiss();
         onBlurInput();
         setinternalKey(!internalKey);
+        onClose?.();
       }}
       containerStyle={[
         localStyles.actionSheetContainer,
-        {backgroundColor: colors.backgroundColor},
+        { backgroundColor: colors.backgroundColor },
       ]}>
-      <Spinner
-        visible={
-          isLoadingAddComments || isLoading || mutation.isLoading || isFetching
-        }
-        color={colors.primary}
-      />
-      <View
-        style={[
-          localStyles.headerContainer,
-          {
-            borderBottomColor: colors.bColor,
-          },
-        ]}>
-        <ZText type="b24" align={'center'} style={styles.mb20}>
-          {strings.comments}
-        </ZText>
-      </View>
-      <CommentsList
-        onAddComment={setCommentId}
-        inputRef={inputRef}
-        postId={postId}
-        SheetRef={SheetRef}
-        hasNextPage={hasNextPage}
-        fetchNextPage={fetchNextPage}
-        isFetchingNextPage={isFetchingNextPage}
-        data={data || []}
-      />
-      <View style={[styles.rowCenter, {marginBottom: 30}]}>
-        <ZInput
-          placeHolder={strings.message + '...'}
-          keyBoardType={'default'}
-          fieldRef={inputRef}
-          _value={addChat}
-          autoCapitalize={'none'}
-          toGetTextFieldValue={onchangeComment}
-          inputContainerStyle={[
-            {backgroundColor: colors.inputBg},
-            localStyles.inputContainerStyle,
-            chatStyle,
-          ]}
-          _onFocus={onFocusInput}
-          onBlur={onBlurInput}
-        />
-        <TouchableOpacity
-          onPress={() => onPressSend(commentId ? commentId : undefined)}
-          disabled={isLoadingAddComments || isFetching}
-          style={[
-            localStyles.sendBtn,
-            {
-              backgroundColor: colors.primary,
-            },
-          ]}>
-          <Feather
-            name={'send'}
-            size={moderateScale(24)}
-            style={{...(I18nManager.isRTL && {transform: [{scaleX: -1}]})}}
-            color={colors.white}
+      <View style={{ height: '100%', justifyContent: 'space-between' }}>
+        <View style={{ flex: 1 }}>
+          <Spinner
+            visible={
+              isLoadingAddComments || isLoading || mutation.isLoading || isFetching
+            }
+            color={colors.primary}
           />
-        </TouchableOpacity>
+          <View
+            style={[
+              localStyles.headerContainer,
+              {
+                borderBottomColor: colors.bColor,
+              },
+            ]}>
+            <ZText type="b24" align={'center'} style={styles.mb20}>
+              {strings.comments}
+            </ZText>
+          </View>
+          <CommentsList
+            onAddComment={setCommentId}
+            inputRef={inputRef}
+            postId={postId}
+            SheetRef={SheetRef}
+            hasNextPage={hasNextPage}
+            fetchNextPage={fetchNextPage}
+            isFetchingNextPage={isFetchingNextPage}
+            data={data || []}
+          />
+        </View>
+        <View style={[styles.rowCenter, { marginBottom: 10, paddingHorizontal: 5 }]}>
+          <ZInput
+            placeHolder={strings.message + '...'}
+            keyBoardType={'default'}
+            fieldRef={inputRef}
+            _value={addChat}
+            autoCapitalize={'none'}
+            toGetTextFieldValue={onchangeComment}
+            inputContainerStyle={[
+              localStyles.inputContainerStyle,
+              {
+                backgroundColor: colors.inputColor,
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.1,
+                shadowRadius: 4,
+                elevation: 3,
+                borderWidth: 0, // Remove border for cleaner look
+              },
+              chatStyle,
+            ]}
+            _onFocus={onFocusInput}
+            onBlur={onBlurInput}
+          />
+          <TouchableOpacity
+            onPress={() => onPressSend(commentId ? commentId : undefined)}
+            disabled={isLoadingAddComments || isFetching}
+            style={[
+              localStyles.sendBtn,
+              {
+                backgroundColor: colors.primary,
+                shadowColor: colors.primary,
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.3,
+                shadowRadius: 5,
+                elevation: 5,
+              },
+            ]}>
+            <Feather
+              name={'send'}
+              size={moderateScale(22)}
+              style={{ ...(I18nManager.isRTL && { transform: [{ scaleX: -1 }] }) }}
+              color={colors.white}
+            />
+          </TouchableOpacity>
+        </View>
       </View>
     </ActionSheet>
   );
@@ -341,11 +366,10 @@ const localStyles = StyleSheet.create({
     ...styles.mt10,
   },
   inputContainerStyle: {
-    height: moderateScale(60),
-    borderRadius: moderateScale(20),
-    borderWidth: moderateScale(1),
+    height: moderateScale(50),
+    borderRadius: moderateScale(25),
     ...styles.ph15,
-    width: moderateScale(300),
+    width: moderateScale(280), // Slightly reduced to fit button
   },
   sendBtn: {
     height: moderateScale(60),

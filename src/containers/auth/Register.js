@@ -5,22 +5,22 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
-import React, {memo, useEffect, useState} from 'react';
-import {useSelector} from 'react-redux';
+import React, { memo, useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 // Local Imports
 import strings from '../../i18n/strings';
-import {styles, colors} from '../../themes';
+import { styles, colors } from '../../themes';
 import ZText from '../../components/common/ZText';
-import {ACCESS_TOKEN, getHeight, moderateScale} from '../../common/constants';
+import { ACCESS_TOKEN, getHeight, moderateScale } from '../../common/constants';
 import ZHeader from '../../components/common/ZHeader';
 import ZSafeAreaView from '../../components/common/ZSafeAreaView';
-import {Google_Icon} from '../../assets/svgs';
-import {StackNav} from '../../navigation/NavigationKeys';
+import { Google_Icon } from '../../assets/svgs';
+import { StackNav } from '../../navigation/NavigationKeys';
 import ZInput from '../../components/common/ZInput';
 import ZKeyBoardAvoidWrapper from '../../components/common/ZKeyBoardAvoidWrapper';
-import {validateEmail, validatePassword} from '../../utils/validators';
+import { validateEmail, validatePassword } from '../../utils/validators';
 import ZButton from '../../components/common/ZButton';
 
 import {
@@ -29,15 +29,15 @@ import {
 } from '@react-native-google-signin/google-signin';
 import axios from 'axios';
 import request from '../../api/request';
-import {useQueryClient} from 'react-query';
+import { useQueryClient } from 'react-query';
 import { OneSignal } from 'react-native-onesignal';
-import {ALERT_TYPE, Dialog, Toast} from 'react-native-alert-notification';
-import {useStorage} from '../../utils/useStorage';
+import { ALERT_TYPE, Dialog, Toast } from 'react-native-alert-notification';
+import { useStorage } from '../../utils/useStorage';
 
 GoogleSignin.configure({
   // Add your web client ID here
   webClientId:
-    '461220795216-310np2q6hf96uurinsk99ulbet2a9jf3.apps.googleusercontent.com',
+    '366063482945-m3nacq9l697asg8f6ss2tabvt05i03d6.apps.googleusercontent.com',
   offlineAccess: true,
   scopes: [
     'profile',
@@ -46,7 +46,7 @@ GoogleSignin.configure({
   ],
 });
 
-const RenderSocialBtn = memo(({item, index}) => {
+const RenderSocialBtn = memo(({ item, index }) => {
   return (
     <>
       <TouchableOpacity
@@ -66,7 +66,7 @@ const RenderSocialBtn = memo(({item, index}) => {
     </>
   );
 });
-const Register = ({navigation, route}) => {
+const Register = ({ navigation, route }) => {
   const colors = useSelector(state => state.theme.theme);
   const queryClient = useQueryClient();
   const [isLoading, setisLoading] = useState(false);
@@ -154,25 +154,41 @@ const Register = ({navigation, route}) => {
         setisLoading(false);
         navigation.reset({
           index: 0,
-          routes: [{name: StackNav.TabBar}],
+          routes: [{ name: StackNav.TabBar }],
         });
       })
       .catch(err => {
         setisLoading(false);
+        console.log('Registration Error:', err);
+        let message = 'Something went wrong';
+        if (typeof err === 'string') {
+          message = err;
+        } else if (err && typeof err === 'object') {
+          // Try to find common error fields
+          message = err.message || err.error || err.email || err.password || JSON.stringify(err);
+          // If the first key is an object (like mongoose 'errors'), stringify it
+          const firstKey = Object.keys(err)?.[0];
+          if (firstKey && typeof err[firstKey] === 'string') {
+            message = err[firstKey];
+          }
+        }
+
         Toast.show({
           type: ALERT_TYPE.DANGER,
           title: strings.error,
-          textBody: err[Object.keys(err)?.[0]],
+          textBody: message,
         });
       });
   };
 
-  const onPressSignUpWithGoogle = async () => {
+  const onPressSignUpWithGoogle = async (isChefParam) => {
     setisLoading(true);
     try {
       await GoogleSignin.hasPlayServices();
-      const {user} = await GoogleSignin.signIn();
-      const {accessToken} = await GoogleSignin.getTokens();
+      const userInfo = await GoogleSignin.signIn();
+      console.log('Google Sign In Response:', userInfo);
+      const user = userInfo?.data?.user || userInfo?.user || userInfo;
+      const { accessToken } = await GoogleSignin.getTokens();
       const phone = await getPhoneNumber(accessToken);
       // Use the information as needed
       handleSubmit(
@@ -181,23 +197,30 @@ const Register = ({navigation, route}) => {
         '',
         '',
         user.email,
-        isChef ? 'chef' : 'user',
+        isChefParam ? 'chef' : 'user', // Use param
         user.photo,
       );
     } catch (error) {
       setisLoading(false);
+      console.log('Google Sign In Error:', error);
       if (error.code === statusCodes.SIGN_IN_CANCELLED) {
         // User cancelled the sign-in flow
-
       } else if (error.code === statusCodes.IN_PROGRESS) {
         // Sign-in is in progress
-
       } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
         // Play services not available or outdated
-
+        Toast.show({
+          type: ALERT_TYPE.DANGER,
+          title: strings.error,
+          textBody: 'Play Services not available',
+        });
       } else {
         // Some other error occurred
-
+        Toast.show({
+          type: ALERT_TYPE.DANGER,
+          title: strings.error,
+          textBody: error.message || 'Google Sign In Failed',
+        });
       }
     }
   };
@@ -215,12 +238,12 @@ const Register = ({navigation, route}) => {
           onPressButtonOne: () => {
             Dialog.hide();
             setIsChef(true);
-            onPressSignUpWithGoogle();
+            onPressSignUpWithGoogle(true);
           },
           onPressButtonTwo: () => {
             Dialog.hide();
             setIsChef(false);
-            onPressSignUpWithGoogle();
+            onPressSignUpWithGoogle(false);
           },
         });
       },
@@ -259,13 +282,13 @@ const Register = ({navigation, route}) => {
   }, [email, password, emailError, passwordError]);
 
   const onChangedEmail = val => {
-    const {msg} = validateEmail(val.trim());
+    const { msg } = validateEmail(val.trim());
     setEmail(val.trim());
     setEmailError(msg);
   };
 
   const onChangedPassword = val => {
-    const {msg} = validatePassword(val.trim());
+    const { msg } = validatePassword(val.trim());
     setPassword(val.trim());
     setPasswordError(msg);
   };
@@ -366,7 +389,7 @@ const Register = ({navigation, route}) => {
             insideLeftIcon={() => <EmailIcon />}
             toGetTextFieldValue={onChangedEmail}
             inputContainerStyle={[
-              {backgroundColor: colors.inputBg},
+              { backgroundColor: colors.inputBg },
               localStyles.inputContainerStyle,
               emailInputStyle,
             ]}
@@ -384,7 +407,7 @@ const Register = ({navigation, route}) => {
             insideLeftIcon={() => <PasswordIcon />}
             toGetTextFieldValue={onChangedPassword}
             inputContainerStyle={[
-              {backgroundColor: colors.inputBg},
+              { backgroundColor: colors.inputBg },
               localStyles.inputContainerStyle,
               passwordInputStyle,
             ]}
@@ -398,7 +421,7 @@ const Register = ({navigation, route}) => {
           {isLoading && (
             <ActivityIndicator
               size={'large'}
-              style={{alignSelf: 'center'}}
+              style={{ alignSelf: 'center' }}
               color={colors.primary}
             />
           )}
@@ -408,7 +431,7 @@ const Register = ({navigation, route}) => {
             color={colors.white}
             containerStyle={[
               localStyles.signBtnContainer,
-              isSubmitDisabled && {opacity: 0.5},
+              isSubmitDisabled && { opacity: 0.5 },
             ]}
             onPress={onPressSignWithPassword}
             disabled={isSubmitDisabled}
@@ -418,7 +441,7 @@ const Register = ({navigation, route}) => {
             <View
               style={[
                 localStyles.orContainer,
-                {backgroundColor: colors.bColor},
+                { backgroundColor: colors.bColor },
               ]}
             />
             {/* <ZText type={'s18'} style={styles.mh10} color={colors.gray}>

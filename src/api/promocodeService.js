@@ -1,47 +1,25 @@
-import { API_BASE_URL } from '../config/constants';
+import request from './request';
 
 class PromoCodeService {
-  constructor() {
-    this.baseURL = API_BASE_URL || 'http://localhost:4800/api';
-  }
-
-  async validatePromoCode(code, orderAmount, chefId, userToken) {
+  async validatePromoCode(code, orderAmount, chefId) {
     try {
-      const response = await fetch(`${this.baseURL}/promocode/validate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${userToken}`,
-        },
-        body: JSON.stringify({
-          code,
-          orderAmount,
-          chefId,
-        }),
+      const response = await request.post('/promocode/validate', {
+        code,
+        orderAmount,
+        chefId,
       });
-
-      const data = await response.json();
-      return data;
+      return response.data;
     } catch (error) {
-throw new Error('Failed to validate promo code');
+      throw error;
     }
   }
 
-  async createPromoCode(promocodeData, userToken) {
+  async createPromoCode(promocodeData) {
     try {
-      const response = await fetch(`${this.baseURL}/promocode/create`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${userToken}`,
-        },
-        body: JSON.stringify(promocodeData),
-      });
-
-      const data = await response.json();
-      return data;
+      const response = await request.post('/promocode/create', promocodeData);
+      return response.data;
     } catch (error) {
-throw new Error('Failed to create promo code');
+      throw error;
     }
   }
 }

@@ -1,5 +1,5 @@
 diff --git a/node_modules/react-native-alert-notification/src/containers/Dialog.tsx b/node_modules/react-native-alert-notification/src/containers/Dialog.tsx
-index a6afe15..361c81e 100644
+index a6afe15..80b6dd1 100644
 --- a/node_modules/react-native-alert-notification/src/containers/Dialog.tsx
 +++ b/node_modules/react-native-alert-notification/src/containers/Dialog.tsx
 @@ -7,10 +7,12 @@ export type IConfigDialog = {
@@ -33,7 +33,7 @@ index a6afe15..361c81e 100644
 +          <Text style={styles.buttonLabel}>{buttonOne}</Text>
          </TouchableOpacity>
 +         <TouchableOpacity style={StyleSheet.flatten([styles.button, styles[type]])} onPress={onPressButtonTwo ?? this._close}>
-+         <Text style={styles.buttonLabel}>{buttonOne}</Text>
++         <Text style={styles.buttonLabel}>{buttonTwo}</Text>
 +       </TouchableOpacity>
 +       </View>
        );

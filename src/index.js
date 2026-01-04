@@ -1,17 +1,19 @@
-import React, {useEffect} from 'react';
-import {Platform, StatusBar, View, LogBox, I18nManager} from 'react-native';
+import React, { useEffect } from 'react';
+import { Platform, StatusBar, View, LogBox, I18nManager } from 'react-native';
 import strings from './i18n/strings';
-import {ScreenProvider} from './navigation/screenContext';
-import {useSelector} from 'react-redux';
+import { ScreenProvider } from './navigation/screenContext';
+import { useSelector } from 'react-redux';
 import AppNavigator from './navigation';
-import {styles} from './themes';
-import {AlertNotificationRoot} from 'react-native-alert-notification';
-import {SheetProvider} from 'react-native-actions-sheet';
+import { styles } from './themes';
+import { AlertNotificationRoot } from 'react-native-alert-notification';
+import { SheetProvider } from 'react-native-actions-sheet';
 import TimeAgo from 'javascript-time-ago';
 import en from 'javascript-time-ago/locale/en';
 import ar from 'javascript-time-ago/locale/ar';
 import firebase from '@react-native-firebase/app';
-import {useStorage} from './utils/useStorage';
+import { useStorage } from './utils/useStorage';
+
+import NotificationService from './services/NotificationService';
 
 const firebaseConfig = {
   apiKey:
@@ -28,6 +30,10 @@ const firebaseConfig = {
   storageBucket: '',
 };
 
+// Initialize OneSignal globally before App mounts
+const notificationService = NotificationService.getInstance();
+notificationService.initialize('8f642b9d-8d10-4b66-b43a-c1d0345ef13f');
+
 const App = () => {
   const colors = useSelector(state => state.theme.theme);
   if (I18nManager.isRTL) {
@@ -43,9 +49,12 @@ const App = () => {
       strings.setLanguage(language || 'en');
     };
     handleLanguage();
-    try {
-      firebase.initializeApp(firebaseConfig);
-    } catch {}
+
+    if (!firebase.apps.length) {
+      try {
+        firebase.initializeApp(firebaseConfig);
+      } catch { }
+    }
   }, []);
 
   return (

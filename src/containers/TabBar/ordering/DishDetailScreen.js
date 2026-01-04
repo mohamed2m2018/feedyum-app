@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -9,9 +9,9 @@ import {
   Animated,
   Dimensions,
 } from 'react-native';
-import {useSelector, useDispatch} from 'react-redux';
-import {useQuery, useMutation, useQueryClient} from 'react-query';
-import {useNavigation, useRoute, CommonActions} from '@react-navigation/native';
+import { useSelector, useDispatch } from 'react-redux';
+import { useQuery, useMutation, useQueryClient } from 'react-query';
+import { useNavigation, useRoute, CommonActions } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
@@ -24,27 +24,31 @@ import StarRating from '../../../components/StarRating';
 import ReviewsList from '../../../components/ReviewsList';
 import ReviewStoriesSection from '../../../components/ReviewStoriesSection';
 import strings from '../../../i18n/strings';
-import {moderateScale} from '../../../common/constants';
-import {styles} from '../../../themes';
-import {StackNav} from '../../../navigation/NavigationKeys';
+import { moderateScale } from '../../../common/constants';
+import { styles } from '../../../themes';
+import { StackNav } from '../../../navigation/NavigationKeys';
 import request from '../../../api/request';
 import images from '../../../assets/images';
 import {
   selectCartError,
   clearError,
+  selectCartItemCount,
+  addToCart,
 } from '../../../redux/reducer/cartSlice';
-import {useStorage} from '../../../utils/useStorage';
+import { useStorage } from '../../../utils/useStorage';
 
-const {width: screenWidth, height: screenHeight} = Dimensions.get('window');
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 const DishDetailScreen = () => {
   const colors = useSelector(state => state.theme.theme);
+  const navigation = useNavigation();
+  const dispatch = useDispatch();
   const route = useRoute();
   const queryClient = useQueryClient();
   const [user] = useStorage('user');
 
-  const {dishId, chefId} = route.params;
-const [quantity, setQuantity] = useState(1);
+  const { dishId, chefId } = route.params;
+  const [quantity, setQuantity] = useState(1);
   const [selectedTab, setSelectedTab] = useState('reviews');
   const [scrollY] = useState(new Animated.Value(0));
   const [showFullDescription, setShowFullDescription] = useState(false);
@@ -62,11 +66,11 @@ const [quantity, setQuantity] = useState(1);
   } = useQuery(
     ['dishDetail', dishId],
     async () => {
-try {
+      try {
         const response = await request.get(`/dishes/${dishId}`);
-return response.data;
+        return response.data;
       } catch (error) {
-throw error;
+        throw error;
       }
     },
     {
@@ -113,7 +117,7 @@ throw error;
   const chefData = dishData?.chef;
 
   // Fallback: fetch chef data separately if not included in dish data
-  const {data: fallbackChefData} = useQuery(
+  const { data: fallbackChefData } = useQuery(
     ['chefInfo', chefId],
     async () => {
       const response = await request.get(`/user/${chefId}`);
@@ -214,7 +218,7 @@ throw error;
                 CommonActions.reset({
                   index: 1,
                   routes: [
-                    {name: 'TabBar', params: {screen: 'Discover'}},
+                    { name: 'TabBar', params: { screen: 'Discover' } },
                     {
                       name: StackNav.ChefMenu,
                       params: {
@@ -255,8 +259,8 @@ throw error;
   };
 
   const handleBack = () => {
-    const {fromDiscover, chefId, chefName} = route.params;
-    
+    const { fromDiscover, chefId, chefName } = route.params;
+
     if (fromDiscover && chefId) {
       // Reset navigation stack to show: Discover -> ChefMenu
       // This way back from ChefMenu goes to Discover, not to DishDetail
@@ -265,8 +269,8 @@ throw error;
           index: 1,
           routes: [
             { name: 'TabBar', params: { screen: 'Discover' } },
-            { 
-              name: StackNav.ChefMenu, 
+            {
+              name: StackNav.ChefMenu,
               params: {
                 chefId: chefId,
                 chefName: chefName || 'Chef Menu',
@@ -309,7 +313,7 @@ throw error;
           },
         ]}>
         <TouchableOpacity
-          style={[localStyles.headerButton, {backgroundColor: colors.white}]}
+          style={[localStyles.headerButton, { backgroundColor: colors.white }]}
           onPress={handleBack}>
           <Ionicons
             name="arrow-back"
@@ -323,7 +327,7 @@ throw error;
         </ZText>
 
         <TouchableOpacity
-          style={[localStyles.headerButton, {backgroundColor: colors.white}]}
+          style={[localStyles.headerButton, { backgroundColor: colors.white }]}
           onPress={handleToggleFavorite}
           disabled={
             addToFavoritesMutation.isLoading ||
@@ -343,7 +347,7 @@ throw error;
     <View style={localStyles.heroSection}>
       <Image
         source={
-          dishData?.image ? {uri: dishData.image} : images.dishPlaceholder
+          dishData?.image ? { uri: dishData.image } : images.dishPlaceholder
         }
         style={localStyles.heroImage}
         resizeMode="cover"
@@ -391,7 +395,7 @@ throw error;
 
   const renderDishInfo = () => (
     <View
-      style={[localStyles.dishInfoSection, {backgroundColor: colors.white}]}>
+      style={[localStyles.dishInfoSection, { backgroundColor: colors.white }]}>
       {/* Dish Name and Price */}
       <View style={localStyles.dishHeader}>
         <View style={localStyles.dishTitleSection}>
@@ -406,11 +410,11 @@ throw error;
         {/* Chef Info */}
         <TouchableOpacity
           style={localStyles.chefInfo}
-          onPress={() => navigation.navigate('ChefProfile', {chefId})}>
+          onPress={() => navigation.navigate('ChefProfile', { chefId })}>
           <Image
             source={
               finalChefData?.avatar
-                ? {uri: finalChefData.avatar}
+                ? { uri: finalChefData.avatar }
                 : colors.dark
                   ? images.userDark
                   : images.userLight
@@ -455,7 +459,7 @@ throw error;
             {dishData.tags.map((tag, index) => (
               <View
                 key={index}
-                style={[localStyles.tag, {backgroundColor: '#FF4D67' + '15'}]}>
+                style={[localStyles.tag, { backgroundColor: '#FF4D67' + '15' }]}>
                 <ZText type="M12" color="#FF4D67">
                   {tag}
                 </ZText>
@@ -468,11 +472,11 @@ throw error;
   );
 
   const renderTabBar = () => (
-    <View style={[localStyles.tabBar, {backgroundColor: colors.white}]}>
+    <View style={[localStyles.tabBar, { backgroundColor: colors.white }]}>
       <TouchableOpacity
         style={[
           localStyles.tab,
-          selectedTab === 'reviews' && {backgroundColor: colors.primary},
+          selectedTab === 'reviews' && { backgroundColor: colors.primary },
         ]}
         onPress={() => setSelectedTab('reviews')}>
         <ZText
@@ -486,7 +490,7 @@ throw error;
         <TouchableOpacity
           style={[
             localStyles.tab,
-            selectedTab === 'ingredients' && {backgroundColor: colors.primary},
+            selectedTab === 'ingredients' && { backgroundColor: colors.primary },
           ]}
           onPress={() => setSelectedTab('ingredients')}>
           <ZText
@@ -511,7 +515,7 @@ throw error;
   };
 
   const renderDetailsTab = () => (
-    <View style={[localStyles.tabContent, {backgroundColor: colors.white}]}>
+    <View style={[localStyles.tabContent, { backgroundColor: colors.white }]}>
       {/* Nutritional Info */}
       {dishData?.nutritionalInfo && (
         <View style={localStyles.nutritionSection}>
@@ -584,7 +588,7 @@ throw error;
     const hasMoreReviews = reviewStories.length > 4;
 
     return (
-      <View style={[localStyles.tabContent, {backgroundColor: colors.white}]}>
+      <View style={[localStyles.tabContent, { backgroundColor: colors.white }]}>
         {/* Stunning Review Posts Section */}
         <View style={localStyles.reviewPostsContainer}>
           <View style={localStyles.reviewPostsHeader}>
@@ -603,11 +607,11 @@ throw error;
               {displayedReviews.map((story, index) => (
                 <TouchableOpacity
                   key={story._id}
-                  style={[localStyles.reviewPostCard, {backgroundColor: colors.backgroundColor}]}
+                  style={[localStyles.reviewPostCard, { backgroundColor: colors.backgroundColor }]}
                   onPress={() => handleReviewStoryPress(story)}
                 >
                   {/* Rating Badge */}
-                  <View style={[localStyles.ratingBadge, {backgroundColor: colors.primary}]}>
+                  <View style={[localStyles.ratingBadge, { backgroundColor: colors.primary }]}>
                     <Ionicons name="star" size={moderateScale(12)} color={colors.white} />
                     <ZText type="B12" color={colors.white} style={styles.ml4}>
                       {story.rating}/5
@@ -623,11 +627,11 @@ throw error;
                         resizeMode="cover"
                       />
                     ) : (
-                      <View style={[localStyles.reviewMediaPlaceholder, {backgroundColor: colors.grayScale2}]}>
+                      <View style={[localStyles.reviewMediaPlaceholder, { backgroundColor: colors.grayScale2 }]}>
                         <Ionicons name="image" size={moderateScale(32)} color={colors.grayScale5} />
                       </View>
                     )}
-                    
+
                     {story.uri && (
                       <View style={localStyles.playButton}>
                         <Ionicons name="play" size={moderateScale(20)} color={colors.white} />
@@ -653,12 +657,12 @@ throw error;
                         {[1, 2, 3, 4, 5].map((star) => (
                           <Ionicons
                             key={star}
-                            name={story.rating && story.rating > 0 
+                            name={story.rating && story.rating > 0
                               ? (star <= story.rating ? 'star' : 'star-outline')
                               : 'star'
                             }
                             size={moderateScale(12)}
-                            color={story.rating && story.rating > 0 
+                            color={story.rating && story.rating > 0
                               ? (star <= story.rating ? '#FFD700' : colors.grayScale4)
                               : (colors.grayScale4 || "#CCCCCC")
                             }
@@ -686,11 +690,11 @@ throw error;
           )}
 
           {hasMoreReviews && (
-            <TouchableOpacity 
-              style={[localStyles.seeMoreButton, {backgroundColor: colors.primary}]}
-              onPress={() => navigation.navigate(StackNav.ReviewReelDetail, { 
-                dishId, 
-                reviews: reviewStories 
+            <TouchableOpacity
+              style={[localStyles.seeMoreButton, { backgroundColor: colors.primary }]}
+              onPress={() => navigation.navigate(StackNav.ReviewReelDetail, {
+                dishId,
+                reviews: reviewStories
               })}
             >
               <ZText type="B16" color={colors.white}>
@@ -704,7 +708,7 @@ throw error;
   };
 
   const renderIngredientsTab = () => (
-    <View style={[localStyles.tabContent, {backgroundColor: colors.white}]}>
+    <View style={[localStyles.tabContent, { backgroundColor: colors.white }]}>
       {dishData?.ingredients && dishData.ingredients.length > 0 ? (
         <View style={localStyles.ingredientsSection}>
           <ZText type="B18" color="#1A1A1A" style={styles.mb15}>
@@ -742,63 +746,63 @@ throw error;
     // Hide cart controls if current user is the chef/owner of the dish
     const currentUserId = user?._id?.toString();
     const dishOwnerId = (dishData?.user_id || chefId)?.toString();
-    
+
 
 
     const isOwner = currentUserId === dishOwnerId;
     if (isOwner) return null;
 
     return (
-    <View style={[localStyles.bottomSection, {backgroundColor: colors.white}]}>
+      <View style={[localStyles.bottomSection, { backgroundColor: colors.white }]}>
 
 
-      {/* Quantity Selector */}
-      <View style={localStyles.quantitySection}>
-        <ZText type="B16" color="#1A1A1A" style={styles.mb10}>
-          Quantity
-        </ZText>
-        <View style={localStyles.quantityControls}>
-          <TouchableOpacity
-            style={[
-              localStyles.quantityButton,
-              {backgroundColor: colors.inputBg},
-            ]}
-            onPress={() => handleQuantityChange(-1)}>
-            <Ionicons
-              name="remove"
-              size={moderateScale(20)}
-              color={colors.textColor}
-            />
-          </TouchableOpacity>
+        {/* Quantity Selector */}
+        <View style={localStyles.quantitySection}>
+          <ZText type="B16" color="#1A1A1A" style={styles.mb10}>
+            Quantity
+          </ZText>
+          <View style={localStyles.quantityControls}>
+            <TouchableOpacity
+              style={[
+                localStyles.quantityButton,
+                { backgroundColor: colors.inputBg },
+              ]}
+              onPress={() => handleQuantityChange(-1)}>
+              <Ionicons
+                name="remove"
+                size={moderateScale(20)}
+                color={colors.textColor}
+              />
+            </TouchableOpacity>
 
-          <View style={localStyles.quantityDisplay}>
-            <ZText type="B20" color={colors.primary}>
-              {quantity}
-            </ZText>
+            <View style={localStyles.quantityDisplay}>
+              <ZText type="B20" color={colors.primary}>
+                {quantity}
+              </ZText>
+            </View>
+
+            <TouchableOpacity
+              style={[
+                localStyles.quantityButton,
+                { backgroundColor: colors.primary },
+              ]}
+              onPress={() => handleQuantityChange(1)}>
+              <Ionicons
+                name="add"
+                size={moderateScale(20)}
+                color={colors.white}
+              />
+            </TouchableOpacity>
           </View>
-
-          <TouchableOpacity
-            style={[
-              localStyles.quantityButton,
-              {backgroundColor: colors.primary},
-            ]}
-            onPress={() => handleQuantityChange(1)}>
-            <Ionicons
-              name="add"
-              size={moderateScale(20)}
-              color={colors.white}
-            />
-          </TouchableOpacity>
         </View>
-      </View>
 
-      <ZButton
-        title={`Add to Cart - ${(dishData?.price * quantity).toFixed(0)} EGP`}
-        onPress={handleAddToCart}
-        containerStyle={localStyles.addToCartButton}
-        disabled={!dishData?.visible}
-      />
-    </View>
+        <ZButton
+          title={`Add to Cart - ${(dishData?.price * quantity).toFixed(0)} EGP`}
+          onPress={handleAddToCart}
+          containerStyle={localStyles.addToCartButton}
+          disabled={!dishData?.visible}
+        />
+      </View>
     );
   };
 
@@ -853,66 +857,68 @@ throw error;
         style={localStyles.container}
         showsVerticalScrollIndicator={false}
         onScroll={Animated.event(
-          [{nativeEvent: {contentOffset: {y: scrollY}}}],
-          {useNativeDriver: false},
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: false },
         )}
         scrollEventThrottle={16}>
         {renderHeroSection()}
         {renderDishInfo()}
-        
-        {/* Prominent Add Review Button - Immediately Visible */}
-        <View style={localStyles.prominentButtonContainer}>
-          <View style={localStyles.prominentAddReviewButton}>
-            <TouchableOpacity 
-              style={localStyles.touchableButton}
-              onPress={handleCreateReviewReel}>
-              <LinearGradient
-                colors={['#FF6B8A', '#FF4D67', '#E63946']}
-                start={{x: 0, y: 0}}
-                end={{x: 1, y: 1}}
-                style={localStyles.gradientButton}>
-                <View style={localStyles.addReviewContent}>
-                <View style={localStyles.starContainer}>
-                  <Ionicons
-                    name="star"
-                    size={moderateScale(28)}
-                    color="#FFD700"
-                  />
-                  <Ionicons
-                    name="star"
-                    size={moderateScale(24)}
-                    color="#FFD700"
-                    style={styles.ml2}
-                  />
-                  <Ionicons
-                    name="star"
-                    size={moderateScale(20)}
-                    color="#FFD700"
-                    style={styles.ml1}
-                  />
-                </View>
-                <View style={localStyles.reviewTextContainer}>
-                  <ZText type="B16" color={colors.white} numberOfLines={1}>
-                    ⭐ Share Your Experience
-                  </ZText>
-                  <ZText type="M12" color={colors.white} style={styles.opacity90} numberOfLines={2}>
-                    Create a review reel and help others discover this dish
-                  </ZText>
-                </View>
-                <View style={localStyles.arrowContainer}>
-                  <View style={localStyles.arrowCircle}>
-                    <Ionicons
-                      name="chevron-forward"
-                      size={moderateScale(20)}
-                      color={colors.white}
-                    />
+
+        {/* Prominent Add Review Button - Immediately Visible (Hidden for Chefs) */}
+        {user?.type !== 'chef' && (
+          <View style={localStyles.prominentButtonContainer}>
+            <View style={localStyles.prominentAddReviewButton}>
+              <TouchableOpacity
+                style={localStyles.touchableButton}
+                onPress={handleCreateReviewReel}>
+                <LinearGradient
+                  colors={['#FF6B8A', '#FF4D67', '#E63946']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={localStyles.gradientButton}>
+                  <View style={localStyles.addReviewContent}>
+                    <View style={localStyles.starContainer}>
+                      <Ionicons
+                        name="star"
+                        size={moderateScale(28)}
+                        color="#FFD700"
+                      />
+                      <Ionicons
+                        name="star"
+                        size={moderateScale(24)}
+                        color="#FFD700"
+                        style={styles.ml2}
+                      />
+                      <Ionicons
+                        name="star"
+                        size={moderateScale(20)}
+                        color="#FFD700"
+                        style={styles.ml1}
+                      />
+                    </View>
+                    <View style={localStyles.reviewTextContainer}>
+                      <ZText type="B16" color={colors.white} numberOfLines={1}>
+                        ⭐ Share Your Experience
+                      </ZText>
+                      <ZText type="M12" color={colors.white} style={styles.opacity90} numberOfLines={2}>
+                        Create a review reel and help others discover this dish
+                      </ZText>
+                    </View>
+                    <View style={localStyles.arrowContainer}>
+                      <View style={localStyles.arrowCircle}>
+                        <Ionicons
+                          name="chevron-forward"
+                          size={moderateScale(20)}
+                          color={colors.white}
+                        />
+                      </View>
+                    </View>
                   </View>
-                </View>
-                </View>
-              </LinearGradient>
-            </TouchableOpacity>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
+        )}
 
         {renderTabBar()}
         {renderTabContent()}

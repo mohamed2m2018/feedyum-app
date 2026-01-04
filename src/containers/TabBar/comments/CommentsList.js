@@ -1,4 +1,4 @@
-import React, {useRef, useState, useEffect} from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
   FlatList,
   View,
@@ -10,88 +10,27 @@ import {
   StyleSheet,
 } from 'react-native';
 import Comment from './Comment';
-import {useSelector} from 'react-redux';
+import { useSelector } from 'react-redux';
 
 const CommentsList = props => {
-  const [itemHeights, setItemHeights] = useState([]);
   const colors = useSelector(state => state.theme.theme);
-  const [initialScrollIndex, setInitialScrollIndex] = useState(0);
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
-
   const flatlistRef = useRef();
-  const itemRefs = useRef([]);
+  // Removed complex height calculation logic in favor of scrollToIndex
 
   const scrollToComment = commentIndex => {
-    if (commentIndex !== -1) {
-      setInitialScrollIndex(commentIndex);
+    if (commentIndex !== -1 && flatlistRef.current) {
+      flatlistRef.current.scrollToIndex({
+        index: commentIndex,
+        animated: true,
+        viewPosition: 0.5 // Center the item
+      });
     }
   };
 
-  const {data, topMargin, inputRef} = props;
+  const { data, topMargin, inputRef } = props;
 
-  useEffect(() => {
-    const calculateHeights = () => {
-      const heights = [];
-      itemRefs?.current?.forEach?.((itemRef, index) => {
-        const itemNode = findNodeHandle?.(itemRef.current);
-        if (itemNode) {
-          if (Platform.OS === 'android') {
-            UIManager.measureInWindow(itemNode, (x, y, width, height) => {
-              heights[index] = height;
-            });
-          } else {
-            UIManager.measure(itemNode, (x, y, width, height) => {
-              heights[index] = height;
-            });
-          }
-        }
-      });
-      setItemHeights(heights);
-    };
-
-    const timeoutId = setTimeout(calculateHeights, 0);
-
-    return () => clearTimeout(timeoutId);
-  }, [data]);
-
-  useEffect(() => {
-    const scrollToOffset = () => {
-      let offset = 0;
-      for (let i = 0; i < initialScrollIndex; i++) {
-        offset += itemHeights[i] || 100;
-      }
-
-      flatlistRef.current?.scrollToOffset?.({offset, animated: true});
-    };
-
-    const timeoutId = setTimeout(scrollToOffset, 0);
-
-    return () => clearTimeout(timeoutId);
-  }, [initialScrollIndex, itemHeights, keyboardHeight]);
-
-  useEffect(() => {
-    const keyboardDidShowListener = Keyboard.addListener(
-      'keyboardDidShow',
-      event => {
-        setKeyboardHeight(event.endCoordinates.height);
-      },
-    );
-
-    const keyboardDidHideListener = Keyboard.addListener(
-      'keyboardDidHide',
-      () => {
-        setKeyboardHeight(0);
-      },
-    );
-
-    return () => {
-      keyboardDidShowListener.remove();
-      keyboardDidHideListener.remove();
-    };
-  }, []);
-
-  const renderItem = ({item, index}) => {
-    itemRefs.current[index] = itemRefs.current[index] || React.createRef();
+  const renderItem = ({ item, index }) => {
+    console.log('Rendering Comment Item:', index, item?._id);
     return (
       <Comment
         commentData={item}
@@ -102,7 +41,6 @@ const CommentsList = props => {
         index={index}
         flatlistRef={flatlistRef}
         scrollToComment={scrollToComment}
-        ref={itemRefs.current[index]}
         theme={colors}
       />
     );
@@ -117,7 +55,8 @@ const CommentsList = props => {
   return (
     <View style={commentListStyling.mainContainer}>
       <FlatList
-        style={{marginTop: topMargin}}
+        ref={flatlistRef}
+        style={{ marginTop: topMargin }}
         extraData={props}
         showsVerticalScrollIndicator={false}
         onEndReachedThreshold={0.9}
@@ -127,23 +66,25 @@ const CommentsList = props => {
             <ActivityIndicator size="large" color={colors.primary} />
           )
         }
-        ref={flatlistRef}
-        onScrollToIndexFailed={() => {
-          flatlistRef.current.scrollToIndex({
-            index: initialScrollIndex,
-            animated: true,
+        onScrollToIndexFailed={info => {
+          const wait = new Promise(resolve => setTimeout(resolve, 500));
+          wait.then(() => {
+            flatlistRef.current?.scrollToIndex({ index: info.index, animated: true });
           });
         }}
         data={data || []}
-        keyExtractor={item => item?.id}
+        keyExtractor={item => item?._id}
         renderItem={renderItem}
+        nestedScrollEnabled={true}
+        keyboardShouldPersistTaps="handled"
+        scrollEventThrottle={16}
       />
     </View>
   );
 };
 
 const commentListStyling = StyleSheet.create({
-  icon: {marginTop: 14, marginLeft: 5, marginRight: 7},
+  icon: { marginTop: 14, marginLeft: 5, marginRight: 7 },
   mainContainer: {
     flex: 1,
     justifyContent: 'center',

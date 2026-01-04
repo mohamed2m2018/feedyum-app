@@ -1,5 +1,5 @@
 diff --git a/node_modules/react-native-background-upload/android/build.gradle b/node_modules/react-native-background-upload/android/build.gradle
-index fa6963f..1ebd2ab 100755
+index fa6963f..b4a4ca7 100755
 --- a/node_modules/react-native-background-upload/android/build.gradle
 +++ b/node_modules/react-native-background-upload/android/build.gradle
 @@ -1,6 +1,6 @@
@@ -18,3 +18,12 @@ index fa6963f..1ebd2ab 100755
  
  def DEFAULT_COMPILE_SDK_VERSION = 28
  def DEFAULT_BUILD_TOOLS_VERSION = "28.0.3"
+@@ -64,7 +63,7 @@ dependencies {
+ 
+     implementation "org.jetbrains.kotlin:$_kotlinStdlib:$_kotlinVersion"
+ 
+-    implementation 'net.gotev:uploadservice-okhttp:4.7.0'
++    implementation 'net.gotev:uploadservice-okhttp:4.9.3'
+ 
+     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.0.0'
+ }

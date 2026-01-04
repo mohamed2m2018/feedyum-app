@@ -1,8 +1,8 @@
 import React from 'react';
-import {ActivityIndicator, Platform, RefreshControl} from 'react-native';
+import { ActivityIndicator, Platform, RefreshControl } from 'react-native';
 import ZText from '../../../components/common/ZText';
 import ZLoader from '../../../components/common/ZLoader';
-import {FlashList} from '@shopify/flash-list';
+import { FlashList } from '@shopify/flash-list';
 
 const ReelsList = ({
   filteredData,
@@ -24,6 +24,7 @@ const ReelsList = ({
   isFetching,
   refetch,
   isFetchingStory,
+  isCommentOpen,
 }) => {
   return (
     <FlashList
@@ -37,6 +38,7 @@ const ReelsList = ({
       onViewableItemsChanged={viewableItemsChanged}
       onLayout={onSetLayout}
       snapToInterval={Platform.OS === 'android' ? layoutHeight : undefined}
+      scrollEnabled={!isCommentOpen}
       drawDistance={layoutHeight * 2} // Increase draw distance for better performance
       decelerationRate={'fast'}
       refreshControl={
@@ -55,7 +57,7 @@ const ReelsList = ({
           <ZText
             align="center"
             type={'m28'}
-            style={{alignSelf: 'center', marginTop: 300}}>
+            style={{ alignSelf: 'center', marginTop: 300 }}>
             {emptylistMessage}
           </ZText>
         )

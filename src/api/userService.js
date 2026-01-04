@@ -1,97 +1,57 @@
-import { API_BASE_URL } from '../config/constants';
+import request from './request';
 
 class UserService {
-  constructor() {
-    this.baseURL = API_BASE_URL || 'http://localhost:4800/api';
-  }
-
-  async getUserProfile(userId, userToken) {
+  async getUserProfile(userId) {
     try {
-      const response = await fetch(`${this.baseURL}/user/${userId}/profile`, {
-        headers: {
-          'Authorization': userToken ? `Bearer ${userToken}` : undefined,
-        },
-      });
-
-      const data = await response.json();
-      return data;
+      const response = await request.get(`/user/${userId}/profile`);
+      return response.data;
     } catch (error) {
-throw new Error('Failed to fetch user profile');
+      throw error;
     }
   }
 
-  async getChefProfile(chefId, userToken) {
+  async getChefProfile(chefId) {
     try {
-      const response = await fetch(`${this.baseURL}/user/chef/${chefId}/profile`, {
-        headers: {
-          'Authorization': userToken ? `Bearer ${userToken}` : undefined,
-        },
-      });
-
-      const data = await response.json();
-      return data;
+      const response = await request.get(`/user/chef/${chefId}/profile`);
+      return response.data;
     } catch (error) {
-throw new Error('Failed to fetch chef profile');
+      throw error;
     }
   }
 
-  async getUserById(userId, userToken) {
+  async getUserById(userId) {
     try {
-      const response = await fetch(`${this.baseURL}/user/${userId}`, {
-        headers: {
-          'Authorization': userToken ? `Bearer ${userToken}` : undefined,
-        },
-      });
-
-      const data = await response.json();
-      return data;
+      const response = await request.get(`/user/${userId}`);
+      return response.data;
     } catch (error) {
-throw new Error('Failed to fetch user');
+      throw error;
     }
   }
 
-  async searchUsers(query, userToken) {
+  async searchUsers(query) {
     try {
-      const response = await fetch(`${this.baseURL}/user/search?q=${encodeURIComponent(query)}`, {
-        headers: {
-          'Authorization': userToken ? `Bearer ${userToken}` : undefined,
-        },
-      });
-
-      const data = await response.json();
-      return data;
+      const response = await request.get(`/user/search?q=${encodeURIComponent(query)}`);
+      return response.data;
     } catch (error) {
-throw new Error('Failed to search users');
+      throw error;
     }
   }
 
-  async getAllUsers(userToken) {
+  async getAllUsers() {
     try {
-      const response = await fetch(`${this.baseURL}/user/all`, {
-        headers: {
-          'Authorization': userToken ? `Bearer ${userToken}` : undefined,
-        },
-      });
-
-      const data = await response.json();
-      return data;
+      const response = await request.get(`/user/all`);
+      return response.data;
     } catch (error) {
-throw new Error('Failed to fetch users');
+      throw error;
     }
   }
 
-  async getChefMenu(chefId, userToken) {
+  async getChefMenu(chefId) {
     try {
-      const response = await fetch(`${this.baseURL}/menus/chef/${chefId}`, {
-        headers: {
-          'Authorization': userToken ? `Bearer ${userToken}` : undefined,
-        },
-      });
-
-      const data = await response.json();
-      return data;
+      const response = await request.get(`/menus/chef/${chefId}`);
+      return response.data;
     } catch (error) {
-throw new Error('Failed to fetch chef menu');
+      throw error;
     }
   }
 }
