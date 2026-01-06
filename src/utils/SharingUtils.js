@@ -12,9 +12,9 @@ class SharingUtils {
         throw new Error('Failed to generate share data');
       }
 
-      // Use native sharing with custom URL scheme
+      // Use native sharing with universal link (clickable https)
       const result = await Share.share({
-        message: `${shareData.shareText}\n\n${shareData.shareLinks.deepLink}`,
+        message: `${shareData.shareText}\n\n${shareData.shareLinks.universalLink}`,
         title: shareData.contentData.title || shareData.contentData.name || 'Check this out!',
       }, {
         // Android specific options
@@ -166,7 +166,7 @@ class SharingUtils {
       const shareData = await this.generateShareData(type, contentId, customParams);
       const { Clipboard } = require('react-native');
 
-      Clipboard.setString(shareData.shareLinks.deepLink);
+      Clipboard.setString(shareData.shareLinks.universalLink);
       Alert.alert('Link Copied!', 'The link has been copied to your clipboard.');
 
       return { success: true };
@@ -206,7 +206,7 @@ class SharingUtils {
   static async shareToWhatsApp(type, contentId, customParams = {}) {
     try {
       const shareData = await this.generateShareData(type, contentId, customParams);
-      const message = encodeURIComponent(`${shareData.shareText}\n\n${shareData.shareLinks.deepLink}`);
+      const message = encodeURIComponent(`${shareData.shareText}\n\n${shareData.shareLinks.universalLink}`);
       const whatsappUrl = `whatsapp://send?text=${message}`;
 
       const canOpen = await Linking.canOpenURL(whatsappUrl);
@@ -229,7 +229,7 @@ class SharingUtils {
       const shareData = await this.generateShareData(type, contentId, customParams);
       const hashtags = shareData.hashtags ? shareData.hashtags.join(',').replace(/#/g, '') : 'FoodTok';
       const text = encodeURIComponent(shareData.shareText);
-      const url = encodeURIComponent(shareData.shareLinks.deepLink);
+      const url = encodeURIComponent(shareData.shareLinks.universalLink);
 
       const twitterUrl = `twitter://post?message=${text}&url=${url}&hashtags=${hashtags}`;
       const webUrl = `https://twitter.com/intent/tweet?text=${text}&url=${url}&hashtags=${hashtags}`;

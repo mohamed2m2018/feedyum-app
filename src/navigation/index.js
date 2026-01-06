@@ -49,7 +49,7 @@ export default function pAppNavigator() {
 
   // Configure deep linking for React Navigation
   const linking = {
-    prefixes: ['foodtok://', 'https://foodtok.app', 'https://www.foodtok.app'],
+    prefixes: ['feedyum://', 'https://feedyum.com', 'https://www.feedyum.com'],
     config: {
       screens: {
         TabBar: {

@@ -544,7 +544,7 @@ class DeepLinkingService {
 
   // Generate deep link URLs
   static generateDeepLink(type, id, params = {}) {
-    const baseUrl = 'foodtok://'; // Your app's URL scheme
+    const baseUrl = 'feedyum://'; // Your app's URL scheme
     const queryString = new URLSearchParams(params).toString();
     const query = queryString ? `?${queryString}` : '';
 
@@ -641,26 +641,25 @@ class DeepLinkingService {
 
   // Generate universal links (for web and sharing)
   static generateUniversalLink(type, id, params = {}) {
-    const baseUrl = 'https://food2k.com'; // Your web domain
+    const baseUrl = 'https://feedyum.com'; // Your web domain
     const queryString = new URLSearchParams(params).toString();
     const query = queryString ? `?${queryString}` : '';
 
     // Use same patterns as deep links but with https
     const deepLink = DeepLinkingService.generateDeepLink(type, id, params);
-    return deepLink.replace('foodtok://', baseUrl);
+    return deepLink.replace('feedyum://', baseUrl);
   }
 
   // Generate shareable links with fallback
   static generateShareableLink(type, id, params = {}) {
-    // Use the backend web fallback which attempts to open the app
-    // For production, replace with your deployed backend URL
-    const API_BASE = 'http://192.168.1.104:4800'; // TODO: Move to config
+    // Use your deployed domain for sharing
+    const DOMAIN = 'https://feedyum.com';
     const queryString = Object.keys(params).length > 0 ? '?' + new URLSearchParams(params).toString() : '';
 
     return {
       deepLink: DeepLinkingService.generateDeepLink(type, id, params),
-      universalLink: `${API_BASE}/api/sharing/${type}/${id}${queryString}`,
-      webFallback: `${API_BASE}/api/sharing/${type}/${id}${queryString}`
+      universalLink: `${DOMAIN}/${type}/${id}${queryString}`,
+      webFallback: `${DOMAIN}/${type}/${id}${queryString}`
     };
   }
 

@@ -1,13 +1,16 @@
 {
   "expo": {
-    "name": "FoodTok",
-    "slug": "foodtok",
+    "name": "FeedYum",
+    "slug": "feedyum",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
-    "scheme": "foodtok",
+    "scheme": "feedyum",
+    "icon": "./assets/icon.png",
     "splash": {
-      "backgroundColor": "#ffffff"
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FF6B35"
     },
     "ios": {
       "supportsTablet": false,
@@ -15,17 +18,21 @@
       "googleServicesFile": "./ios/GoogleService-Info.plist",
       "buildNumber": "1",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "FoodTok needs your location to show nearby restaurants",
-        "NSCameraUsageDescription": "FoodTok needs camera access for taking photos and videos",
-        "NSPhotoLibraryUsageDescription": "FoodTok needs access to your photos to upload images",
-        "NSPhotoLibraryAddUsageDescription": "FoodTok needs access to save photos to your library",
-        "NSMicrophoneUsageDescription": "FoodTok needs microphone access for recording videos"
+        "NSLocationWhenInUseUsageDescription": "FeedYum needs your location to show nearby restaurants",
+        "NSCameraUsageDescription": "FeedYum needs camera access for taking photos and videos",
+        "NSPhotoLibraryUsageDescription": "FeedYum needs access to your photos to upload images",
+        "NSPhotoLibraryAddUsageDescription": "FeedYum needs access to save photos to your library",
+        "NSMicrophoneUsageDescription": "FeedYum needs microphone access for recording videos"
       }
     },
     "android": {
       "package": "com.foodtok",
       "googleServicesFile": "./google-services.json",
       "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FF6B35"
+      },
       "permissions": [
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.ACCESS_FINE_LOCATION",
