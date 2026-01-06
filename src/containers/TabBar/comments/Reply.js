@@ -25,6 +25,52 @@ const Reply = props => {
 
   const queryClient = useQueryClient();
 
+  const { likesNo = 0, likes = [], _id } = reply;
+
+  // Robust check for ObjectId vs String
+  const checkIsLiked = () => {
+    if (!user?._id || !likes) return false;
+    return likes.some(id => id.toString() === user._id.toString());
+  };
+
+  const [isLiked, setIsLiked] = useState(checkIsLiked());
+  const [likesCount, setLikesCount] = useState(likesNo);
+
+  useEffect(() => {
+    setIsLiked(checkIsLiked());
+  }, [likes, user]);
+
+  useEffect(() => {
+    setLikesCount(likesNo);
+  }, [likesNo]);
+
+  const toggleLikeMutation = useMutation(
+    () => {
+      console.log('[Reply Like] Calling API for replyId:', _id);
+      return request.post(`/comment/reply/like/${_id}`);
+    },
+    {
+      onMutate: async () => {
+        console.log('[Reply Like] onMutate - Optimistic update');
+        const previousLiked = isLiked;
+        setIsLiked(!previousLiked);
+        setLikesCount(prev => (!previousLiked ? prev + 1 : Math.max(0, prev - 1)));
+        return { previousLiked };
+      },
+      onError: (err, newTodo, context) => {
+        console.log('[Reply Like] onError:', err);
+        setIsLiked(context.previousLiked);
+        queryClient.invalidateQueries('comments');
+      },
+      onSuccess: (data) => {
+        console.log('[Reply Like] onSuccess. Response:', data);
+        console.log('[Reply Like] Invalidating queries with postId:', props.postId);
+        // Force refetch to sync with server data
+        queryClient.invalidateQueries(['comments', props.postId]);
+      }
+    }
+  );
+
   const deleteReply = async () => {
     await request.post('/comment/reply/delete', {
       commentId: props.commentId,
@@ -65,55 +111,70 @@ const Reply = props => {
           />
         </TouchableOpacity>
 
-        <View style={commentStyling.wrapper}>
-          <Text
-            onPress={navigateToProfile}
-            style={[
-              commentStyling.commentOwner,
-              {
-                color: props.theme.textColor,
-              },
-            ]}>
-            {reply.user_id?.fullName}
-          </Text>
-          <Text
-            style={[
-              commentStyling.content,
-              {
-                color: props.theme.textColor,
-              },
-            ]}>
-            {reply.content}
-          </Text>
+        <View style={{ flex: 1 }}>
+          <View style={commentStyling.wrapper}>
+            <Text
+              onPress={navigateToProfile}
+              style={[
+                commentStyling.commentOwner,
+                { color: props.theme.textColor }
+              ]}>
+              {reply.user_id?.fullName}
+            </Text>
+            <Text
+              style={[
+                commentStyling.content,
+                { color: props.theme.textColor }
+              ]}>
+              {reply.content}
+            </Text>
+          </View>
+
+          <View style={commentStyling.replyFooter}>
+            <Text style={[commentStyling.footerElement, { color: props.theme.textColor }]}>
+              {time}
+            </Text>
+
+            {reply?.user_id?._id === user?._id && (
+              <TouchableOpacity onPress={() => mutation.mutate(reply)}>
+                <Feather name="trash-2" size={moderateScale(16)} color={props.theme.primary} />
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
+
+        {/* Like Button Column */}
+        <TouchableOpacity
+          onPress={() => toggleLikeMutation.mutate()}
+          style={localStyles.likeContainer}
+        >
+          <Ionicons
+            name={isLiked ? 'heart' : 'heart-outline'}
+            size={moderateScale(16)}
+            color={isLiked ? '#FF2D55' : props.theme.textColor}
+          />
+          <Text style={[localStyles.likeCount, { color: props.theme.textColor }]}>
+            {millify(likesCount)}
+          </Text>
+        </TouchableOpacity>
       </View>
-      <View style={commentStyling.replyFooter}>
-        <Text
-          style={[
-            commentStyling.footerElement,
-            { color: props.theme.textColor },
-          ]}>
-          {time}
-        </Text>
-        <Text
-          style={[
-            commentStyling.footerElement,
-            { color: props.theme.textColor },
-          ]}>
-          {reply.date}
-        </Text>
-        {reply?.user_id?._id === user?._id && (
-          <TouchableOpacity onPress={() => mutation.mutate(reply)}>
-            <Feather
-              name="trash-2"
-              size={moderateScale(20)}
-              color={props.theme.primary}
-            />
-          </TouchableOpacity>
-        )}
-      </View>
+
     </View>
   );
 };
+
+const localStyles = StyleSheet.create({
+  likeContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: moderateScale(5),
+    padding: moderateScale(5),
+  },
+  likeCount: {
+    fontSize: moderateScale(10),
+    marginTop: moderateScale(2),
+    textAlign: 'center',
+  }
+});
 
 export default Reply;

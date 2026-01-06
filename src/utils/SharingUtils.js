@@ -1,21 +1,20 @@
-import {Share, Alert, Linking, Platform} from 'react-native';
+import { Share, Alert, Linking, Platform } from 'react-native';
 import DeepLinkingService from '../services/DeepLinkingService';
-import {request} from '../api/constant';
+import request from '../api/request';
 
 class SharingUtils {
   // Generate and share links for different content types
   static async shareContent(type, contentId, customData = {}) {
     try {
       const shareData = await this.generateShareData(type, contentId, customData);
-      
+
       if (!shareData) {
         throw new Error('Failed to generate share data');
       }
 
-      // Use native sharing
+      // Use native sharing with custom URL scheme
       const result = await Share.share({
-        message: shareData.shareText,
-        url: shareData.shareLinks.universalLink,
+        message: `${shareData.shareText}\n\n${shareData.shareLinks.deepLink}`,
         title: shareData.contentData.title || shareData.contentData.name || 'Check this out!',
       }, {
         // Android specific options
@@ -25,10 +24,10 @@ class SharingUtils {
 
       if (result.action === Share.sharedAction) {
 
-        
+
         // Track sharing analytics
         this.trackSharing(type, contentId, result.activityType);
-        
+
         return { success: true, action: result.action, activityType: result.activityType };
       } else if (result.action === Share.dismissedAction) {
         return { success: false, action: 'dismissed' };
@@ -56,7 +55,7 @@ class SharingUtils {
       }
     } catch (error) {
       console.error('Error generating share data:', error);
-      
+
       // Fallback: generate local share data
       return this.generateFallbackShareData(type, contentId, customParams);
     }
@@ -65,7 +64,7 @@ class SharingUtils {
   // Fallback share data generation when backend is unavailable
   static generateFallbackShareData(type, contentId, customParams = {}) {
     const shareLinks = DeepLinkingService.generateShareableLink(type, contentId, customParams);
-    
+
     const fallbackMessages = {
       reel: 'Check out this amazing reel on FoodTok!',
       profile: 'Check out this profile on FoodTok!',
@@ -90,7 +89,7 @@ class SharingUtils {
   // Share specific content types
   static async shareReel(reelId, reelData = {}) {
     const customData = {
-      shareText: reelData.title 
+      shareText: reelData.title
         ? `Check out "${reelData.title}" by ${reelData.creator?.name || 'this creator'} on FoodTok! 🍽️`
         : 'Check out this amazing food reel on FoodTok! 🍽️',
       title: reelData.title,
@@ -104,7 +103,7 @@ class SharingUtils {
   static async shareProfile(profileId, profileData = {}) {
     const isChef = profileData.type === 'chef';
     const customData = {
-      shareText: isChef 
+      shareText: isChef
         ? `Check out Chef ${profileData.name || 'this amazing chef'} on FoodTok! 👨‍🍳`
         : `Check out ${profileData.name || 'this profile'} on FoodTok! 👤`,
       title: profileData.name,
@@ -165,11 +164,11 @@ class SharingUtils {
   static async copyLinkToClipboard(type, contentId, customParams = {}) {
     try {
       const shareData = await this.generateShareData(type, contentId, customParams);
-      const {Clipboard} = require('@react-native-clipboard/clipboard');
-      
-      await Clipboard.setString(shareData.shareLinks.universalLink);
+      const { Clipboard } = require('react-native');
+
+      Clipboard.setString(shareData.shareLinks.deepLink);
       Alert.alert('Link Copied!', 'The link has been copied to your clipboard.');
-      
+
       return { success: true };
     } catch (error) {
       console.error('Copy link error:', error);
@@ -182,7 +181,7 @@ class SharingUtils {
   static async shareToInstagram(type, contentId, imageUrl = null) {
     try {
       const canOpen = await Linking.canOpenURL('instagram://app');
-      
+
       if (!canOpen) {
         Alert.alert('Instagram not found', 'Please install Instagram to share.');
         return { success: false, error: 'Instagram not installed' };
@@ -207,11 +206,11 @@ class SharingUtils {
   static async shareToWhatsApp(type, contentId, customParams = {}) {
     try {
       const shareData = await this.generateShareData(type, contentId, customParams);
-      const message = encodeURIComponent(`${shareData.shareText}\n\n${shareData.shareLinks.universalLink}`);
+      const message = encodeURIComponent(`${shareData.shareText}\n\n${shareData.shareLinks.deepLink}`);
       const whatsappUrl = `whatsapp://send?text=${message}`;
-      
+
       const canOpen = await Linking.canOpenURL(whatsappUrl);
-      
+
       if (canOpen) {
         await Linking.openURL(whatsappUrl);
         return { success: true };
@@ -230,19 +229,19 @@ class SharingUtils {
       const shareData = await this.generateShareData(type, contentId, customParams);
       const hashtags = shareData.hashtags ? shareData.hashtags.join(',').replace(/#/g, '') : 'FoodTok';
       const text = encodeURIComponent(shareData.shareText);
-      const url = encodeURIComponent(shareData.shareLinks.universalLink);
-      
+      const url = encodeURIComponent(shareData.shareLinks.deepLink);
+
       const twitterUrl = `twitter://post?message=${text}&url=${url}&hashtags=${hashtags}`;
       const webUrl = `https://twitter.com/intent/tweet?text=${text}&url=${url}&hashtags=${hashtags}`;
-      
+
       const canOpen = await Linking.canOpenURL(twitterUrl);
-      
+
       if (canOpen) {
         await Linking.openURL(twitterUrl);
       } else {
         await Linking.openURL(webUrl);
       }
-      
+
       return { success: true };
     } catch (error) {
       console.error('Twitter sharing error:', error);

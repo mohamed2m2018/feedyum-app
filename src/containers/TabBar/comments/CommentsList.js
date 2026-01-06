@@ -1,6 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
 import {
-  FlatList,
   View,
   UIManager,
   findNodeHandle,
@@ -9,6 +8,7 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
+import { FlatList, NativeViewGestureHandler } from 'react-native-gesture-handler';
 import Comment from './Comment';
 import { useSelector } from 'react-redux';
 
@@ -53,33 +53,35 @@ const CommentsList = props => {
   };
 
   return (
-    <View style={commentListStyling.mainContainer}>
-      <FlatList
-        ref={flatlistRef}
-        style={{ marginTop: topMargin }}
-        extraData={props}
-        showsVerticalScrollIndicator={false}
-        onEndReachedThreshold={0.9}
-        onEndReached={handleLoadMore}
-        ListFooterComponent={
-          props.isFetchingNextPage && (
-            <ActivityIndicator size="large" color={colors.primary} />
-          )
-        }
-        onScrollToIndexFailed={info => {
-          const wait = new Promise(resolve => setTimeout(resolve, 500));
-          wait.then(() => {
-            flatlistRef.current?.scrollToIndex({ index: info.index, animated: true });
-          });
-        }}
-        data={data || []}
-        keyExtractor={item => item?._id}
-        renderItem={renderItem}
-        nestedScrollEnabled={true}
-        keyboardShouldPersistTaps="handled"
-        scrollEventThrottle={16}
-      />
-    </View>
+    <NativeViewGestureHandler disallowInterruption={true}>
+      <View style={commentListStyling.mainContainer}>
+        <FlatList
+          ref={flatlistRef}
+          style={{ marginTop: topMargin }}
+          extraData={props}
+          showsVerticalScrollIndicator={false}
+          onEndReachedThreshold={0.9}
+          onEndReached={handleLoadMore}
+          ListFooterComponent={
+            props.isFetchingNextPage && (
+              <ActivityIndicator size="large" color={colors.primary} />
+            )
+          }
+          onScrollToIndexFailed={info => {
+            const wait = new Promise(resolve => setTimeout(resolve, 500));
+            wait.then(() => {
+              flatlistRef.current?.scrollToIndex({ index: info.index, animated: true });
+            });
+          }}
+          data={data || []}
+          keyExtractor={item => item?._id}
+          renderItem={renderItem}
+          nestedScrollEnabled={true}
+          keyboardShouldPersistTaps="handled"
+          scrollEventThrottle={16}
+        />
+      </View>
+    </NativeViewGestureHandler>
   );
 };
 

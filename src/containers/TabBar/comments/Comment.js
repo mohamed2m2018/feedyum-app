@@ -70,7 +70,8 @@ const Comment = props => {
         setLikesCount(context.previousCount);
       },
       onSuccess: () => {
-        // Optionally invalidate to ensure sync
+        // Force refetch to sync with server data
+        queryClient.invalidateQueries(['comments', props.postId]);
       }
     }
   );
@@ -100,6 +101,7 @@ const Comment = props => {
       <View key={index} style={{ marginLeft: moderateScale(20), marginTop: moderateScale(5) }}>
         <Reply
           commentId={props.commentData._id}
+          postId={props.postId}
           theme={props.theme}
           SheetRef={props.SheetRef}
           reply={reply}

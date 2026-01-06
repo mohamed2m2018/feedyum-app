@@ -41,6 +41,7 @@ import { useAnalytics } from '@segment/analytics-react-native';
 import AttachedDishesDisplay from '../../../components/common/AttachedDishesDisplay';
 import DeepLinkingService from '../../../services/DeepLinkingService';
 import ImageZoomModal from '../../../components/common/ImageZoomModal';
+import ShareOptionsSheet from '../../../components/models/ShareOptionsSheet';
 import strings from '../../../i18n/strings';
 
 const ReelComponent = ({
@@ -168,6 +169,8 @@ const ReelComponent = ({
 
   const [isLike, setIsLike] = useState(false);
   const [showImageZoom, setShowImageZoom] = useState(false);
+  const shareSheetRef = useRef(null);
+  const [shareItem, setShareItem] = useState(null);
 
   const onPressProfile = (userName, userImage, id) => {
     if (id === data?.data?.user?._id) {
@@ -210,16 +213,8 @@ const ReelComponent = ({
   };
 
   const handleShare = async Postitem => {
-    const link = await generateDynamicLink(Postitem);
-
-    const shareOptions = {
-      title: 'Share via',
-      url: link,
-    };
-
-    Share.open(shareOptions).catch(err => {
-      err && (() => { })();
-    });
+    setShareItem(Postitem);
+    shareSheetRef.current?.show();
   };
 
   const handleContactPress = async () => {
@@ -852,6 +847,21 @@ const ReelComponent = ({
         visible={showImageZoom}
         imageUri={poster}
         onClose={() => setShowImageZoom(false)}
+      />
+
+      {/* Share Options Sheet */}
+      <ShareOptionsSheet
+        SheetRef={shareSheetRef}
+        contentType="reel"
+        contentId={shareItem?._id}
+        contentData={{
+          title: shareItem?.title,
+          description: shareItem?.caption,
+          creator: {
+            name: shareItem?.author?.fullName,
+            avatar: shareItem?.author?.avatar,
+          },
+        }}
       />
     </View >
   );

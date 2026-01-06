@@ -234,7 +234,7 @@ export default function Comment({ SheetRef, postId, onOpen, onClose }) {
 
   return (
     <ActionSheet
-      gestureEnabled
+      gestureEnabled={true}
       ref={SheetRef}
       key={internalKey}
       onBeforeClose={async () => {

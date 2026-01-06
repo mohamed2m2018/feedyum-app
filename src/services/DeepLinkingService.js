@@ -1,5 +1,5 @@
-import {Linking} from 'react-native';
-import {CommonActions} from '@react-navigation/native';
+import { Linking } from 'react-native';
+import { CommonActions } from '@react-navigation/native';
 
 class DeepLinkingService {
   static instance = null;
@@ -20,7 +20,7 @@ class DeepLinkingService {
   initialize() {
     // Handle app launch from deep link
     this.getInitialURL();
-    
+
     // Handle deep links when app is running
     this.addEventListeners();
   }
@@ -32,7 +32,7 @@ class DeepLinkingService {
         this.handleDeepLink(url);
       }
     } catch (error) {
-}
+    }
   }
 
   addEventListeners() {
@@ -46,71 +46,71 @@ class DeepLinkingService {
 
   // Parse and handle deep link URLs
   handleDeepLink(url) {
-try {
+    try {
       const parsed = this.parseDeepLink(url);
       if (parsed) {
         this.navigateToScreen(parsed);
       }
     } catch (error) {
-}
+    }
   }
 
   parseDeepLink(url) {
     const urlObj = new URL(url);
     const path = urlObj.pathname;
     const params = Object.fromEntries(urlObj.searchParams);
-    
+
     // Define supported deep link patterns
     const patterns = {
       // Order deep links
       order: /^\/order\/([a-f\d]{24})$/i,
       orderTracking: /^\/order\/([a-f\d]{24})\/track$/i,
-      
+
       // Chat deep links
       chat: /^\/chat\/([a-f\d]{24})$/i,
       chatList: /^\/chat$/i,
-      
+
       // Reel/Video deep links
       reel: /^\/reel\/([a-f\d]{24})$/i,
       reels: /^\/reels$/i,
       video: /^\/video\/([a-f\d]{24})$/i,
       story: /^\/story\/([a-f\d]{24})$/i,
       reviewReel: /^\/review-reel\/([a-f\d]{24})$/i,
-      
+
       // Profile deep links
       profile: /^\/profile\/([a-f\d]{24})$/i,
       userProfile: /^\/user\/([a-f\d]{24})$/i,
       profileByUsername: /^\/u\/([a-zA-Z0-9_.-]+)$/i,
-      
+
       // Chef deep links
       chefProfile: /^\/chef\/([a-f\d]{24})$/i,
       chefByUsername: /^\/chef\/([a-zA-Z0-9_.-]+)$/i,
       chefMenu: /^\/chef\/([a-f\d]{24})\/menu$/i,
       chefDashboard: /^\/chef\/dashboard$/i,
-      
+
       // Menu deep links
       menu: /^\/menu\/([a-f\d]{24})$/i,
       menuItem: /^\/menu\/([a-f\d]{24})\/item\/([a-f\d]{24})$/i,
       dish: /^\/dish\/([a-f\d]{24})$/i,
       dishDetail: /^\/dish\/([a-f\d]{24})\/detail$/i,
-      
+
       // Discovery deep links
       discover: /^\/discover$/i,
       discoverCategory: /^\/discover\/([a-zA-Z0-9_-]+)$/i,
       trending: /^\/trending$/i,
       search: /^\/search$/i,
       searchResults: /^\/search\/([^\/]+)$/i,
-      
+
       // Social deep links
       following: /^\/profile\/([a-f\d]{24})\/following$/i,
       followers: /^\/profile\/([a-f\d]{24})\/followers$/i,
       likes: /^\/profile\/([a-f\d]{24})\/likes$/i,
       posts: /^\/profile\/([a-f\d]{24})\/posts$/i,
-      
+
       // Live streaming
       live: /^\/live\/([a-f\d]{24})$/i,
       liveStream: /^\/live$/i,
-      
+
       // General deep links
       post: /^\/post\/([a-f\d]{24})$/i,
       hashtag: /^\/hashtag\/([a-zA-Z0-9_]+)$/i,
@@ -150,7 +150,7 @@ try {
         case 'orderTracking':
           this.navigateToOrder(id, params);
           break;
-          
+
         // Chat navigation
         case 'chat':
           this.navigateToChat(id, params);
@@ -158,7 +158,7 @@ try {
         case 'chatList':
           this.navigateToChatList();
           break;
-          
+
         // Reel/Video navigation
         case 'reel':
         case 'video':
@@ -171,7 +171,7 @@ try {
         case 'reels':
           this.navigateToReels(params);
           break;
-          
+
         // Profile navigation
         case 'profile':
         case 'userProfile':
@@ -180,7 +180,7 @@ try {
         case 'profileByUsername':
           this.navigateToProfileByUsername(username, params);
           break;
-          
+
         // Chef navigation
         case 'chefProfile':
           this.navigateToChefProfile(id, params);
@@ -194,7 +194,7 @@ try {
         case 'chefDashboard':
           this.navigateToChefDashboard();
           break;
-          
+
         // Menu navigation
         case 'menu':
           this.navigateToMenu(id, params);
@@ -206,7 +206,7 @@ try {
         case 'dishDetail':
           this.navigateToDish(id, params);
           break;
-          
+
         // Discovery navigation
         case 'discover':
           this.navigateToDiscover(params);
@@ -223,7 +223,7 @@ try {
         case 'searchResults':
           this.navigateToSearchResults(id, params);
           break;
-          
+
         // Social navigation
         case 'following':
           this.navigateToFollowing(id, params);
@@ -237,7 +237,7 @@ try {
         case 'posts':
           this.navigateToPosts(id, params);
           break;
-          
+
         // Live streaming
         case 'live':
           this.navigateToLive(id, params);
@@ -245,7 +245,7 @@ try {
         case 'liveStream':
           this.navigateToLiveStream(params);
           break;
-          
+
         // General navigation
         case 'post':
           this.navigateToPost(id, params);
@@ -256,11 +256,11 @@ try {
         case 'sound':
           this.navigateToSound(id, params);
           break;
-          
+
         default:
-}
+      }
     } catch (error) {
-}
+    }
   }
 
   // Navigation methods for different screens
@@ -554,13 +554,13 @@ try {
         return `${baseUrl}/order/${id}${query}`;
       case 'orderTracking':
         return `${baseUrl}/order/${id}/track${query}`;
-        
+
       // Chat links
       case 'chat':
         return `${baseUrl}/chat/${id}${query}`;
       case 'chatList':
         return `${baseUrl}/chat${query}`;
-        
+
       // Reel/Video links
       case 'reel':
       case 'video':
@@ -571,14 +571,14 @@ try {
         return `${baseUrl}/review-reel/${id}${query}`;
       case 'reels':
         return `${baseUrl}/reels${query}`;
-        
+
       // Profile links
       case 'profile':
       case 'userProfile':
         return `${baseUrl}/profile/${id}${query}`;
       case 'profileByUsername':
         return `${baseUrl}/u/${id}${query}`;
-        
+
       // Chef links
       case 'chefProfile':
         return `${baseUrl}/chef/${id}${query}`;
@@ -588,7 +588,7 @@ try {
         return `${baseUrl}/chef/${id}/menu${query}`;
       case 'chefDashboard':
         return `${baseUrl}/chef/dashboard${query}`;
-        
+
       // Menu links
       case 'menu':
         return `${baseUrl}/menu/${id}${query}`;
@@ -597,7 +597,7 @@ try {
       case 'dish':
       case 'dishDetail':
         return `${baseUrl}/dish/${id}${query}`;
-        
+
       // Discovery links
       case 'discover':
         return `${baseUrl}/discover${query}`;
@@ -609,7 +609,7 @@ try {
         return `${baseUrl}/search${query}`;
       case 'searchResults':
         return `${baseUrl}/search/${encodeURIComponent(id)}${query}`;
-        
+
       // Social links
       case 'following':
         return `${baseUrl}/profile/${id}/following${query}`;
@@ -619,13 +619,13 @@ try {
         return `${baseUrl}/profile/${id}/likes${query}`;
       case 'posts':
         return `${baseUrl}/profile/${id}/posts${query}`;
-        
+
       // Live streaming
       case 'live':
         return `${baseUrl}/live/${id}${query}`;
       case 'liveStream':
         return `${baseUrl}/live${query}`;
-        
+
       // General links
       case 'post':
         return `${baseUrl}/post/${id}${query}`;
@@ -633,7 +633,7 @@ try {
         return `${baseUrl}/hashtag/${id}${query}`;
       case 'sound':
         return `${baseUrl}/sound/${id}${query}`;
-        
+
       default:
         return `${baseUrl}/${query}`;
     }
@@ -641,7 +641,7 @@ try {
 
   // Generate universal links (for web and sharing)
   static generateUniversalLink(type, id, params = {}) {
-    const baseUrl = 'https://foodtok.app'; // Your web domain
+    const baseUrl = 'https://food2k.com'; // Your web domain
     const queryString = new URLSearchParams(params).toString();
     const query = queryString ? `?${queryString}` : '';
 
@@ -652,16 +652,21 @@ try {
 
   // Generate shareable links with fallback
   static generateShareableLink(type, id, params = {}) {
+    // Use the backend web fallback which attempts to open the app
+    // For production, replace with your deployed backend URL
+    const API_BASE = 'http://192.168.1.104:4800'; // TODO: Move to config
+    const queryString = Object.keys(params).length > 0 ? '?' + new URLSearchParams(params).toString() : '';
+
     return {
       deepLink: DeepLinkingService.generateDeepLink(type, id, params),
-      universalLink: DeepLinkingService.generateUniversalLink(type, id, params),
-      webFallback: `https://foodtok.app/${type}/${id || ''}${params ? '?' + new URLSearchParams(params).toString() : ''}`
+      universalLink: `${API_BASE}/api/sharing/${type}/${id}${queryString}`,
+      webFallback: `${API_BASE}/api/sharing/${type}/${id}${queryString}`
     };
   }
 
   // Handle notification-based navigation
   handleNotificationTap(notificationData) {
-if (notificationData.deepLink) {
+    if (notificationData.deepLink) {
       this.handleDeepLink(notificationData.deepLink);
     } else if (notificationData.type && notificationData.id) {
       // Legacy support for old notification format
