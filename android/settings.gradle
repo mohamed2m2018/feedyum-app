@@ -44,7 +44,7 @@ if (getRNMinorVersion() >= 75) {
   }
 }
 
-rootProject.name = 'FoodTok'
+rootProject.name = 'FeedYum'
 
 dependencyResolutionManagement {
   versionCatalogs {

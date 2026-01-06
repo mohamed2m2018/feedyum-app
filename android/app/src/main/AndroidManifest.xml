@@ -32,9 +32,9 @@
         <action android:name="android.intent.action.VIEW"/>
         <category android:name="android.intent.category.DEFAULT"/>
         <category android:name="android.intent.category.BROWSABLE"/>
-        <data android:scheme="foodtok"/>
-        <data android:scheme="com.foodtok"/>
-        <data android:scheme="exp+foodtok"/>
+        <data android:scheme="feedyum"/>
+        <data android:scheme="com.feedyum"/>
+        <data android:scheme="exp+feedyum"/>
       </intent-filter>
     </activity>
     <activity android:name="com.facebook.react.devsupport.DevSettingsActivity" android:exported="false"/>

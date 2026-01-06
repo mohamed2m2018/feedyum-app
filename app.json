@@ -14,7 +14,7 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.foodtok.app",
+      "bundleIdentifier": "com.feedyum.app",
       "googleServicesFile": "./ios/GoogleService-Info.plist",
       "buildNumber": "1",
       "infoPlist": {
@@ -26,7 +26,7 @@
       }
     },
     "android": {
-      "package": "com.foodtok",
+      "package": "com.feedyum",
       "googleServicesFile": "./google-services.json",
       "versionCode": 1,
       "adaptiveIcon": {
@@ -90,7 +90,7 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "45f7cdb3-9f58-43fa-827a-5f29e58b3a67"
+        "projectId": "596fdce7-7a13-43dc-b2f9-cfb57c7395ad"
       }
     }
   }
