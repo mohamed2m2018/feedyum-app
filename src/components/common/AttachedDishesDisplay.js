@@ -6,14 +6,14 @@ import {
   Image,
   ScrollView,
 } from 'react-native';
-import {useSelector} from 'react-redux';
-import {useNavigation} from '@react-navigation/native';
+import { useSelector } from 'react-redux';
+import { useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import StarRating from '../StarRating';
 import ZText from './ZText';
-import {moderateScale} from '../../common/constants';
+import { moderateScale } from '../../common/constants';
 import images from '../../assets/images';
-import {StackNav} from '../../navigation/NavigationKeys';
+import { StackNav } from '../../navigation/NavigationKeys';
 
 const AttachedDishesDisplay = ({
   attachedDishes = [],
@@ -35,11 +35,16 @@ const AttachedDishesDisplay = ({
     if (onDishPress) {
       onDishPress(dish);
     } else {
+      // Use dish's user_id (chef/owner) if available, otherwise fall back to passed chefId
+      // This is important for reviews where the post author is the reviewer, not the chef
+      const dishChefId = dish?.user_id?._id || dish?.user_id || chefId;
+      const dishChefName = dish?.user_id?.fullName || chefName;
+
       // Navigate to chef menu with dish ID for auto-scroll
       navigation.navigate(StackNav.ChefMenu, {
-        chefId: chefId,
+        chefId: dishChefId,
         scrollToDishId: dish?._id || dish?.id,
-        chefName: chefName,
+        chefName: dishChefName,
       });
     }
   };
@@ -57,13 +62,13 @@ const AttachedDishesDisplay = ({
       onPress={() => handleDishPress(dish)}
       activeOpacity={0.8}>
       <Image
-        source={dish.image ? {uri: dish.image} : images.dishPlaceholder}
+        source={dish.image ? { uri: dish.image } : images.dishPlaceholder}
         style={compact ? localStyles.compactDishImage : localStyles.dishImage}
         resizeMode="cover"
       />
-      
 
-      
+
+
       {/* Dish Info Overlay */}
       <View style={localStyles.dishInfoOverlay}>
         <View style={localStyles.dishInfo}>
@@ -84,7 +89,7 @@ const AttachedDishesDisplay = ({
             showWhenNoRating={true}
             style={{ marginBottom: moderateScale(2) }}
           />
-          
+
           {showPrices && (
             <View style={localStyles.priceContainer}>
               <Ionicons
@@ -132,7 +137,7 @@ const AttachedDishesDisplay = ({
               Featured Dishes
             </ZText>
           </View>
-          
+
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -173,7 +178,7 @@ const localStyles = StyleSheet.create({
   },
   headerText: {
     textShadowColor: 'rgba(0, 0, 0, 0.5)',
-    textShadowOffset: {width: 0, height: 1},
+    textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
   },
   dishesContainer: {
@@ -245,7 +250,7 @@ const localStyles = StyleSheet.create({
   },
   dishName: {
     textShadowColor: 'rgba(0, 0, 0, 0.7)',
-    textShadowOffset: {width: 0, height: 1},
+    textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
     marginBottom: moderateScale(4),
   },
@@ -262,7 +267,7 @@ const localStyles = StyleSheet.create({
   priceText: {
     marginLeft: moderateScale(4),
     textShadowColor: 'rgba(0, 0, 0, 0.5)',
-    textShadowOffset: {width: 0, height: 1},
+    textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 1,
   },
   shineEffect: {

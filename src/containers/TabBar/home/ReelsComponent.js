@@ -311,7 +311,7 @@ export default function ReelsComponent({ amIFocused }) {
         />
       </View>
       {isLoadingStory && <ZLoader absolute height={100} top={300} />}
-      {filteredData?.[activeVideoIndex]?.type !== 'ad' && (
+      {filteredData?.[activeVideoIndex]?.type !== 'ad' && filteredData?.[activeVideoIndex]?.author?.type === 'chef' && (
         <View style={localStyles.headerContainer3}>
           <ZButton
             onPress={() => {

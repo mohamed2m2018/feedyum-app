@@ -190,7 +190,7 @@ export default function ReelsComponent({ amIFocused }) {
 
   return (
     <View style={[localStyles.outerContainer, { color: colors.backgroundColor }]}>
-      {filteredData?.[activeVideoIndex]?.type !== 'ad' && (
+      {filteredData?.[activeVideoIndex]?.type !== 'ad' && filteredData?.[activeVideoIndex]?.author?.type === 'chef' && (
         <View style={localStyles.headerContainer3}>
           <ZButton
             onPress={() => {

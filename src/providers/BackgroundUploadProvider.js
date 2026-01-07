@@ -1,14 +1,14 @@
-import React, {createContext, useEffect, useState} from 'react';
-import {convertVideoToMP4, generateThumbnail} from '../utils/UploadUtils';
+import React, { createContext, useEffect, useState } from 'react';
+import { convertVideoToMP4, generateThumbnail } from '../utils/UploadUtils';
 import BackgroundUpload from 'react-native-background-upload';
-import {S3Policy} from 'react-native-aws3/src/S3Policy';
-import {ALERT_TYPE, Dialog, Toast} from 'react-native-alert-notification';
-import {useMutation, useQueryClient} from 'react-query';
+import { S3Policy } from 'react-native-aws3/src/S3Policy';
+import { ALERT_TYPE, Dialog, Toast } from 'react-native-alert-notification';
+import { useMutation, useQueryClient } from 'react-query';
 import request from '../api/request';
-import {Platform} from 'react-native';
+import { Platform } from 'react-native';
 import strings from '../i18n/strings';
-import {useNavigation} from '@react-navigation/native';
-import {TabNav} from '../navigation/NavigationKeys';
+import { useNavigation } from '@react-navigation/native';
+import { TabNav } from '../navigation/NavigationKeys';
 
 const BackgroundUploadContext = createContext();
 
@@ -16,7 +16,7 @@ export function useBackgroundUpload() {
   return React.useContext(BackgroundUploadContext);
 }
 
-export function BackgroundUploadProvider({children}) {
+export function BackgroundUploadProvider({ children }) {
   const queryClient = useQueryClient();
   const [isFormFilled, setisFormFilled] = useState(false);
   const [dataToBeSent, setDataToBeSent] = useState({});
@@ -49,25 +49,26 @@ export function BackgroundUploadProvider({children}) {
         avatarUri: data.avatarUri,
         poster: data.poster,
       };
-return request.post('/story/create-review-reel', reviewReelData);
+      return request.post('/story/create-review-reel', reviewReelData);
     }
     return request.post('/story/add_story', data);
   };
 
   const editPost = () => {
-    const {_id, ...data} = dataToBeSent;
+    const { _id, ...data } = dataToBeSent;
     return request.patch('/story/update_story', {
       id: _id,
       ...data,
     });
   };
 
-  const {mutate} = useMutation(dataToBeSent?.isEdit ? editPost : addNewPost, {
+  const { mutate } = useMutation(dataToBeSent?.isEdit ? editPost : addNewPost, {
     onSuccess: () => {
       // queryClient.invalidateQueries('stories'); // Invalidate the 'stories' query to trigger a refetch
       queryClient.invalidateQueries('user');
-      queryClient.invalidateQueries({queryKey: 'profile-stories'});
-      queryClient.invalidateQueries({queryKey: 'stories_following'});
+      queryClient.invalidateQueries({ queryKey: 'profile-stories' });
+      queryClient.invalidateQueries({ queryKey: 'profile-reviews' }); // Also invalidate reviews
+      queryClient.invalidateQueries({ queryKey: 'stories_following' });
       setImageId();
       setVideoId();
     },
@@ -117,7 +118,10 @@ return request.post('/story/create-review-reel', reviewReelData);
           await queryClient.invalidateQueries({
             queryKey: 'profile-stories',
           });
-          await queryClient.invalidateQueries({queryKey: 'user'});
+          await queryClient.invalidateQueries({
+            queryKey: 'profile-reviews',
+          });
+          await queryClient.invalidateQueries({ queryKey: 'user' });
 
           setisFormFilled(false);
           setDataToBeSent({});
@@ -133,7 +137,7 @@ return request.post('/story/create-review-reel', reviewReelData);
         onError: err => {
           Dialog.hide();
           setisFormFilled(false);
-// Handle validation errors specifically
+          // Handle validation errors specifically
           if (err.details && typeof err.details === 'object') {
             const errorMessages = Object.values(err.details).join(', ');
             Toast.show({
@@ -160,7 +164,7 @@ return request.post('/story/create-review-reel', reviewReelData);
   };
 
   const handleDataToBeSent = formData => {
-    const {uri, poster, avatarUri, ...data} = formData;
+    const { uri, poster, avatarUri, ...data } = formData;
     setDataToBeSent(prevData => ({
       ...prevData,
       ...data,
@@ -179,7 +183,7 @@ return request.post('/story/create-review-reel', reviewReelData);
         locations,
       })
       .then(async () => {
-        await queryClient.invalidateQueries({queryKey: 'user'});
+        await queryClient.invalidateQueries({ queryKey: 'user' });
       })
       .catch(err =>
         Toast.show({
@@ -213,10 +217,10 @@ return request.post('/story/create-review-reel', reviewReelData);
     } else {
       try {
         await BackgroundUpload.cancelUpload(videoId);
-      } catch {}
+      } catch { }
       try {
         await BackgroundUpload.cancelUpload(imageId);
-      } catch {}
+      } catch { }
     }
     try {
       setIsMediaUploading(true);
@@ -285,9 +289,9 @@ return request.post('/story/create-review-reel', reviewReelData);
             );
           });
           BackgroundUpload.addListener('error', uploadId, data => {
-});
+          });
           BackgroundUpload.addListener('cancelled', uploadId, data => {
-});
+          });
           BackgroundUpload.addListener('completed', uploadId, data => {
             // data includes responseCode: number and responseBody: Object
             const startTag = '<Location>';
@@ -301,17 +305,17 @@ return request.post('/story/create-review-reel', reviewReelData);
               ...prevData,
               ...(isImage
                 ? {
-                    avatarUri: secureUrlImage,
-                    isImage: true,
-                  }
+                  avatarUri: secureUrlImage,
+                  isImage: true,
+                }
                 : {
-                    poster: secureUrlImage,
-                  }),
+                  poster: secureUrlImage,
+                }),
             }));
           });
         })
         .catch(err => {
-});
+        });
       if (!isImage) {
         const optionsVideo = {
           type: 'multipart',
@@ -348,9 +352,9 @@ return request.post('/story/create-review-reel', reviewReelData);
               );
             });
             BackgroundUpload.addListener('error', uploadId, data => {
-});
+            });
             BackgroundUpload.addListener('cancelled', uploadId, data => {
-});
+            });
             BackgroundUpload.addListener('completed', uploadId, data => {
               // data includes responseCode: number and responseBody: Object
               const startTag = '<Location>';
@@ -371,7 +375,7 @@ return request.post('/story/create-review-reel', reviewReelData);
             });
           })
           .catch(err => {
-});
+          });
       }
 
       setIsMediaUploading(false);
@@ -383,7 +387,7 @@ return request.post('/story/create-review-reel', reviewReelData);
         duration: 3000,
         hideOnPress: true,
       });
-}
+    }
   };
 
   const providerValue = {

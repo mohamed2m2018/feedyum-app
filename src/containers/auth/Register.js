@@ -33,6 +33,7 @@ import { useQueryClient } from 'react-query';
 import { OneSignal } from 'react-native-onesignal';
 import { ALERT_TYPE, Dialog, Toast } from 'react-native-alert-notification';
 import { useStorage } from '../../utils/useStorage';
+import AppInitializer from '../../services/AppInitializer';
 
 GoogleSignin.configure({
   // Add your web client ID here
@@ -147,8 +148,9 @@ const Register = ({ navigation, route }) => {
       })
       .then(async res => {
         setAccessToken(res?.data?.token);
-        // OneSignal v5
-        OneSignal.login(res?.data?.user?._id);
+        // Use AppInitializer to handle consistent login logic (includes OneSignal login)
+        await AppInitializer.handleUserLogin(res?.data?.user, res?.data?.token);
+
         // Clear React Query cache to force fresh data fetch for this device
         await queryClient.clear();
         setisLoading(false);

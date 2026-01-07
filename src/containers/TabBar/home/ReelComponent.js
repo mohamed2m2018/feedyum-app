@@ -348,11 +348,8 @@ const ReelComponent = ({
             backgroundColor: colors.backgroundColor,
           }}>
           <DoubleClick
-            delay={200}
             singleTap={() => {
-              if (item?.avatarUri) {
-                setShowImageZoom(true);
-              } else {
+              if (!item?.avatarUri) {
                 setpaused(prev => ({
                   ...prev,
                   paused: !prev.paused
@@ -366,14 +363,12 @@ const ReelComponent = ({
               setIsOverlayVisible(true)
             }}
             onLongPress={() => {
-              setIsOverlayVisible(false);
+              if (item?.avatarUri) {
+                setShowImageZoom(true);
+              } else {
+                setIsOverlayVisible(false);
+              }
             }}>
-            {/* Play/Pause Overlay Icon - Shows when video is paused */}
-            {paused.paused && !item?.avatarUri && (
-              <View style={[StyleSheet.absoluteFill, { justifyContent: 'center', alignItems: 'center', zIndex: 10 }]}>
-                <Ionicons name="play" size={60} color="rgba(255, 255, 255, 0.6)" />
-              </View>
-            )}
 
             {/* Review Badge - positioned at top right */}
             {item?.reviewMode && (
@@ -438,7 +433,7 @@ const ReelComponent = ({
                 activeVideoIndex === index + 1 ||
                 activeVideoIndex === index - 1) &&
               isFocused ? (
-              <>
+              <View pointerEvents="none" style={localStyles.imageContainer}>
                 <Video
                   source={{
                     uri,
@@ -490,7 +485,7 @@ const ReelComponent = ({
                   }
                   useTextureView={true}
                 />
-              </>
+              </View>
             ) : item?.avatarUri ? (
               <View style={imageStyles}>
                 <FastImage
@@ -538,6 +533,7 @@ const ReelComponent = ({
 
             {isOverlayVisible && (
               <View
+                pointerEvents="box-none"
                 key={`item-${item?._id}`}
                 style={localStyles.bottomContainer}>
 
@@ -728,32 +724,6 @@ const ReelComponent = ({
                       </TouchableOpacity>
                     )}
 
-                    {/* Seeker - Only show for videos (no avatarUri) */}
-                    {!item?.avatarUri && (
-                      <View
-                        style={{
-                          direction: 'ltr',
-                          ...(I18nManager.isRTL &&
-                            Platform.OS === 'ios' && { transform: [{ scaleX: -1 }] }),
-                        }}>
-                        <Slider
-                          style={localStyles.seekBar}
-                          minimumValue={0}
-                          tapToSeek
-                          maximumValue={durationInSeconds}
-                          value={seekValueClick}
-                          minimumTrackTintColor={colors.primary}
-                          maximumTrackTintColor={colors.grey}
-                          thumbTintColor={colors.primary}
-                          onSlidingComplete={value => {
-                            if (activeVideoIndex === index) {
-                              videoRef?.current?.seek?.(value);
-                              setSeekValueClick(value);
-                            }
-                          }}
-                        />
-                      </View>
-                    )}
                     {/* Debug logging for author type */}
 
 
@@ -825,6 +795,39 @@ const ReelComponent = ({
               )}
             </View>
           </DoubleClick>
+
+          {/* Seeker - Outside DoubleClick to receive touch events */}
+          {isOverlayVisible && !item?.avatarUri && (
+            <View
+              style={{
+                position: 'absolute',
+                bottom: moderateScale(40),
+                left: 5,
+                right: 5,
+                zIndex: 100,
+                width: moderateScale(360),
+                direction: 'ltr',
+                ...(I18nManager.isRTL &&
+                  Platform.OS === 'ios' && { transform: [{ scaleX: -1 }] }),
+              }}>
+              <Slider
+                style={localStyles.seekBar}
+                minimumValue={0}
+                tapToSeek
+                maximumValue={durationInSeconds}
+                value={seekValueClick}
+                minimumTrackTintColor={colors.primary}
+                maximumTrackTintColor={colors.grey}
+                thumbTintColor={colors.primary}
+                onSlidingComplete={value => {
+                  if (activeVideoIndex === index) {
+                    videoRef?.current?.seek?.(value);
+                    setSeekValueClick(value);
+                  }
+                }}
+              />
+            </View>
+          )}
         </View>
       ) : (
         <>

@@ -1,8 +1,8 @@
 diff --git a/node_modules/react-native-double-tap/index.js b/node_modules/react-native-double-tap/index.js
-index 812a47e..4d6ac2e 100644
+index 812a47e..b69b821 100644
 --- a/node_modules/react-native-double-tap/index.js
 +++ b/node_modules/react-native-double-tap/index.js
-@@ -2,63 +2,63 @@ import React, { Component } from "react";
+@@ -2,63 +2,83 @@ import React, { Component } from "react";
  import { TouchableOpacity } from "react-native";
  
  export default class DoubleClick extends Component {
@@ -74,23 +74,27 @@ index 812a47e..4d6ac2e 100644
 +            if (now - this.lastTime < this.delayTime) {
 +                // clear the timeout for the single press
 +                this.timer && clearTimeout(this.timer);
- 
--        //check if user passed in prop for double click
--        this.props.doubleTap ? this.props.doubleTap() : null;
++
 +                //check if user passed in prop for double click
 +                this.props.doubleTap ? this.props.doubleTap() : null;
  
--        // reset back to initial state
--        this.firstPress = true;
--      }
--    }
--  };
+-        //check if user passed in prop for double click
+-        this.props.doubleTap ? this.props.doubleTap() : null;
 +                // reset back to initial state
 +                this.firstPress = true;
 +            }
 +        }
 +    };
  
+-        // reset back to initial state
++    _onLongPress = () => {
++        // Clear single tap timer if long press is triggered
++        this.timer && clearTimeout(this.timer);
+         this.firstPress = true;
+-      }
+-    }
+-  };
+         
 -  render() {
 -    return (
 -      <TouchableOpacity onPress={this._onPress}>
@@ -98,9 +102,24 @@ index 812a47e..4d6ac2e 100644
 -      </TouchableOpacity>
 -    );
 -  }
++        // Call the onLongPress prop if provided
++        this.props.onLongPress ? this.props.onLongPress() : null;
++    };
++
++    _onPressOut = () => {
++        // Call the onPressOut prop if provided
++        this.props.onPressOut ? this.props.onPressOut() : null;
++    };
++
 +    render() {
 +        return (
-+            <TouchableOpacity activeOpacity={1} onPress={this._onPress}>
++            <TouchableOpacity 
++                activeOpacity={1} 
++                onPress={this._onPress}
++                onLongPress={this._onLongPress}
++                onPressOut={this._onPressOut}
++                delayLongPress={this.props.delayLongPress || 500}
++            >
 +                {this.props.children}
 +            </TouchableOpacity>
 +        );

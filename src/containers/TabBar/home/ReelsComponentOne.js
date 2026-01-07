@@ -1,16 +1,16 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 // Libraries import
-import {StyleSheet, TouchableOpacity, View, Platform} from 'react-native';
-import React, {useCallback, useEffect, useRef, useState} from 'react';
+import { StyleSheet, TouchableOpacity, View, Platform } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Description from '../../../components/models/Descriptions';
 import Locations from '../../../components/models/Locations';
 import Comment from '../../../components/models/Comment';
-import {useSelector} from 'react-redux';
+import { useSelector } from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {useIsFocused, useNavigation, useRoute} from '@react-navigation/native';
+import { useIsFocused, useNavigation, useRoute } from '@react-navigation/native';
 
 // Local import
-import {styles} from '../../../themes';
+import { styles } from '../../../themes';
 import {
   getHeight,
   isAndroid,
@@ -18,16 +18,16 @@ import {
   screenFullHeight,
   screenHeight,
 } from '../../../common/constants';
-import {TabNav} from '../../../navigation/NavigationKeys';
-import {useInfiniteQuery, useMutation, useQuery} from 'react-query';
+import { TabNav } from '../../../navigation/NavigationKeys';
+import { useInfiniteQuery, useMutation, useQuery } from 'react-query';
 import ReelComponent from './ReelComponent';
 import request from '../../../api/request';
-import {BannerAd, BannerAdSize, TestIds} from 'react-native-google-mobile-ads';
+import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
 import ReelsList from './ReelsList';
 import strings from '../../../i18n/strings';
 import ZHeader from '../../../components/common/ZHeader';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {useLocation} from '../../../navigation/locationContext';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useLocation } from '../../../navigation/locationContext';
 import ZButton from '../../../components/common/ZButton';
 
 export default function ReelsComponentOne() {
@@ -68,7 +68,7 @@ export default function ReelsComponentOne() {
     isRefetching,
   } = useInfiniteQuery(
     ['stories-user', route?.params?.profile._id],
-    ({pageParam = 1}) => fetchReels(pageParam),
+    ({ pageParam = 1 }) => fetchReels(pageParam),
     {
       retry: 0,
       getNextPageParam: (lastPage, allPages) => {
@@ -80,7 +80,7 @@ export default function ReelsComponentOne() {
       },
       onSuccess: res => {
         if (res?.pageParams?.length === 1) {
-          flatListRef.current?.scrollToOffset({offset: 0});
+          flatListRef.current?.scrollToOffset({ offset: 0 });
         }
         if (!res?.pages?.[0]?.data) {
           // Check if data exists
@@ -95,14 +95,14 @@ export default function ReelsComponentOne() {
             storyCounter++;
 
             if (storyCounter % 5 === 0) {
-              allStoriesWithAds.push({_id: `ad-${storyCounter}`, type: 'ad'});
+              allStoriesWithAds.push({ _id: `ad-${storyCounter}`, type: 'ad' });
             }
           }
         }
 
         // Ensure at least one ad even for less than 5 stories
         if (allStoriesWithAds.length > 0 && storyCounter < 5) {
-          allStoriesWithAds.push({_id: 'ad-end', type: 'ad'});
+          allStoriesWithAds.push({ _id: 'ad-end', type: 'ad' });
         }
 
         setFilteredDataNotSeen(allStoriesWithAds);
@@ -136,7 +136,7 @@ export default function ReelsComponentOne() {
         }
         updateViewsMutation.mutate(res?.data?.story?._id);
       },
-      onError: () => {},
+      onError: () => { },
     },
   );
   useEffect(() => {
@@ -156,7 +156,7 @@ export default function ReelsComponentOne() {
   };
 
   const renderReelComponent = useCallback(
-    ({item, index}) => {
+    ({ item, index }) => {
       return (
         <ReelComponent
           item={item}
@@ -181,7 +181,7 @@ export default function ReelsComponentOne() {
     [layoutHeight, route?.params?.profile._id, activeVideoIndex, isFocused],
   );
 
-  const viewConfig = useRef({viewAreaCoveragePercentThreshold: 50}).current;
+  const viewConfig = useRef({ viewAreaCoveragePercentThreshold: 50 }).current;
 
   const updateViews = async s =>
     request.post('/views', {
@@ -191,7 +191,7 @@ export default function ReelsComponentOne() {
 
   const updateViewsMutation = useMutation(updateViews);
 
-  const viewableItemsChanged = useRef(({viewableItems}) => {
+  const viewableItemsChanged = useRef(({ viewableItems }) => {
     if (viewableItems?.length) {
       setActiveVideoIndex(viewableItems[0].index);
       updateViewsMutation.mutate(viewableItems[0]?.item?._id);
@@ -204,8 +204,8 @@ export default function ReelsComponentOne() {
 
   return (
     <SafeAreaView>
-      <View style={{height: '100%'}}>
-        <View style={{marginTop: 5}}>
+      <View style={{ height: '100%' }}>
+        <View style={{ marginTop: 5 }}>
           <ZHeader
             title={route?.params?.profile?.fullName}
             rightIcon={
@@ -219,7 +219,7 @@ export default function ReelsComponentOne() {
             }
           />
         </View>
-        {filteredData?.[activeVideoIndex]?.type !== 'ad' && (
+        {filteredData?.[activeVideoIndex]?.type !== 'ad' && filteredData?.[activeVideoIndex]?.author?.type === 'chef' && (
           <View style={localStyles.headerContainer3}>
             <ZButton
               onPress={() => {
@@ -232,14 +232,14 @@ export default function ReelsComponentOne() {
               title={
                 filteredData?.[activeVideoIndex]?.kmAway && filteredData?.[activeVideoIndex]?.kmAway !== null
                   ? filteredData?.[activeVideoIndex]?.kmAway?.toFixed(2) +
-                    strings.kmAway
+                  strings.kmAway
                   : strings.clickbranches
               }
             />
           </View>
         )}
         <View
-          style={[localStyles.outerContainer, {color: colors.backgroundColor}]}>
+          style={[localStyles.outerContainer, { color: colors.backgroundColor }]}>
           <ReelsList
             filteredData={filteredData}
             extraData={extraData}
@@ -281,8 +281,8 @@ export default function ReelsComponentOne() {
                   __DEV__
                     ? TestIds.BANNER
                     : Platform.OS === 'android'
-                    ? 'ca-app-pub-2374540952576524/2502355239'
-                    : 'ca-app-pub-2374540952576524/7194173394'
+                      ? 'ca-app-pub-2374540952576524/2502355239'
+                      : 'ca-app-pub-2374540952576524/7194173394'
                 }
                 size={BannerAdSize.BANNER}
                 onAdLoaded={() => setadFailedToLoad(false)}

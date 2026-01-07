@@ -60,17 +60,25 @@ const Login = ({ navigation }) => {
 
   const onPressSignInWithGoogle = async () => {
     try {
+      console.log('[Login] Check Play Services...');
       await GoogleSignin.hasPlayServices();
-      const { user } = await GoogleSignin.signIn();
+      const response = await GoogleSignin.signIn();
+      console.log('[Login] signIn full response:', JSON.stringify(response, null, 2));
+      const user = response.data?.user || response.user; // Handle both v13 structure and potential legacy/different structure
+
+      console.log('[Login] Extracted user:', user);
+
       // Use the information as needed
+      console.log('[Login] Calling mutate login...');
       await mutate(
         {
-          email: user.email,
+          email: user?.email,
           password: '',
           isGoogleSignIn: true,
         },
         {
           onSuccess: async res => {
+            console.log('[Login] mutate onSuccess triggered', res);
             setAccessToken(res?.data?.token);
             setAccessToken(res?.data?.token);
             setUser(res?.data?.user);
@@ -83,7 +91,8 @@ const Login = ({ navigation }) => {
               routes: [{ name: StackNav.TabBar }],
             });
           },
-          onError: () => {
+          onError: (err) => {
+            console.log('[Login] mutate onError triggered', err);
             Toast.show({
               type: ALERT_TYPE.WARNING,
               textBody: strings.notsignedInWithGoogle,
@@ -97,6 +106,7 @@ const Login = ({ navigation }) => {
         },
       );
     } catch (error) {
+      console.log('[Login] GoogleSignin catch error:', error);
       if (error.code === statusCodes.SIGN_IN_CANCELLED) {
         // User cancelled the sign-in flow
 
@@ -167,10 +177,30 @@ const Login = ({ navigation }) => {
 
   const { isLoading, mutate } = useMutation(login, {
     onError: err => {
+      console.log('[Login] Mutation Error:', err);
+      let message = strings.error;
+      if (typeof err === 'string') {
+        message = err;
+      } else if (err?.message) {
+        message = err.message;
+      } else if (err?.error) {
+        message = err.error;
+      } else if (err && typeof err === 'object') {
+        // Fallback: try to find the first string value in the object
+        const keys = Object.keys(err);
+        if (keys.length > 0) {
+          const firstValue = err[keys[0]];
+          if (typeof firstValue === 'string') {
+            message = firstValue;
+          } else {
+            message = JSON.stringify(err);
+          }
+        }
+      }
       Toast.show({
         type: ALERT_TYPE.DANGER,
         title: strings.error,
-        textBody: err[Object.keys(err)?.[0]],
+        textBody: message,
       });
     },
     onSuccess: data => {

@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { Platform, StatusBar, View, LogBox, I18nManager } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import strings from './i18n/strings';
 import { ScreenProvider } from './navigation/screenContext';
 import { useSelector } from 'react-redux';
@@ -58,18 +59,20 @@ const App = () => {
   }, []);
 
   return (
-    <View style={styles.flex}>
-      <StatusBar
-        barStyle={colors.dark === 'dark' ? 'light-content' : 'dark-content'}
-      />
-      <AlertNotificationRoot>
-        <SheetProvider>
-          <ScreenProvider>
-            <AppNavigator />
-          </ScreenProvider>
-        </SheetProvider>
-      </AlertNotificationRoot>
-    </View>
+    <SafeAreaProvider>
+      <View style={styles.flex}>
+        <StatusBar
+          barStyle={colors.dark === 'dark' ? 'light-content' : 'dark-content'}
+        />
+        <AlertNotificationRoot>
+          <SheetProvider>
+            <ScreenProvider>
+              <AppNavigator />
+            </ScreenProvider>
+          </SheetProvider>
+        </AlertNotificationRoot>
+      </View>
+    </SafeAreaProvider>
   );
 };
 

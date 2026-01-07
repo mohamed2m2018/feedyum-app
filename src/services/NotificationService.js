@@ -192,11 +192,11 @@ class NotificationService {
   // Update user tags based on user type and preferences
   async updateUserTags(user) {
     const tags = {
-      user_type: user.type || 'user',
-      user_id: user._id.toString(),
-      language: user.language || 'en',
-      location_city: user.location?.city || '',
-      location_country: user.location?.country || '',
+      user_type: String(user.type || 'user'),
+      user_id: String(user._id),
+      language: String(user.language || 'en'),
+      location_city: String(user.location?.city || ''),
+      location_country: String(user.location?.country || ''),
       last_active: new Date().toISOString()
     };
 

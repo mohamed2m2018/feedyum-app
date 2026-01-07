@@ -1,12 +1,13 @@
-import {SafeAreaView, StyleSheet} from 'react-native';
+import { StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import React from 'react';
-import {styles} from '../../themes';
-import {useSelector} from 'react-redux';
+import { styles } from '../../themes';
+import { useSelector } from 'react-redux';
 
-export default ZSafeAreaView = ({children, ...props}) => {
+export default ZSafeAreaView = ({ children, edges = ['top', 'left', 'right'], ...props }) => {
   const colors = useSelector(state => state.theme.theme);
   return (
-    <SafeAreaView {...props} style={[localStyles(colors, props.style).root]}>
+    <SafeAreaView {...props} edges={edges} style={[localStyles(colors, props.style).root]}>
       {children}
     </SafeAreaView>
   );

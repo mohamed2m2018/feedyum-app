@@ -365,20 +365,22 @@ export default function Profile({ navigation }) {
           </TouchableOpacity>
         )}
 
-        {/* WALLET BUTTON */}
-        <TouchableOpacity
-          style={[localStyles.iconButton, { borderColor: colors.primary }]}
-          onPress={() => navigation.navigate(StackNav.Wallet)}
-        >
-          <Ionicons
-            name="wallet-outline"
-            size={moderateScale(20)}
-            color={colors.primary}
-          />
-          <ZText type="m12" color={colors.primary} style={styles.mt5}>
-            {strings.wallet}
-          </ZText>
-        </TouchableOpacity>
+        {/* WALLET BUTTON - Only for chefs */}
+        {user?.type === 'chef' && (
+          <TouchableOpacity
+            style={[localStyles.iconButton, { borderColor: colors.primary }]}
+            onPress={() => navigation.navigate(StackNav.Wallet)}
+          >
+            <Ionicons
+              name="wallet-outline"
+              size={moderateScale(20)}
+              color={colors.primary}
+            />
+            <ZText type="m12" color={colors.primary} style={styles.mt5}>
+              {strings.wallet}
+            </ZText>
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Enhanced Tab Bar */}

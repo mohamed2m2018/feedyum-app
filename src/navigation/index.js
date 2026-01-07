@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, useNavigationContainerRef } from '@react-navigation/native';
 import { AppState } from 'react-native';
 import StackNavigation from './Type/StackNavigation';
 import { useSelector } from 'react-redux';
@@ -11,7 +11,7 @@ import NotificationService from '../services/NotificationService';
 import AppInitializer from '../services/AppInitializer';
 
 export default function pAppNavigator() {
-  const navigationRef = useRef();
+  const navigationRef = useNavigationContainerRef();
   const appState = useRef(AppState.currentState);
   const color = useSelector(state => state.theme.theme);
 
@@ -20,16 +20,10 @@ export default function pAppNavigator() {
   };
 
   useEffect(() => {
-    // Initialize deep linking service
-    if (navigationRef.current) {
-      DeepLinkingService.setNavigationRef(navigationRef.current);
-      const deepLinkingService = DeepLinkingService.getInstance();
-      const cleanup = deepLinkingService.initialize();
-
-
-
-      return cleanup;
-    }
+    // We will initialize DeepLinkingService in onReady to ensure ref is ready
+    const deepLinkingService = DeepLinkingService.getInstance();
+    const cleanup = deepLinkingService.initialize();
+    return cleanup;
   }, []);
 
   useEffect(() => {
@@ -343,6 +337,9 @@ export default function pAppNavigator() {
       fallback={<></>} // You can add a loading component here
       onReady={() => {
         // Navigation is ready, deep linking service can now handle navigation
+        if (navigationRef.isReady()) {
+          DeepLinkingService.setNavigationRef(navigationRef);
+        }
       }}
       onUnhandledAction={(action) => {
       }}

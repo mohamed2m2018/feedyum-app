@@ -1,7 +1,7 @@
 /* eslint-disable react-native/no-inline-styles */
 
-import React, {useEffect, useRef, useState} from 'react';
-import {ActivityIndicator, Platform, View} from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Platform, View } from 'react-native';
 import NativeAdView, {
   AdvertiserView,
   CallToActionView,
@@ -12,9 +12,9 @@ import NativeAdView, {
   TaglineView,
   TestIds,
 } from 'react-native-admob-native-ads';
-import {MediaView} from './MediaView';
-import {Logger} from './utils';
-import {useSelector} from 'react-redux';
+import { MediaView } from './MediaView';
+import { Logger } from './utils';
+import { useSelector } from 'react-redux';
 import Typography from '../../../../themes/typography';
 import {
   getHeight,
@@ -23,7 +23,7 @@ import {
 } from '../../../../common/constants';
 
 export const AdView = React.memo(
-  ({index, media, type, loadOnMount = true, layoutHeight}) => {
+  ({ index, media, type, loadOnMount = true, layoutHeight }) => {
     const [aspectRatio, setAspectRatio] = useState(1.5);
     const [loading, setLoading] = useState(true);
     const [loaded, setLoaded] = useState(false);
@@ -119,12 +119,9 @@ export const AdView = React.memo(
         mediationOptions={{
           nativeBanner: true,
         }}
-        adUnitID={
-          Platform.OS === 'android'
-            ? 'ca-app-pub-2374540952576524/8305679395'
-            : TestIds.Video
-        } // REPLACE WITH NATIVE_AD_VIDEO_ID for video ads.
-        // repository={type === 'image' ? 'imageAd' : 'videoAd'}
+        // Production ID: 'ca-app-pub-2374540952576524/8305679395'
+        adUnitID={TestIds.Video} // Using test ID for development
+      // repository={type === 'image' ? 'imageAd' : 'videoAd'}
       >
         <View
           style={{
@@ -169,7 +166,7 @@ export const AdView = React.memo(
                 opacity: loading || error || !loaded ? 0 : 1,
                 maxWidth: '100%',
               }}>
-              <View style={{flexDirection: 'row', marginBottom: 15}}>
+              <View style={{ flexDirection: 'row', marginBottom: 15 }}>
                 <IconView
                   style={{
                     width: 60,
@@ -243,13 +240,13 @@ export const AdView = React.memo(
                   },
                   Platform.OS === 'ios'
                     ? {
-                        backgroundColor: colors.primary,
-                        height: getHeight(50),
-                        borderRadius: moderateScale(20),
-                        borderWidth: moderateScale(1),
-                        width: '100%',
-                        alignSelf: 'center',
-                      }
+                      backgroundColor: colors.primary,
+                      height: getHeight(50),
+                      borderRadius: moderateScale(20),
+                      borderWidth: moderateScale(1),
+                      width: '100%',
+                      alignSelf: 'center',
+                    }
                     : {},
                 ]}
                 buttonAndroidStyle={{
