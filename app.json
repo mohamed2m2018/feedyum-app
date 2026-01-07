@@ -51,7 +51,7 @@
             "deploymentTarget": "15.0"
           },
           "android": {
-            "kotlinVersion": "1.8.10"
+            "kotlinVersion": "1.9.23"
           }
         }
       ],
@@ -90,7 +90,7 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "596fdce7-7a13-43dc-b2f9-cfb57c7395ad"
+        "projectId": "ca47fcfd-0fd8-4e5b-8eab-0bb115097411"
       }
     }
   }
