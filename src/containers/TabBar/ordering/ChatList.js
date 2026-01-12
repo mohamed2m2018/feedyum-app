@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -7,25 +7,25 @@ import {
   RefreshControl,
   Image,
 } from 'react-native';
-import {useSelector} from 'react-redux';
-import {useQuery} from 'react-query';
-import {useFocusEffect} from '@react-navigation/native';
+import { useSelector } from 'react-redux';
+import { useQuery } from 'react-query';
+import { useFocusEffect } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
 import ZHeader from '../../../components/common/ZHeader';
 import ZText from '../../../components/common/ZText';
 import ZLoader from '../../../components/common/ZLoader';
-import {moderateScale} from '../../../common/constants';
-import {StackNav} from '../../../navigation/NavigationKeys';
+import { moderateScale } from '../../../common/constants';
+import { StackNav } from '../../../navigation/NavigationKeys';
 import request from '../../../api/request';
 import strings from '../../../i18n/strings';
 
-export default function ChatList({navigation}) {
+export default function ChatList({ navigation }) {
   const colors = useSelector(state => state.theme.theme);
   const [refreshing, setRefreshing] = useState(false);
 
   // Get current user
-  const {data: userData} = useQuery('user', () => request.get('/user'));
+  const { data: userData } = useQuery('user', () => request.get('/user'));
   const currentUser = userData?.data?.user;
 
   // Listen for order changes to refresh chat list
@@ -73,7 +73,7 @@ export default function ChatList({navigation}) {
     try {
       await refetchChats();
     } catch (error) {
-} finally {
+    } finally {
       setRefreshing(false);
     }
   };
@@ -92,7 +92,7 @@ export default function ChatList({navigation}) {
     const diffInHours = (now - date) / (1000 * 60 * 60);
 
     if (diffInHours < 24) {
-      return date.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     } else {
       return date.toLocaleDateString();
     }
@@ -100,53 +100,53 @@ export default function ChatList({navigation}) {
 
   const formatMessagePreview = (content) => {
     if (!content) return strings.noMessagesYet;
-    
+
     // Try to parse as JSON first (for structured messages like audio, images, etc.)
     try {
       const parsedContent = JSON.parse(content);
-      
+
       if (parsedContent.type === 'audio_with_duration') {
-        return '🎵 Audio message';
+        return strings.audioMessage;
       }
-      
+
       if (parsedContent.type === 'image_with_text') {
-        return parsedContent.text ? `📷 ${parsedContent.text}` : '📷 Image';
+        return parsedContent.text ? `📷 ${parsedContent.text}` : strings.imageMessage;
       }
-      
+
       // If it's JSON but unknown type, return a generic message
-      return '📎 Media message';
-      
+      return strings.mediaMessage;
+
     } catch (e) {
       // Not JSON, check if it's an image path
       const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
-      const isImagePath = imageExtensions.some(ext => 
+      const isImagePath = imageExtensions.some(ext =>
         content.toLowerCase().includes(ext)
       );
-      
+
       if (isImagePath) {
-        return '📷 Image';
+        return strings.imageMessage;
       }
-      
+
       // Check if it's an audio file path
       const audioExtensions = ['.mp3', '.wav', '.m4a', '.aac'];
-      const isAudioPath = audioExtensions.some(ext => 
+      const isAudioPath = audioExtensions.some(ext =>
         content.toLowerCase().includes(ext)
       );
-      
+
       if (isAudioPath) {
-        return '🎵 Audio message';
+        return strings.audioMessage;
       }
-      
+
       // Check if it's an order summary message
       if (content.includes('🍽️ ORDER #')) {
         const orderMatch = content.match(/🍽️ ORDER #(\w+)/);
         const statusMatch = content.match(/🔄 Status: (\w+)/);
         if (orderMatch && statusMatch) {
-          return `Order #${orderMatch[1]} - ${statusMatch[1]}`;
+          return strings.formatString(strings.orderSummaryFormat, orderMatch[1], statusMatch[1]);
         }
         return strings.orderSummary;
       }
-      
+
       // Regular text message - truncate if too long
       return content.length > 50 ? `${content.substring(0, 50)}...` : content;
     }
@@ -194,9 +194,9 @@ export default function ChatList({navigation}) {
     }
   };
 
-  const renderChatItem = ({item}) => (
+  const renderChatItem = ({ item }) => (
     <TouchableOpacity
-      style={[localStyles.chatItem, {backgroundColor: colors.inputBg}]}
+      style={[localStyles.chatItem, { backgroundColor: colors.inputBg }]}
       onPress={() => handleChatPress(item)}
       activeOpacity={0.7}>
       <Image
@@ -219,9 +219,9 @@ export default function ChatList({navigation}) {
             </ZText>
           </View>
           <View style={localStyles.orderStatus}>
-            <View 
+            <View
               style={[
-                localStyles.statusBadge, 
+                localStyles.statusBadge,
                 { backgroundColor: getOrderStatusColor(item.order.status) }
               ]}>
               <ZText type="M10" color={colors.white}>
@@ -262,13 +262,13 @@ export default function ChatList({navigation}) {
         type="B18"
         color={colors.grayScale7}
         style={localStyles.emptyTitle}>
-        No order chats yet
+        {strings.noOrderChatsYet}
       </ZText>
       <ZText
         type="M14"
         color={colors.grayScale7}
         style={localStyles.emptySubtitle}>
-        Start a conversation by placing an order and chatting with a chef
+        {strings.startConversationInfo}
       </ZText>
     </View>
   );

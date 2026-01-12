@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   Image,
   ScrollView,
+  Linking,
 } from 'react-native';
 import { useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
@@ -23,6 +24,7 @@ const AttachedDishesDisplay = ({
   compact = false,
   chefId,
   chefName,
+  restaurantName,
 }) => {
   const colors = useSelector(state => state.theme.theme);
   const navigation = useNavigation();
@@ -36,16 +38,27 @@ const AttachedDishesDisplay = ({
       onDishPress(dish);
     } else {
       // Use dish's user_id (chef/owner) if available, otherwise fall back to passed chefId
-      // This is important for reviews where the post author is the reviewer, not the chef
       const dishChefId = dish?.user_id?._id || dish?.user_id || chefId;
       const dishChefName = dish?.user_id?.fullName || chefName;
 
-      // Navigate to chef menu with dish ID for auto-scroll
-      navigation.navigate(StackNav.ChefMenu, {
-        chefId: dishChefId,
-        scrollToDishId: dish?._id || dish?.id,
-        chefName: dishChefName,
-      });
+      // If checks for partner status - usually defined by having a valid chef ID or specific type
+      const isPartnerDish = !!dishChefId && (dish.type === 'menu' || !!dish.menuId || !!dish._id);
+
+      if (isPartnerDish) {
+        // Partner Dish: Navigate to Chef Menu
+        navigation.navigate(StackNav.ChefMenu, {
+          chefId: dishChefId,
+          scrollToDishId: dish?._id || dish?.id,
+          chefName: dishChefName,
+        });
+      } else {
+        // Manual/Unlinked Dish: Google Search
+        // Prioritize passed restaurantName (from post) over dishChefName (which might be the reviewer)
+        const searchEntity = restaurantName || dishChefName || '';
+        const query = `${searchEntity} ${dish.name}`;
+        const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query.trim())}`;
+        Linking.openURL(searchUrl);
+      }
     }
   };
 
@@ -156,9 +169,8 @@ const AttachedDishesDisplay = ({
 const localStyles = StyleSheet.create({
   container: {
     position: 'absolute',
-    bottom: moderateScale(280), // Positioned much higher to be well above action icons
+    bottom: moderateScale(280),
     right: moderateScale(16),
-    // Remove left constraint for compact mode to allow right alignment
     zIndex: 10,
   },
   header: {
@@ -185,41 +197,43 @@ const localStyles = StyleSheet.create({
     paddingRight: moderateScale(16),
   },
   verticalDishesContainer: {
-    alignItems: 'flex-end', // Align dishes to the right side above action icons
+    alignItems: 'flex-end',
   },
   dishCard: {
     width: moderateScale(120),
     height: moderateScale(140),
     borderRadius: moderateScale(16),
-    backgroundColor: '#FFFFFF', // Background color for shadow efficiency
+    backgroundColor: '#FFFFFF',
     marginRight: moderateScale(12),
-    borderWidth: 1,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.4)',
     overflow: 'hidden',
     position: 'relative',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 6,
     },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 10,
   },
   compactDishCard: {
-    width: moderateScale(75),
-    height: moderateScale(85),
-    borderRadius: moderateScale(12),
-    backgroundColor: '#FFFFFF', // Background color for shadow efficiency
-    marginBottom: moderateScale(10),
-    borderWidth: 2,
+    width: moderateScale(80),
+    height: moderateScale(90),
+    borderRadius: moderateScale(14),
+    backgroundColor: '#1a1a1a',
+    marginBottom: moderateScale(8),
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
     overflow: 'hidden',
     position: 'relative',
-    shadowColor: '#000',
+    shadowColor: '#FF6B6B',
     shadowOffset: {
       width: 0,
       height: 4,
     },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.25,
     shadowRadius: 8,
     elevation: 8,
   },
@@ -239,46 +253,49 @@ const localStyles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    borderBottomLeftRadius: moderateScale(10),
-    borderBottomRightRadius: moderateScale(10),
-    paddingVertical: moderateScale(4),
-    paddingHorizontal: moderateScale(4),
+    backgroundColor: 'rgba(0, 0, 0, 0.65)',
+    borderBottomLeftRadius: moderateScale(12),
+    borderBottomRightRadius: moderateScale(12),
+    paddingVertical: moderateScale(5),
+    paddingHorizontal: moderateScale(5),
   },
   dishInfo: {
     zIndex: 2,
   },
   dishName: {
-    textShadowColor: 'rgba(0, 0, 0, 0.7)',
+    textShadowColor: 'rgba(0, 0, 0, 0.8)',
     textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
-    marginBottom: moderateScale(4),
+    textShadowRadius: 3,
+    marginBottom: moderateScale(2),
+    fontWeight: '700',
   },
   priceContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    paddingHorizontal: moderateScale(4),
+    backgroundColor: 'rgba(255, 107, 107, 0.3)',
+    paddingHorizontal: moderateScale(5),
     paddingVertical: moderateScale(2),
-    borderRadius: moderateScale(6),
+    borderRadius: moderateScale(8),
     alignSelf: 'flex-start',
     marginTop: moderateScale(2),
+    borderWidth: 1,
+    borderColor: 'rgba(255, 107, 107, 0.4)',
   },
   priceText: {
-    marginLeft: moderateScale(4),
+    marginLeft: moderateScale(3),
     textShadowColor: 'rgba(0, 0, 0, 0.5)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 1,
+    fontWeight: '700',
   },
   shineEffect: {
     position: 'absolute',
-    top: moderateScale(4),
-    right: moderateScale(4),
-    width: moderateScale(12),
-    height: moderateScale(12),
-    borderRadius: moderateScale(6),
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    opacity: 0.7,
+    top: moderateScale(6),
+    right: moderateScale(6),
+    width: moderateScale(8),
+    height: moderateScale(8),
+    borderRadius: moderateScale(4),
+    backgroundColor: 'rgba(255, 255, 255, 0.6)',
   },
 });
 

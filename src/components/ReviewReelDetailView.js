@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -7,27 +7,27 @@ import {
   Image,
   Dimensions,
 } from 'react-native';
-import {useSelector} from 'react-redux';
-import {useNavigation} from '@react-navigation/native';
+import { useSelector } from 'react-redux';
+import { useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {useQuery} from 'react-query';
+import { useQuery } from 'react-query';
 
 import ZText from './common/ZText';
 import ZButton from './common/ZButton';
 import StarRating from './StarRating';
-import {moderateScale} from '../common/constants';
-import {styles} from '../themes';
+import { moderateScale } from '../common/constants';
+import { styles } from '../themes';
 import request from '../api/request';
 import images from '../assets/images';
 
-const {width: screenWidth} = Dimensions.get('window');
+const { width: screenWidth } = Dimensions.get('window');
 
-const ReviewReelDetailView = ({reviewReel, onClose}) => {
+const ReviewReelDetailView = ({ reviewReel, onClose }) => {
   const colors = useSelector(state => state.theme.theme);
   const navigation = useNavigation();
 
   // Fetch detailed review data
-  const {data: reviewDetails} = useQuery(
+  const { data: reviewDetails } = useQuery(
     ['reviewReelDetails', reviewReel?.id],
     async () => {
       const response = await request.get(`/stories/${reviewReel.id}`);
@@ -68,26 +68,26 @@ const ReviewReelDetailView = ({reviewReel, onClose}) => {
   };
 
   const renderReviewHeader = () => (
-    <View style={[localStyles.header, {backgroundColor: colors.backgroundColor}]}>
+    <View style={[localStyles.header, { backgroundColor: colors.backgroundColor }]}>
       <TouchableOpacity style={localStyles.closeButton} onPress={onClose}>
         <Ionicons name="close" size={moderateScale(24)} color={colors.textColor} />
       </TouchableOpacity>
-      
+
       <ZText type="B16" color={colors.textColor}>
         Review Details
       </ZText>
-      
+
       <View style={localStyles.closeButton} />
     </View>
   );
 
   const renderReviewerInfo = () => (
-    <View style={[localStyles.reviewerSection, {backgroundColor: colors.white}]}>
+    <View style={[localStyles.reviewerSection, { backgroundColor: colors.white }]}>
       <TouchableOpacity style={localStyles.reviewerInfo} onPress={handleViewChef}>
         <Image
           source={
             reviewDetails?.author?.avatar
-              ? {uri: reviewDetails.author.avatar}
+              ? { uri: reviewDetails.author.avatar }
               : colors.dark
                 ? images.userDark
                 : images.userLight
@@ -120,45 +120,45 @@ const ReviewReelDetailView = ({reviewReel, onClose}) => {
   const renderReviewedItem = () => {
     const item = reviewDetails?.reviewedDish || reviewDetails?.reviewedMenu;
     const isMenu = !!reviewDetails?.reviewedMenu;
-    
+
     if (!item) return null;
 
     return (
-      <View style={[localStyles.reviewedItemSection, {backgroundColor: colors.white}]}>
+      <View style={[localStyles.reviewedItemSection, { backgroundColor: colors.white }]}>
         <ZText type="B16" color="#1A1A1A" style={localStyles.sectionTitle}>
-          Reviewed {isMenu ? 'Menu' : 'Dish'}
+          {isMenu ? strings.reviewedMenu : strings.reviewedDish}
         </ZText>
-        
+
         <TouchableOpacity
           style={localStyles.reviewedItem}
           onPress={isMenu ? handleViewMenu : handleViewDish}>
           <Image
             source={
               item.image
-                ? {uri: item.image}
+                ? { uri: item.image }
                 : images.dishPlaceholder
             }
             style={localStyles.itemImage}
           />
-          
+
           <View style={localStyles.itemInfo}>
             <ZText type="B16" color="#1A1A1A" numberOfLines={2}>
               {item.name}
             </ZText>
-            
+
             {item.description && (
               <ZText type="M14" color="#666666" numberOfLines={3} style={styles.mt4}>
                 {item.description}
               </ZText>
             )}
-            
+
             {!isMenu && item.price && (
               <ZText type="B14" color={colors.primary} style={styles.mt8}>
                 {item.price} EGP
               </ZText>
             )}
           </View>
-          
+
           <Ionicons
             name="chevron-forward"
             size={moderateScale(20)}
@@ -170,15 +170,15 @@ const ReviewReelDetailView = ({reviewReel, onClose}) => {
   };
 
   const renderReviewContent = () => (
-    <View style={[localStyles.reviewContentSection, {backgroundColor: colors.white}]}>
+    <View style={[localStyles.reviewContentSection, { backgroundColor: colors.white }]}>
       <ZText type="B16" color="#1A1A1A" style={localStyles.sectionTitle}>
         Review
       </ZText>
-      
+
       <ZText type="M16" color="#333333" style={localStyles.reviewText}>
         {reviewDetails?.caption || 'No review text provided.'}
       </ZText>
-      
+
       {reviewDetails?.created_at && (
         <ZText type="M12" color="#888888" style={localStyles.reviewDate}>
           {new Date(reviewDetails.created_at).toLocaleDateString('en-US', {
@@ -192,35 +192,35 @@ const ReviewReelDetailView = ({reviewReel, onClose}) => {
   );
 
   const renderActionButtons = () => (
-    <View style={[localStyles.actionSection, {backgroundColor: colors.backgroundColor}]}>
+    <View style={[localStyles.actionSection, { backgroundColor: colors.backgroundColor }]}>
       {reviewDetails?.reviewedDish && (
         <ZButton
-          title="View Dish"
+          title={strings.viewDish}
           onPress={handleViewDish}
-          containerStyle={[localStyles.actionButton, {backgroundColor: colors.primary}]}
+          containerStyle={[localStyles.actionButton, { backgroundColor: colors.primary }]}
         />
       )}
-      
+
       {reviewDetails?.reviewedMenu && (
         <ZButton
-          title="View Menu"
+          title={strings.viewMenu}
           onPress={handleViewMenu}
-          containerStyle={[localStyles.actionButton, {backgroundColor: colors.primary}]}
+          containerStyle={[localStyles.actionButton, { backgroundColor: colors.primary }]}
         />
       )}
     </View>
   );
 
   return (
-    <View style={[localStyles.container, {backgroundColor: colors.backgroundColor}]}>
+    <View style={[localStyles.container, { backgroundColor: colors.backgroundColor }]}>
       {renderReviewHeader()}
-      
+
       <ScrollView style={localStyles.content} showsVerticalScrollIndicator={false}>
         {renderReviewerInfo()}
         {renderReviewedItem()}
         {renderReviewContent()}
       </ScrollView>
-      
+
       {renderActionButtons()}
     </View>
   );

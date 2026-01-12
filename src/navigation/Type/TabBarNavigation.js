@@ -91,8 +91,8 @@ export default function TabBarNavigation({ route, navigation }) {
       if (!menuId) {
         setModalState({
           visible: true,
-          title: 'Create your menu first',
-          message: 'To start posting, please create your menu and add your dishes so customers can order easily.',
+          title: strings.createMenuFirst,
+          message: strings.createMenuMessage,
         });
         return false;
       }
@@ -102,8 +102,8 @@ export default function TabBarNavigation({ route, navigation }) {
       if (!Array.isArray(dishes) || dishes.length === 0) {
         setModalState({
           visible: true,
-          title: 'No dishes found',
-          message: 'We didn’t find any dishes in your menu. Please add at least one dish before posting.',
+          title: strings.noDishesFound,
+          message: strings.noDishesMessage,
         });
         return false;
       }
@@ -111,8 +111,8 @@ export default function TabBarNavigation({ route, navigation }) {
     } catch (e) {
       setModalState({
         visible: true,
-        title: 'No dishes found',
-        message: 'We didn’t find any dishes in your menu. Please add at least one dish before posting.',
+        title: strings.noDishesFound,
+        message: strings.noDishesMessage,
       });
       return false;
     }
@@ -299,8 +299,8 @@ export default function TabBarNavigation({ route, navigation }) {
           visible={modalState.visible}
           title={modalState.title}
           message={modalState.message}
-          primaryLabel={'Open Menu Management'}
-          secondaryLabel={'Not now'}
+          primaryLabel={strings.openMenuManagement}
+          secondaryLabel={strings.notNow}
           onPrimary={() => {
             setModalState({ visible: false, title: '', message: '' });
             navigation.navigate(StackNav.MenuManagement, { fromTabs: true });

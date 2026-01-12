@@ -21,7 +21,7 @@ const AddressDropdown = ({ onAddressSelect, style, compact = false }) => {
   const { addresses, selectedAddress, loading } = useSelector(state => state.address);
   const dispatch = useDispatch();
   const location = useLocation();
-  
+
   const [modalVisible, setModalVisible] = useState(false);
   const [animatedValue] = useState(new Animated.Value(0));
   const hasLoadedAddresses = useRef(false);
@@ -40,15 +40,15 @@ const AddressDropdown = ({ onAddressSelect, style, compact = false }) => {
     if (addresses.length > 0 && !selectedAddress && !hasSetInitialAddress.current) {
       hasSetInitialAddress.current = true;
       const primaryAddress = addresses.find(addr => addr.isPrimary) || addresses[0];
-      
+
       // Use setTimeout to prevent synchronous state updates
       setTimeout(() => {
         dispatch(setSelectedAddress(primaryAddress));
-        
+
         if (location?.updateDeliveryLocation) {
           location.updateDeliveryLocation(primaryAddress);
         }
-        
+
         if (onAddressSelect && typeof onAddressSelect === 'function') {
           onAddressSelect(primaryAddress);
         }
@@ -58,11 +58,11 @@ const AddressDropdown = ({ onAddressSelect, style, compact = false }) => {
 
   const handleAddressSelect = useCallback((address) => {
     dispatch(setSelectedAddress(address));
-    
+
     if (location?.updateDeliveryLocation) {
       location.updateDeliveryLocation(address);
     }
-    
+
     if (onAddressSelect && typeof onAddressSelect === 'function') {
       onAddressSelect(address);
     }
@@ -87,12 +87,24 @@ const AddressDropdown = ({ onAddressSelect, style, compact = false }) => {
 
   const getDisplayText = useCallback(() => {
     if (loading) return strings.loading;
-    if (!selectedAddress) return strings.selectDeliveryLocation;
-    
+
+    // If no address is selected (using device location), show the detected address if available
+    if (!selectedAddress) {
+      if (location?.address) {
+        // Increase limit for better visibility, use ellipsis only for very long addresses
+        const maxLength = compact ? 45 : 80;
+        return location.address.length > maxLength
+          ? `${location.address.substring(0, maxLength)}...`
+          : location.address;
+      }
+      return strings.currentLocation || "Current Location";
+    }
+
     const addressText = selectedAddress.formattedAddress || selectedAddress.nameLine || 'Address';
-    const maxLength = compact ? 35 : 50;
+    // Increase limit for better visibility
+    const maxLength = compact ? 45 : 80;
     return addressText.length > maxLength ? `${addressText.substring(0, maxLength)}...` : addressText;
-  }, [loading, selectedAddress, compact]);
+  }, [loading, selectedAddress, compact, location?.address]);
 
   const getSubText = useCallback(() => {
     if (!selectedAddress) return '';
@@ -100,8 +112,8 @@ const AddressDropdown = ({ onAddressSelect, style, compact = false }) => {
   }, [selectedAddress]);
 
   const getAddressIcon = useCallback(() => {
-    if (!selectedAddress) return 'location-on';
-    
+    if (!selectedAddress) return 'my-location';
+
     switch (selectedAddress.addressType) {
       case 'apartment':
         return 'apartment';
@@ -130,7 +142,7 @@ const AddressDropdown = ({ onAddressSelect, style, compact = false }) => {
           <TouchableOpacity
             style={[
               localStyles.compactContainer,
-              { 
+              {
                 backgroundColor: colors.dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
                 borderColor: colors.primary + '30'
               }
@@ -139,20 +151,20 @@ const AddressDropdown = ({ onAddressSelect, style, compact = false }) => {
             disabled={loading}
             activeOpacity={0.8}
           >
-            <MaterialIcons 
-              name={getAddressIcon()} 
-              size={moderateScale(16)} 
-              color={colors.primary} 
+            <MaterialIcons
+              name={getAddressIcon()}
+              size={moderateScale(16)}
+              color={colors.primary}
             />
             <View style={localStyles.compactTextContainer}>
               <ZText type="s12" color={colors.textColor} numberOfLines={1}>
                 {getDisplayText()}
               </ZText>
             </View>
-            <Feather 
-              name="chevron-down" 
-              size={moderateScale(14)} 
-              color={colors.grayScale5} 
+            <Feather
+              name="chevron-down"
+              size={moderateScale(14)}
+              color={colors.grayScale5}
             />
           </TouchableOpacity>
         </Animated.View>
@@ -181,7 +193,7 @@ const AddressDropdown = ({ onAddressSelect, style, compact = false }) => {
           <TouchableOpacity
             style={[
               localStyles.dropdownContainer,
-              { 
+              {
                 backgroundColor: 'transparent',
                 borderColor: colors.primary + '20'
               }
@@ -192,13 +204,13 @@ const AddressDropdown = ({ onAddressSelect, style, compact = false }) => {
           >
             <View style={localStyles.contentContainer}>
               <View style={localStyles.iconContainer}>
-                <MaterialIcons 
-                  name={getAddressIcon()} 
-                  size={moderateScale(20)} 
-                  color={colors.primary} 
+                <MaterialIcons
+                  name={getAddressIcon()}
+                  size={moderateScale(20)}
+                  color={colors.primary}
                 />
               </View>
-              
+
               <View style={localStyles.textContainer}>
                 <View style={localStyles.headerRow}>
                   <ZText type="s12" color={colors.grayScale5}>
@@ -212,23 +224,23 @@ const AddressDropdown = ({ onAddressSelect, style, compact = false }) => {
                     </View>
                   )}
                 </View>
-                
+
                 <ZText type="B14" color={colors.textColor} numberOfLines={1}>
                   {getDisplayText()}
                 </ZText>
-                
+
                 {getSubText() && (
                   <ZText type="s12" color={colors.grayScale5} numberOfLines={1}>
                     {getSubText()}
                   </ZText>
                 )}
               </View>
-              
+
               <View style={localStyles.chevronContainer}>
-                <Feather 
-                  name="chevron-down" 
-                  size={moderateScale(18)} 
-                  color={colors.primary} 
+                <Feather
+                  name="chevron-down"
+                  size={moderateScale(18)}
+                  color={colors.primary}
                 />
               </View>
             </View>

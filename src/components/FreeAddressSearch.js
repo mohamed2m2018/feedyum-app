@@ -13,10 +13,12 @@ import { useSelector } from 'react-redux';
 import { moderateScale } from '../common/constants';
 import ZText from './common/ZText';
 import strings from '../i18n/strings';
+import GoogleMapsService from '../services/GoogleMapsService';
 
-const FreeAddressSearch = ({ 
-  onLocationSelect, 
-  placeholder, 
+const FreeAddressSearch = ({
+  onLocationSelect,
+  onClear,
+  placeholder,
   autoFocus = false,
   initialValue = ''
 }) => {
@@ -25,9 +27,16 @@ const FreeAddressSearch = ({
   const [suggestions, setSuggestions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const isSelectingRef = React.useRef(false);
 
   // Debounce search to avoid too many API calls
   useEffect(() => {
+    // Don't search if we just selected an item
+    if (isSelectingRef.current) {
+      isSelectingRef.current = false;
+      return;
+    }
+
     const timeoutId = setTimeout(() => {
       if (searchText.trim().length > 2) {
         searchAddresses(searchText.trim());
@@ -43,84 +52,57 @@ const FreeAddressSearch = ({
   const searchAddresses = async (query, retryCount = 0) => {
     setLoading(true);
     try {
-      // Create abort controller for timeout
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      const predictions = await GoogleMapsService.searchPlaces(query);
 
-      // Using Nominatim (OpenStreetMap) - completely free
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=eg&limit=5&addressdetails=1&extratags=1`,
-        {
-          method: 'GET',
-          headers: {
-            'User-Agent': 'FoodTokApp/1.0 (Contact: support@foodtok.app)', // Required by Nominatim
-            'Accept': 'application/json',
-            'Accept-Language': 'en,ar'
-          },
-          signal: controller.signal
-        }
-      );
-
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        // Handle rate limiting (429) with retry
-        if (response.status === 429 && retryCount < 2) {
-await new Promise(resolve => setTimeout(resolve, 1500));
-          return searchAddresses(query, retryCount + 1);
-        }
-        throw new Error(`Server error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      
-      const formattedSuggestions = data.map(item => ({
+      const formattedSuggestions = predictions.map(item => ({
         id: item.place_id,
-        description: item.display_name,
-        lat: parseFloat(item.lat),
-        lng: parseFloat(item.lon),
+        description: item.description,
+        place_id: item.place_id,
         details: {
-          geometry: {
-            location: {
-              lat: parseFloat(item.lat),
-              lng: parseFloat(item.lon)
-            }
-          },
-          formatted_address: item.display_name,
-          address_components: item.address || {}
+          // Note: Google Autocomplete doesn't return lat/lng immediately.
+          // We are passing limited info here. The selection handler might need to fetch details.
+          formatted_address: item.description,
         }
       }));
 
       setSuggestions(formattedSuggestions);
       setShowSuggestions(true);
     } catch (error) {
-// Don't show alert for abort/timeout - user likely typed more
-      if (error.name === 'AbortError') {
-return;
-      }
-      
-      // Only show alert if it's not a network error (user might be offline)
-      if (error.message?.includes('Network request failed')) {
-        Alert.alert(strings.error || 'Error', 'No internet connection. Please check your network.');
-      } else {
-        // Silently fail for other errors to avoid annoying the user during typing
-}
+      console.log('Search failed', error);
       setSuggestions([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSuggestionPress = (suggestion) => {
+  const handleSuggestionPress = async (suggestion) => {
+    // Set flag to prevent search from re-triggering
+    isSelectingRef.current = true;
     setSearchText(suggestion.description);
     setShowSuggestions(false);
     setSuggestions([]);
-    
-    if (onLocationSelect) {
-      onLocationSelect(
-        { description: suggestion.description },
-        suggestion.details
-      );
+    setLoading(true);
+
+    try {
+      const details = await GoogleMapsService.getPlaceDetails(suggestion.place_id);
+
+      if (onLocationSelect) {
+        // Map Google Place Details to what the app expects
+        const mappedDetails = {
+          geometry: details.geometry,
+          formatted_address: details.formatted_address,
+          address_components: details.address_components
+        };
+
+        onLocationSelect(
+          { description: suggestion.description, ...mappedDetails }, // Pass details merged or as second arg? Original was `(data, details)`
+          mappedDetails
+        );
+      }
+    } catch (error) {
+      Alert.alert(strings.error, strings.failedToGetLocationDetails || "Failed to get location details");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -148,11 +130,27 @@ return;
           multiline={false}
         />
         {loading && (
-          <ActivityIndicator 
-            size="small" 
-            color={colors.primary} 
+          <ActivityIndicator
+            size="small"
+            color={colors.primary}
             style={localStyles.loadingIndicator}
           />
+        )}
+        {searchText.length > 0 && !loading && (
+          <TouchableOpacity
+            onPress={() => {
+              setSearchText('');
+              setSuggestions([]);
+              setShowSuggestions(false);
+              // Notify parent to clear selected location
+              if (onClear) {
+                onClear();
+              }
+            }}
+            style={localStyles.clearButton}
+          >
+            <Text style={{ color: colors.grayScale5, fontSize: 18, fontWeight: 'bold' }}>✕</Text>
+          </TouchableOpacity>
         )}
       </View>
 
@@ -203,6 +201,10 @@ const localStyles = StyleSheet.create({
   },
   loadingIndicator: {
     marginLeft: moderateScale(8),
+  },
+  clearButton: {
+    padding: moderateScale(8),
+    marginLeft: moderateScale(4),
   },
   suggestionsContainer: {
     borderRadius: moderateScale(12),

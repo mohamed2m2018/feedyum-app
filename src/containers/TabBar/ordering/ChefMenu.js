@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState, useCallback} from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import {
   View,
   StyleSheet,
@@ -10,9 +10,9 @@ import {
   InteractionManager,
   ActivityIndicator,
 } from 'react-native';
-import {useSelector, useDispatch} from 'react-redux';
-import {useQuery} from 'react-query';
-import {useNavigation, useRoute} from '@react-navigation/native';
+import { useSelector, useDispatch } from 'react-redux';
+import { useQuery } from 'react-query';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import ZText from '../../../components/common/ZText';
 import ZInput from '../../../components/common/ZInput';
@@ -22,11 +22,11 @@ import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
 import ZLoader from '../../../components/common/ZLoader';
 import ZButton from '../../../components/common/ZButton';
 import CartFloatingButton from '../../../components/common/CartFloatingButton';
-import {moderateScale, getHeight} from '../../../common/constants';
-import {styles} from '../../../themes';
+import { moderateScale, getHeight } from '../../../common/constants';
+import { styles } from '../../../themes';
 import request from '../../../api/request';
 import images from '../../../assets/images';
-import {StackNav} from '../../../navigation/NavigationKeys';
+import { StackNav } from '../../../navigation/NavigationKeys';
 import strings from '../../../i18n/strings';
 import {
   addToCart,
@@ -34,14 +34,14 @@ import {
   selectCartError,
   clearError,
 } from '../../../redux/reducer/cartSlice';
-import {useStorage} from '../../../utils/useStorage';
+import { useStorage } from '../../../utils/useStorage';
 
 const ChefMenu = () => {
   const colors = useSelector(state => state.theme.theme);
   const dispatch = useDispatch();
   const navigation = useNavigation();
   const route = useRoute();
-  const {chefId, scrollToDishId, chefName, averageDishRating: headerAvg = 0, ratedDishesCount: headerCount = 0} = route.params;
+  const { chefId, scrollToDishId, chefName, averageDishRating: headerAvg = 0, ratedDishesCount: headerCount = 0 } = route.params;
   const [user] = useStorage('user');
 
 
@@ -59,7 +59,7 @@ const ChefMenu = () => {
   // Define fetch function first
   const fetchChefMenu = async chefId => {
     try {
-let menu = null;
+      let menu = null;
       let dishes = [];
       let chef = null;
 
@@ -67,15 +67,15 @@ let menu = null;
       try {
         const menuResponse = await request.get(`/menus/chef/${chefId}`);
         menu = menuResponse.data;
-} catch (menuError) {
-}
+      } catch (menuError) {
+      }
 
       // Get chef information
       try {
         const chefResponse = await request.get(`/user/${chefId}`);
         chef = chefResponse.data;
-} catch (chefError) {
-// If we can't get chef info, create a basic chef object
+      } catch (chefError) {
+        // If we can't get chef info, create a basic chef object
         chef = {
           _id: chefId,
           fullName: chefName || strings.unknownChef,
@@ -88,7 +88,7 @@ let menu = null;
         const dishesResponse = await request.get(`/dishes/chef/${chefId}`);
         dishes = dishesResponse.data || [];
       } catch (dishError) {
-dishes = [];
+        dishes = [];
       }
 
       return {
@@ -97,7 +97,7 @@ dishes = [];
         chef,
       };
     } catch (error) {
-throw error;
+      throw error;
     }
   };
 
@@ -112,9 +112,9 @@ throw error;
     cacheTime: 1000 * 60 * 10, // 10 minutes
     retry: 2,
     onError: error => {
-},
+    },
     onSuccess: data => {
-// Auto-scroll to specific dish if provided
+      // Auto-scroll to specific dish if provided
       if (scrollToDishId && data?.dishes && flatListRef.current) {
         // Defer until interactions complete to ensure list has measured content
         InteractionManager.runAfterInteractions(() => {
@@ -131,7 +131,7 @@ throw error;
                 });
                 hasAttemptedScrollRef.current = true;
               } catch (e) {
-}
+              }
             }
           }, 300);
         });
@@ -193,7 +193,7 @@ throw error;
         if (attempt < 5) {
           setTimeout(() => tryScroll(attempt + 1), 200);
         } else {
-}
+        }
       }
     };
 
@@ -225,12 +225,12 @@ throw error;
           dish,
           quantity,
           chefId,
-          chefName: chefName || 'Unknown Chef',
+          chefName: chefName || strings.unknownChef,
         }),
       );
     } catch (error) {
       Alert.alert(strings.error, strings.failedToAddItemToCart);
-}
+    }
   };
 
   const handleCartPress = () => {
@@ -241,7 +241,7 @@ throw error;
   // Handle cart errors
   useEffect(() => {
     if (cartError) {
-      Alert.alert('Cart Error', cartError);
+      Alert.alert(strings.cartError, cartError);
       dispatch(clearError());
     }
   }, [cartError, dispatch]);
@@ -249,14 +249,14 @@ throw error;
   // Helper function to generate color gradients for categories
   const getCategoryGradient = index => {
     const gradients = [
-      {primary: '#FF6B8A', secondary: '#FF8FA3'},
-      {primary: '#4ECDC4', secondary: '#7EDDD8'},
-      {primary: '#45B7D1', secondary: '#6BCFF6'},
-      {primary: '#FFA726', secondary: '#FFB74D'},
-      {primary: '#AB47BC', secondary: '#BA68C8'},
-      {primary: '#66BB6A', secondary: '#81C784'},
-      {primary: '#EF5350', secondary: '#E57373'},
-      {primary: '#26A69A', secondary: '#4DB6AC'},
+      { primary: '#FF6B8A', secondary: '#FF8FA3' },
+      { primary: '#4ECDC4', secondary: '#7EDDD8' },
+      { primary: '#45B7D1', secondary: '#6BCFF6' },
+      { primary: '#FFA726', secondary: '#FFB74D' },
+      { primary: '#AB47BC', secondary: '#BA68C8' },
+      { primary: '#66BB6A', secondary: '#81C784' },
+      { primary: '#EF5350', secondary: '#E57373' },
+      { primary: '#26A69A', secondary: '#4DB6AC' },
     ];
     return gradients[index % gradients.length];
   };
@@ -278,7 +278,7 @@ throw error;
     return iconMap[category] || 'restaurant-outline';
   };
 
-  const renderDishCard = ({item: dish}) => {
+  const renderDishCard = ({ item: dish }) => {
     const currentQuantity = quantities[dish._id] || 0;
     const isAvailable = dish.visible !== false;
 
@@ -287,7 +287,7 @@ throw error;
         <TouchableOpacity
           style={[
             localStyles.dishCard,
-            {backgroundColor: colors.backgroundColor},
+            { backgroundColor: colors.backgroundColor },
           ]}
           onPress={() => {
             navigation.navigate(StackNav.DishDetailScreen, {
@@ -301,7 +301,7 @@ throw error;
             <Image
               source={
                 dish.image
-                  ? {uri: dish.image}
+                  ? { uri: dish.image }
                   : colors.dark
                     ? images.dishplaceholder
                     : images.dishplaceholder
@@ -323,7 +323,7 @@ throw error;
                 style={localStyles.dishName}>
                 {dish.name}
               </ZText>
-              
+
               {dish.description && (
                 <ZText
                   type="M12"
@@ -356,7 +356,7 @@ throw error;
                     <View
                       style={[
                         localStyles.categoryBadge,
-                        {backgroundColor: colors.primary + '15'},
+                        { backgroundColor: colors.primary + '15' },
                       ]}>
                       <ZText
                         type="M10"
@@ -378,7 +378,7 @@ throw error;
                     <TouchableOpacity
                       style={[
                         localStyles.quantityControl,
-                        {backgroundColor: colors.grayScale4},
+                        { backgroundColor: colors.grayScale4 },
                       ]}
                       onPress={() => handleQuantityChange(dish._id, -1)}
                       activeOpacity={0.7}>
@@ -398,7 +398,7 @@ throw error;
                     <TouchableOpacity
                       style={[
                         localStyles.quantityControl,
-                        {backgroundColor: colors.primary},
+                        { backgroundColor: colors.primary },
                       ]}
                       onPress={() => {
                         handleQuantityChange(dish._id, 1);
@@ -416,7 +416,7 @@ throw error;
                   <TouchableOpacity
                     style={[
                       localStyles.addButton,
-                      {backgroundColor: colors.primary},
+                      { backgroundColor: colors.primary },
                     ]}
                     onPress={() => {
                       handleQuantityChange(dish._id, 1);
@@ -429,7 +429,7 @@ throw error;
                       color={colors.white}
                     />
                     <ZText type="B14" color={colors.white}>
-                      Add to Cart
+                      {strings.addToCart}
                     </ZText>
                   </TouchableOpacity>
                 )
@@ -438,7 +438,7 @@ throw error;
                 <View
                   style={[
                     localStyles.unavailableState,
-                    {backgroundColor: colors.grayScale2},
+                    { backgroundColor: colors.grayScale2 },
                   ]}>
                   <Ionicons
                     name="close-circle-outline"
@@ -446,7 +446,7 @@ throw error;
                     color={colors.grayScale6}
                   />
                   <ZText type="M16" color={colors.grayScale6}>
-                    Currently Unavailable
+                    {strings.currentlyUnavailable}
                   </ZText>
                 </View>
               )}
@@ -476,7 +476,7 @@ throw error;
     if (categoryNames.length <= 1) return null;
 
     return (
-      <View style={[localStyles.stickyBrowseContainer, {backgroundColor: colors.backgroundColor}]}> 
+      <View style={[localStyles.stickyBrowseContainer, { backgroundColor: colors.backgroundColor }]}>
         <View style={localStyles.stunningCategoriesContainer}>
           {/* Header row: Browse Menu + Search */}
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: moderateScale(10), marginTop: moderateScale(-6), marginBottom: moderateScale(8) }}>
@@ -484,12 +484,12 @@ throw error;
               type="B16"
               color={colors.textColor}
               style={[localStyles.categoriesTitle, { marginBottom: 0 }]}>
-              Browse Menu
+              {strings.browseMenu}
             </ZText>
             <View style={{ flex: 1, marginTop: -moderateScale(4) }}>
               <ZInput
                 _value={search}
-                placeHolder={'Search dishes...'}
+                placeHolder={strings.searchDishes}
                 toGetTextFieldValue={onSearchInput}
                 insideLeftIcon={() => (
                   <Ionicons name="search" size={moderateScale(16)} color={colors.grayScale6} />
@@ -515,7 +515,7 @@ throw error;
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={localStyles.stunningCategoriesList}
-            renderItem={({item: category, index}) => {
+            renderItem={({ item: category, index }) => {
               const itemCount = dishCategories[category].length;
               const gradientColors = getCategoryGradient(index);
 
@@ -551,7 +551,7 @@ throw error;
                   <View
                     style={[
                       localStyles.categoryGradientOverlay,
-                      {backgroundColor: gradientColors.secondary},
+                      { backgroundColor: gradientColors.secondary },
                     ]}
                   />
 
@@ -559,7 +559,7 @@ throw error;
                   <View
                     style={[
                       localStyles.categoryIconContainer,
-                      {backgroundColor: 'rgba(255,255,255,0.2)'},
+                      { backgroundColor: 'rgba(255,255,255,0.2)' },
                     ]}>
                     <Ionicons
                       name={getCategoryIcon(category)}
@@ -602,13 +602,13 @@ throw error;
       <View
         style={[
           localStyles.headerContainer,
-          {backgroundColor: colors.backgroundColor},
+          { backgroundColor: colors.backgroundColor },
         ]}>
         <View style={localStyles.chefInfo}>
           <Image
             source={
               menuData?.chef?.avatar
-                ? {uri: menuData.chef.avatar}
+                ? { uri: menuData.chef.avatar }
                 : colors.dark
                   ? images.userDark
                   : images.userLight
@@ -616,7 +616,7 @@ throw error;
             style={localStyles.chefAvatar}
           />
           <View style={localStyles.chefDetails}>
-            <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'}}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
               <ZText type="B18" color={colors.textColor}>
                 {menuData?.chef?.fullName || chefName}
               </ZText>
@@ -638,7 +638,7 @@ throw error;
               )}
             </View>
             <ZText type="M14" color={colors.grayScale7}>
-              {menuData?.dishes?.length || 0} dishes available
+              {menuData?.dishes?.length || 0} {strings.dishesAvailable}
             </ZText>
           </View>
         </View>
@@ -670,15 +670,14 @@ throw error;
             align="center"
             color={colors.error}
             style={localStyles.errorTitle}>
-            Failed to load menu
+            {strings.failedToLoadMenu}
           </ZText>
           <ZText
             type="M14"
             align="center"
             color={colors.grayScale7}
             style={localStyles.errorSubtitle}>
-            This chef might not have a menu available yet, or there was a
-            connection issue.
+            {strings.menuLoadErrorSub}
           </ZText>
           <ZButton
             title={strings.retry}
@@ -707,14 +706,14 @@ throw error;
             align="center"
             color={colors.textColor}
             style={localStyles.emptyTitle}>
-            No dishes available
+            {strings.noDishesAvailable}
           </ZText>
           <ZText
             type="M14"
             align="center"
             color={colors.grayScale7}
             style={localStyles.emptySubtitle}>
-            This chef hasn't added any dishes to their menu yet.
+            {strings.noDishesSub}
           </ZText>
         </View>
       </ZSafeAreaView>
@@ -734,7 +733,7 @@ throw error;
       {/* Optional small loader below search when searching */}
       {debouncedSearch.length > 0 && isSearching ? (
         <View style={{ paddingHorizontal: moderateScale(16), paddingBottom: moderateScale(6) }}>
-          <ZText type="M12" color={colors.grayScale7}>Searching…</ZText>
+          <ZText type="M12" color={colors.grayScale7}>{strings.searching}</ZText>
         </View>
       ) : null}
 
@@ -770,11 +769,11 @@ throw error;
                     viewPosition: 0.1,
                   });
                 } catch (e2) {
-}
+                }
               }, 250);
             }
           } catch (e) {
-}
+          }
         }}
       />
 
@@ -1053,14 +1052,14 @@ const localStyles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 0.5,
     textShadowColor: 'rgba(0,0,0,0.3)',
-    textShadowOffset: {width: 0, height: 1},
+    textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
   },
   categoryItemCount: {
     marginTop: moderateScale(2),
     fontWeight: '500',
     textShadowColor: 'rgba(0,0,0,0.2)',
-    textShadowOffset: {width: 0, height: 1},
+    textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 1,
   },
   shineEffect: {
@@ -1071,7 +1070,7 @@ const localStyles = StyleSheet.create({
     height: moderateScale(30),
     backgroundColor: 'rgba(255,255,255,0.2)',
     borderRadius: moderateScale(15),
-    transform: [{rotate: '45deg'}],
+    transform: [{ rotate: '45deg' }],
   },
 
   // Section Header Styles

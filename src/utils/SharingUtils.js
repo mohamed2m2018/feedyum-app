@@ -34,7 +34,7 @@ class SharingUtils {
       }
     } catch (error) {
       console.error('Sharing error:', error);
-      Alert.alert('Sharing Error', 'Failed to share content. Please try again.');
+      Alert.alert(strings.sharingError, strings.failedToShare);
       return { success: false, error: error.message };
     }
   }
@@ -104,8 +104,8 @@ class SharingUtils {
     const isChef = profileData.type === 'chef';
     const customData = {
       shareText: isChef
-        ? `Check out Chef ${profileData.name || 'this amazing chef'} on FoodTok! 👨‍🍳`
-        : `Check out ${profileData.name || 'this profile'} on FoodTok! 👤`,
+        ? strings.formatString(strings.shareChefText, profileData.name || 'this amazing chef')
+        : strings.formatString(strings.shareProfileText, profileData.name || 'this profile'),
       title: profileData.name,
       type: profileData.type,
       hashtags: isChef ? ['#FoodTok', '#Chef', '#Cooking'] : ['#FoodTok', '#Profile']
@@ -117,7 +117,7 @@ class SharingUtils {
 
   static async shareChefMenu(chefId, chefData = {}) {
     const customData = {
-      shareText: `Check out ${chefData.name || 'this chef'}'s delicious menu on FoodTok! Order now! 🍽️📋`,
+      shareText: strings.formatString(strings.shareMenuText, chefData.name || 'this chef'),
       title: `${chefData.name}'s Menu`,
       chefName: chefData.name,
       hashtags: ['#FoodTok', '#Menu', '#Chef', '#Delivery', '#Order']
@@ -167,12 +167,12 @@ class SharingUtils {
       const { Clipboard } = require('react-native');
 
       Clipboard.setString(shareData.shareLinks.universalLink);
-      Alert.alert('Link Copied!', 'The link has been copied to your clipboard.');
+      Alert.alert(strings.linkCopied, strings.linkCopiedMessage);
 
       return { success: true };
     } catch (error) {
       console.error('Copy link error:', error);
-      Alert.alert('Error', 'Failed to copy link to clipboard.');
+      Alert.alert(strings.error, strings.failedToCopyLink);
       return { success: false, error: error.message };
     }
   }
@@ -183,7 +183,7 @@ class SharingUtils {
       const canOpen = await Linking.canOpenURL('instagram://app');
 
       if (!canOpen) {
-        Alert.alert('Instagram not found', 'Please install Instagram to share.');
+        Alert.alert(strings.instagramNotFound, strings.installInstagram);
         return { success: false, error: 'Instagram not installed' };
       }
 
@@ -215,7 +215,7 @@ class SharingUtils {
         await Linking.openURL(whatsappUrl);
         return { success: true };
       } else {
-        Alert.alert('WhatsApp not found', 'Please install WhatsApp to share.');
+        Alert.alert(strings.whatsappNotFound, strings.installWhatsApp);
         return { success: false, error: 'WhatsApp not installed' };
       }
     } catch (error) {

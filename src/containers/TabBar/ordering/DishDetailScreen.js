@@ -144,11 +144,11 @@ const DishDetailScreen = () => {
     {
       onSuccess: () => {
         Alert.alert(
-          '❤️ Added to Favorites!',
-          `${dishData?.name} has been added to your favorites`,
+          strings.favoritesAddedTitle,
+          strings.formatString(strings.favoritesAddedMsg, dishData?.name),
           [
             {
-              text: 'Great!',
+              text: strings.great,
               style: 'default',
             },
           ],
@@ -170,11 +170,11 @@ const DishDetailScreen = () => {
     {
       onSuccess: () => {
         Alert.alert(
-          '💔 Removed from Favorites',
-          `${dishData?.name} has been removed from your favorites`,
+          strings.favoritesRemovedTitle,
+          strings.formatString(strings.favoritesRemovedMsg, dishData?.name),
           [
             {
-              text: 'OK',
+              text: strings.ok,
               style: 'default',
             },
           ],
@@ -206,8 +206,8 @@ const DishDetailScreen = () => {
     );
 
     Alert.alert(
-      'Added to Cart!',
-      `${quantity} x ${dishData.name} added to your cart`,
+      strings.addedToCartTitle,
+      strings.formatString(strings.addedToCartMsg, quantity, dishData.name),
       [
         {
           text: strings.continueShoppingButton,
@@ -287,7 +287,7 @@ const DishDetailScreen = () => {
   // Handle cart errors
   useEffect(() => {
     if (cartError) {
-      Alert.alert('Cart Error', cartError, [
+      Alert.alert(strings.cartError, cartError, [
         {
           text: 'OK',
           onPress: () => dispatch(clearError()),

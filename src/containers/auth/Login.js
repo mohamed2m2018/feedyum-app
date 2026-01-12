@@ -203,9 +203,23 @@ const Login = ({ navigation }) => {
         textBody: message,
       });
     },
-    onSuccess: data => {
+    onSuccess: async data => {
       // OneSignal v5
-      OneSignal.login(data?.data?.user?._id);
+      const rawId = data?.data?.user?._id;
+      console.log('[Login] User ID Type:', typeof rawId);
+      console.log('[Login] User ID Value:', rawId);
+
+      let userId = rawId;
+      if (typeof rawId === 'object' && rawId !== null) {
+        // Fallback if it's an object (shouldn't happen with standard JSON, but safety first)
+        userId = rawId.toString();
+      }
+
+      if (userId && userId !== '[object Object]') {
+        OneSignal.login(String(userId));
+      } else {
+        console.warn('[Login] Invalid User ID for OneSignal:', rawId);
+      }
     },
   });
 

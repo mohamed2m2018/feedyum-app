@@ -1,11 +1,11 @@
-import {Pressable, StyleSheet} from 'react-native';
-import React, {useState} from 'react';
-import {styles} from '../../../themes';
+import { Pressable, StyleSheet, View } from 'react-native';
+import React, { useState } from 'react';
+import { styles } from '../../../themes';
 import ZText from '../../../components/common/ZText';
-import {moderateScale} from '../../../common/constants';
+import { moderateScale } from '../../../common/constants';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {useSelector} from 'react-redux';
-import {useHandleAuth} from '../../../utils/useHandleAuth';
+import { useSelector } from 'react-redux';
+import { useHandleAuth } from '../../../utils/useHandleAuth';
 
 export const VideoItem = ({
   onPress,
@@ -21,7 +21,7 @@ export const VideoItem = ({
   const [isLiked, setisLiked] = useState(initialIsLiked);
   const colors = useSelector(state => state.theme.theme);
   const [likesNoLocally, setlikesNoLocally] = useState(data);
-  const {handleAuthToast} = useHandleAuth();
+  const { handleAuthToast } = useHandleAuth();
 
   const handlePress = () => {
     if (handleAuthToast()) {
@@ -47,15 +47,18 @@ export const VideoItem = ({
   if (icon === 'heart') {
     return (
       <Pressable onPress={handlePress} style={localStyles.renderIconContainer}>
-        <Ionicons
-          name={icon}
-          size={size ? size : moderateScale(30)}
-          color={isLiked ? color : colors.white}
-        />
+        <View style={[localStyles.iconBackground, isLiked && localStyles.iconBackgroundActive]}>
+          <Ionicons
+            name={icon}
+            size={size ? size : moderateScale(26)}
+            color={isLiked ? color : colors.white}
+            style={localStyles.iconShadow}
+          />
+        </View>
         {!!likesNoLocally && (
           <ZText
             type="m14"
-            style={styles.flex}
+            style={localStyles.countText}
             color={colors.white}
             numberOfLines={1}>
             {likesNoLocally}
@@ -66,15 +69,18 @@ export const VideoItem = ({
   } else {
     return (
       <Pressable onPress={onPress} style={localStyles.renderIconContainer}>
-        <Ionicons
-          name={icon}
-          size={size ? size : moderateScale(30)}
-          color={color ? color : colors.white}
-        />
+        <View style={localStyles.iconBackground}>
+          <Ionicons
+            name={icon}
+            size={size ? size : moderateScale(26)}
+            color={color ? color : colors.white}
+            style={localStyles.iconShadow}
+          />
+        </View>
         {!!data && (
           <ZText
             type="m14"
-            style={styles.flex}
+            style={localStyles.countText}
             color={colors.white}
             numberOfLines={1}>
             {data}
@@ -88,6 +94,32 @@ export const VideoItem = ({
 const localStyles = StyleSheet.create({
   renderIconContainer: {
     ...styles.itemsCenter,
-    ...styles.mt20,
+    marginTop: moderateScale(16),
+  },
+  iconBackground: {
+    width: moderateScale(44),
+    height: moderateScale(44),
+    borderRadius: moderateScale(22),
+    backgroundColor: 'rgba(0, 0, 0, 0.25)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+  },
+  iconBackgroundActive: {
+    backgroundColor: 'rgba(255, 75, 100, 0.2)',
+    borderColor: 'rgba(255, 75, 100, 0.3)',
+  },
+  iconShadow: {
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  countText: {
+    marginTop: moderateScale(4),
+    textShadowColor: 'rgba(0, 0, 0, 0.7)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+    fontWeight: '600',
   },
 });

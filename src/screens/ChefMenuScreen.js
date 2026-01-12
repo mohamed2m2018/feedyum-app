@@ -18,7 +18,7 @@ const ChefMenuScreen = ({ route, navigation }) => {
   const [menu, setMenu] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSection, setSelectedSection] = useState(null);
-  
+
   const dispatch = useDispatch();
   const cartItems = useSelector(state => state.cart.items);
   const cartChefId = useSelector(state => state.cart.chefId);
@@ -40,10 +40,10 @@ const ChefMenuScreen = ({ route, navigation }) => {
           setSelectedSection(data.sections[0]._id);
         }
       } else {
-        Alert.alert('No Menu', 'This chef has not created a menu yet.');
+        Alert.alert(strings.noMenu, strings.chefNoMenu);
       }
     } catch (error) {
-Alert.alert('Error', 'Failed to load menu');
+      Alert.alert(strings.error, strings.failedToLoadMenu);
     } finally {
       setIsLoading(false);
     }
@@ -53,12 +53,12 @@ Alert.alert('Error', 'Failed to load menu');
     // Check if cart has items from different chef
     if (cartChefId && cartChefId !== chefId) {
       Alert.alert(
-        'Different Chef',
-        'You can only order from one chef at a time. Clear your cart to order from this chef?',
+        strings.differentChefTitle,
+        strings.differentChefMessage,
         [
-          { text: 'Cancel', style: 'cancel' },
-          { 
-            text: 'Clear Cart', 
+          { text: strings.cancel, style: 'cancel' },
+          {
+            text: strings.clearCart,
             onPress: () => {
               dispatch(clearCart());
               dispatch(addToCart({
@@ -67,7 +67,7 @@ Alert.alert('Error', 'Failed to load menu');
                 chefId: chefId,
                 chefName: chefName
               }));
-              Alert.alert('Added!', `${dish.name} added to cart`);
+              Alert.alert(strings.dishAddedTitle, strings.formatString(strings.dishAddedMessage, dish.name));
             }
           }
         ]
@@ -79,7 +79,7 @@ Alert.alert('Error', 'Failed to load menu');
         chefId: chefId,
         chefName: chefName
       }));
-      Alert.alert('Added!', `${dish.name} added to cart`);
+      Alert.alert(strings.dishAddedTitle, strings.formatString(strings.dishAddedMessage, dish.name));
     }
   };
 
@@ -93,12 +93,12 @@ Alert.alert('Error', 'Failed to load menu');
 
   const renderDishItem = ({ item: dish }) => {
     const isInCart = cartItems.some(cartItem => cartItem.dishId === dish._id);
-    
+
     return (
       <View style={styles.dishCard}>
-        <Image 
-          source={{ uri: dish.image || 'https://via.placeholder.com/100' }} 
-          style={styles.dishImage} 
+        <Image
+          source={{ uri: dish.image || 'https://via.placeholder.com/100' }}
+          style={styles.dishImage}
         />
         <View style={styles.dishInfo}>
           <Text style={styles.dishName}>{dish.name}</Text>
@@ -112,15 +112,15 @@ Alert.alert('Error', 'Failed to load menu');
                 styles.availabilityText,
                 dish.isAvailable ? styles.available : styles.unavailable
               ]}>
-                {dish.isAvailable ? 'Available' : 'Unavailable'}
+                {dish.isAvailable ? strings.available : strings.unavailable}
               </Text>
               {dish.isAvailable && (
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={[styles.addButton, isInCart && styles.addedButton]}
                   onPress={() => addDishToCart(dish)}
                 >
                   <Text style={[styles.addButtonText, isInCart && styles.addedButtonText]}>
-                    {isInCart ? 'Added' : 'Add'}
+                    {isInCart ? strings.added : strings.add}
                   </Text>
                 </TouchableOpacity>
               )}
@@ -152,7 +152,7 @@ Alert.alert('Error', 'Failed to load menu');
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.loadingText}>Loading menu...</Text>
+        <Text style={styles.loadingText}>{strings.loadingMenu}</Text>
       </View>
     );
   }
@@ -160,9 +160,9 @@ Alert.alert('Error', 'Failed to load menu');
   if (!menu) {
     return (
       <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>No menu available</Text>
+        <Text style={styles.errorText}>{strings.noMenuAvailable}</Text>
         <TouchableOpacity onPress={fetchMenu} style={styles.retryButton}>
-          <Text style={styles.retryButtonText}>Retry</Text>
+          <Text style={styles.retryButtonText}>{strings.retry}</Text>
         </TouchableOpacity>
       </View>
     );

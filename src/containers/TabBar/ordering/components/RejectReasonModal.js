@@ -3,6 +3,7 @@ import { StyleSheet, View, Modal, TouchableOpacity, TextInput, KeyboardAvoidingV
 import ZText from '../../../../components/common/ZText';
 import { moderateScale } from '../../../../common/constants';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import strings from '../../../../i18n/strings';
 
 const RejectReasonModal = ({ visible, onClose, onConfirm, colors }) => {
     const [reason, setReason] = useState('');
@@ -29,14 +30,14 @@ const RejectReasonModal = ({ visible, onClose, onConfirm, colors }) => {
                 <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={onClose} />
                 <View style={[styles.content, { backgroundColor: colors.backgroundColor }]}>
                     <View style={styles.header}>
-                        <ZText type="B18" color={colors.textColor}>Reject Order</ZText>
+                        <ZText type="B18" color={colors.textColor}>{strings.rejectOrder}</ZText>
                         <TouchableOpacity onPress={onClose}>
                             <Ionicons name="close" size={24} color={colors.textColor} />
                         </TouchableOpacity>
                     </View>
 
                     <ZText type="r14" color={colors.grayScale7} style={styles.subtitle}>
-                        Please provide a reason for rejecting this order.
+                        {strings.provideReason}
                     </ZText>
 
                     <TextInput
@@ -45,7 +46,7 @@ const RejectReasonModal = ({ visible, onClose, onConfirm, colors }) => {
                             color: colors.textColor,
                             borderColor: colors.borderColor
                         }]}
-                        placeholder="Reason for rejection..."
+                        placeholder={strings.reasonForRejection}
                         placeholderTextColor={colors.grayScale5}
                         multiline
                         numberOfLines={4}
@@ -59,7 +60,7 @@ const RejectReasonModal = ({ visible, onClose, onConfirm, colors }) => {
                             style={[styles.btn, styles.cancelBtn, { borderColor: colors.borderColor }]}
                             onPress={onClose}
                         >
-                            <ZText type="B16" color={colors.textColor}>Cancel</ZText>
+                            <ZText type="B16" color={colors.textColor}>{strings.cancel}</ZText>
                         </TouchableOpacity>
 
                         <TouchableOpacity
@@ -69,7 +70,7 @@ const RejectReasonModal = ({ visible, onClose, onConfirm, colors }) => {
                             onPress={handleConfirm}
                             disabled={!reason.trim()}
                         >
-                            <ZText type="B16" color={colors.white}>Reject Order</ZText>
+                            <ZText type="B16" color={colors.white}>{strings.rejectOrder}</ZText>
                         </TouchableOpacity>
                     </View>
                 </View>

@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import React, { Component } from 'react';
 import {
   View,
   KeyboardAvoidingView,
@@ -20,12 +20,12 @@ export default class componentName extends Component {
           <TextInput
             ref="TextInput"
             onChangeText={text => {
-              this.setState({text});
+              this.setState({ text });
             }}
             placeholderTextColor="#C3C5C8"
             style={commentListStyling.textInput}
             multiline={true}
-            placeholder="Write a comment.."
+            placeholder={strings.writeCommentPlaceholder}
           />
           <TouchableOpacity onPress={this.addComment}>
             <Icon

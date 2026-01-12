@@ -9,6 +9,7 @@ import {
   ScrollView,
   Modal,
 } from 'react-native';
+import strings from '../i18n/strings';
 
 const ChefWallet = ({ chefId, userToken }) => {
   const [walletData, setWalletData] = useState(null);
@@ -28,13 +29,13 @@ const ChefWallet = ({ chefId, userToken }) => {
           'Authorization': `Bearer ${userToken}`,
         },
       });
-      
+
       const data = await response.json();
       if (data.success) {
         setWalletData(data);
       }
     } catch (error) {
-} finally {
+    } finally {
       setIsLoading(false);
     }
   };
@@ -46,18 +47,18 @@ const ChefWallet = ({ chefId, userToken }) => {
           'Authorization': `Bearer ${userToken}`,
         },
       });
-      
+
       const data = await response.json();
       if (data.success && data.paymentRequired) {
         setShowPaymentModal(true);
       }
     } catch (error) {
-}
+    }
   };
 
   const processPayment = async (amount) => {
     setIsProcessingPayment(true);
-    
+
     try {
       // In a real app, you would integrate with a payment processor here
       // For now, we'll simulate a successful payment
@@ -76,14 +77,14 @@ const ChefWallet = ({ chefId, userToken }) => {
 
       const data = await response.json();
       if (data.success) {
-        Alert.alert('Payment Successful', 'Your payment has been processed successfully!');
+        Alert.alert(strings.paymentSuccessful, strings.paymentProcessedSuccess);
         setShowPaymentModal(false);
         fetchWalletInfo(); // Refresh wallet data
       } else {
-        Alert.alert('Payment Failed', data.message || 'Payment could not be processed');
+        Alert.alert(strings.paymentFailed, data.message || strings.paymentNotProcessed);
       }
     } catch (error) {
-Alert.alert('Error', 'Failed to process payment. Please try again.');
+      Alert.alert(strings.error, strings.failedToProcessPayment);
     } finally {
       setIsProcessingPayment(false);
     }
@@ -96,11 +97,11 @@ Alert.alert('Error', 'Failed to process payment. Please try again.');
   const formatTransactionType = (type) => {
     switch (type) {
       case 'service_fee':
-        return 'Service Fee';
+        return strings.serviceFee;
       case 'payment_to_platform':
-        return 'Payment';
+        return strings.paymentType;
       case 'adjustment':
-        return 'Adjustment';
+        return strings.adjustment;
       default:
         return type;
     }
@@ -110,7 +111,7 @@ Alert.alert('Error', 'Failed to process payment. Please try again.');
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.loadingText}>Loading wallet...</Text>
+        <Text style={styles.loadingText}>{strings.loadingWallet}</Text>
       </View>
     );
   }
@@ -118,9 +119,9 @@ Alert.alert('Error', 'Failed to process payment. Please try again.');
   if (!walletData) {
     return (
       <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Failed to load wallet information</Text>
+        <Text style={styles.errorText}>{strings.failedToLoadWallet}</Text>
         <TouchableOpacity onPress={fetchWalletInfo} style={styles.retryButton}>
-          <Text style={styles.retryButtonText}>Retry</Text>
+          <Text style={styles.retryButtonText}>{strings.retry}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -132,7 +133,7 @@ Alert.alert('Error', 'Failed to process payment. Please try again.');
     <ScrollView style={styles.container}>
       {/* Balance Card */}
       <View style={styles.balanceCard}>
-        <Text style={styles.balanceLabel}>Current Balance</Text>
+        <Text style={styles.balanceLabel}>{strings.currentBalanceLabel}</Text>
         <Text style={[
           styles.balanceAmount,
           summary.currentBalance < 0 ? styles.negativeBalance : styles.positiveBalance
@@ -140,17 +141,17 @@ Alert.alert('Error', 'Failed to process payment. Please try again.');
           {summary.currentBalance < 0 ? '-' : ''}
           {formatCurrency(summary.currentBalance)}
         </Text>
-        
+
         {summary.isPaymentRequired && (
           <View style={styles.paymentWarning}>
             <Text style={styles.warningText}>
-              ⚠️ Payment Required: {formatCurrency(summary.paymentDueAmount)}
+              ⚠️ {strings.paymentWarning.replace('{amount}', formatCurrency(summary.paymentDueAmount))}
             </Text>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.payNowButton}
               onPress={() => setShowPaymentModal(true)}
             >
-              <Text style={styles.payNowButtonText}>Pay Now</Text>
+              <Text style={styles.payNowButtonText}>{strings.payNow}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -158,18 +159,18 @@ Alert.alert('Error', 'Failed to process payment. Please try again.');
 
       {/* Summary Stats */}
       <View style={styles.summaryCard}>
-        <Text style={styles.cardTitle}>Summary</Text>
+        <Text style={styles.cardTitle}>{strings.summary}</Text>
         <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Total Service Fees:</Text>
+          <Text style={styles.summaryLabel}>{strings.totalServiceFees}</Text>
           <Text style={styles.summaryValue}>{formatCurrency(summary.totalServiceFees)}</Text>
         </View>
         <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Total Payments:</Text>
+          <Text style={styles.summaryLabel}>{strings.totalPayments}</Text>
           <Text style={styles.summaryValue}>{formatCurrency(summary.totalPayments)}</Text>
         </View>
         {summary.lastPaymentDate && (
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Last Payment:</Text>
+            <Text style={styles.summaryLabel}>{strings.lastPayment}</Text>
             <Text style={styles.summaryValue}>
               {new Date(summary.lastPaymentDate).toLocaleDateString()}
             </Text>
@@ -179,7 +180,7 @@ Alert.alert('Error', 'Failed to process payment. Please try again.');
 
       {/* Recent Transactions */}
       <View style={styles.transactionsCard}>
-        <Text style={styles.cardTitle}>Recent Transactions</Text>
+        <Text style={styles.cardTitle}>{strings.recentTransactions}</Text>
         {wallet.transactions && wallet.transactions.length > 0 ? (
           wallet.transactions.map((transaction, index) => (
             <View key={index} style={styles.transactionRow}>
@@ -206,7 +207,7 @@ Alert.alert('Error', 'Failed to process payment. Please try again.');
             </View>
           ))
         ) : (
-          <Text style={styles.noTransactions}>No transactions yet</Text>
+          <Text style={styles.noTransactions}>{strings.noTransactions}</Text>
         )}
       </View>
 
@@ -219,13 +220,13 @@ Alert.alert('Error', 'Failed to process payment. Please try again.');
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Payment Required</Text>
+            <Text style={styles.modalTitle}>{strings.paymentRequiredTitle}</Text>
             <Text style={styles.modalMessage}>
-              Your service fee balance has exceeded £2,000. Please make a payment to continue receiving orders.
+              {strings.serviceFeeLimitExceeded}
             </Text>
-            
+
             <View style={styles.paymentDetails}>
-              <Text style={styles.paymentLabel}>Amount Due:</Text>
+              <Text style={styles.paymentLabel}>{strings.amountDueLabel}:</Text>
               <Text style={styles.paymentAmount}>
                 {formatCurrency(summary.paymentDueAmount)}
               </Text>
@@ -240,16 +241,16 @@ Alert.alert('Error', 'Failed to process payment. Please try again.');
                 {isProcessingPayment ? (
                   <ActivityIndicator size="small" color="#fff" />
                 ) : (
-                  <Text style={styles.payButtonText}>Pay Now</Text>
+                  <Text style={styles.payButtonText}>{strings.payNow}</Text>
                 )}
               </TouchableOpacity>
-              
+
               {!summary.isPaymentRequired && (
                 <TouchableOpacity
                   style={styles.cancelButton}
                   onPress={() => setShowPaymentModal(false)}
                 >
-                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                  <Text style={styles.cancelButtonText}>{strings.cancel}</Text>
                 </TouchableOpacity>
               )}
             </View>

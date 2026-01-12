@@ -27,6 +27,7 @@ import DishCard from './components/DishCard';
 import AddEditDishModal from './components/AddEditDishModal';
 import request from '../../../api/request';
 import { moderateScale } from '../../../common/constants';
+import strings from '../../../i18n/strings';
 
 // Components moved outside to avoid React warnings
 const SectionTab = ({ section, isSelected, onPress, colors }) => (
@@ -54,19 +55,19 @@ const EmptyState = ({ searchQuery, colors, onAddDish }) => (
       color={colors.grayScale4}
     />
     <ZText type="B18" color={colors.grayScale7} style={localStyles.emptyTitle}>
-      No dishes found
+      {strings.noDishesFound}
     </ZText>
     <ZText
       type="M14"
       color={colors.grayScale7}
       style={localStyles.emptySubtitle}>
       {searchQuery
-        ? 'Try adjusting your search terms'
-        : 'Start by adding your first dish to the menu'}
+        ? strings.tryAdjustingSearch
+        : strings.startAddingDish}
     </ZText>
     {!searchQuery && (
       <ZButton
-        title={'Add your first dish'}
+        title={strings.addFirstDish}
         textType={'b18'}
         color={colors.white}
         containerStyle={localStyles.ctaButton}
@@ -418,11 +419,11 @@ export default function MenuManagement() {
       `Are you sure you want to delete "${dish.name}"? This action cannot be undone.`,
       [
         {
-          text: 'Cancel',
+          text: strings.cancel,
           style: 'cancel',
         },
         {
-          text: 'Delete',
+          text: strings.delete,
           style: 'destructive',
           onPress: () => deleteDishMutation.mutate(dish._id),
         },
@@ -465,7 +466,7 @@ export default function MenuManagement() {
       Toast.show({
         type: ALERT_TYPE.SUCCESS,
         title: 'Success',
-        textBody: `Dish ${newVisibility ? 'made visible' : 'hidden'}`,
+        textBody: newVisibility ? strings.dishMadeVisible : strings.dishHidden,
       });
     } catch (error) {
       Toast.show({
@@ -501,7 +502,7 @@ export default function MenuManagement() {
   return (
     <ZSafeAreaView>
       <ZHeader
-        title="Menu Management"
+        title={strings.menuManagement}
         isHideBack={fromTabsParam || isFromTabBar || !navigation.canGoBack()}
         rightIcon={
           <TouchableOpacity
@@ -531,7 +532,7 @@ export default function MenuManagement() {
           />
           <TextInput
             style={[localStyles.searchInput, { color: colors.textColor }]}
-            placeholder="Search dishes..."
+            placeholder={strings.searchDishes}
             placeholderTextColor={colors.grayScale7}
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -581,7 +582,7 @@ export default function MenuManagement() {
                 type="M16"
                 color={colors.grayScale7}
                 style={localStyles.loadingText}>
-                Loading dishes...
+                {strings.loadingDishes}
               </ZText>
             </View>
           ) : dishesError ? (
@@ -595,7 +596,7 @@ export default function MenuManagement() {
                 type="M16"
                 color={colors.redColor}
                 style={localStyles.errorText}>
-                Failed to load dishes
+                {strings.failedToLoadDishes}
               </ZText>
             </View>
           ) : (

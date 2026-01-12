@@ -78,7 +78,7 @@ const ShareOptionsSheet = props => {
                 SheetRef.current?.hide();
             }
         } catch (error) {
-            Alert.alert('Sharing Error', 'Failed to share content. Please try again.');
+            Alert.alert(strings.sharingError, strings.failedToShareContent);
         } finally {
             setIsLoading(false);
             setLoadingOption(null);

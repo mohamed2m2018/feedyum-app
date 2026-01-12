@@ -243,8 +243,8 @@ const ReviewReelCreator = ({ route }) => {
 
       <ZText type="B18" color={colors.textColor}>
         {editMode
-          ? 'Edit Review'
-          : `Review ${reviewType === 'dish' ? dishData?.name : menuData?.name}`
+          ? strings.editReview
+          : `${strings.review} ${reviewType === 'dish' ? dishData?.name : menuData?.name}`
         }
       </ZText>
 
@@ -263,11 +263,11 @@ const ReviewReelCreator = ({ route }) => {
         />
 
         <ZText type="B20" color={colors.textColor} style={localStyles.selectionTitle}>
-          Create Your Review Post
+          {strings.createYourReviewPost}
         </ZText>
 
         <ZText type="M16" color={colors.grayScale5} style={localStyles.selectionSubtitle}>
-          Share your experience with {reviewType === 'dish' ? dishData?.name : menuData?.name}
+          {strings.shareExperienceWith} {reviewType === 'dish' ? dishData?.name : menuData?.name}
         </ZText>
 
         <View style={localStyles.videoButtons}>
@@ -277,13 +277,13 @@ const ReviewReelCreator = ({ route }) => {
             disabled={isLoading}>
             <Ionicons name="camera" size={moderateScale(24)} color={colors.white} />
             <ZText type="B16" color={colors.white} style={styles.ml8}>
-              Add Photo/Video
+              {strings.addPhotoVideo}
             </ZText>
           </TouchableOpacity>
         </View>
 
         <ZText type="M12" color={colors.grayScale5} style={localStyles.videoNote}>
-          You can add photos or videos (max 60 seconds for videos)
+          {strings.mediaNote}
         </ZText>
       </View>
     </View>
@@ -294,7 +294,7 @@ const ReviewReelCreator = ({ route }) => {
       {/* Media Preview */}
       <View style={localStyles.videoPreviewSection}>
         <ZText type="B16" color={colors.textColor} style={localStyles.sectionTitle}>
-          Your Review {mediaType === 'video' ? 'Video' : 'Photo'}
+          {strings.yourReview} {mediaType === 'video' ? strings.videoMedia : strings.photo}
         </ZText>
         <View style={localStyles.videoPreview}>
           <Ionicons
@@ -304,15 +304,15 @@ const ReviewReelCreator = ({ route }) => {
           />
           <ZText type="M14" color={colors.textColor} style={styles.mt8}>
             {isMediaUploading
-              ? 'Uploading...'
-              : `${mediaType === 'video' ? 'Video' : 'Photo'} Ready`
+              ? strings.uploading
+              : `${mediaType === 'video' ? strings.videoMedia : strings.photo} ${strings.mediaReady}`
             }
           </ZText>
           <TouchableOpacity
             style={localStyles.changeVideoButton}
             onPress={handleSelectMedia}>
             <ZText type="B12" color={colors.primary}>
-              Change {mediaType === 'video' ? 'Video' : 'Photo'}
+              {strings.change} {mediaType === 'video' ? strings.videoMedia : strings.photo}
             </ZText>
           </TouchableOpacity>
         </View>
@@ -321,7 +321,7 @@ const ReviewReelCreator = ({ route }) => {
       {/* Rating */}
       <View style={localStyles.ratingSection}>
         <ZText type="B16" color={colors.textColor} style={localStyles.sectionTitle}>
-          Rate your experience
+          {strings.rateYourExperience}
         </ZText>
         <View style={localStyles.starsContainer}>
           {[1, 2, 3, 4, 5].map((star) => (
@@ -342,7 +342,7 @@ const ReviewReelCreator = ({ route }) => {
       {/* Caption Input */}
       <View style={localStyles.captionSection}>
         <ZText type="B16" color={colors.textColor} style={localStyles.sectionTitle}>
-          Share your thoughts
+          {strings.shareYourThoughts}
         </ZText>
         <TextInput
           style={[
@@ -353,7 +353,7 @@ const ReviewReelCreator = ({ route }) => {
               borderColor: colors.borderColor,
             },
           ]}
-          placeholder="Tell others about your experience... (minimum 10 characters)"
+          placeholder={strings.reviewPlaceholderMinChars}
           placeholderTextColor={colors.grayScale5}
           value={caption}
           onChangeText={setCaption}
@@ -375,8 +375,8 @@ const ReviewReelCreator = ({ route }) => {
         title={isLoading || isMediaUploading
           ? 'Processing...'
           : editMode
-            ? 'Update Review'
-            : 'Post Review'
+            ? strings.updateReview
+            : strings.postReview
         }
         onPress={handleSubmitReview}
         disabled={isLoading || isMediaUploading || !selectedMedia}

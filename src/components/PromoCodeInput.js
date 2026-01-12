@@ -8,25 +8,26 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
+import strings from '../i18n/strings';
 
-const PromoCodeInput = ({ 
-  onPromoCodeApplied, 
-  orderAmount, 
+const PromoCodeInput = ({
+  onPromoCodeApplied,
+  orderAmount,
   chefId,
   appliedPromoCode,
-  onRemovePromoCode 
+  onRemovePromoCode
 }) => {
   const [promoCode, setPromoCode] = useState('');
   const [isValidating, setIsValidating] = useState(false);
 
   const validatePromoCode = async () => {
     if (!promoCode.trim()) {
-      Alert.alert('Error', 'Please enter a promo code');
+      Alert.alert(strings.error, strings.enterPromoCode);
       return;
     }
 
     setIsValidating(true);
-    
+
     try {
       const response = await fetch('/api/promocode/validate', {
         method: 'POST',
@@ -49,13 +50,13 @@ const PromoCodeInput = ({
           discountAmount: data.discountAmount,
           discountType: data.discountType,
         });
-        Alert.alert('Success!', data.message);
+        Alert.alert(strings.successExclamation, data.message);
         setPromoCode('');
       } else {
-        Alert.alert('Invalid Promo Code', data.message || 'This promo code is not valid');
+        Alert.alert(strings.invalidPromoCode, data.message || strings.promoCodeInvalidMsg);
       }
     } catch (error) {
-Alert.alert('Error', 'Failed to validate promo code. Please try again.');
+      Alert.alert(strings.error, strings.failedToValidatePromoCode);
     } finally {
       setIsValidating(false);
     }
@@ -78,7 +79,7 @@ Alert.alert('Error', 'Failed to validate promo code. Please try again.');
           </Text>
         </View>
         <TouchableOpacity onPress={removePromoCode} style={styles.removeButton}>
-          <Text style={styles.removeButtonText}>Remove</Text>
+          <Text style={styles.removeButtonText}>{strings.remove}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -86,11 +87,11 @@ Alert.alert('Error', 'Failed to validate promo code. Please try again.');
 
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>Have a promo code?</Text>
+      <Text style={styles.label}>{strings.havePromoCode}</Text>
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
-          placeholder="Enter promo code"
+          placeholder={strings.enterPromoCodePlaceholder}
           value={promoCode}
           onChangeText={setPromoCode}
           autoCapitalize="characters"
@@ -104,7 +105,7 @@ Alert.alert('Error', 'Failed to validate promo code. Please try again.');
           {isValidating ? (
             <ActivityIndicator size="small" color="#fff" />
           ) : (
-            <Text style={styles.applyButtonText}>Apply</Text>
+            <Text style={styles.applyButtonText}>{strings.apply}</Text>
           )}
         </TouchableOpacity>
       </View>

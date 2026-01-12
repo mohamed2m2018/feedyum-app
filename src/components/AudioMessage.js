@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef} from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   TouchableOpacity,
@@ -7,12 +7,12 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import {useSelector} from 'react-redux';
+import { useSelector } from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Video from 'react-native-video';
 import ZText from './common/ZText';
-import {moderateScale} from '../common/constants';
-import {styles} from '../themes';
+import { moderateScale } from '../common/constants';
+import { styles } from '../themes';
 import strings from '../i18n/strings';
 
 const AudioMessage = ({
@@ -42,7 +42,7 @@ const AudioMessage = ({
       Alert.alert(strings.noAudio, strings.noAudioFileAvailable);
       return;
     }
-if (isPlaying) {
+    if (isPlaying) {
       setIsPlaying(false);
     } else {
       setIsLoading(true);
@@ -51,7 +51,7 @@ if (isPlaying) {
   };
 
   const handleLoad = (data) => {
-const audioDuration = data.duration || initialDuration || 30;
+    const audioDuration = data.duration || initialDuration || 30;
     setDuration(audioDuration);
     setIsLoading(false);
     setHasError(false);
@@ -62,15 +62,15 @@ const audioDuration = data.duration || initialDuration || 30;
   };
 
   const handleEnd = () => {
-setIsPlaying(false);
+    setIsPlaying(false);
     setCurrentTime(0);
   };
 
   const handleError = (error) => {
-setIsLoading(false);
+    setIsLoading(false);
     setIsPlaying(false);
     setHasError(true);
-    Alert.alert(strings.audioError, 'Failed to play audio file');
+    Alert.alert(strings.audioError, strings.failedToPlayAudioFile);
   };
 
   const handleSeek = (value) => {
@@ -87,7 +87,7 @@ setIsLoading(false);
   };
 
   return (
-    <View 
+    <View
       style={[
         localStyles.container,
         {
@@ -100,13 +100,13 @@ setIsLoading(false);
       {audioUrl && (
         <Video
           ref={videoRef}
-          source={{uri: audioUrl}}
+          source={{ uri: audioUrl }}
           paused={!isPlaying}
           onLoad={handleLoad}
           onProgress={handleProgress}
           onEnd={handleEnd}
           onError={handleError}
-          style={{height: 0, width: 0}}
+          style={{ height: 0, width: 0 }}
           resizeMode="contain"
           ignoreSilentSwitch="obey"
           playWhenInactive={true}
@@ -123,17 +123,17 @@ setIsLoading(false);
         style={[
           localStyles.playButton,
           {
-            backgroundColor: hasError 
-              ? colors.grayScale3 
+            backgroundColor: hasError
+              ? colors.grayScale3
               : (isOwn ? colors.white : colors.primary)
           }
         ]}
         onPress={handlePlayPause}
         disabled={isLoading}>
         {isLoading ? (
-          <ActivityIndicator 
-            size="small" 
-            color={isOwn ? colors.primary : colors.white} 
+          <ActivityIndicator
+            size="small"
+            color={isOwn ? colors.primary : colors.white}
           />
         ) : hasError ? (
           <Ionicons
@@ -166,16 +166,16 @@ setIsLoading(false);
             height: 12,
           }}
         />
-        
+
         <View style={localStyles.timeContainer}>
-          <ZText 
-            type="s12" 
+          <ZText
+            type="s12"
             color={isOwn ? colors.white : colors.textColor}
           >
             {formatTime(currentTime)}
           </ZText>
-          <ZText 
-            type="s12" 
+          <ZText
+            type="s12"
             color={isOwn ? 'rgba(255,255,255,0.7)' : colors.grayScale5}
           >
             {formatTime(duration)}

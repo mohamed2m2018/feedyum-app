@@ -1,5 +1,5 @@
 // Library import
-import {StyleSheet, TouchableOpacity, View, ScrollView, I18nManager} from 'react-native';
+import {StyleSheet, TouchableOpacity, View, ScrollView, I18nManager, FlatList} from 'react-native';
 import React, {useState, useRef, useEffect} from 'react';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useSelector} from 'react-redux';
@@ -28,7 +28,7 @@ export default function Discover({navigation}) {
 
   const [isSelect, setIsSelect] = useState({
     index: 0,
-    routes: routes?.map(item => ({key: I18nManager.isRTL? item.nameAr: item.nameEn, title:  I18nManager.isRTL? item.nameAr: item.nameEn})),
+    routes: routes?.map(item => ({key: item.nameEn, title:  I18nManager.isRTL? item.nameAr: item.nameEn})),
   });
 
   // Track location changes and provide visual feedback
@@ -76,93 +76,46 @@ export default function Discover({navigation}) {
     );
   };
   const _renderTabBar = props => {
-    const SCROLL_OFFSET = 100;
+    const flatListRef = useRef(null);
 
-    const handleScrollViewLayout = event => {
-      setScrollViewWidth(event.nativeEvent.layout.width);
-    };
+    // Scroll to selected index when it changes
+    useEffect(() => {
+      if (flatListRef.current) {
+        flatListRef.current.scrollToIndex({
+          index: isSelect.index,
+          animated: true,
+          viewPosition: 0.5,
+        });
+      }
+    }, [isSelect.index]);
 
-    const onContentSizeChange = (contentWidth, contentHeight) => {
-      setIsContentOverflowing(scrollViewWidth < contentWidth);
-    };
-
-    const handleScroll = event => {
-      setCurrentScrollPosition(event.nativeEvent.contentOffset.x);
-    };
-
-    const handleScrollArrowPress = () => {
-      scrollViewRef.current?.scrollTo({
-        x: currentScrollPosition + SCROLL_OFFSET,
-        animated: true,
-      });
-    };
-    const isAtEnd =
-      currentScrollPosition + scrollViewWidth >=
-      props.navigationState.routes.length * 100; // Assuming each item is 100 pixels wide
+    const renderItem = ({ item, index }) => (
+      <HeaderCetegoryItem title={item.title} index={index} />
+    );
 
     return (
-      <View style={{flexDirection: 'row'}}>
-        {/* Left Arrow (only show if content overflows) */}
-        {isContentOverflowing &&
-          currentScrollPosition > 0 && ( // Check both overflow and scroll position
-            <TouchableOpacity
-              onPress={() => {
-                // Scroll left when pressed
-                scrollViewRef.current?.scrollTo({
-                  x: Math.max(currentScrollPosition - SCROLL_OFFSET, 0), // Don't go below 0
-                  animated: true,
-                });
-              }}
-              style={{
-                paddingRight: moderateScale(5), // Add padding to the right
-                top: -5,
-              }}>
-              <MaterialIcons
-                name={I18nManager.isRTL? "keyboard-arrow-right": "keyboard-arrow-left"}
-                size={moderateScale(35)}
-                color={colors.grayScale7}
-              />
-            </TouchableOpacity>
-          )}
-
-        <ScrollView
-          ref={scrollViewRef}
+      <View>
+        <FlatList
+          ref={flatListRef}
+          data={props.navigationState.routes}
+          renderItem={renderItem}
           horizontal
           showsHorizontalScrollIndicator={false}
-          // style={{maxHeight: 40}}
           contentContainerStyle={localStyles.scrollContainer}
-          onContentSizeChange={onContentSizeChange}
-          onLayout={handleScrollViewLayout}
-          onScroll={handleScroll} // Add onScroll handler
-        >
-          {props.navigationState.routes.map((item, index) => (
-            <HeaderCetegoryItem title={item.title} index={index} key={index} />
-          ))}
-        </ScrollView>
-
-        {/* Arrow Button */}
-        {isContentOverflowing && !isAtEnd && (
-          <TouchableOpacity
-            onPress={handleScrollArrowPress}
-            style={{
-              paddingLeft: moderateScale(5),
-              top: -5,
-            }}>
-            <MaterialIcons
-                name={I18nManager.isRTL? "keyboard-arrow-left": "keyboard-arrow-right"}
-                size={moderateScale(35)}
-              color={colors.grayScale7}
-            />
-          </TouchableOpacity>
-        )}
+          keyExtractor={(item, index) => index.toString()}
+          onScrollToIndexFailed={info => {
+            const wait = new Promise(resolve => setTimeout(resolve, 500));
+            wait.then(() => {
+              flatListRef.current?.scrollToIndex({ index: info.index, animated: true });
+            });
+          }}
+        />
       </View>
     );
   };
 
   const _renderScene = ({route}) => {
-    const selectedTag = I18nManager.isRTL 
-      ? routes.find(item => item.nameAr === route.title).nameAr 
-      : routes.find(item => item.nameEn === route.title).nameEn;
+    const selectedTag = route.key;
 
     return (
       <HashtagCategory 

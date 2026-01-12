@@ -20,29 +20,29 @@ const ChefNavigator = () => {
         },
       }}
     >
-      <Stack.Screen 
-        name="ChefsList" 
+      <Stack.Screen
+        name="ChefsList"
         component={ChefsListScreen}
-        options={{ title: 'Chefs' }}
+        options={{ title: strings.chefsTitle }}
       />
-      <Stack.Screen 
-        name="ChefProfile" 
+      <Stack.Screen
+        name="ChefProfile"
         component={ChefProfileScreen}
-        options={({ route }) => ({ 
-          title: route.params?.chefName || 'Chef Profile' 
+        options={({ route }) => ({
+          title: route.params?.chefName || 'Chef Profile'
         })}
       />
-      <Stack.Screen 
-        name="ChefMenu" 
+      <Stack.Screen
+        name="ChefMenu"
         component={ChefMenuScreen}
-        options={({ route }) => ({ 
-          title: `${route.params?.chefName || 'Chef'}'s Menu` 
+        options={({ route }) => ({
+          title: `${route.params?.chefName || 'Chef'}'s Menu`
         })}
       />
-      <Stack.Screen 
-        name="DishDetail" 
+      <Stack.Screen
+        name="DishDetail"
         component={DishDetailScreen}
-        options={{ title: 'Dish Details' }}
+        options={{ title: strings.dishDetailsTitle }}
       />
     </Stack.Navigator>
   );

@@ -1,24 +1,24 @@
 // Library import
-import {FlatList, StyleSheet, TouchableOpacity, View} from 'react-native';
-import React, {memo, useCallback, useEffect, useRef, useState} from 'react';
-import {useSelector} from 'react-redux';
+import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
+import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
+import { useSelector } from 'react-redux';
 import Feather from 'react-native-vector-icons/Feather';
 import debounce from 'debounce';
 // Local import
 import ZSafeAreaView from '../../../../components/common/ZSafeAreaView';
 import ZInput from '../../../../components/common/ZInput';
 import strings from '../../../../i18n/strings';
-import {moderateScale} from '../../../../common/constants';
-import {styles} from '../../../../themes';
+import { moderateScale } from '../../../../common/constants';
+import { styles } from '../../../../themes';
 import ZText from '../../../../components/common/ZText';
 import SearchUser from './SearchUser';
 import SearchVideo from './SearchVideo';
 import SearchDishes from './SearchDishes';
-import {useInfiniteQuery, useQuery} from 'react-query';
+import { useInfiniteQuery, useQuery } from 'react-query';
 import request from '../../../../api/request';
-import {useFocusEffect, useIsFocused} from '@react-navigation/native';
-import {useScreen} from '../../../../navigation/screenContext';
-import {TabNav} from '../../../../navigation/NavigationKeys';
+import { useFocusEffect, useIsFocused } from '@react-navigation/native';
+import { useScreen } from '../../../../navigation/screenContext';
+import { TabNav } from '../../../../navigation/NavigationKeys';
 import ZLoader from '../../../../components/common/ZLoader';
 
 export default function Search() {
@@ -31,14 +31,18 @@ export default function Search() {
     },
     {
       id: 1,
-      title: strings.posts,
+      title: strings.chefs,
     },
     {
       id: 2,
-      title: strings.reviews,
+      title: strings.posts,
     },
     {
       id: 3,
+      title: strings.reviews,
+    },
+    {
+      id: 4,
       title: strings.dishes,
     },
   ];
@@ -63,7 +67,7 @@ export default function Search() {
   const [useSemanticSearch, setUseSemanticSearch] = useState(true); // Toggle for semantic search
 
   const isFocused = useIsFocused();
-  const {updateCurrentScreen} = useScreen();
+  const { updateCurrentScreen } = useScreen();
 
   useEffect(() => {
     if (isFocused) {
@@ -72,32 +76,26 @@ export default function Search() {
   }, [isFocused, updateCurrentScreen]);
 
   const onSearchInput = text => {
-setSearch(text);
+    setSearch(text);
     debounce(() => {
-setDebouncedSearch(text);
+      setDebouncedSearch(text);
     }, 300)();
   };
 
-  const {data} = useQuery('user', () => request.get('/user'), {retry: 1});
+  const { data } = useQuery('user', () => request.get('/user'), { retry: 1 });
 
   const user = data?.data?.user;
 
-  const searchStory = ({pageParam = null}) => {
+  const searchStory = ({ pageParam = null }) => {
     const endpoint = useSemanticSearch ? '/story/semantic-search' : '/story/search';
     const params = {
       searchString: debouncedSearch || '',
       excludeReviews: 'true', // Only regular posts, exclude reviews
       searchType: useSemanticSearch ? 'hybrid' : 'text',
       limit: 10,
+      page: pageParam || 1,
     };
-    
-    // Add cursor for semantic search, page for traditional search
-    if (useSemanticSearch && pageParam) {
-      params.cursor = pageParam;
-    } else if (!useSemanticSearch && pageParam) {
-      params.page = pageParam;
-    }
-    
+
     return request.get(endpoint, { params });
   };
 
@@ -109,21 +107,13 @@ setDebouncedSearch(text);
     error: storiesError,
   } = useInfiniteQuery(['search_story', debouncedSearch, useSemanticSearch], searchStory, {
     keepPreviousData: true,
-    enabled: isSelect === 1 && !!user,
+    enabled: isSelect === 2 && !!user,
     getNextPageParam: (lastPage, allPages) => {
-      if (useSemanticSearch) {
-        // For semantic search, use cursor-based pagination
-        return lastPage?.data?.data?.pagination?.hasMore 
-          ? lastPage?.data?.data?.pagination?.nextCursor 
+      const nextPage =
+        lastPage?.data?.data?.hasNextPage || lastPage?.data?.data?.pagination?.hasNextPage
+          ? allPages.length + 1
           : undefined;
-      } else {
-        // For traditional search, use page-based pagination
-        const nextPage =
-          lastPage?.data?.data?.currentPage < lastPage?.data?.data?.totalPages
-            ? allPages.length + 1
-            : undefined;
-        return nextPage;
-      }
+      return nextPage;
     },
 
     select: res => {
@@ -133,21 +123,16 @@ setDebouncedSearch(text);
   });
 
   // New search for review posts only
-  const searchReviews = ({pageParam = null}) => {
+  const searchReviews = ({ pageParam = null }) => {
     const endpoint = useSemanticSearch ? '/story/semantic-search' : '/story/search';
     const params = {
       searchString: debouncedSearch || '',
       reviewsOnly: 'true', // Only review posts
       searchType: useSemanticSearch ? 'hybrid' : 'text',
       limit: 10,
+      page: pageParam || 1,
     };
-    
-    if (useSemanticSearch && pageParam) {
-      params.cursor = pageParam;
-    } else if (!useSemanticSearch && pageParam) {
-      params.page = pageParam;
-    }
-    
+
     return request.get(endpoint, { params });
   };
 
@@ -159,39 +144,47 @@ setDebouncedSearch(text);
     error: reviewsError,
   } = useInfiniteQuery(['search_reviews', debouncedSearch, useSemanticSearch], searchReviews, {
     keepPreviousData: true,
-    enabled: isSelect === 2 && !!user,
+    enabled: isSelect === 3 && !!user,
     getNextPageParam: (lastPage, allPages) => {
-      if (useSemanticSearch) {
-        return lastPage?.data?.data?.pagination?.hasMore 
-          ? lastPage?.data?.data?.pagination?.nextCursor 
+      const nextPage =
+        lastPage?.data?.data?.hasNextPage || lastPage?.data?.data?.pagination?.hasNextPage
+          ? allPages.length + 1
           : undefined;
-      } else {
-        const nextPage =
-          lastPage?.data?.data?.currentPage < lastPage?.data?.data?.totalPages
-            ? allPages.length + 1
-            : undefined;
-        return nextPage;
-      }
+      return nextPage;
     },
 
     select: res => res?.pages.flatMap(page => page.data?.data?.stories || []),
   });
 
-  const searchUser = ({pageParam = null}) => {
+  const searchUser = ({ pageParam = null }) => {
     const endpoint = useSemanticSearch ? '/user/semantic-search' : '/user/search';
     const params = {
       searchString: debouncedSearch || '',
       currentUserId: user?._id,
       searchType: useSemanticSearch ? 'hybrid' : 'text',
       limit: 10,
+      page: pageParam || 1,
+      filters: {
+        type: { $ne: 'chef' }
+      }
     };
-    
-    if (useSemanticSearch && pageParam) {
-      params.cursor = pageParam;
-    } else if (!useSemanticSearch && pageParam) {
-      params.page = pageParam;
-    }
-    
+
+    return request.get(endpoint, { params });
+  };
+
+  const searchChef = ({ pageParam = null }) => {
+    const endpoint = useSemanticSearch ? '/user/semantic-search' : '/user/search';
+    const params = {
+      searchString: debouncedSearch || '',
+      currentUserId: user?._id,
+      searchType: useSemanticSearch ? 'hybrid' : 'text',
+      limit: 10,
+      page: pageParam || 1,
+      filters: {
+        type: 'chef'
+      }
+    };
+
     return request.get(endpoint, { params });
   };
 
@@ -205,36 +198,52 @@ setDebouncedSearch(text);
     keepPreviousData: true,
     enabled: isSelect === 0 && !!user?._id,
     getNextPageParam: (lastPage, allPages) => {
-      if (useSemanticSearch) {
-        return lastPage?.data?.data?.pagination?.hasMore 
-          ? lastPage?.data?.data?.pagination?.nextCursor 
+      const nextPage =
+        lastPage?.data?.currentPage < lastPage?.data?.totalPages ||
+          lastPage?.data?.data?.pagination?.hasNextPage
+          ? allPages.length + 1
           : undefined;
-      } else {
-        const nextPage =
-          lastPage?.data?.data?.currentPage < lastPage?.data?.data?.totalPages
-            ? allPages.length + 1
-            : undefined;
-        return nextPage;
-      }
+      return nextPage;
     },
 
     select: res => res?.pages.flatMap(page => page.data?.data?.users || []),
   });
 
-  const searchDishes = ({pageParam = null}) => {
+  const {
+    data: chefs,
+    fetchNextPage: fetchNextPageChefs,
+    isFetching: isFetchingChefs,
+    isFetchingNextPage: isFetchingNextPageChefs,
+    error: chefsError,
+  } = useInfiniteQuery(['search_chef', debouncedSearch, useSemanticSearch], searchChef, {
+    keepPreviousData: true,
+    enabled: isSelect === 1 && !!user?._id,
+    getNextPageParam: (lastPage, allPages) => {
+      const nextPage =
+        lastPage?.data?.currentPage < lastPage?.data?.totalPages ||
+          lastPage?.data?.data?.pagination?.hasNextPage
+          ? allPages.length + 1
+          : undefined;
+      return nextPage;
+    },
+
+    select: res => res?.pages.flatMap(page => page.data?.data?.users || []),
+  });
+
+  const searchDishes = ({ pageParam = null }) => {
     const endpoint = useSemanticSearch ? '/dishes/semantic-search' : '/dishes/search';
     const params = {
       searchString: debouncedSearch || '', // Use debouncedSearch and allow empty string
       searchType: useSemanticSearch ? 'hybrid' : 'text',
       limit: 10,
     };
-    
+
     if (useSemanticSearch && pageParam) {
       params.cursor = pageParam;
     } else if (!useSemanticSearch && pageParam) {
       params.page = pageParam;
     }
-    
+
     return request.get(endpoint, { params });
   };
 
@@ -246,11 +255,11 @@ setDebouncedSearch(text);
     error: dishesError,
   } = useInfiniteQuery(['search_dishes', debouncedSearch, useSemanticSearch], searchDishes, {
     keepPreviousData: true,
-    enabled: isSelect === 3, // Allow dishes search without authentication
+    enabled: isSelect === 4, // Allow dishes search without authentication
     getNextPageParam: (lastPage, allPages) => {
       if (useSemanticSearch) {
-        return lastPage?.data?.data?.pagination?.hasMore 
-          ? lastPage?.data?.data?.pagination?.nextCursor 
+        return lastPage?.data?.data?.pagination?.hasMore
+          ? lastPage?.data?.data?.pagination?.nextCursor
           : undefined;
       } else {
         const nextPage =
@@ -263,9 +272,9 @@ setDebouncedSearch(text);
 
     select: res => {
       const dishes = res?.pages.flatMap(page => {
-return page.data?.data?.dishes || [];
+        return page.data?.data?.dishes || [];
       });
-return dishes;
+      return dishes;
     },
   });
 
@@ -285,7 +294,7 @@ return dishes;
   };
 
   // eslint-disable-next-line react/no-unstable-nested-components
-  const HeaderCategory = memo(({item, index}) => {
+  const HeaderCategory = memo(({ item, index }) => {
     return (
       <TouchableOpacity
         key={index}
@@ -313,7 +322,7 @@ return dishes;
 
   return (
     <ZSafeAreaView>
-      <View style={{flex: 1, margin: 10}}>
+      <View style={{ flex: 1, margin: 10 }}>
         <ZInput
           placeHolder={strings.search}
           _value={search}
@@ -322,7 +331,7 @@ return dishes;
           insideLeftIcon={() => <SearchIcon />}
           toGetTextFieldValue={onSearchInput}
           inputContainerStyle={[
-            {backgroundColor: colors.inputBg},
+            { backgroundColor: colors.inputBg },
             localStyles.inputContainerStyle,
             searchInputStyle,
           ]}
@@ -330,7 +339,7 @@ return dishes;
           _onFocus={onHighlightInput}
           onBlur={onUnHighlightInput}
         />
-        
+
         {/* Semantic Search Toggle */}
         <View style={localStyles.semanticToggleContainer}>
           <TouchableOpacity
@@ -345,7 +354,7 @@ return dishes;
               color={useSemanticSearch ? colors.white : colors.grayScale7}
               style={localStyles.toggleText}
             >
-              🤖 Smart Search
+              {strings.smartSearch}
             </ZText>
           </TouchableOpacity>
           <ZText
@@ -353,15 +362,15 @@ return dishes;
             color={colors.grayScale6}
             style={localStyles.toggleDescription}
           >
-            {useSemanticSearch ? 'Smart search (AI understands Arabic & English)' : 'Traditional keyword search only'}
+            {useSemanticSearch ? strings.smartSearchDesc : strings.traditionalSearchDesc}
           </ZText>
         </View>
-        
-        <View style={{height: moderateScale(70), alignSelf: 'flex-start'}}>
+
+        <View style={{ height: moderateScale(70), alignSelf: 'flex-start' }}>
           <FlatList
             data={searchCategoryData}
             keyboardShouldPersistTaps={'always'}
-            renderItem={({item, index}) => (
+            renderItem={({ item, index }) => (
               <HeaderCategory item={item} index={index} />
             )}
             keyExtractor={(item, index) => index.toString()}
@@ -377,7 +386,7 @@ return dishes;
               users={users || []}
               onEndReachedThreshold={0.5}
               isFetching={isFetchingUser}
-              onMomentumScrollBegin={fetchNextPageUsers}
+              onEndReached={fetchNextPageUsers}
               isFetchingNextPage={isFetchingNextPageUsers}
             />
             {isFetchingUser && !isFetchingNextPageUsers && (
@@ -386,41 +395,55 @@ return dishes;
           </>
         )}
         {isSelect === 1 && (
-          <View style={{flex: 1}}>
+          <>
+            <SearchUser
+              users={chefs || []}
+              onEndReachedThreshold={0.5}
+              isFetching={isFetchingChefs}
+              onEndReached={fetchNextPageChefs}
+              isFetchingNextPage={isFetchingNextPageChefs}
+            />
+            {isFetchingChefs && !isFetchingNextPageChefs && (
+              <ZLoader height={100} top={260} />
+            )}
+          </>
+        )}
+        {isSelect === 2 && (
+          <View style={{ flex: 1 }}>
             <SearchVideo
               stories={stories || []}
               onEndReachedThreshold={0.9}
               isFetching={isFetchingsStories}
               isFetchingNextPage={isFetchingNextPage}
-              onMomentumScrollBegin={fetchNextPage}
+              onEndReached={fetchNextPage}
             />
             {isFetchingsStories && !isFetchingNextPage && (
               <ZLoader height={100} top={120} />
             )}
           </View>
         )}
-        {isSelect === 2 && (
-          <View style={{flex: 1}}>
+        {isSelect === 3 && (
+          <View style={{ flex: 1 }}>
             <SearchVideo
               stories={reviews || []}
               onEndReachedThreshold={0.9}
               isFetching={isFetchingReviews}
               isFetchingNextPage={isFetchingNextPageReviews}
-              onMomentumScrollBegin={fetchNextPageReviews}
+              onEndReached={fetchNextPageReviews}
             />
             {isFetchingReviews && !isFetchingNextPageReviews && (
               <ZLoader height={100} top={120} />
             )}
           </View>
         )}
-        {isSelect === 3 && (
-          <View style={{flex: 1}}>
+        {isSelect === 4 && (
+          <View style={{ flex: 1 }}>
             <SearchDishes
               dishes={dishes || []}
               onEndReachedThreshold={0.9}
               isFetching={isFetchingDishes}
               isFetchingNextPage={isFetchingNextPageDishes}
-              onMomentumScrollBegin={fetchNextPageDishes}
+              onEndReached={fetchNextPageDishes}
             />
             {isFetchingDishes && !isFetchingNextPageDishes && (
               <ZLoader height={100} top={120} />
@@ -481,5 +504,5 @@ const localStyles = StyleSheet.create({
     fontSize: moderateScale(10),
     fontStyle: 'italic',
   },
-  
+
 });

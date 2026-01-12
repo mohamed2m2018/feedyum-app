@@ -94,11 +94,11 @@ const ReviewPrompt = ({
                 <Icon name="rate-review" size={moderateScale(30)} color="#FFFFFF" />
               </LinearGradient>
             </View>
-            
+
             <Text style={[styles.title, { color: colors.textColor }]}>
               How was your order?
             </Text>
-            
+
             <Text style={[styles.subtitle, { color: colors.grayScale5 }]}>
               Share your experience to help others discover great food!
             </Text>
@@ -115,24 +115,24 @@ const ReviewPrompt = ({
               </Text>
             </View>
 
-            <ScrollView 
-              horizontal 
+            <ScrollView
+              horizontal
               showsHorizontalScrollIndicator={false}
               style={styles.dishesContainer}
             >
               {orderData.dishes?.map((dish, index) => (
                 <View key={index} style={styles.dishItem}>
                   {dish.dishImage ? (
-                    <Image 
-                      source={{ uri: dish.dishImage }} 
-                      style={styles.dishImage} 
+                    <Image
+                      source={{ uri: dish.dishImage }}
+                      style={styles.dishImage}
                     />
                   ) : (
                     <View style={[styles.dishPlaceholder, { backgroundColor: colors.grayScale2 }]}>
                       <Icon name="restaurant" size={moderateScale(20)} color={colors.grayScale5} />
                     </View>
                   )}
-                  <Text 
+                  <Text
                     style={[styles.dishName, { color: colors.textColor }]}
                     numberOfLines={2}
                   >
@@ -151,14 +151,14 @@ const ReviewPrompt = ({
                 Help others discover great food
               </Text>
             </View>
-            
+
             <View style={styles.benefitItem}>
               <Icon name="star" size={moderateScale(20)} color="#FFD700" />
               <Text style={[styles.benefitText, { color: colors.textColor }]}>
                 Support your favorite chefs
               </Text>
             </View>
-            
+
             <View style={styles.benefitItem}>
               <Icon name="feedback" size={moderateScale(20)} color="#2196F3" />
               <Text style={[styles.benefitText, { color: colors.textColor }]}>
@@ -178,7 +178,7 @@ const ReviewPrompt = ({
                 style={styles.gradientButton}
               >
                 <Icon name="rate-review" size={moderateScale(20)} color="#FFFFFF" />
-                <Text style={styles.primaryButtonText}>Review Now</Text>
+                <Text style={styles.primaryButtonText}>{strings.reviewNow}</Text>
               </LinearGradient>
             </TouchableOpacity>
 

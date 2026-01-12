@@ -7,6 +7,7 @@ import {
   Image,
 } from 'react-native';
 import StarRating from './StarRating';
+import strings from '../i18n/strings';
 
 const ChefProfileCard = ({ chef, onPress, onViewMenu, showMenuButton = true }) => {
   const handlePress = () => {
@@ -28,9 +29,9 @@ const ChefProfileCard = ({ chef, onPress, onViewMenu, showMenuButton = true }) =
   return (
     <TouchableOpacity style={styles.card} onPress={handlePress}>
       <View style={styles.header}>
-        <Image 
-          source={{ uri: chef.avatar || 'https://via.placeholder.com/60' }} 
-          style={styles.avatar} 
+        <Image
+          source={{ uri: chef.avatar || 'https://via.placeholder.com/60' }}
+          style={styles.avatar}
         />
         <View style={styles.info}>
           <View style={styles.nameRow}>
@@ -47,7 +48,7 @@ const ChefProfileCard = ({ chef, onPress, onViewMenu, showMenuButton = true }) =
               style={styles.rating}
             />
           </View>
-          <Text style={styles.type}>Chef</Text>
+          <Text style={styles.type}>{strings.yes}</Text>
           {chef.bio && (
             <Text style={styles.bio} numberOfLines={2}>
               {chef.bio}
@@ -74,34 +75,34 @@ const ChefProfileCard = ({ chef, onPress, onViewMenu, showMenuButton = true }) =
       <View style={styles.stats}>
         <View style={styles.statItem}>
           <Text style={styles.statNumber}>{chef.postsNo || 0}</Text>
-          <Text style={styles.statLabel}>Posts</Text>
+          <Text style={styles.statLabel}>{strings.posts}</Text>
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statNumber}>{chef.likesNo || 0}</Text>
-          <Text style={styles.statLabel}>Likes</Text>
+          <Text style={styles.statLabel}>{strings.likes}</Text>
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statNumber}>
             {chef.menu?.dishCount || 0}
           </Text>
-          <Text style={styles.statLabel}>Dishes</Text>
+          <Text style={styles.statLabel}>{strings.dishes}</Text>
         </View>
       </View>
 
       {/* Menu Button */}
       {showMenuButton && chef.hasMenu && (
-        <TouchableOpacity 
-          style={styles.menuButton} 
+        <TouchableOpacity
+          style={styles.menuButton}
           onPress={handleViewMenu}
         >
-          <Text style={styles.menuButtonText}>View Menu</Text>
+          <Text style={styles.menuButtonText}>{strings.viewMenu}</Text>
         </TouchableOpacity>
       )}
 
       {/* No Menu Message */}
       {showMenuButton && !chef.hasMenu && (
         <View style={styles.noMenuContainer}>
-          <Text style={styles.noMenuText}>No menu available</Text>
+          <Text style={styles.noMenuText}>{strings.noMenuAvailable}</Text>
         </View>
       )}
     </TouchableOpacity>

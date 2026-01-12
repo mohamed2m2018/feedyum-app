@@ -129,14 +129,15 @@
 //   },
 // });
 
-import {StyleSheet, Text, View} from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import React from 'react';
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
+import strings from '../../../i18n/strings';
 
 export default function PostSound() {
   return (
     <ZSafeAreaView>
-      <Text>PostSound</Text>
+      <Text>{strings.postSound}</Text>
     </ZSafeAreaView>
   );
 }

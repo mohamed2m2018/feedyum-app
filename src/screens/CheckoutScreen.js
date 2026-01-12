@@ -28,7 +28,7 @@ const CheckoutScreen = ({ navigation, userToken }) => {
   const subtotal = useSelector(selectCartSubtotal);
   const chef = useSelector(selectCartChef);
   const appliedPromocode = useSelector(selectCartPromocode);
-  
+
   const [deliveryAddress, setDeliveryAddress] = useState(null);
   const [specialInstructions, setSpecialInstructions] = useState('');
   const [isProcessingOrder, setIsProcessingOrder] = useState(false);
@@ -63,12 +63,12 @@ const CheckoutScreen = ({ navigation, userToken }) => {
 
   const processCheckout = async () => {
     if (!deliveryAddress) {
-      Alert.alert('Error', 'Please select a delivery address');
+      Alert.alert(strings.error, strings.selectDeliveryAddress);
       return;
     }
 
     if (cartItems.length === 0) {
-      Alert.alert('Error', 'Your cart is empty');
+      Alert.alert(strings.error, strings.cartEmpty);
       return;
     }
 
@@ -109,10 +109,10 @@ const CheckoutScreen = ({ navigation, userToken }) => {
           ]
         );
       } else {
-        Alert.alert('Error', data.message || 'Failed to place order');
+        Alert.alert(strings.error, data.message || strings.failedToPlaceOrder);
       }
     } catch (error) {
-Alert.alert('Error', 'Failed to process your order. Please try again.');
+      Alert.alert(strings.error, strings.failedToProcessOrder);
     } finally {
       setIsProcessingOrder(false);
     }
@@ -124,7 +124,7 @@ Alert.alert('Error', 'Failed to process your order. Please try again.');
     <ScrollView style={styles.container}>
       {/* Order Summary */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Order Summary</Text>
+        <Text style={styles.sectionTitle}>{strings.orderSummary}</Text>
         {cartItems.map((item, index) => (
           <View key={index} style={styles.orderItem}>
             <View style={styles.itemInfo}>
@@ -140,18 +140,18 @@ Alert.alert('Error', 'Failed to process your order. Please try again.');
 
       {/* Chef Info */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Chef</Text>
+        <Text style={styles.sectionTitle}>{strings.kitchen}</Text>
         <Text style={styles.chefName}>{chef.name}</Text>
       </View>
 
       {/* Delivery Address */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Delivery Address</Text>
+        <Text style={styles.sectionTitle}>{strings.deliveryAddress}</Text>
         <Text style={styles.addressText}>
-          {deliveryAddress?.nameLine || 'No address selected'}
+          {deliveryAddress?.nameLine || strings.noAddressSelected}
         </Text>
         <TouchableOpacity style={styles.changeAddressButton}>
-          <Text style={styles.changeAddressText}>Change Address</Text>
+          <Text style={styles.changeAddressText}>{strings.changeAddress}</Text>
         </TouchableOpacity>
       </View>
 
@@ -166,51 +166,51 @@ Alert.alert('Error', 'Failed to process your order. Please try again.');
 
       {/* Price Breakdown */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Price Breakdown</Text>
-        
+        <Text style={styles.sectionTitle}>{strings.priceBreakdown}</Text>
+
         <View style={styles.priceRow}>
-          <Text style={styles.priceLabel}>Subtotal</Text>
+          <Text style={styles.priceLabel}>{strings.subtotal}</Text>
           <Text style={styles.priceValue}>{formatCurrency(subtotal)}</Text>
         </View>
-        
+
         <View style={styles.priceRow}>
           <Text style={styles.priceLabel}>{strings.serviceFeePercentage}</Text>
           <Text style={styles.priceValue}>{formatCurrency(serviceFee)}</Text>
         </View>
-        
+
         <View style={styles.priceRow}>
-          <Text style={styles.priceLabel}>Tax (10%)</Text>
+          <Text style={styles.priceLabel}>{strings.taxPercentage}</Text>
           <Text style={styles.priceValue}>{formatCurrency(tax)}</Text>
         </View>
-        
+
         {appliedPromocode && (
           <View style={styles.priceRow}>
             <Text style={[styles.priceLabel, styles.discountLabel]}>
-              Discount ({appliedPromocode.code})
+              {strings.discount} ({appliedPromocode.code})
             </Text>
             <Text style={[styles.priceValue, styles.discountValue]}>
               -{formatCurrency(discountAmount)}
             </Text>
           </View>
         )}
-        
+
         <View style={styles.priceRow}>
-          <Text style={styles.priceLabel}>Delivery Fee</Text>
-          <Text style={styles.priceValue}>TBD</Text>
+          <Text style={styles.priceLabel}>{strings.deliveryFee}</Text>
+          <Text style={styles.priceValue}>{strings.tbd}</Text>
         </View>
-        
+
         <View style={[styles.priceRow, styles.totalRow]}>
-          <Text style={styles.totalLabel}>Total (before delivery)</Text>
+          <Text style={styles.totalLabel}>{strings.totalBeforeDelivery}</Text>
           <Text style={styles.totalValue}>{formatCurrency(totalBeforeDelivery)}</Text>
         </View>
       </View>
 
       {/* Special Instructions */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Special Instructions (Optional)</Text>
+        <Text style={styles.sectionTitle}>{strings.specialInstructionsOptional}</Text>
         <TextInput
           style={styles.instructionsInput}
-          placeholder="Any special requests or dietary requirements..."
+          placeholder={strings.anySpecialRequests}
           value={specialInstructions}
           onChangeText={setSpecialInstructions}
           multiline
@@ -228,7 +228,7 @@ Alert.alert('Error', 'Failed to process your order. Please try again.');
           <ActivityIndicator size="small" color="#fff" />
         ) : (
           <Text style={styles.placeOrderButtonText}>
-            Place Order • {formatCurrency(totalBeforeDelivery)} + delivery
+            {strings.placeOrder} • {formatCurrency(totalBeforeDelivery)} + {strings.delivery}
           </Text>
         )}
       </TouchableOpacity>

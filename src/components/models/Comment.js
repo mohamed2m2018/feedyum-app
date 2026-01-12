@@ -144,7 +144,7 @@ export default function Comment({ SheetRef, postId, onOpen, onClose }) {
     },
   );
 
-  console.log('CommentModal Render: postId=', postId, 'isLoading:', isLoading, 'isFetching:', isFetching, 'Data pages:', data?.pages?.length);
+
 
   const queryClient = useQueryClient();
   const { handleAuthToast } = useHandleAuth();

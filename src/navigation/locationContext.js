@@ -1,12 +1,13 @@
-import React, {createContext, useContext, useEffect, useState} from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import Geolocation from '@react-native-community/geolocation';
-import {Linking, Platform} from 'react-native';
+import { Linking, Platform } from 'react-native';
 import {
   PERMISSIONS,
   request,
   requestNotifications,
 } from 'react-native-permissions'; // Import react-native-permissions
-import {Toast} from 'react-native-alert-notification';
+import { Toast } from 'react-native-alert-notification';
+import GoogleMapsService from '../services/GoogleMapsService';
 
 const LocationContext = createContext();
 
@@ -14,14 +15,14 @@ export const useLocation = () => {
   return useContext(LocationContext);
 };
 
-export const LocationProvider = ({children}) => {
+export const LocationProvider = ({ children }) => {
   const [location, setLocation] = useState(null);
   const [deliveryLocation, setDeliveryLocation] = useState(null);
   const [useDeliveryAddress, setUseDeliveryAddress] = useState(false);
 
   const handleRequestPermission = () => {
     if (Platform.OS === 'android') {
-      requestNotifications(['alert', 'sound']).then(({status}) => {
+      requestNotifications(['alert', 'sound']).then(({ status }) => {
         if (status === 'blocked' || status === 'denied') {
           setTimeout(() => {
             Toast.show({
@@ -53,21 +54,37 @@ export const LocationProvider = ({children}) => {
         const result = await request(permission);
         if (result === 'granted') {
           Geolocation.getCurrentPosition(
-            position => {
-              const {latitude, longitude} = position.coords;
-              setLocation({latitude, longitude});
+            async position => {
+              const { latitude, longitude } = position.coords;
+
+              let addressDetails = null;
+              try {
+                // Reverse geocode
+                const geocodeResult = await GoogleMapsService.reverseGeocode(latitude, longitude);
+                if (geocodeResult.address) {
+                  addressDetails = geocodeResult.address;
+                }
+              } catch (e) {
+                console.log('Reverse geocoding failed', e);
+              }
+
+              setLocation({
+                latitude,
+                longitude,
+                address: addressDetails
+              });
               handleRequestPermission();
             },
             error => {
-handleRequestPermission();
+              handleRequestPermission();
             },
-            {enableHighAccuracy: true, timeout: 60000},
+            { enableHighAccuracy: true, timeout: 60000 },
           );
         } else {
-handleRequestPermission();
+          handleRequestPermission();
         }
       } catch (err) {
-}
+      }
     };
 
     requestLocationPermission();
@@ -83,7 +100,7 @@ handleRequestPermission();
       };
       setDeliveryLocation(newDeliveryLocation);
       setUseDeliveryAddress(true);
-} else {
+    } else {
       setUseDeliveryAddress(false);
     }
   };
@@ -91,7 +108,7 @@ handleRequestPermission();
   // Function to use device location
   const useDeviceLocation = () => {
     setUseDeliveryAddress(false);
-};
+  };
 
   // Determine which location to return
   const currentLocation = useDeliveryAddress && deliveryLocation ? deliveryLocation : location;

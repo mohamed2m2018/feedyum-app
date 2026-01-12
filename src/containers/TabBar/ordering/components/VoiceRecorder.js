@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef} from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   StyleSheet,
@@ -8,19 +8,19 @@ import {
   Platform,
   PermissionsAndroid,
 } from 'react-native';
-import {useSelector} from 'react-redux';
+import { useSelector } from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AudioRecord from 'react-native-audio-record';
 import Video from 'react-native-video';
 import ZText from '../../../../components/common/ZText';
-import {moderateScale} from '../../../../common/constants';
+import { moderateScale } from '../../../../common/constants';
 import {
   uploadAudioToS3,
   convertWavToMp3,
 } from '../../../../utils/UploadUtils';
 import strings from '../../../../i18n/strings';
 
-const VoiceRecorder = ({onSend, onCancel}) => {
+const VoiceRecorder = ({ onSend, onCancel }) => {
   const colors = useSelector(state => state.theme.theme);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
@@ -45,9 +45,9 @@ const VoiceRecorder = ({onSend, onCancel}) => {
             title: 'Microphone Permission',
             message:
               'This app needs access to your microphone to record voice messages.',
-            buttonNeutral: 'Ask Me Later',
-            buttonNegative: 'Cancel',
-            buttonPositive: 'OK',
+            buttonNeutral: strings.askMeLater,
+            buttonNegative: strings.cancel,
+            buttonPositive: strings.ok,
           },
         );
         return granted === PermissionsAndroid.RESULTS.GRANTED;
@@ -177,8 +177,8 @@ const VoiceRecorder = ({onSend, onCancel}) => {
           'Permission Required',
           'Microphone access is required to record voice messages. Please enable it in your device settings.',
           [
-            {text: 'Cancel', style: 'cancel'},
-            {text: 'Retry', onPress: () => initializeRecorder()},
+            { text: strings.cancel, style: 'cancel' },
+            { text: strings.retry, onPress: () => initializeRecorder() },
           ],
         );
         return;
@@ -188,7 +188,7 @@ const VoiceRecorder = ({onSend, onCancel}) => {
         Alert.alert(
           'Not Ready',
           'Audio recorder is not ready. Please wait a moment and try again.',
-          [{text: 'OK', onPress: () => initializeRecorder()}],
+          [{ text: 'OK', onPress: () => initializeRecorder() }],
         );
         return;
       }
@@ -210,8 +210,8 @@ const VoiceRecorder = ({onSend, onCancel}) => {
         'Recording Error',
         'Failed to start recording. Please check microphone permissions and try again.',
         [
-          {text: 'Cancel', style: 'cancel'},
-          {text: 'Retry', onPress: () => initializeRecorder()},
+          { text: strings.cancel, style: 'cancel' },
+          { text: strings.retry, onPress: () => initializeRecorder() },
         ],
       );
     }
@@ -227,7 +227,7 @@ const VoiceRecorder = ({onSend, onCancel}) => {
       if (audioFile && audioFile.length > 0) {
         setAudioPath(audioFile);
 
-        
+
         // Check if file actually exists
         try {
           const RNFS = require('react-native-fs');
@@ -243,9 +243,9 @@ const VoiceRecorder = ({onSend, onCancel}) => {
       } else {
         console.error('No audio file received from recording');
         Alert.alert(
-          'Recording Error',
-          'No audio was recorded. Please try again.',
-          [{text: 'OK', onPress: () => cancelRecording()}],
+          strings.recordingError,
+          strings.noAudioRecorded,
+          [{ text: strings.ok, onPress: () => cancelRecording() }],
         );
       }
     } catch (error) {
@@ -255,8 +255,8 @@ const VoiceRecorder = ({onSend, onCancel}) => {
         'Recording Error',
         'Failed to stop recording. Please try again.',
         [
-          {text: 'Cancel', style: 'cancel', onPress: () => cancelRecording()},
-          {text: 'Retry', onPress: () => startRecording()},
+          { text: strings.cancel, style: 'cancel', onPress: () => cancelRecording() },
+          { text: strings.retry, onPress: () => startRecording() },
         ],
       );
     }
@@ -276,10 +276,10 @@ const VoiceRecorder = ({onSend, onCancel}) => {
 
   const sendAudio = async () => {
 
-    
+
     if (!audioPath) {
 
-      Alert.alert('No Audio', 'No audio recording available to send.');
+      Alert.alert(strings.noAudio, strings.noAudioMessage);
       return;
     }
 
@@ -304,7 +304,7 @@ const VoiceRecorder = ({onSend, onCancel}) => {
 
       // Upload audio to S3 with actual duration
 
-      
+
       const uploadResult = await uploadAudioToS3(
         audioPath,
         progress => {
@@ -348,9 +348,9 @@ const VoiceRecorder = ({onSend, onCancel}) => {
         'Upload Failed',
         `Failed to upload audio: ${error.message}. Would you like to send it locally instead?`,
         [
-          {text: 'Cancel', style: 'cancel'},
+          { text: strings.cancel, style: 'cancel' },
           {
-            text: 'Send Locally',
+            text: strings.sendLocally,
             onPress: async () => {
               try {
                 // Convert M4A for compatibility and send locally
@@ -375,7 +375,7 @@ const VoiceRecorder = ({onSend, onCancel}) => {
                 setIsPlaying(false);
               } catch (conversionError) {
                 console.error('WAV conversion error:', conversionError);
-                Alert.alert('Error', 'Failed to process audio file');
+                Alert.alert(strings.error, strings.failedToProcessAudio);
               }
             },
           },
@@ -406,7 +406,7 @@ const VoiceRecorder = ({onSend, onCancel}) => {
         setIsPlaying(true);
       } catch (error) {
         console.error('Preview conversion error:', error);
-        Alert.alert('Preview Error', 'Failed to prepare audio for preview');
+        Alert.alert(strings.previewError, strings.failedToPrepareAudio);
       }
     }
   };
@@ -424,20 +424,20 @@ const VoiceRecorder = ({onSend, onCancel}) => {
   const onPreviewError = error => {
 
     setIsPlaying(false);
-    Alert.alert('Preview Error', 'Failed to play audio preview');
+    Alert.alert(strings.previewError, strings.failedToPlayAudio);
   };
 
   if (isRecording) {
     return (
       <View
-        style={[styles.recordingContainer, {backgroundColor: colors.inputBg}]}>
+        style={[styles.recordingContainer, { backgroundColor: colors.inputBg }]}>
         <View style={styles.recordingIndicator}>
           <Animated.View
             style={[
               styles.pulseCircle,
               {
                 backgroundColor: colors.red,
-                transform: [{scale: pulseAnim}],
+                transform: [{ scale: pulseAnim }],
               },
             ]}>
             <Ionicons
@@ -476,7 +476,7 @@ const VoiceRecorder = ({onSend, onCancel}) => {
 
         <View style={styles.recordingActions}>
           <TouchableOpacity
-            style={[styles.actionButton, {backgroundColor: colors.grayScale3}]}
+            style={[styles.actionButton, { backgroundColor: colors.grayScale3 }]}
             onPress={cancelRecording}>
             <Ionicons
               name="close"
@@ -486,7 +486,7 @@ const VoiceRecorder = ({onSend, onCancel}) => {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.actionButton, {backgroundColor: colors.primary}]}
+            style={[styles.actionButton, { backgroundColor: colors.primary }]}
             onPress={stopRecording}>
             <Ionicons
               name="stop"
@@ -502,12 +502,12 @@ const VoiceRecorder = ({onSend, onCancel}) => {
   if (audioPath) {
     return (
       <View
-        style={[styles.previewContainer, {backgroundColor: colors.inputBg}]}>
+        style={[styles.previewContainer, { backgroundColor: colors.inputBg }]}>
         {/* Hidden Video component for audio preview */}
         {compatibleAudioPath && (
           <Video
             ref={videoRef}
-            source={{uri: compatibleAudioPath}}
+            source={{ uri: compatibleAudioPath }}
             paused={!isPlaying}
             audioOnly={true}
             style={styles.hiddenVideo}
@@ -527,7 +527,7 @@ const VoiceRecorder = ({onSend, onCancel}) => {
 
         <View style={styles.audioPreview}>
           <TouchableOpacity
-            style={[styles.playButton, {backgroundColor: colors.primary}]}
+            style={[styles.playButton, { backgroundColor: colors.primary }]}
             onPress={playPreview}>
             <Ionicons
               name={isPlaying ? 'pause' : 'play'}
@@ -538,7 +538,7 @@ const VoiceRecorder = ({onSend, onCancel}) => {
 
           <View style={styles.audioInfo}>
             <ZText type="M14" color={colors.textColor}>
-              Voice message
+              {strings.voiceMessage}
             </ZText>
             <ZText type="M12" color={colors.grayScale7}>
               {formatTime(recordingTime)}
@@ -548,15 +548,15 @@ const VoiceRecorder = ({onSend, onCancel}) => {
 
         <View style={styles.previewActions}>
           <TouchableOpacity
-            style={[styles.actionButton, {backgroundColor: colors.grayScale3}]}
+            style={[styles.actionButton, { backgroundColor: colors.grayScale3 }]}
             onPress={cancelRecording}>
             <ZText type="M14" color={colors.textColor}>
-              Cancel
+              {strings.cancel}
             </ZText>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.actionButton, {backgroundColor: colors.green}]}
+            style={[styles.actionButton, { backgroundColor: colors.green }]}
             onPress={startRecording}>
             <Ionicons
               name="refresh"
@@ -564,12 +564,12 @@ const VoiceRecorder = ({onSend, onCancel}) => {
               color={colors.white}
             />
             <ZText type="M14" color={colors.white} style={styles.buttonText}>
-              Re-record
+              {strings.reRecord}
             </ZText>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.actionButton, {backgroundColor: colors.primary}]}
+            style={[styles.actionButton, { backgroundColor: colors.primary }]}
             onPress={sendAudio}
             disabled={isUploading}>
             {isUploading ? (
@@ -589,7 +589,7 @@ const VoiceRecorder = ({onSend, onCancel}) => {
                   type="M14"
                   color={colors.white}
                   style={styles.buttonText}>
-                  Send
+                  {strings.send}
                 </ZText>
               </>
             )}
@@ -601,7 +601,7 @@ const VoiceRecorder = ({onSend, onCancel}) => {
 
   return (
     <TouchableOpacity
-      style={[styles.recordButton, {backgroundColor: colors.primary}]}
+      style={[styles.recordButton, { backgroundColor: colors.primary }]}
       onPress={startRecording}>
       <Ionicons name="mic" size={moderateScale(24)} color={colors.white} />
     </TouchableOpacity>

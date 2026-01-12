@@ -51,7 +51,7 @@ const ImageMessageComposer = ({ onSend, onCancel }) => {
 
       // Get file size
       const fileSize = await getFileSize(image.path);
-      
+
       // Compress image if it's too large (> 2MB)
       let processedPath = image.path;
       if (fileSize > 2 * 1024 * 1024) {
@@ -70,7 +70,7 @@ const ImageMessageComposer = ({ onSend, onCancel }) => {
       });
       setIsVisible(false);
     } catch (error) {
-Alert.alert(strings.processingError, strings.failedToProcessImage);
+      Alert.alert(strings.processingError, strings.failedToProcessImage);
     } finally {
       setIsProcessing(false);
     }
@@ -84,7 +84,7 @@ Alert.alert(strings.processingError, strings.failedToProcessImage);
       cropping: true,
       compressImageQuality: 0.8,
     }).then(processImage).catch(error => {
-setIsVisible(false);
+      setIsVisible(false);
     });
   };
 
@@ -96,7 +96,7 @@ setIsVisible(false);
       cropping: true,
       compressImageQuality: 0.8,
     }).then(processImage).catch(error => {
-setIsVisible(false);
+      setIsVisible(false);
     });
   };
 
@@ -111,7 +111,7 @@ setIsVisible(false);
       // Upload image to S3 first
       const { uploadImageToS3 } = require('../../../../utils/UploadUtils');
       const uploadResult = await uploadImageToS3(selectedImage.path);
-      
+
       if (!uploadResult.success || !uploadResult.url) {
         throw new Error('Failed to upload image');
       }
@@ -127,7 +127,7 @@ setIsVisible(false);
       resetComposer();
     } catch (error) {
       console.error('Image upload error:', error);
-      Alert.alert(strings.error, 'Failed to upload image. Please try again.');
+      Alert.alert(strings.error, strings.failedToUploadImage);
     } finally {
       setIsProcessing(false);
     }
@@ -203,7 +203,7 @@ setIsVisible(false);
           multiline
           maxLength={500}
         />
-        
+
         <View style={styles.actionButtons}>
           <TouchableOpacity
             style={[styles.actionButton, { backgroundColor: colors.grayScale3 }]}
@@ -211,7 +211,7 @@ setIsVisible(false);
           >
             <ZText type="M14" color={colors.textColor}>{strings.cancel}</ZText>
           </TouchableOpacity>
-          
+
           <TouchableOpacity
             style={[styles.actionButton, { backgroundColor: colors.primary }]}
             onPress={handleSend}

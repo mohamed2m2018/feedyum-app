@@ -8,23 +8,23 @@ import {
   View,
 } from 'react-native';
 import Locations from '../../../../components/models/Locations';
-import React, {useRef, useState} from 'react';
-import {useSelector} from 'react-redux';
+import React, { useRef, useState } from 'react';
+import { useSelector } from 'react-redux';
 import ZLoader from '../../../../components/common/ZLoader';
 
 // Local import
 import ZSafeAreaView from '../../../../components/common/ZSafeAreaView';
 import ZHeader from '../../../../components/common/ZHeader';
-import {getHeight, moderateScale} from '../../../../common/constants';
-import {styles} from '../../../../themes';
+import { getHeight, moderateScale } from '../../../../common/constants';
+import { styles } from '../../../../themes';
 import ZText from '../../../../components/common/ZText';
 import images from '../../../../assets/images';
 import ZButton from '../../../../components/common/ZButton';
-import {LikeIconModal} from '../../../../assets/svgs';
-import {StackNav} from '../../../../navigation/NavigationKeys';
+import { LikeIconModal } from '../../../../assets/svgs';
+import { StackNav } from '../../../../navigation/NavigationKeys';
 import SuccessModal from '../../../../components/models/SuccessModal';
 import ReelComponent from '../../../../components/ReelComponent';
-import {UserDetailCategory} from '../../../../api/constant';
+import { UserDetailCategory } from '../../../../api/constant';
 import {
   useInfiniteQuery,
   useQuery,
@@ -33,10 +33,10 @@ import {
 } from 'react-query';
 import request from '../../../../api/request';
 import strings from '../../../../i18n/strings';
-import {useHandleAuth} from '../../../../utils/useHandleAuth';
+import { useHandleAuth } from '../../../../utils/useHandleAuth';
 
 
-const RenderUserDetail = ({item}) => {
+const RenderUserDetail = ({ item }) => {
   return (
     <TouchableOpacity onPress={item?.onPress} style={styles.itemsCenter}>
       <ZText type="b24" align={'center'}>
@@ -49,19 +49,22 @@ const RenderUserDetail = ({item}) => {
   );
 };
 
-export default function ProfileDetail({navigation, route}) {
-  const {id} = route.params;
+export default function ProfileDetail({ navigation, route }) {
+  const { id } = route.params;
   const colors = useSelector(state => state.theme.theme);
   const queryClient = useQueryClient();
   const [modalVisible, setModalVisible] = useState(false);
   const locationSheetRef = useRef('');
   const [selectedGov, setselectedGov] = useState('');
-  const [selectedTab, setSelectedTab] = useState('posts'); // 'posts' or 'reviews'
+  // Tab selection based on viewed user type (set properly after user data loads)
+  const [selectedTab, setSelectedTab] = useState('posts');
+  const [hasCheckedEmptyPosts, setHasCheckedEmptyPosts] = useState(false);
+  const [showReviewsFirst, setShowReviewsFirst] = useState(false);
 
-  const {data: currentUserQuery} = useQuery(
+  const { data: currentUserQuery } = useQuery(
     'user',
     () => request.get('/user'),
-    {retry: 1},
+    { retry: 1 },
   );
 
   const getFollowStatistics = () =>
@@ -70,7 +73,7 @@ export default function ProfileDetail({navigation, route}) {
   const currentUser = currentUserQuery?.data?.user;
   const [isFollow, setIsFollow] = useState(false);
 
-  const {data, isFetching: isFetchingUserDetailsFollowed} = useQuery(
+  const { data, isFetching: isFetchingUserDetailsFollowed } = useQuery(
     ['user', id],
     () =>
       request.get(`user/${id}`, {
@@ -84,7 +87,7 @@ export default function ProfileDetail({navigation, route}) {
     },
   );
 
-  const {data: followStatistics} = useQuery(
+  const { data: followStatistics } = useQuery(
     ['followStatistics', user?._id],
     () => getFollowStatistics(user?._id),
     {
@@ -94,19 +97,19 @@ export default function ProfileDetail({navigation, route}) {
 
   const getUserViews = () => request.get(`/views/user/${user?._id}`);
 
-  const {data: views} = useQuery(['userViews', user?._id], getUserViews, {
+  const { data: views } = useQuery(['userViews', user?._id], getUserViews, {
     refetchInterval: false, // Disable auto-refresh
     enabled: !!data?.data?.user,
   });
 
-  const {handleAuthToast} = useHandleAuth();
+  const { handleAuthToast } = useHandleAuth();
   const followMutation = useMutation(
-    userToFollow => request.post('/follow', {userToFollow}),
+    userToFollow => request.post('/follow', { userToFollow }),
     {
       onSuccess: () => {
-        queryClient.invalidateQueries({queryKey: 'stories_following'});
-        queryClient.invalidateQueries({queryKey: 'search_user'});
-        queryClient.invalidateQueries({queryKey: 'followStatistics'});
+        queryClient.invalidateQueries({ queryKey: 'stories_following' });
+        queryClient.invalidateQueries({ queryKey: 'search_user' });
+        queryClient.invalidateQueries({ queryKey: 'followStatistics' });
         queryClient.invalidateQueries('IamFollowing');
         queryClient.invalidateQueries('IamFollowed');
       },
@@ -114,12 +117,12 @@ export default function ProfileDetail({navigation, route}) {
   );
 
   const unfollowMutation = useMutation(
-    userToUnfollow => request.delete('/follow', {data: {userToUnfollow}}),
+    userToUnfollow => request.delete('/follow', { data: { userToUnfollow } }),
     {
       onSuccess: () => {
-        queryClient.invalidateQueries({queryKey: 'stories_following'});
-        queryClient.invalidateQueries({queryKey: 'search_user'});
-        queryClient.invalidateQueries({queryKey: 'followStatistics'});
+        queryClient.invalidateQueries({ queryKey: 'stories_following' });
+        queryClient.invalidateQueries({ queryKey: 'search_user' });
+        queryClient.invalidateQueries({ queryKey: 'followStatistics' });
         queryClient.invalidateQueries('IamFollowing');
         queryClient.invalidateQueries('IamFollowed');
       },
@@ -130,13 +133,13 @@ export default function ProfileDetail({navigation, route}) {
       return;
     }
     if (isFollow) {
-      unfollowMutation.mutate({_id: id});
+      unfollowMutation.mutate({ _id: id });
     } else {
-      followMutation.mutate({_id: id});
+      followMutation.mutate({ _id: id });
     }
     setIsFollow(!isFollow);
   };
-  const fetchPosts = ({pageParam = 1}) =>
+  const fetchPosts = ({ pageParam = 1 }) =>
     request.get(`/story/author?id=${id}`, {
       params: {
         limit: 10,
@@ -145,7 +148,7 @@ export default function ProfileDetail({navigation, route}) {
       },
     });
 
-  const fetchReviewPosts = ({pageParam = 1}) =>
+  const fetchReviewPosts = ({ pageParam = 1 }) =>
     request.get(`/story/author?id=${id}`, {
       params: {
         limit: 10,
@@ -190,6 +193,20 @@ export default function ProfileDetail({navigation, route}) {
     select: res => res?.pages.flatMap(page => page.data?.stories || []),
   });
 
+  // Auto-switch to reviews tab if posts are empty but reviews exist
+  React.useEffect(() => {
+    // Only check once after posts data loads
+    if (!hasCheckedEmptyPosts && !isLoading && stories !== undefined) {
+      setHasCheckedEmptyPosts(true);
+
+      // If no posts exist, switch to reviews tab and show it first
+      if (!stories || stories.length === 0) {
+        setSelectedTab('reviews');
+        setShowReviewsFirst(true);
+      }
+    }
+  }, [stories, isLoading, hasCheckedEmptyPosts]);
+
   // const categoryData = [
   //   {
   //     id: 0,
@@ -222,6 +239,15 @@ export default function ProfileDetail({navigation, route}) {
 
   const user = data?.data?.user;
 
+  // Set correct tab based on viewed user type
+  React.useEffect(() => {
+    if (user?.type === 'chef') {
+      setSelectedTab('posts');
+    } else if (user) {
+      setSelectedTab('reviews');
+    }
+  }, [user?.type]);
+
 
 
   const onPressAvailableLocation = () => {
@@ -235,10 +261,10 @@ export default function ProfileDetail({navigation, route}) {
         <Image
           source={
             user?.avatar
-              ? {uri: user?.avatar}
+              ? { uri: user?.avatar }
               : colors.dark
-              ? images.userDark
-              : images.userLight
+                ? images.userDark
+                : images.userLight
           }
           style={localStyles.userImage}
         />
@@ -290,7 +316,7 @@ export default function ProfileDetail({navigation, route}) {
           followStatistics?.data?.followingCount || 0,
           views?.data?.viewsCount || 0,
           () =>
-            navigation.navigate(StackNav.UserNetwork, {userId: user?._id}),
+            navigation.navigate(StackNav.UserNetwork, { userId: user?._id }),
         ).map((item, index) => (
           <TouchableOpacity
             key={index}
@@ -311,7 +337,7 @@ export default function ProfileDetail({navigation, route}) {
           onPress={onPressFollow}
           containerStyle={[
             localStyles.buttonContainer,
-            {borderColor: colors.primary},
+            { borderColor: colors.primary },
           ]}
           textType="b14"
           color={colors.white}
@@ -322,7 +348,7 @@ export default function ProfileDetail({navigation, route}) {
         <TouchableOpacity
           style={[
             localStyles.stunningMenuButton,
-            {backgroundColor: colors.primary},
+            { backgroundColor: colors.primary },
           ]}
           onPress={() => {
             navigation.navigate(StackNav.ChefMenu, {
@@ -341,7 +367,7 @@ export default function ProfileDetail({navigation, route}) {
               type="b14"
               color={colors.white}
               style={localStyles.menuButtonText}>
-              View Menu
+              {strings.viewMenu}
             </ZText>
           </View>
         </TouchableOpacity>
@@ -349,34 +375,36 @@ export default function ProfileDetail({navigation, route}) {
       <View style={localStyles.clarificationContainer}>
         <ZText style={localStyles.clarificationText} type={'m14'}>
           {user?.type === 'chef'
-            ? "📱 These are food reels • Tap 'View Menu' above to see actual dishes & order"
-            : '📱 Food reels and posts'}
+            ? strings.foodReelsHint
+            : strings.foodReelsAndPosts}
         </ZText>
       </View>
-      
-      {/* Tab buttons */}
-      <View style={localStyles.tabContainer}>
-        <TouchableOpacity
-          style={[
-            localStyles.tabButton,
-            selectedTab === 'posts' && {borderBottomColor: colors.primary, borderBottomWidth: 2}
-          ]}
-          onPress={() => setSelectedTab('posts')}>
-          <ZText type={selectedTab === 'posts' ? 'b16' : 'm16'} color={selectedTab === 'posts' ? colors.primary : colors.textColor}>
-            Posts
-          </ZText>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            localStyles.tabButton,
-            selectedTab === 'reviews' && {borderBottomColor: colors.primary, borderBottomWidth: 2}
-          ]}
-          onPress={() => setSelectedTab('reviews')}>
-          <ZText type={selectedTab === 'reviews' ? 'b16' : 'm16'} color={selectedTab === 'reviews' ? colors.primary : colors.textColor}>
-            Reviews
-          </ZText>
-        </TouchableOpacity>
-      </View>
+
+      {/* Tab buttons - Only show for chefs (regular users only have reviews) */}
+      {user?.type === 'chef' && (
+        <View style={[localStyles.tabContainer, showReviewsFirst && { flexDirection: 'row-reverse' }]}>
+          <TouchableOpacity
+            style={[
+              localStyles.tabButton,
+              selectedTab === 'posts' && { borderBottomColor: colors.primary, borderBottomWidth: 2 }
+            ]}
+            onPress={() => setSelectedTab('posts')}>
+            <ZText type={selectedTab === 'posts' ? 'b16' : 'm16'} color={selectedTab === 'posts' ? colors.primary : colors.textColor}>
+              Posts
+            </ZText>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              localStyles.tabButton,
+              selectedTab === 'reviews' && { borderBottomColor: colors.primary, borderBottomWidth: 2 }
+            ]}
+            onPress={() => setSelectedTab('reviews')}>
+            <ZText type={selectedTab === 'reviews' ? 'b16' : 'm16'} color={selectedTab === 'reviews' ? colors.primary : colors.textColor}>
+              Reviews
+            </ZText>
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 
@@ -388,7 +416,7 @@ export default function ProfileDetail({navigation, route}) {
   const currentFetchNext = selectedTab === 'posts' ? fetchNextPage : fetchNextReviewPage;
 
   return (
-    <ZSafeAreaView style={[localStyles.screenContainer, {backgroundColor: colors.backgroundColor}]}>
+    <ZSafeAreaView style={[localStyles.screenContainer, { backgroundColor: colors.backgroundColor }]}>
       <FlatList
         data={currentData}
         ListHeaderComponent={renderHeader}
@@ -400,16 +428,16 @@ export default function ProfileDetail({navigation, route}) {
             <ZLoader height={100} />
           ) : (
             <ZText style={localStyles.emptyStateText} type={'B20'}>
-              {selectedTab === 'posts' 
+              {selectedTab === 'posts'
                 ? (user?.type === 'chef' || user?.hasMenu)
-                  ? "No food reels yet! Check the menu for dishes 🍽️"
+                  ? strings.noFoodReelsYet
                   : strings.noDishesYetProfileOther
-                : "No review reels yet! Be the first to share your experience! ⭐"
+                : strings.noReviewReelsYet
               }
             </ZText>
           )
         }
-        renderItem={({item, index}) => (
+        renderItem={({ item, index }) => (
           <View style={localStyles.dishItemContainer}>
             <ReelComponent
               profileId={user}
@@ -421,6 +449,10 @@ export default function ProfileDetail({navigation, route}) {
                   'https://d1wfcrbbkg3bzd.cloudfront.net',
                 ) ||
                 item?.poster?.replace(
+                  'https://foodtokforever.s3.amazonaws.com',
+                  'https://d1wfcrbbkg3bzd.cloudfront.net',
+                ) ||
+                item?.media?.[0]?.image?.replace(
                   'https://foodtokforever.s3.amazonaws.com',
                   'https://d1wfcrbbkg3bzd.cloudfront.net',
                 )

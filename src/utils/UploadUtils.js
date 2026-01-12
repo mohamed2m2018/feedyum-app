@@ -1,8 +1,9 @@
-import {Video, Image} from 'react-native-compressor';
-import {createThumbnail} from 'react-native-create-thumbnail';
-import {Platform} from 'react-native';
+import { Video, Image } from 'react-native-compressor';
+import { createThumbnail } from 'react-native-create-thumbnail';
+import { Platform } from 'react-native';
 import RNFS from 'react-native-fs';
 import request from '../api/request';
+import strings from '../i18n/strings';
 
 export const convertVideoToMP4 = async inputPath => {
   try {
@@ -11,7 +12,7 @@ export const convertVideoToMP4 = async inputPath => {
       {
         compressionMethod: 'auto',
         getCancellationId: cancellationId =>
-          (()=>{})(),
+          (() => { })(),
         progressDivider: 10,
         downloadProgress: progress => {
 
@@ -99,20 +100,20 @@ export const formatFileSize = bytes => {
 export const convertWavToMp3 = async inputPath => {
   try {
 
-    
+
     // Just format the path properly for upload - backend will handle conversion
     let formattedPath = inputPath;
-    
+
     if (Platform.OS === 'android' && !inputPath.startsWith('file://') && !inputPath.startsWith('http')) {
       formattedPath = `file://${inputPath}`;
     } else if (Platform.OS === 'ios' && !inputPath.startsWith('file://') && !inputPath.startsWith('http')) {
       formattedPath = `file://${inputPath}`;
     }
-    
 
-    
+
+
     return formattedPath;
-    
+
   } catch (error) {
     console.error('WAV preparation error:', error);
     return inputPath;
@@ -130,12 +131,12 @@ export const uploadAudioToS3 = async (audioPath, onProgress, duration) => {
 
     const isValid = validateAudioFile(convertedAudioPath);
 
-    
+
     if (!isValid) {
       console.error('Audio file validation failed for:', convertedAudioPath);
-      throw new Error('Invalid audio file format');
+      throw new Error(strings.invalidAudioFormat);
     }
-    
+
 
 
     // Get file stats from original path (without file:// prefix)
@@ -179,7 +180,7 @@ export const uploadAudioToS3 = async (audioPath, onProgress, duration) => {
     // Upload to backend using the correct endpoint
 
 
-    
+
     const response = await request.post('/messages/upload-audio', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -220,7 +221,7 @@ export const uploadAudioToS3 = async (audioPath, onProgress, duration) => {
         'Upload failed';
       throw new Error(`Upload failed: ${errorMessage}`);
     } else if (error.request) {
-      throw new Error('Network error: Unable to reach server');
+      throw new Error(strings.networkErrorServer);
     } else {
       throw new Error(`Upload error: ${error.message}`);
     }
@@ -233,7 +234,7 @@ export const uploadImageToS3 = async (imagePath, onProgress) => {
 
     // Validate image file
     if (!validateImageFile(imagePath)) {
-      throw new Error('Invalid image file format');
+      throw new Error(strings.invalidImageFormat);
     }
 
     // Format path properly

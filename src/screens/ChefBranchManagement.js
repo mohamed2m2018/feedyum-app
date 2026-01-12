@@ -12,6 +12,8 @@ import {
 import { useSelector } from 'react-redux';
 import strings from '../i18n/strings';
 import branchService from '../api/branchService';
+import ZText from '../components/common/ZText';
+import { moderateScale } from '../common/constants';
 import BranchCard from '../components/BranchCard';
 import AddBranchModal from '../components/AddBranchModal';
 import { colors } from '../themes/colors';
@@ -34,11 +36,11 @@ const ChefBranchManagement = ({ navigation, userToken }) => {
     try {
       setIsLoading(true);
       const response = await branchService.getBranches();
-      
+
       if (response.success) {
         setBranches(response.branches);
         setStats(response.stats);
-        
+
         // Extract chef settings from first branch
         if (response.branches.length > 0 && response.branches[0].chef) {
           setChefSettings(response.branches[0].chef.chefSettings);
@@ -47,7 +49,7 @@ const ChefBranchManagement = ({ navigation, userToken }) => {
         Alert.alert(strings.error, response.message || 'Failed to load branches');
       }
     } catch (error) {
-Alert.alert(strings.error, 'Failed to load branches');
+      Alert.alert(strings.error, strings.failedToLoadBranches);
     } finally {
       setIsLoading(false);
     }
@@ -71,7 +73,7 @@ Alert.alert(strings.error, 'Failed to load branches');
       active: prev.active + 1
     }));
     setShowAddModal(false);
-    
+
     // Update chef settings if this is the first branch
     if (newBranch.chef?.chefSettings) {
       setChefSettings(newBranch.chef.chefSettings);
@@ -79,15 +81,15 @@ Alert.alert(strings.error, 'Failed to load branches');
   };
 
   const handleEditBranch = (branch) => {
-    navigation.navigate('EditBranch', { 
-      branch, 
-      onBranchUpdated: handleBranchUpdated 
+    navigation.navigate('EditBranch', {
+      branch,
+      onBranchUpdated: handleBranchUpdated
     });
   };
 
   const handleBranchUpdated = (updatedBranch) => {
-    setBranches(prev => 
-      prev.map(branch => 
+    setBranches(prev =>
+      prev.map(branch =>
         branch._id === updatedBranch._id ? updatedBranch : branch
       )
     );
@@ -98,8 +100,8 @@ Alert.alert(strings.error, 'Failed to load branches');
       'Delete Branch',
       `Are you sure you want to delete "${branchName}"? This action cannot be undone.`,
       [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete', style: 'destructive', onPress: () => confirmDeleteBranch(branchId) }
+        { text: strings.cancel, style: 'cancel' },
+        { text: strings.delete, style: 'destructive', onPress: () => confirmDeleteBranch(branchId) }
       ]
     );
   };
@@ -107,7 +109,7 @@ Alert.alert(strings.error, 'Failed to load branches');
   const confirmDeleteBranch = async (branchId) => {
     try {
       const response = await branchService.deleteBranch(branchId);
-      
+
       if (response.success) {
         setBranches(prev => prev.filter(branch => branch._id !== branchId));
         setStats(prev => ({
@@ -115,9 +117,9 @@ Alert.alert(strings.error, 'Failed to load branches');
           total: prev.total - 1,
           active: prev.active - 1
         }));
-        
-        Alert.alert('Success', response.message);
-        
+
+        Alert.alert(strings.success, response.message);
+
         // If no branches left, reset chef settings
         if (response.remainingBranches === 0) {
           setChefSettings(null);
@@ -126,23 +128,23 @@ Alert.alert(strings.error, 'Failed to load branches');
         Alert.alert(strings.error, response.message || 'Failed to delete branch');
       }
     } catch (error) {
-Alert.alert(strings.error, 'Failed to delete branch');
+      Alert.alert(strings.error, strings.failedToDeleteBranch);
     }
   };
 
   const renderEmptyState = () => (
     <View style={[styles.emptyContainer, { backgroundColor: currentTheme.backgroundColor }]}>
       <Text style={[styles.emptyTitle, { color: currentTheme.textColor }]}>
-        No Branches Yet
+        {strings.noBranches}
       </Text>
       <Text style={[styles.emptySubtitle, { color: currentTheme.grayColor }]}>
-        Add your first branch to start receiving orders
+        {strings.addFirstBranchDesc}
       </Text>
       <TouchableOpacity
         style={[styles.addButton, { backgroundColor: colors.primary }]}
         onPress={handleAddBranch}
       >
-        <Text style={styles.addButtonText}>Add First Branch</Text>
+        <ZText type="B18" color={colors.textColor}>{strings.addFirstBranch}</ZText>
       </TouchableOpacity>
     </View>
   );
@@ -151,15 +153,15 @@ Alert.alert(strings.error, 'Failed to delete branch');
     <View style={[styles.statsContainer, { backgroundColor: currentTheme.cardBackground }]}>
       <View style={styles.statItem}>
         <Text style={[styles.statValue, { color: colors.primary }]}>{stats?.total || 0}</Text>
-        <Text style={[styles.statLabel, { color: currentTheme.grayColor }]}>Total</Text>
+        <Text style={[styles.statLabel, { color: currentTheme.grayColor }]}>{strings.total}</Text>
       </View>
       <View style={styles.statItem}>
         <Text style={[styles.statValue, { color: colors.success }]}>{stats?.active || 0}</Text>
-        <Text style={[styles.statLabel, { color: currentTheme.grayColor }]}>Active</Text>
+        <Text style={[styles.statLabel, { color: currentTheme.grayColor }]}>{strings.active}</Text>
       </View>
       <View style={styles.statItem}>
         <Text style={[styles.statValue, { color: colors.error }]}>{stats?.inactive || 0}</Text>
-        <Text style={[styles.statLabel, { color: currentTheme.grayColor }]}>Inactive</Text>
+        <Text style={[styles.statLabel, { color: currentTheme.grayColor }]}>{strings.inactive}</Text>
       </View>
       {chefSettings?.currency && (
         <View style={styles.statItem}>
@@ -176,17 +178,17 @@ Alert.alert(strings.error, 'Failed to delete branch');
 
   const renderCountryInfo = () => {
     if (!chefSettings?.country) return null;
-    
+
     return (
       <View style={[styles.countryInfo, { backgroundColor: currentTheme.cardBackground }]}>
         <Text style={[styles.countryTitle, { color: currentTheme.textColor }]}>
-          Operating Country
+          {strings.operatingCountry}
         </Text>
         <Text style={[styles.countryName, { color: colors.primary }]}>
           {chefSettings.country}
         </Text>
         <Text style={[styles.countryNote, { color: currentTheme.grayColor }]}>
-          All branches must be in the same country. This setting cannot be changed.
+          {strings.countryNote}
         </Text>
       </View>
     );
@@ -197,7 +199,7 @@ Alert.alert(strings.error, 'Failed to delete branch');
       <View style={[styles.loadingContainer, { backgroundColor: currentTheme.backgroundColor }]}>
         <ActivityIndicator size="large" color={colors.primary} />
         <Text style={[styles.loadingText, { color: currentTheme.textColor }]}>
-          Loading branches...
+          {strings.loadingBranches}
         </Text>
       </View>
     );
@@ -218,10 +220,10 @@ Alert.alert(strings.error, 'Failed to delete branch');
         {/* Header */}
         <View style={styles.header}>
           <Text style={[styles.title, { color: currentTheme.textColor }]}>
-            Branch Management
+            {strings.branchManagement}
           </Text>
           <Text style={[styles.subtitle, { color: currentTheme.grayColor }]}>
-            Manage your restaurant locations
+            {strings.manageBranchesDesc}
           </Text>
         </View>
 
@@ -237,7 +239,7 @@ Alert.alert(strings.error, 'Failed to delete branch');
             style={[styles.addBranchButton, { backgroundColor: colors.primary }]}
             onPress={handleAddBranch}
           >
-            <Text style={styles.addBranchButtonText}>+ Add New Branch</Text>
+            <ZText type="B16" color={colors.white}>{strings.addNewBranch}</ZText>
           </TouchableOpacity>
         )}
 

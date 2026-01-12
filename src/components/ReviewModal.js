@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,12 +12,13 @@ import {
   Dimensions,
   Alert,
 } from 'react-native';
-import {useSelector} from 'react-redux';
+import { useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import LinearGradient from 'react-native-linear-gradient';
-import {moderateScale} from '../common/constants';
+import { moderateScale } from '../common/constants';
+import strings from '../i18n/strings';
 
-const {width, height} = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
 const ReviewModal = ({
   visible,
@@ -35,14 +36,14 @@ const ReviewModal = ({
   const reviewSteps = [
     {
       type: 'chef',
-      title: 'Rate the Chef',
-      subtitle: 'How was your overall experience?',
+      title: strings.rateChef,
+      subtitle: strings.rateChefSubtitle,
     },
     ...(orderData?.dishes || []).map((dish, index) => ({
       type: 'dish',
       dishId: dish.dishId,
-      title: `Rate ${dish.dishName}`,
-      subtitle: 'How did you like this dish?',
+      title: `${strings.rate} ${dish.dishName}`,
+      subtitle: strings.rateDishSubtitle,
       image: dish.dishImage,
     })),
   ];
@@ -76,7 +77,7 @@ const ReviewModal = ({
         ...prev[currentReview.type === 'chef' ? 'chef' : currentReview.dishId],
         rating,
         type: currentReview.type,
-        ...(currentReview.type === 'dish' && {dishId: currentReview.dishId}),
+        ...(currentReview.type === 'dish' && { dishId: currentReview.dishId }),
       },
     }));
   };
@@ -89,7 +90,7 @@ const ReviewModal = ({
         ...prev[currentReview.type === 'chef' ? 'chef' : currentReview.dishId],
         comment,
         type: currentReview.type,
-        ...(currentReview.type === 'dish' && {dishId: currentReview.dishId}),
+        ...(currentReview.type === 'dish' && { dishId: currentReview.dishId }),
       },
     }));
   };
@@ -107,7 +108,7 @@ const ReviewModal = ({
           ? currentTags.filter(t => t !== tag)
           : [...currentTags, tag],
         type: currentReview.type,
-        ...(currentReview.type === 'dish' && {dishId: currentReview.dishId}),
+        ...(currentReview.type === 'dish' && { dishId: currentReview.dishId }),
       },
     }));
   };
@@ -188,18 +189,18 @@ const ReviewModal = ({
       currentReview.type === 'chef'
         ? ['friendly', 'professional', 'fast_delivery', 'clean', 'creative']
         : [
-            'delicious',
-            'fresh',
-            'hot',
-            'presentation',
-            'value_for_money',
-            'authentic',
-          ];
+          'delicious',
+          'fresh',
+          'hot',
+          'presentation',
+          'value_for_money',
+          'authentic',
+        ];
 
     return (
       <View style={styles.tagsContainer}>
-        <Text style={[styles.tagsTitle, {color: colors.textColor}]}>
-          Add tags (optional)
+        <Text style={[styles.tagsTitle, { color: colors.textColor }]}>
+          {strings.addTagsOptional}
         </Text>
         <View style={styles.tagsWrapper}>
           {availableTags.map(tag => (
@@ -241,7 +242,7 @@ const ReviewModal = ({
     return (
       <View style={styles.progressContainer}>
         <View
-          style={[styles.progressBar, {backgroundColor: colors.borderColor}]}>
+          style={[styles.progressBar, { backgroundColor: colors.borderColor }]}>
           <Animated.View
             style={[
               styles.progressFill,
@@ -251,7 +252,7 @@ const ReviewModal = ({
             ]}
           />
         </View>
-        <Text style={[styles.progressText, {color: colors.textColor}]}>
+        <Text style={[styles.progressText, { color: colors.textColor }]}>
           {currentStep + 1} of {reviewSteps.length}
         </Text>
       </View>
@@ -282,7 +283,7 @@ const ReviewModal = ({
                     outputRange: [height, 0],
                   }),
                 },
-                {scale: scaleAnim},
+                { scale: scaleAnim },
               ],
             },
           ]}>
@@ -295,8 +296,8 @@ const ReviewModal = ({
                 color={colors.textColor}
               />
             </TouchableOpacity>
-            <Text style={[styles.headerTitle, {color: colors.textColor}]}>
-              Leave a Review
+            <Text style={[styles.headerTitle, { color: colors.textColor }]}>
+              {strings.leaveReview}
             </Text>
             <View style={styles.placeholder} />
           </View>
@@ -310,7 +311,7 @@ const ReviewModal = ({
             <View style={styles.itemContainer}>
               {currentReview.image && (
                 <Image
-                  source={{uri: currentReview.image}}
+                  source={{ uri: currentReview.image }}
                   style={styles.dishImage}
                 />
               )}
@@ -318,7 +319,7 @@ const ReviewModal = ({
                 <View
                   style={[
                     styles.chefAvatar,
-                    {backgroundColor: colors.primary},
+                    { backgroundColor: colors.primary },
                   ]}>
                   <Icon
                     name="person"
@@ -328,10 +329,10 @@ const ReviewModal = ({
                 </View>
               )}
 
-              <Text style={[styles.itemTitle, {color: colors.textColor}]}>
+              <Text style={[styles.itemTitle, { color: colors.textColor }]}>
                 {currentReview.title}
               </Text>
-              <Text style={[styles.itemSubtitle, {color: colors.grayScale5}]}>
+              <Text style={[styles.itemSubtitle, { color: colors.grayScale5 }]}>
                 {currentReview.subtitle}
               </Text>
             </View>
@@ -341,12 +342,12 @@ const ReviewModal = ({
 
             {/* Rating Text */}
             {currentReviewData.rating > 0 && (
-              <Text style={[styles.ratingText, {color: colors.primary}]}>
-                {currentReviewData.rating === 1 && 'Poor'}
-                {currentReviewData.rating === 2 && 'Fair'}
-                {currentReviewData.rating === 3 && 'Good'}
-                {currentReviewData.rating === 4 && 'Very Good'}
-                {currentReviewData.rating === 5 && 'Excellent'}
+              <Text style={[styles.ratingText, { color: colors.primary }]}>
+                {currentReviewData.rating === 1 && strings.poor}
+                {currentReviewData.rating === 2 && strings.fair}
+                {currentReviewData.rating === 3 && strings.good}
+                {currentReviewData.rating === 4 && strings.veryGood}
+                {currentReviewData.rating === 5 && strings.excellent}
               </Text>
             )}
 
@@ -355,8 +356,8 @@ const ReviewModal = ({
 
             {/* Comment Input */}
             <View style={styles.commentContainer}>
-              <Text style={[styles.commentTitle, {color: colors.textColor}]}>
-                Share your experience (optional)
+              <Text style={[styles.commentTitle, { color: colors.textColor }]}>
+                {strings.shareExperienceOptional}
               </Text>
               <TextInput
                 style={[
@@ -367,7 +368,7 @@ const ReviewModal = ({
                     color: colors.textColor,
                   },
                 ]}
-                placeholder="Tell others about your experience..."
+                placeholder={strings.reviewPlaceholder}
                 placeholderTextColor={colors.grayScale5}
                 multiline
                 numberOfLines={4}
@@ -384,7 +385,7 @@ const ReviewModal = ({
               <TouchableOpacity
                 onPress={handlePrevious}
                 style={[styles.footerButton, styles.previousButton]}>
-                <Text style={styles.previousButtonText}>Previous</Text>
+                <Text style={styles.previousButtonText}>{strings.previous}</Text>
               </TouchableOpacity>
             )}
 
@@ -410,10 +411,10 @@ const ReviewModal = ({
                 style={styles.gradientButton}>
                 <Text style={styles.nextButtonText}>
                   {loading
-                    ? 'Submitting...'
+                    ? strings.submitting
                     : currentStep === reviewSteps.length - 1
-                      ? 'Submit Reviews'
-                      : 'Next'}
+                      ? strings.submitReviews
+                      : strings.next}
                 </Text>
               </LinearGradient>
             </TouchableOpacity>

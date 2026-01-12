@@ -68,8 +68,20 @@ export default function Profile({ navigation }) {
 
   const [page, setpage] = useState(1);
   const [reviewsPage, setReviewsPage] = useState(1);
+  // Regular users only have reviews, chefs only have posts
   const [selectedTab, setSelectedTab] = useState('posts');
   const [refreshing, setRefreshing] = useState(false);
+  const [hasCheckedEmptyPosts, setHasCheckedEmptyPosts] = useState(false);
+  const [showReviewsFirst, setShowReviewsFirst] = useState(false);
+
+  // Set correct default tab based on user type
+  useEffect(() => {
+    if (user?.type === 'chef') {
+      setSelectedTab('posts');
+    } else if (user) {
+      setSelectedTab('reviews');
+    }
+  }, [user?.type]);
 
   const [isLoadingSomething, setisLoadingSomething] = useState();
 
@@ -166,14 +178,29 @@ export default function Profile({ navigation }) {
     },
   });
 
+  // Auto-switch to reviews tab if posts are empty but reviews exist
+  useEffect(() => {
+    // Only check once after posts data loads
+    if (!hasCheckedEmptyPosts && queryData?.data && !isLoading) {
+      setHasCheckedEmptyPosts(true);
+
+      // If no posts exist (check both stories array and total count), switch to reviews tab
+      const postsEmpty = (!queryData?.data?.stories || queryData?.data?.stories?.length === 0);
+      if (postsEmpty) {
+        setSelectedTab('reviews');
+        setShowReviewsFirst(true); // Show reviews tab first in the order
+      }
+    }
+  }, [queryData, isLoading, hasCheckedEmptyPosts]);
+
   const onDeletePost = (id) => {
-    Alert.alert('Delete Post', 'Are you sure you want to delete this post?', [
+    Alert.alert(strings.deletePost, strings.deletePostConfirm, [
       {
-        text: 'Cancel',
+        text: strings.cancel,
         style: 'cancel',
       },
       {
-        text: 'Delete',
+        text: strings.delete,
         onPress: async () => {
           try {
             setisLoadingSomething(true);
@@ -383,101 +410,103 @@ export default function Profile({ navigation }) {
         )}
       </View>
 
-      {/* Enhanced Tab Bar */}
-      <View style={localStyles.tabBarContainer}>
-        <LinearGradient
-          colors={colors.dark ? ['#1C1C1E', '#2C2C2E'] : ['#F8F9FA', '#FFFFFF']}
-          style={localStyles.tabBar}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-        >
-          <TouchableOpacity
-            style={[
-              localStyles.tab,
-              selectedTab === 'posts' && [
-                localStyles.activeTab,
-                { backgroundColor: colors.primary }
-              ]
-            ]}
-            onPress={() => setSelectedTab('posts')}
-            activeOpacity={0.8}
+      {/* Enhanced Tab Bar - Only show for chefs (users only have reviews) */}
+      {user?.type === 'chef' && (
+        <View style={localStyles.tabBarContainer}>
+          <LinearGradient
+            colors={colors.dark ? ['#1C1C1E', '#2C2C2E'] : ['#F8F9FA', '#FFFFFF']}
+            style={[localStyles.tabBar, showReviewsFirst && { flexDirection: 'row-reverse' }]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
           >
-            {selectedTab === 'posts' && (
-              <LinearGradient
-                colors={[colors.primary, colors.primary + '90']}
-                style={localStyles.activeTabGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              />
-            )}
-            <Ionicons
-              name={selectedTab === 'posts' ? 'grid' : 'grid-outline'}
-              size={moderateScale(18)}
-              color={selectedTab === 'posts' ? colors.white : colors.textColor}
-              style={localStyles.tabIcon}
-            />
-            <ZText
-              type="B14"
-              color={selectedTab === 'posts' ? colors.white : colors.textColor}
-              style={[localStyles.tabText, {
-                position: 'relative',
-                zIndex: 10,
-                backgroundColor: 'transparent',
-              }]}
-              numberOfLines={1}
-              ellipsizeMode="tail"
+            <TouchableOpacity
+              style={[
+                localStyles.tab,
+                selectedTab === 'posts' && [
+                  localStyles.activeTab,
+                  { backgroundColor: colors.primary }
+                ]
+              ]}
+              onPress={() => setSelectedTab('posts')}
+              activeOpacity={0.8}
             >
-              {strings.posts}
-            </ZText>
-            {selectedTab === 'posts' && (
-              <View style={[localStyles.tabIndicator, { backgroundColor: colors.white }]} />
-            )}
-          </TouchableOpacity>
+              {selectedTab === 'posts' && (
+                <LinearGradient
+                  colors={[colors.primary, colors.primary + '90']}
+                  style={localStyles.activeTabGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                />
+              )}
+              <Ionicons
+                name={selectedTab === 'posts' ? 'grid' : 'grid-outline'}
+                size={moderateScale(18)}
+                color={selectedTab === 'posts' ? colors.white : colors.textColor}
+                style={localStyles.tabIcon}
+              />
+              <ZText
+                type="B14"
+                color={selectedTab === 'posts' ? colors.white : colors.textColor}
+                style={[localStyles.tabText, {
+                  position: 'relative',
+                  zIndex: 10,
+                  backgroundColor: 'transparent',
+                }]}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                {strings.posts}
+              </ZText>
+              {selectedTab === 'posts' && (
+                <View style={[localStyles.tabIndicator, { backgroundColor: colors.white }]} />
+              )}
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[
-              localStyles.tab,
-              selectedTab === 'reviews' && [
-                localStyles.activeTab,
-                { backgroundColor: colors.primary }
-              ]
-            ]}
-            onPress={() => setSelectedTab('reviews')}
-            activeOpacity={0.8}
-          >
-            {selectedTab === 'reviews' && (
-              <LinearGradient
-                colors={[colors.primary, colors.primary + '90']}
-                style={localStyles.activeTabGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              />
-            )}
-            <Ionicons
-              name={selectedTab === 'reviews' ? 'star' : 'star-outline'}
-              size={moderateScale(18)}
-              color={selectedTab === 'reviews' ? colors.white : colors.textColor}
-              style={localStyles.tabIcon}
-            />
-            <ZText
-              type="B14"
-              color={selectedTab === 'reviews' ? colors.white : colors.textColor}
-              style={[localStyles.tabText, {
-                position: 'relative',
-                zIndex: 10,
-                backgroundColor: 'transparent',
-              }]}
-              numberOfLines={1}
-              ellipsizeMode="tail"
+            <TouchableOpacity
+              style={[
+                localStyles.tab,
+                selectedTab === 'reviews' && [
+                  localStyles.activeTab,
+                  { backgroundColor: colors.primary }
+                ]
+              ]}
+              onPress={() => setSelectedTab('reviews')}
+              activeOpacity={0.8}
             >
-              {strings.reviews}
-            </ZText>
-            {selectedTab === 'reviews' && (
-              <View style={[localStyles.tabIndicator, { backgroundColor: colors.white }]} />
-            )}
-          </TouchableOpacity>
-        </LinearGradient>
-      </View>
+              {selectedTab === 'reviews' && (
+                <LinearGradient
+                  colors={[colors.primary, colors.primary + '90']}
+                  style={localStyles.activeTabGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                />
+              )}
+              <Ionicons
+                name={selectedTab === 'reviews' ? 'star' : 'star-outline'}
+                size={moderateScale(18)}
+                color={selectedTab === 'reviews' ? colors.white : colors.textColor}
+                style={localStyles.tabIcon}
+              />
+              <ZText
+                type="B14"
+                color={selectedTab === 'reviews' ? colors.white : colors.textColor}
+                style={[localStyles.tabText, {
+                  position: 'relative',
+                  zIndex: 10,
+                  backgroundColor: 'transparent',
+                }]}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                {strings.reviews}
+              </ZText>
+              {selectedTab === 'reviews' && (
+                <View style={[localStyles.tabIndicator, { backgroundColor: colors.white }]} />
+              )}
+            </TouchableOpacity>
+          </LinearGradient>
+        </View>
+      )}
     </View>
   );
 

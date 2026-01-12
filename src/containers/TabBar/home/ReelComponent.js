@@ -59,7 +59,9 @@ const ReelComponent = ({
   descriptionSheetRef,
   isFocused,
   isCommentOpen,
+  isLocationOpen,
   setIsCommentOpen,
+  onPressAvailableLocation,
 }) => {
   const colors = useSelector(state => state.theme.theme);
   const [indexState] = useState(index);
@@ -120,12 +122,12 @@ const ReelComponent = ({
       Animated.parallel([
         Animated.timing(headerSlideAnim, {
           toValue: 0,
-          duration: 800,
+          duration: 400,
           useNativeDriver: true,
         }),
         Animated.timing(headerOpacityAnim, {
           toValue: 1,
-          duration: 600,
+          duration: 300,
           useNativeDriver: true,
         }),
       ]).start();
@@ -270,8 +272,8 @@ const ReelComponent = ({
   useEffect(() => {
     let timeout;
 
-    if (index === activeVideoIndex && !!item.avatarUri && isFocused && !isCommentOpen && !showImageZoom) {
-      console.log('Auto-scroll EFFECT START. index:', index, 'active:', activeVideoIndex, 'focused:', isFocused, 'commentOpen:', isCommentOpen, 'zoomed:', showImageZoom);
+    if (index === activeVideoIndex && !!item.avatarUri && isFocused && !isCommentOpen && !isLocationOpen && !showImageZoom) {
+      console.log('Auto-scroll EFFECT START. index:', index);
       timeout = setTimeout(() => {
         flatListRef.current.scrollToIndex({
           animated: true,
@@ -284,9 +286,8 @@ const ReelComponent = ({
         clearTimeout(timeout);
       };
     } else {
-      console.log('Auto-scroll EFFECT SKIPPED. Condition met? index:', index, 'active:', activeVideoIndex, 'focused:', isFocused, 'commentOpen:', isCommentOpen, 'zoomed:', showImageZoom);
     }
-  }, [isFocused, index, activeVideoIndex, flatListRef, item.avatarUri, isCommentOpen, showImageZoom]);
+  }, [isFocused, index, activeVideoIndex, flatListRef, item.avatarUri, isCommentOpen, isLocationOpen, showImageZoom]);
 
   const handlePressProfile = () => {
     // Navigate to author's profile, not the current user's profile unless they match
@@ -341,6 +342,7 @@ const ReelComponent = ({
 
   return (
     <View>
+
       {item?.type !== 'ad' ? (
         <View
           style={{
@@ -349,7 +351,7 @@ const ReelComponent = ({
           }}>
           <DoubleClick
             singleTap={() => {
-              if (!item?.avatarUri) {
+              if (item?.uri) {
                 setpaused(prev => ({
                   ...prev,
                   paused: !prev.paused
@@ -370,62 +372,41 @@ const ReelComponent = ({
               }
             }}>
 
-            {/* Review Badge - positioned at top right */}
-            {item?.reviewMode && (
-              <>
-                {/* Review Glow Effect */}
-                <View style={localStyles.reviewGlowEffect} />
-
-                <Animated.View
-                  style={[
-                    localStyles.reviewBadge,
-                    { transform: [{ scale: pulseAnim }] }
-                  ]}
+            {/* Review Badge - compact, positioned at top left */}
+            {(item?.reviewMode || item?.author?.type !== 'chef') && (
+              <Animated.View
+                style={[
+                  localStyles.reviewBadge,
+                  { transform: [{ scale: pulseAnim }] }
+                ]}
+              >
+                <LinearGradient
+                  colors={['#FF6B6B', '#FF8E53']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={localStyles.reviewBadgeGradient}
                 >
-                  <LinearGradient
-                    colors={['rgba(255, 215, 0, 0.95)', 'rgba(255, 77, 103, 0.95)', 'rgba(138, 43, 226, 0.9)']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={localStyles.reviewBadgeGradient}
-                  >
-                    <View style={localStyles.reviewBadgeGlass}>
-                      <View style={localStyles.reviewBadgeContent}>
-                        <Ionicons name="star" size={moderateScale(12)} color="#FFD700" />
-                        <ZText type="B10" color="#FFFFFF" style={[styles.ml2, localStyles.reviewBadgeText]}>
-                          REVIEW
-                        </ZText>
-                      </View>
-                      {item?.rating && (
-                        <View style={localStyles.ratingBadge}>
-                          <ZText type="B13" color="#FFFFFF" style={localStyles.ratingText}>
-                            {item.rating}/5
-                          </ZText>
-                          <View style={localStyles.starsContainer}>
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <Ionicons
-                                key={star}
-                                name={item.rating && item.rating > 0
-                                  ? (star <= item.rating ? 'star' : 'star-outline')
-                                  : 'star'
-                                }
-                                size={moderateScale(10)}
-                                color={item.rating && item.rating > 0
-                                  ? (star <= item.rating ? '#FFD700' : 'rgba(255, 255, 255, 0.6)')
-                                  : 'rgba(255, 255, 255, 0.3)'
-                                }
-                                style={[
-                                  localStyles.starIcon,
-                                  { opacity: item.rating && item.rating > 0 ? 1 : 0.4 }
-                                ]}
-                              />
-                            ))}
-                          </View>
-                        </View>
-                      )}
-                    </View>
-                  </LinearGradient>
-                </Animated.View>
-              </>
+                  <Ionicons name="star" size={moderateScale(10)} color="#FFFFFF" />
+                  <ZText type="B10" color="#FFFFFF" style={localStyles.reviewBadgeText}>
+                    REVIEW
+                  </ZText>
+                </LinearGradient>
+              </Animated.View>
+            )}
+            {/* KM Away / Branches Button */}
+            {item?.author?.type === 'chef' && (
+              <View style={localStyles.headerContainer3}>
+                <ZButton
+                  onPress={() => onPressAvailableLocation(item?.author?.locations)}
+                  type="m14"
+                  containerStyle={localStyles.buttonTag}
+                  title={
+                    item?.kmAway && item?.kmAway !== null
+                      ? item?.kmAway?.toFixed(2) + strings.kmAway
+                      : strings.clickbranches
+                  }
+                />
+              </View>
             )}
 
             {!!item?.uri &&
@@ -516,13 +497,18 @@ const ReelComponent = ({
             )}
 
             {/* Attached Dishes Display - positioned above the action icons */}
-            {isOverlayVisible && item?.dishes && item.dishes.length > 0 && (
+            {isOverlayVisible && ((item?.dishes && item.dishes.length > 0) || item?.dishName) && (
               <AttachedDishesDisplay
-                attachedDishes={item.dishes}
+                attachedDishes={
+                  item?.dishes && item.dishes.length > 0
+                    ? item.dishes
+                    : [{ name: item.dishName, price: item.price, type: 'manual' }]
+                }
                 showPrices={true}
                 compact={true}
                 chefId={item?.author?._id}
                 chefName={item?.author?.fullName}
+                restaurantName={item?.restaurantName}
                 containerStyle={localStyles.dishesDisplayContainer}
               />
             )}
@@ -559,26 +545,22 @@ const ReelComponent = ({
                     ]}>
                     <View style={localStyles.headerInnerContainer}>
                       <TouchableOpacity onPress={handlePressProfile}>
-                        <Image
-                          resizeMode="cover"
-                          source={
-                            item?.author?.avatar
-                              ? { uri: item?.author?.avatar }
-                              : colors.dark
-                                ? images.userDark
-                                : images.userLight
-                          }
-                          style={{
-                            width: 42,
-                            height: 42,
-                            borderRadius: 21,
-                            borderWidth: 2,
-                            borderColor: 'white',
-                          }}
-                        />
+                        <View style={localStyles.avatarRing}>
+                          <Image
+                            resizeMode="cover"
+                            source={
+                              item?.author?.avatar
+                                ? { uri: item?.author?.avatar }
+                                : colors.dark
+                                  ? images.userDark
+                                  : images.userLight
+                            }
+                            style={localStyles.avatarImage}
+                          />
+                        </View>
                       </TouchableOpacity>
                       <TouchableOpacity
-                        style={{ marginLeft: 4, flex: 1 }}
+                        style={localStyles.userInfoContainer}
                         onPress={() =>
                           onPressProfile(
                             item?.channelName,
@@ -586,75 +568,89 @@ const ReelComponent = ({
                             item?.author?._id,
                           )
                         }>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <View style={localStyles.userNameRow}>
                           <ZText
-                            style={{
-                              fontSize: 12,
-                              fontWeight: 'bold',
-                              color: 'white',
-                              textShadowColor: 'rgba(0, 0, 0, 0.9)',
-                              textShadowOffset: { width: 1, height: 1 },
-                              textShadowRadius: 3,
-                              flex: 1,
-                            }}
+                            style={localStyles.userName}
                             numberOfLines={1}>
-                            {item?.author?.fullName || data?.fullName}
+                            {item?.channelName || item?.author?.fullName || data?.fullName}
                           </ZText>
-                          {/* Debug: Show rating data and always render something */}
 
-                          {item?.author?.ratedDishesCount > 0 && item?.author?.averageDishRating > 0 ? (
-                            <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 8 }}>
-                              <ZText style={{
-                                fontSize: 10,
-                                fontWeight: 'bold',
-                                color: '#FFD700',
-                                textShadowColor: 'rgba(0, 0, 0, 0.9)',
-                                textShadowOffset: { width: 1, height: 1 },
-                                textShadowRadius: 2,
-                              }}>
-                                {item.author.averageDishRating.toFixed(1)}
+                          {/* Rating Pill - Keep next to username or move? Keeping next to username for now if it fits, or move it? 
+                              Actually, user didn't complain about stars, but looking at screenshot, stars are separate. 
+                              Let's keep stars next to name if they act as "User Rating"? No, it's Restaurant Rating.
+                              Let's Keep stars here for now, but move Badge OUT.
+                          */}
+                          {(item?.author?.averageDishRating > 0 || item?.restaurantRating > 0) && (
+                            <View style={localStyles.ratingPill}>
+                              <ZText style={localStyles.ratingValue}>
+                                {(item?.author?.averageDishRating || item?.restaurantRating).toFixed(1)}
                               </ZText>
-                              <ZText style={{
-                                fontSize: 10,
-                                color: 'white',
-                                textShadowColor: 'rgba(0, 0, 0, 0.9)',
-                                textShadowOffset: { width: 1, height: 1 },
-                                textShadowRadius: 2,
-                                marginLeft: 2,
-                              }}>
-                                ⭐
-                              </ZText>
+                              <ZText style={localStyles.ratingStar}>⭐</ZText>
                             </View>
-                          ) : (
-                            <ZText style={{
-                              fontSize: 12,
-                              color: '#FFD700',
-                              textShadowColor: 'rgba(0, 0, 0, 0.9)',
-                              textShadowOffset: { width: 1, height: 1 },
-                              textShadowRadius: 2,
-                              marginLeft: 8,
-                              fontWeight: 'bold',
-                            }}>
-                              -
-                            </ZText>
                           )}
                         </View>
+
+                        {/* Restaurant Name for Reviews - Premium Badge Design - Moved BELOW Name */}
+                        {((item?.reviewMode || item?.isReview || item?.author?.type !== 'chef') && (item?.restaurantName || item?.reviewedChef?.fullName)) && (
+                          <View style={[localStyles.glassContainer, {
+                            borderRadius: moderateScale(12),
+                            paddingVertical: moderateScale(4),
+                            paddingHorizontal: moderateScale(10),
+                            marginTop: moderateScale(6),
+                            alignSelf: 'flex-start',
+                            backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                            borderWidth: 1,
+                            borderColor: 'rgba(255, 255, 255, 0.3)',
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            shadowColor: '#000',
+                            shadowOffset: { width: 0, height: 2 },
+                            shadowOpacity: 0.2,
+                            shadowRadius: 4,
+                            elevation: 3
+                          }]}>
+                            <Ionicons
+                              name="location"
+                              size={moderateScale(12)}
+                              color="#FF4B4B"
+                              style={{ marginRight: moderateScale(4) }}
+                            />
+                            <View>
+                              <ZText style={{
+                                fontSize: moderateScale(12),
+                                color: '#FFFFFF',
+                                fontWeight: '700',
+                                textShadowColor: 'rgba(0,0,0,0.5)',
+                                textShadowRadius: 3,
+                                lineHeight: 16
+                              }} numberOfLines={1}>
+                                {item?.restaurantName || item?.reviewedChef?.fullName}
+                              </ZText>
+                              {/* Address Subtitle */}
+                              {(item?.restaurantAddress || (item?.reviewedChef?.locations && item?.reviewedChef?.locations[0]?.address)) && (
+                                <ZText style={{
+                                  fontSize: moderateScale(10),
+                                  color: 'rgba(255,255,255,0.8)',
+                                  fontWeight: '500',
+                                  marginTop: 1
+                                }} numberOfLines={1}>
+                                  {/* Extract city/area from address if possible, or show truncated address */}
+                                  {item?.restaurantAddress?.split(',')[0] || item?.restaurantAddress || item?.reviewedChef?.locations?.[0]?.address?.split(',')[0]}
+                                </ZText>
+                              )}
+                            </View>
+                            <Ionicons
+                              name="chevron-forward"
+                              size={moderateScale(12)}
+                              color="rgba(255,255,255,0.6)"
+                              style={{ marginLeft: moderateScale(6) }}
+                            />
+                          </View>
+                        )}
                       </TouchableOpacity>
                     </View>
 
-                    <ZText
-                      style={{
-                        fontSize: 13,
-                        color: 'white',
-                        marginTop: 4,
-                        lineHeight: 18,
-                        textShadowColor: 'rgba(0, 0, 0, 0.8)',
-                        textShadowOffset: { width: 1, height: 1 },
-                        textShadowRadius: 2,
-                      }}
-                      numberOfLines={2}>
-                      {item?.title || 'Perfect lunch for today ☀️'}
-                    </ZText>
+
 
                     {duration?.[0] && duration?.[0] !== 'undefined' && duration?.[0] !== undefined && (
                       <ZText
@@ -678,7 +674,7 @@ const ReelComponent = ({
                     </ZText>
 
                     {/* Review-specific info */}
-                    {item?.reviewMode && (
+                    {(item?.reviewMode || item?.isReview || item?.author?.type !== 'chef') && (
                       <View style={localStyles.reviewInfo}>
                         <View style={localStyles.reviewRating}>
                           {[1, 2, 3, 4, 5].map((star) => (
@@ -686,21 +682,21 @@ const ReelComponent = ({
                               key={star}
                               name={item?.rating && item.rating > 0
                                 ? (star <= item.rating ? 'star' : 'star-outline')
-                                : 'star'
+                                : 'star-outline'
                               }
                               size={moderateScale(12)}
                               color={item?.rating && item.rating > 0
                                 ? (star <= item.rating ? '#FFD700' : 'rgba(255, 255, 255, 0.5)')
-                                : 'rgba(255, 255, 255, 0.3)'
+                                : 'rgba(255, 255, 255, 0.8)'
                               }
                               style={[
                                 styles.mr2,
-                                { opacity: item?.rating && item.rating > 0 ? 1 : 0.4 }
+                                { opacity: item?.rating && item.rating > 0 ? 1 : 0.8 }
                               ]}
                             />
                           ))}
-                          <ZText type="B12" color={colors.white} style={styles.ml4}>
-                            {item.rating}/5
+                          <ZText type="B14" color={colors.white} style={[styles.ml4, { fontWeight: '800' }]}>
+                            {item.rating || 0}/5
                           </ZText>
                         </View>
                       </View>
@@ -730,7 +726,7 @@ const ReelComponent = ({
                     {/* Show Visit Menu button for chefs or users with menus */}
                     {(item?.author?.type === 'chef' || item?.author?.hasMenu === true) && (
                       <ZButton
-                        title="Visit Menu"
+                        title={strings.visitMenu}
                         textType={'b18'}
                         color={colors.white}
                         containerStyle={localStyles.buttonContainer}
@@ -780,7 +776,7 @@ const ReelComponent = ({
                 ]}>
                 <Entypo
                   name="triangle-right"
-                  size={paused && !item?.avatarUri ? moderateScale(60) : 0}
+                  size={paused && item?.uri ? moderateScale(60) : 0}
                   color={'white'}
                 />
               </View>
@@ -797,7 +793,7 @@ const ReelComponent = ({
           </DoubleClick>
 
           {/* Seeker - Outside DoubleClick to receive touch events */}
-          {isOverlayVisible && !item?.avatarUri && (
+          {isOverlayVisible && item?.uri && (
             <View
               style={{
                 position: 'absolute',
@@ -936,7 +932,63 @@ const localStyles = StyleSheet.create({
   headerInnerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 16,
+  },
+  avatarRing: {
+    width: moderateScale(48),
+    height: moderateScale(48),
+    borderRadius: moderateScale(24),
+    borderWidth: 2,
+    borderColor: '#FF6B6B',
+    padding: 2,
+    shadowColor: '#FF6B6B',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: moderateScale(22),
+  },
+  userInfoContainer: {
+    marginLeft: moderateScale(10),
+    flex: 1,
+  },
+  userNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  userName: {
+    fontSize: moderateScale(14),
+    fontWeight: '700',
+    color: 'white',
+    textShadowColor: 'rgba(0, 0, 0, 0.9)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 4,
+    flex: 1,
+  },
+  ratingPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.35)',
+    paddingHorizontal: moderateScale(8),
+    paddingVertical: moderateScale(3),
+    borderRadius: moderateScale(12),
+    marginLeft: moderateScale(8),
+  },
+  ratingValue: {
+    fontSize: moderateScale(11),
+    fontWeight: '700',
+    color: '#FFD700',
+    textShadowColor: 'rgba(0, 0, 0, 0.8)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  ratingStar: {
+    fontSize: moderateScale(10),
+    marginLeft: moderateScale(2),
   },
   headerCetegoryItemContainer: {
     ...styles.mh10,
@@ -1038,16 +1090,27 @@ const localStyles = StyleSheet.create({
   },
   reviewBadge: {
     position: 'absolute',
-    top: moderateScale(16),
-    right: moderateScale(14),
+    top: moderateScale(90),
+    left: moderateScale(14),
     zIndex: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
   },
   reviewBadgeGradient: {
-    flex: 1,
-    borderRadius: moderateScale(8),
-    padding: moderateScale(4),
-    justifyContent: 'center',
+    flexDirection: 'row',
     alignItems: 'center',
+    borderRadius: moderateScale(12),
+    paddingHorizontal: moderateScale(8),
+    paddingVertical: moderateScale(4),
+  },
+  reviewBadgeText: {
+    fontWeight: 'bold',
+    marginLeft: moderateScale(4),
+    fontSize: moderateScale(9),
+    letterSpacing: 0.5,
   },
   reviewBadgeGlass: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
@@ -1082,6 +1145,17 @@ const localStyles = StyleSheet.create({
   starIcon: {
     marginHorizontal: moderateScale(2),
   },
+  headerContainer3: {
+    position: 'absolute',
+    top: moderateScale(35),
+    zIndex: 999,
+    left: moderateScale(15),
+  },
+  buttonTag: {
+    height: 30,
+    paddingHorizontal: 10,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+  },
   reviewGlowEffect: {
     position: 'absolute',
     top: 0,
@@ -1103,9 +1177,43 @@ const localStyles = StyleSheet.create({
   },
   reviewInfo: {
     marginTop: moderateScale(8),
+    marginBottom: moderateScale(8), // Add breathing room
   },
   reviewRating: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.3)', // Slight background for contrast
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
   },
+  glassBadge: {
+    borderRadius: moderateScale(12),
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  glassContainer: {
+    paddingHorizontal: moderateScale(12),
+    paddingVertical: moderateScale(8),
+    backgroundColor: 'rgba(0, 0, 0, 0.2)', // Fallback / Shade
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modernDishCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 16,
+    padding: 10,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+    elevation: 8,
+    maxWidth: 160,
+  }
 });

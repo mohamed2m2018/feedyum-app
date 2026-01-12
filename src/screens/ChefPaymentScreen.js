@@ -10,6 +10,7 @@ import {
   TextInput,
 } from 'react-native';
 import chefWalletService from '../api/chefWalletService';
+import strings from '../i18n/strings';
 
 const ChefPaymentScreen = ({ navigation, userToken, route }) => {
   const [walletInfo, setWalletInfo] = useState(null);
@@ -33,14 +34,14 @@ const ChefPaymentScreen = ({ navigation, userToken, route }) => {
       setIsLoading(true);
       const data = await chefWalletService.getWalletInfo(null, userToken);
       setWalletInfo(data);
-      
+
       // If payment is required, show the payment modal immediately
       if (data.summary?.isPaymentRequired) {
         setPaymentAmount(data.summary.paymentDueAmount.toString());
         setShowPaymentModal(true);
       }
     } catch (error) {
-Alert.alert('Error', 'Failed to load wallet information');
+      Alert.alert(strings.error, strings.failedToLoadWallet);
     } finally {
       setIsLoading(false);
     }
@@ -48,23 +49,23 @@ Alert.alert('Error', 'Failed to load wallet information');
 
   const processPayment = async () => {
     if (!paymentAmount || parseFloat(paymentAmount) <= 0) {
-      Alert.alert('Error', 'Please enter a valid payment amount');
+      Alert.alert(strings.error, strings.enterValidPayment);
       return;
     }
 
     // Basic card validation (in a real app, use a proper payment processor)
     if (!cardNumber || cardNumber.length < 16) {
-      Alert.alert('Error', 'Please enter a valid card number');
+      Alert.alert(strings.error, strings.enterValidCard);
       return;
     }
 
     if (!expiryDate || !expiryDate.match(/^\d{2}\/\d{2}$/)) {
-      Alert.alert('Error', 'Please enter expiry date in MM/YY format');
+      Alert.alert(strings.error, strings.enterValidExpiry);
       return;
     }
 
     if (!cvv || cvv.length < 3) {
-      Alert.alert('Error', 'Please enter a valid CVV');
+      Alert.alert(strings.error, strings.enterValidCVV);
       return;
     }
 
@@ -74,7 +75,7 @@ Alert.alert('Error', 'Failed to load wallet information');
       // In a real app, you would integrate with Stripe, PayPal, etc.
       // For now, we'll simulate a successful payment
       const transactionId = `txn_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      
+
       const result = await chefWalletService.processPayment(
         parseFloat(paymentAmount),
         'card',
@@ -84,8 +85,8 @@ Alert.alert('Error', 'Failed to load wallet information');
 
       if (result.success) {
         Alert.alert(
-          'Payment Successful!',
-          'Your payment has been processed successfully. You can now continue receiving orders.',
+          strings.paymentSuccessfulTitle,
+          strings.paymentSuccessfulMessage,
           [
             {
               text: 'OK',
@@ -103,10 +104,10 @@ Alert.alert('Error', 'Failed to load wallet information');
           ]
         );
       } else {
-        Alert.alert('Payment Failed', result.message || 'Payment could not be processed');
+        Alert.alert(strings.paymentFailed, result.message || strings.paymentNotProcessed);
       }
     } catch (error) {
-Alert.alert('Error', 'Failed to process payment. Please try again.');
+      Alert.alert(strings.error, strings.failedToProcessPayment);
     } finally {
       setIsProcessingPayment(false);
     }
@@ -118,7 +119,7 @@ Alert.alert('Error', 'Failed to process payment. Please try again.');
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.loadingText}>Loading payment information...</Text>
+        <Text style={styles.loadingText}>{strings.loadingPaymentInfo}</Text>
       </View>
     );
   }
@@ -126,9 +127,9 @@ Alert.alert('Error', 'Failed to process payment. Please try again.');
   if (!walletInfo) {
     return (
       <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Failed to load payment information</Text>
+        <Text style={styles.errorText}>{strings.failedToLoadPaymentInfo}</Text>
         <TouchableOpacity onPress={fetchWalletInfo} style={styles.retryButton}>
-          <Text style={styles.retryButtonText}>Retry</Text>
+          <Text style={styles.retryButtonText}>{strings.retry}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -140,31 +141,31 @@ Alert.alert('Error', 'Failed to process payment. Please try again.');
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>Payment Required</Text>
+        <Text style={styles.title}>{strings.paymentRequiredTitle}</Text>
         <Text style={styles.subtitle}>
-          Your service fee balance has exceeded £2,000
+          {strings.serviceFeeLimitExceededShort}
         </Text>
       </View>
 
       {/* Balance Info */}
       <View style={styles.balanceCard}>
-        <Text style={styles.balanceLabel}>Current Balance</Text>
+        <Text style={styles.balanceLabel}>{strings.currentBalanceLabel}</Text>
         <Text style={styles.balanceAmount}>
           -{formatCurrency(summary.currentBalance)}
         </Text>
         <Text style={styles.balanceDescription}>
-          This represents accumulated service fees from your orders
+          {strings.balanceDescription}
         </Text>
       </View>
 
       {/* Payment Due */}
       <View style={styles.paymentDueCard}>
-        <Text style={styles.paymentDueLabel}>Amount Due</Text>
+        <Text style={styles.paymentDueLabel}>{strings.amountDueLabel}</Text>
         <Text style={styles.paymentDueAmount}>
           {formatCurrency(summary.paymentDueAmount)}
         </Text>
         <Text style={styles.paymentDueDescription}>
-          Pay this amount to continue receiving orders
+          {strings.paymentDueDescription}
         </Text>
       </View>
 
@@ -172,8 +173,7 @@ Alert.alert('Error', 'Failed to process payment. Please try again.');
       <View style={styles.warningCard}>
         <Text style={styles.warningIcon}>⚠️</Text>
         <Text style={styles.warningText}>
-          You cannot receive new orders until this payment is made. 
-          Existing orders can still be completed.
+          {strings.warningMessage}
         </Text>
       </View>
 
@@ -186,7 +186,7 @@ Alert.alert('Error', 'Failed to process payment. Please try again.');
         }}
       >
         <Text style={styles.payNowButtonText}>
-          Pay Now • {formatCurrency(summary.paymentDueAmount)}
+          {strings.payNow} • {formatCurrency(summary.paymentDueAmount)}
         </Text>
       </TouchableOpacity>
 
@@ -199,19 +199,19 @@ Alert.alert('Error', 'Failed to process payment. Please try again.');
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Payment Details</Text>
-            
+            <Text style={styles.modalTitle}>{strings.paymentDetailsTitle}</Text>
+
             <View style={styles.paymentForm}>
-              <Text style={styles.inputLabel}>Payment Amount (£)</Text>
+              <Text style={styles.inputLabel}>{strings.paymentAmountLabel}</Text>
               <TextInput
                 style={styles.input}
                 value={paymentAmount}
                 onChangeText={setPaymentAmount}
                 keyboardType="numeric"
-                placeholder="0.00"
+                placeholder={strings.amountPlaceholder}
               />
 
-              <Text style={styles.inputLabel}>Card Number</Text>
+              <Text style={styles.inputLabel}>{strings.cardNumberLabel}</Text>
               <TextInput
                 style={styles.input}
                 value={cardNumber}
@@ -223,17 +223,17 @@ Alert.alert('Error', 'Failed to process payment. Please try again.');
 
               <View style={styles.cardDetailsRow}>
                 <View style={styles.cardDetailHalf}>
-                  <Text style={styles.inputLabel}>Expiry Date</Text>
+                  <Text style={styles.inputLabel}>{strings.expiryDateLabel}</Text>
                   <TextInput
                     style={styles.input}
                     value={expiryDate}
                     onChangeText={setExpiryDate}
-                    placeholder="MM/YY"
+                    placeholder={strings.expirationPlaceholder}
                     maxLength={5}
                   />
                 </View>
                 <View style={styles.cardDetailHalf}>
-                  <Text style={styles.inputLabel}>CVV</Text>
+                  <Text style={styles.inputLabel}>{strings.cvv}</Text>
                   <TextInput
                     style={styles.input}
                     value={cvv}
@@ -257,17 +257,17 @@ Alert.alert('Error', 'Failed to process payment. Please try again.');
                   <ActivityIndicator size="small" color="#fff" />
                 ) : (
                   <Text style={styles.processPaymentButtonText}>
-                    Process Payment
+                    {strings.processPayment}
                   </Text>
                 )}
               </TouchableOpacity>
-              
+
               {!summary.isPaymentRequired && (
                 <TouchableOpacity
                   style={styles.cancelButton}
                   onPress={() => setShowPaymentModal(false)}
                 >
-                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                  <Text style={styles.cancelButtonText}>{strings.cancel}</Text>
                 </TouchableOpacity>
               )}
             </View>

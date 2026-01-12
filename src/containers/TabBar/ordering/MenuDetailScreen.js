@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -7,9 +7,9 @@ import {
   Alert,
   FlatList,
 } from 'react-native';
-import {useSelector} from 'react-redux';
-import {useQuery} from 'react-query';
-import {useNavigation, useRoute} from '@react-navigation/native';
+import { useSelector } from 'react-redux';
+import { useQuery } from 'react-query';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import strings from '../../../i18n/strings';
 
@@ -17,8 +17,8 @@ import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
 import ZText from '../../../components/common/ZText';
 import ZButton from '../../../components/common/ZButton';
 import ZLoader from '../../../components/common/ZLoader';
-import {moderateScale} from '../../../common/constants';
-import {styles} from '../../../themes';
+import { moderateScale } from '../../../common/constants';
+import { styles } from '../../../themes';
 import request from '../../../api/request';
 
 const MenuDetailScreen = () => {
@@ -26,7 +26,7 @@ const MenuDetailScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
 
-  const {menuId, chefId} = route.params;
+  const { menuId, chefId } = route.params;
 
   // Fetch menu details
   const {
@@ -61,27 +61,27 @@ const MenuDetailScreen = () => {
   };
 
   const renderHeader = () => (
-    <View style={[localStyles.header, {backgroundColor: colors.backgroundColor}]}>
+    <View style={[localStyles.header, { backgroundColor: colors.backgroundColor }]}>
       <TouchableOpacity
         style={localStyles.headerButton}
         onPress={() => navigation.goBack()}>
         <Ionicons name="arrow-back" size={moderateScale(24)} color={colors.textColor} />
       </TouchableOpacity>
-      
+
       <ZText type="B18" color={colors.textColor} numberOfLines={1}>
         {menuData?.name || 'Menu'}
       </ZText>
-      
+
       <View style={localStyles.headerButton} />
     </View>
   );
 
   const renderMenuInfo = () => (
-    <View style={[localStyles.menuInfoSection, {backgroundColor: colors.white}]}>
+    <View style={[localStyles.menuInfoSection, { backgroundColor: colors.white }]}>
       <ZText type="B24" color="#1A1A1A" style={localStyles.menuName}>
         {menuData?.name}
       </ZText>
-      
+
       {menuData?.description && (
         <ZText type="M16" color="#555555" style={localStyles.menuDescription}>
           {menuData.description}
@@ -92,7 +92,7 @@ const MenuDetailScreen = () => {
       {menuData?.chef && (
         <TouchableOpacity
           style={localStyles.chefInfo}
-          onPress={() => navigation.navigate('ChefProfile', {chefId})}>
+          onPress={() => navigation.navigate('ChefProfile', { chefId })}>
           <ZText type="M12" color="#888888">
             Chef
           </ZText>
@@ -104,7 +104,7 @@ const MenuDetailScreen = () => {
 
       {/* Review Reel Button */}
       <TouchableOpacity
-        style={[localStyles.reviewReelButton, {borderColor: colors.primary}]}
+        style={[localStyles.reviewReelButton, { borderColor: colors.primary }]}
         onPress={handleCreateReviewReel}>
         <Ionicons
           name="star"
@@ -118,26 +118,26 @@ const MenuDetailScreen = () => {
     </View>
   );
 
-  const renderDishItem = ({item: dish}) => (
+  const renderDishItem = ({ item: dish }) => (
     <TouchableOpacity
-      style={[localStyles.dishItem, {backgroundColor: colors.white}]}
+      style={[localStyles.dishItem, { backgroundColor: colors.white }]}
       onPress={() => handleDishPress(dish)}>
       <View style={localStyles.dishInfo}>
         <ZText type="B16" color="#1A1A1A" style={localStyles.dishName}>
           {dish.name}
         </ZText>
-        
+
         {dish.description && (
           <ZText type="M14" color="#666666" numberOfLines={2} style={localStyles.dishDescription}>
             {dish.description}
           </ZText>
         )}
-        
+
         <ZText type="B16" color={colors.primary} style={localStyles.dishPrice}>
           {dish.price} EGP
         </ZText>
       </View>
-      
+
       <Ionicons
         name="chevron-forward"
         size={moderateScale(20)}
@@ -147,11 +147,11 @@ const MenuDetailScreen = () => {
   );
 
   const renderDishes = () => (
-    <View style={[localStyles.dishesSection, {backgroundColor: colors.backgroundColor}]}>
+    <View style={[localStyles.dishesSection, { backgroundColor: colors.backgroundColor }]}>
       <ZText type="B18" color={colors.textColor} style={localStyles.sectionTitle}>
         Dishes ({menuData?.dishes?.length || 0})
       </ZText>
-      
+
       <FlatList
         data={menuData?.dishes || []}
         renderItem={renderDishItem}
@@ -189,7 +189,7 @@ const MenuDetailScreen = () => {
             Failed to load menu
           </ZText>
           <ZButton
-            title="Retry"
+            title={strings.retry}
             onPress={refetchMenu}
             containerStyle={localStyles.retryButton}
           />
@@ -201,7 +201,7 @@ const MenuDetailScreen = () => {
   return (
     <ZSafeAreaView>
       {renderHeader()}
-      
+
       <ScrollView style={localStyles.container} showsVerticalScrollIndicator={false}>
         {renderMenuInfo()}
         {renderDishes()}

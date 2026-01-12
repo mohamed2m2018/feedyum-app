@@ -49,7 +49,9 @@ export default function ReelsComponent({ amIFocused }) {
   const [selectedGov, setselectedGov] = useState('');
   const [categoryIds, setcategoryIds] = useState([]);
   const [user] = useStorage('user');
+
   const [isCommentOpen, setIsCommentOpen] = useState(false);
+  const [isLocationOpen, setIsLocationOpen] = useState(false);
 
   const location = useLocation();
 
@@ -129,6 +131,7 @@ export default function ReelsComponent({ amIFocused }) {
 
   const onPressAvailableLocation = locations => {
     setselectedGov(locations);
+    setIsLocationOpen(true);
     locationSheetRef.current?.show();
   };
 
@@ -158,11 +161,12 @@ export default function ReelsComponent({ amIFocused }) {
           setselectedDescription={setselectedDescription}
           isCommentOpen={isCommentOpen}
           setIsCommentOpen={setIsCommentOpen}
+          isLocationOpen={isLocationOpen}
           descriptionSheetRef={descriptionSheetRef}
         />
       );
     },
-    [layoutHeight, user, activeVideoIndex, isFocused, isCommentOpen],
+    [layoutHeight, user, activeVideoIndex, isFocused, isCommentOpen, isLocationOpen],
   );
 
   const viewConfig = useRef({ viewAreaCoveragePercentThreshold: 50 }).current;
@@ -190,25 +194,7 @@ export default function ReelsComponent({ amIFocused }) {
 
   return (
     <View style={[localStyles.outerContainer, { color: colors.backgroundColor }]}>
-      {filteredData?.[activeVideoIndex]?.type !== 'ad' && filteredData?.[activeVideoIndex]?.author?.type === 'chef' && (
-        <View style={localStyles.headerContainer3}>
-          <ZButton
-            onPress={() => {
-              onPressAvailableLocation(
-                filteredData?.[activeVideoIndex]?.author?.locations,
-              );
-            }}
-            type="m14"
-            containerStyle={localStyles.buttonTag}
-            title={
-              filteredData?.[activeVideoIndex]?.kmAway && filteredData?.[activeVideoIndex]?.kmAway !== null
-                ? filteredData?.[activeVideoIndex]?.kmAway?.toFixed(2) +
-                strings.kmAway
-                : strings.clickbranches
-            }
-          />
-        </View>
-      )}
+
       {/* {filteredData?.[activeVideoIndex]?.type !== 'ad' && (
         <View style={localStyles.headerContainer4}>
           <ZButton
@@ -266,6 +252,7 @@ export default function ReelsComponent({ amIFocused }) {
         hasNextPage={hasNextPage}
         fetchNextPage={fetchNextPage}
         isCommentOpen={isCommentOpen}
+        isLocationOpen={isLocationOpen}
       />
 
       <Comment
@@ -279,7 +266,7 @@ export default function ReelsComponent({ amIFocused }) {
         SheetRef={descriptionSheetRef}
         description={selectedDescription}
       />
-      <Locations SheetRef={locationSheetRef} selectedGov={selectedGov} />
+      <Locations SheetRef={locationSheetRef} selectedGov={selectedGov} onClose={() => setIsLocationOpen(false)} />
       {/* {!adFailedToLoad && (
         <View style={localStyles.bannerContainer}>
           <BannerAd

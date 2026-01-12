@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { moderateScale } from '../common/constants';
+import strings from '../i18n/strings';
 
 const StarRating = ({
   rating = 0,
@@ -37,10 +38,10 @@ const StarRating = ({
 
   const renderStars = () => {
     const stars = [];
-    
+
     // Check if we should show disabled stars when no rating
     const hasNoRating = !rating || rating === 0;
-    
+
     if (hasNoRating && showWhenNoRating) {
       // Show 5 empty (outlined) stars
       for (let i = 0; i < 5; i++) {
@@ -50,7 +51,7 @@ const StarRating = ({
             name="star-border"
             size={currentSize.star}
             color={colors.grayScale4 || "#CCCCCC"}
-            style={{ 
+            style={{
               marginRight: moderateScale(1)
             }}
           />
@@ -58,7 +59,7 @@ const StarRating = ({
       }
       return stars;
     }
-    
+
     // Original logic for when there is a rating
     const fullStars = Math.floor(rating);
     const hasHalfStar = rating % 1 !== 0;
@@ -119,25 +120,25 @@ const StarRating = ({
       <View style={styles.starsContainer}>
         {renderStars()}
       </View>
-      
+
       {showText && (
         <View style={[styles.textContainer, { marginLeft: currentSize.spacing }]}>
-          <Text style={[styles.ratingText, { 
+          <Text style={[styles.ratingText, {
             fontSize: currentSize.text,
-            color: (!rating || rating === 0) && showWhenNoRating 
+            color: (!rating || rating === 0) && showWhenNoRating
               ? colors.grayScale4 || "#CCCCCC"
-              : colors.textColor 
+              : colors.textColor
           }]}>
-            {(!rating || rating === 0) && showWhenNoRating 
-              ? "No rating" 
+            {(!rating || rating === 0) && showWhenNoRating
+              ? strings.noRating
               : rating.toFixed(1)
             }
           </Text>
-          
+
           {showCount && totalReviews > 0 && (
-            <Text style={[styles.countText, { 
+            <Text style={[styles.countText, {
               fontSize: currentSize.text - 1,
-              color: colors.grayScale5 
+              color: colors.grayScale5
             }]}>
               ({totalReviews})
             </Text>

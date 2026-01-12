@@ -12,9 +12,9 @@ import {
   Linking,
 } from 'react-native';
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
-import React, {useEffect, useState} from 'react';
- 
-import {useSelector} from 'react-redux';
+import React, { useEffect, useState } from 'react';
+
+import { useSelector } from 'react-redux';
 import ImagePicker from 'react-native-image-crop-picker';
 import {
   PERMISSIONS,
@@ -25,8 +25,8 @@ import {
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
 import ZHeader from '../../../components/common/ZHeader';
 import strings from '../../../i18n/strings';
-import {styles} from '../../../themes';
-import {getHeight, moderateScale} from '../../../common/constants';
+import { styles } from '../../../themes';
+import { getHeight, moderateScale } from '../../../common/constants';
 import typography from '../../../themes/typography';
 import ZText from '../../../components/common/ZText';
 import ZButton from '../../../components/common/ZButton';
@@ -35,17 +35,20 @@ import {
   useNavigation,
   useRoute,
 } from '@react-navigation/native';
-import {StackNav, TabNav} from '../../../navigation/NavigationKeys';
-import {useQuery} from 'react-query';
+import { StackNav, TabNav } from '../../../navigation/NavigationKeys';
+import { useQuery } from 'react-query';
 import request from '../../../api/request';
-import {ALERT_TYPE, Toast} from 'react-native-alert-notification';
+import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
 import BottomActionSheet from '../../../components/models/BottomActionSheet';
 import images from '../../../assets/images';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
- 
-import {useBackgroundUpload} from '../../../providers/BackgroundUploadProvider';
-import {useScreen} from '../../../navigation/screenContext';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+
+import { useBackgroundUpload } from '../../../providers/BackgroundUploadProvider';
+import { useScreen } from '../../../navigation/screenContext';
 import AttachedDishesComponent from './components/AttachedDishesComponent';
+import RestaurantSearch from '../../../components/RestaurantSearch';
+import DishSelector from '../../../components/DishSelector';
+import RatingInput from '../../../components/RatingInput';
 
 export default function PostDetail() {
 
@@ -53,10 +56,10 @@ export default function PostDetail() {
   const navigation = useNavigation();
   const [postedData, setpostedData] = useState({});
 
- 
+
   const route = useRoute();
 
-  const {currentScreen: previousScreen} = useScreen();
+  const { currentScreen: previousScreen } = useScreen();
   const postDataToBeEdited = route?.params?.postDataToBeEdited;
   const isImage = route.params?.isImage;
   const [mediaIsEdited, setmediaIsEdited] = useState(false);
@@ -76,13 +79,13 @@ export default function PostDetail() {
         isEdit: true,
         mediaIsEdited,
       });
-      
+
       setlocalUri(
         postDataToBeEdited?.poster || postDataToBeEdited?.avatarUri || '',
       );
     }
   }, [postDataToBeEdited, mediaIsEdited]);
-  const {data: queryResult} = useQuery('user', () => request.get('/user'), {
+  const { data: queryResult } = useQuery('user', () => request.get('/user'), {
     retry: 1,
     onError: err => {
       Toast.show({
@@ -95,7 +98,7 @@ export default function PostDetail() {
 
   const user = queryResult?.data?.user;
 
-  const {data: locationsData} = useQuery(
+  const { data: locationsData } = useQuery(
     'location' + user?._id,
     () =>
       request.get('/user/location', {
@@ -110,7 +113,7 @@ export default function PostDetail() {
       onSuccess: res => {
         setLocations(res?.data?.locations);
       },
-      onError: () => {},
+      onError: () => { },
     },
   );
 
@@ -118,9 +121,14 @@ export default function PostDetail() {
   const [localUri, setlocalUri] = useState('');
   const [phone, setPhone] = useState();
   const [locations, setLocations] = useState(locationsData?.data?.locations);
-  const [modalState, setModalState] = useState({visible: false, title: '', message: ''});
+  const [modalState, setModalState] = useState({ visible: false, title: '', message: '' });
 
-  
+  // Review-specific state for regular users
+  const [selectedRestaurant, setSelectedRestaurant] = useState(null);
+  const [selectedDish, setSelectedDish] = useState(null);
+  const [rating, setRating] = useState(0);
+
+
 
   const handleUpload = async (response, isImage) => {
     uploadData(
@@ -150,8 +158,8 @@ export default function PostDetail() {
         if (!menuId) {
           setModalState({
             visible: true,
-            title: 'Create your menu first',
-            message: 'To start posting, please create your menu and add your dishes so customers can order easily.',
+            title: strings.createMenuFirst,
+            message: strings.createMenuMessage,
           });
           return;
         }
@@ -161,8 +169,8 @@ export default function PostDetail() {
         if (!Array.isArray(dishes) || dishes.length === 0) {
           setModalState({
             visible: true,
-            title: 'No dishes found',
-            message: 'We didn’t find any dishes in your menu. Please add at least one dish before posting.',
+            title: strings.noDishesFound,
+            message: strings.noDishesMessage,
           });
           return;
         }
@@ -170,8 +178,8 @@ export default function PostDetail() {
         // If fetching fails, fail safe with prompt to manage menu
         setModalState({
           visible: true,
-          title: 'No dishes found',
-          message: 'We didn’t find any dishes in your menu. Please add at least one dish before posting.',
+          title: strings.noDishesFound,
+          message: strings.noDishesMessage,
         });
         return;
       }
@@ -183,14 +191,19 @@ export default function PostDetail() {
       (!user?.phone && !phone) ||
       !locations.length;
 
+    // For regular users: require restaurant and dish, but not phone/locations
     const validationUser =
-      !postedData?.title || !postedData?.caption;
+      !postedData?.caption ||
+      !selectedRestaurant ||
+      !selectedDish;
     const validation = user?.type === 'chef' ? validationChef : validationUser;
     if (validation) {
       Toast.show({
         type: ALERT_TYPE.DANGER,
         title: strings.error,
-        textBody: strings.pleaseFillAllInputs,
+        textBody: user?.type === 'chef'
+          ? strings.pleaseFillAllInputs
+          : strings.selectRestaurantAndDish,
       });
       return;
     }
@@ -211,7 +224,7 @@ export default function PostDetail() {
       return;
     }
 
-    
+
 
     // Derive categories from attached dishes (fallback to backend default if none)
     const derivedCategories = Array.from(
@@ -233,6 +246,34 @@ export default function PostDetail() {
       dishes: postedData?.attachedDishes?.map(dish => dish._id) || [],
     };
 
+    // For regular users, add review-specific fields and mark as review
+    if (user?.type !== 'chef') {
+      dataToBeSent.isReview = true;
+      dataToBeSent.title = selectedDish?.name || dataToBeSent.title; // Use dish name as title
+
+      // Restaurant info
+      if (selectedRestaurant?.type === 'partner') {
+        dataToBeSent.reviewedChefId = selectedRestaurant.chefId;
+      } else {
+        dataToBeSent.googlePlaceId = selectedRestaurant.placeId;
+        dataToBeSent.restaurantName = selectedRestaurant.name;
+        dataToBeSent.restaurantAddress = selectedRestaurant.address;
+      }
+
+      // Dish info
+      if (selectedDish?.type === 'menu') {
+        dataToBeSent.reviewedDishId = selectedDish.dishId;
+        dataToBeSent.dishes = [selectedDish.dishId];
+      } else {
+        dataToBeSent.dishName = selectedDish.name;
+      }
+
+      // Rating (optional)
+      if (rating > 0) {
+        dataToBeSent.rating = rating;
+      }
+    }
+
     // Only set category if derived from dishes; otherwise let backend/use existing
     if (derivedCategories.length > 0) {
       dataToBeSent.category = derivedCategories;
@@ -250,7 +291,7 @@ export default function PostDetail() {
     setisFormFilled(true);
 
     setTimeout(() => {
-      navigation.navigate(StackNav.TabBar, {screen: TabNav.ForYou});
+      navigation.navigate(StackNav.TabBar, { screen: TabNav.ForYou });
     }, 100);
   };
 
@@ -290,8 +331,8 @@ export default function PostDetail() {
   // Permission request functions
   const requestCameraPermission = async () => {
     try {
-      const permission = Platform.OS === 'ios' 
-        ? PERMISSIONS.IOS.CAMERA 
+      const permission = Platform.OS === 'ios'
+        ? PERMISSIONS.IOS.CAMERA
         : PERMISSIONS.ANDROID.CAMERA;
 
       // First check existing status to avoid unnecessary prompts
@@ -315,8 +356,8 @@ export default function PostDetail() {
 
   const requestPhotoLibraryPermission = async () => {
     try {
-      const permission = Platform.OS === 'ios' 
-        ? PERMISSIONS.IOS.PHOTO_LIBRARY 
+      const permission = Platform.OS === 'ios'
+        ? PERMISSIONS.IOS.PHOTO_LIBRARY
         : PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE;
 
       // Check status first
@@ -346,11 +387,11 @@ export default function PostDetail() {
 
   const showPermissionAlert = (type) => {
     Alert.alert(
-      'Permission Required',
-      `${type} access is required to use this feature. Please enable it in your device settings.`,
+      strings.permissionRequired,
+      strings.permissionMessage.replace('{type}', type),
       [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Settings', onPress: () => Linking.openSettings() }
+        { text: strings.cancel, style: 'cancel' },
+        { text: strings.settings, onPress: () => Linking.openSettings() }
       ]
     );
   };
@@ -361,14 +402,14 @@ export default function PostDetail() {
       showPermissionAlert('Camera');
       return;
     }
-    
+
     ImagePicker.openCamera({
       mediaType: 'video',
       cropping: false,
       maximumVideoDuration: 60,
     })
       .then(handleMedia)
-      .catch(() => {});
+      .catch(() => { });
   };
 
   const handleCaptureImage = async () => {
@@ -377,13 +418,13 @@ export default function PostDetail() {
       showPermissionAlert('Camera');
       return;
     }
-    
+
     ImagePicker.openCamera({
       cropping: true,
       compressImageQuality: 1,
     })
       .then(handleMedia)
-      .catch(() => {});
+      .catch(() => { });
   };
 
   const handlepickImage = async () => {
@@ -445,6 +486,8 @@ export default function PostDetail() {
         bounces={false}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
+        extraScrollHeight={100}
+        extraHeight={150}
         contentContainerStyle={styles.ph10}>
         <View style={localStyles.container}>
           <TouchableOpacity
@@ -455,7 +498,7 @@ export default function PostDetail() {
             {isPhotoUploading ? (
               <ActivityIndicator
                 color={colors.primary}
-                style={{marginBottom: 15}}
+                style={{ marginBottom: 15 }}
                 size={'large'}
               />
             ) : (
@@ -463,8 +506,8 @@ export default function PostDetail() {
                 source={
                   localUri
                     ? {
-                        uri: localUri || postDataToBeEdited.poster,
-                      }
+                      uri: localUri || postDataToBeEdited.poster,
+                    }
                     : images.dishPlaceholder
                 }
                 resizeMode="cover"
@@ -486,54 +529,86 @@ export default function PostDetail() {
         </View>
         {localUri && (
           <>
-            <TextInput
-              placeholder={strings.mealName + ' *'}
-              multiline={false}
-              textAlign={I18nManager.isRTL ? 'right' : 'left'}
-              value={postedData?.title}
-              onChangeText={input =>
-                setpostedData(currentState => ({
-                  ...currentState,
-                  title: input,
-                }))
-              }
-              placeholderTextColor={colors.placeHolderColor}
-              style={[
-                {
-                  backgroundColor: colors.inputBg,
-                  borderColor: colors.bColor,
-                  color: colors.textColor,
-                },
-                localStyles.smallInputContainerStyle,
-              ]}
-              inputBoxStyle={localStyles.inputBoxStyle}
-            />
-            <TextInput
-              placeholder={strings.description + ' *'}
-              textAlign={I18nManager.isRTL ? 'right' : 'left'}
-              multiline={true}
-              value={postedData?.caption}
-              onChangeText={input => {
-                setpostedData(currentState => ({
-                  ...currentState,
-                  caption: input,
-                }));
-              }}
-              placeholderTextColor={colors.placeHolderColor}
-              style={[
-                {
-                  backgroundColor: colors.inputBg,
-                  borderColor: colors.bColor,
-                  color: colors.textColor,
-                },
-                localStyles.inputContainerStyle,
+            <View style={localStyles.inputsWrapper}>
+              <ZInput
+                label={strings.title}
+                placeholder={strings.titlePlaceholder}
+                _value={postedData?.title}
+                toGetTextFieldValue={input =>
+                  setpostedData(currentState => ({
+                    ...currentState,
+                    title: input,
+                  }))
+                }
+                required
+              />
 
-                {
-                  paddingTop: 20,
-                },
-              ]}
-              inputBoxStyle={localStyles.inputBoxStyle}
-            />
+              <ZInput
+                label={strings.caption}
+                placeholder={strings.captionPlaceholder}
+                _value={postedData?.caption}
+                toGetTextFieldValue={input =>
+                  setpostedData(currentState => ({
+                    ...currentState,
+                    caption: input,
+                  }))
+                }
+                multiline={true}
+                inputContainerStyle={{ height: moderateScale(100) }}
+                required
+              />
+            </View>
+
+            {/* User Review Section - only for regular users */}
+            {user?.type !== 'chef' && (
+              <>
+                {/* Restaurant Search */}
+                <View style={localStyles.reviewSection}>
+                  <ZText type="B18" color={colors.textColor} style={localStyles.sectionTitle}>
+                    {strings.whereIsThisFrom}
+                  </ZText>
+                  <RestaurantSearch
+                    selectedRestaurant={selectedRestaurant}
+                    onRestaurantSelect={setSelectedRestaurant}
+                    onClear={() => {
+                      setSelectedRestaurant(null);
+                      setSelectedDish(null);
+                    }}
+                    userLocation={{
+                      lat: locations?.[0]?.lat,
+                      lng: locations?.[0]?.long || locations?.[0]?.lng,
+                      country: user?.country || user?.chefSettings?.country
+                    }}
+                  />
+                </View>
+
+                {/* Dish Selector - only show if restaurant selected */}
+                {selectedRestaurant && (
+                  <View style={localStyles.reviewSection}>
+                    <ZText type="B18" color={colors.textColor} style={localStyles.sectionTitle}>
+                      {strings.whatDidYouOrder}
+                    </ZText>
+                    <DishSelector
+                      restaurant={selectedRestaurant}
+                      selectedDish={selectedDish}
+                      onDishSelect={setSelectedDish}
+                      onClear={() => setSelectedDish(null)}
+                    />
+                  </View>
+                )}
+
+                {/* Rating - only show if dish selected */}
+                {selectedDish && (
+                  <View style={localStyles.reviewSection}>
+                    <RatingInput
+                      rating={rating}
+                      onRatingChange={setRating}
+                      label={strings.rateThisDishOptional}
+                    />
+                  </View>
+                )}
+              </>
+            )}
 
             {user?.type === 'chef' && (
               <>
@@ -541,10 +616,10 @@ export default function PostDetail() {
                 <View style={localStyles.attachDishesSection}>
                   <View style={localStyles.sectionHeader}>
                     <ZText type="B18" color={colors.textColor}>
-                      Attach Dishes from Menu
+                      {strings.attachDishesFromMenu}
                     </ZText>
                     <ZText type="M12" color={colors.grayScale7}>
-                      Showcase up to 3 dishes (optional)
+                      {strings.showcaseDishesOptional}
                     </ZText>
                   </View>
                   <AttachedDishesComponent
@@ -559,81 +634,72 @@ export default function PostDetail() {
                     }
                   />
                 </View>
-
-                
-                {!user?.phone && (
-                  <TextInput
-                    placeholder={'Please add your phone number'}
-                    textAlign={I18nManager.isRTL ? 'right' : 'left'}
-                    multiline={false}
-                    value={phone}
-                    onChangeText={input => setPhone(input)}
-                    placeholderTextColor={colors.placeHolderColor}
-                    style={[
-                      {
-                        backgroundColor: colors.inputBg,
-                        borderColor: colors.bColor,
-                        color: colors.textColor,
-                      },
-                      localStyles.smallInputContainerStyle,
-                    ]}
-                    inputBoxStyle={localStyles.inputBoxStyle}
-                  />
-                )}
-                
-
-                {user?.type === 'chef' &&
-                  !locationsData?.data?.locations?.length && (
-                    <>
-                      <ZText style={{marginVertical: 10}} type={'B20'}>
-                        {strings.branches}
-                      </ZText>
-
-                      {(locations?.length === 0 || !locations) && (
-                        <View style={{flexDirection: 'row'}}>
-                          <ZText style={{marginVertical: 5, width: '70%'}}>
-                            {strings.dontHaveBranches}
-                          </ZText>
-                          <MaterialIcon
-                            name="plus"
-                            onPress={onPressLocation}
-                            size={moderateScale(25)}
-                            color={colors.primary}
-                          />
-                        </View>
-                      )}
-                      {locations?.map?.((item, index) => (
-                        <View style={{flexDirection: 'row'}}>
-                          <ZText style={{marginVertical: 5, width: '70%'}}>
-                            {index + 1}- {item.description}
-                          </ZText>
-                          <MaterialIcon
-                            name="pencil-box"
-                            size={moderateScale(25)}
-                            onPress={() => onEditLocation(index)}
-                            color={colors.primary}
-                          />
-                          <MaterialIcon
-                            name="delete"
-                            onPress={() => onDeleteLocation(index)}
-                            size={moderateScale(25)}
-                            color={colors.primary}
-                          />
-                          {index === locations.length - 1 && (
-                            <MaterialIcon
-                              name="plus"
-                              onPress={onPressLocation}
-                              size={moderateScale(25)}
-                              color={colors.primary}
-                            />
-                          )}
-                        </View>
-                      ))}
-                    </>
-                  )}
               </>
             )}
-            
+
+
+            {user?.type === 'chef' && !user?.phone && (
+              <ZInput
+                label={strings.phoneNumber} // Ensure this string exists or use a hardcoded one if needed, but safe to assume similar pattern or just use placeholder
+                placeholder={strings.addPhoneNumberPlaceholder}
+                _value={phone}
+                toGetTextFieldValue={setPhone}
+                keyBoardType="phone-pad"
+                inputContainerStyle={{ marginTop: moderateScale(10) }}
+              />
+            )}
+
+
+            {user?.type === 'chef' &&
+              !locationsData?.data?.locations?.length && (
+                <>
+                  <ZText style={{ marginVertical: 10 }} type={'B20'}>
+                    {strings.branches}
+                  </ZText>
+
+                  {(locations?.length === 0 || !locations) && (
+                    <View style={{ flexDirection: 'row' }}>
+                      <ZText style={{ marginVertical: 5, width: '70%' }}>
+                        {strings.dontHaveBranches}
+                      </ZText>
+                      <MaterialIcon
+                        name="plus"
+                        onPress={onPressLocation}
+                        size={moderateScale(25)}
+                        color={colors.primary}
+                      />
+                    </View>
+                  )}
+                  {locations?.map?.((item, index) => (
+                    <View style={{ flexDirection: 'row' }}>
+                      <ZText style={{ marginVertical: 5, width: '70%' }}>
+                        {index + 1}- {item.description}
+                      </ZText>
+                      <MaterialIcon
+                        name="pencil-box"
+                        size={moderateScale(25)}
+                        onPress={() => onEditLocation(index)}
+                        color={colors.primary}
+                      />
+                      <MaterialIcon
+                        name="delete"
+                        onPress={() => onDeleteLocation(index)}
+                        size={moderateScale(25)}
+                        color={colors.primary}
+                      />
+                      {index === locations.length - 1 && (
+                        <MaterialIcon
+                          name="plus"
+                          onPress={onPressLocation}
+                          size={moderateScale(25)}
+                          color={colors.primary}
+                        />
+                      )}
+                    </View>
+                  ))}
+                </>
+              )}
+
           </>
         )}
         <View style={localStyles.btnContainer}>
@@ -652,68 +718,70 @@ export default function PostDetail() {
               {(postDataToBeEdited
                 ? postDataToBeEdited.title && postDataToBeEdited.avatarUri
                 : isImage) && (
-                <>
-                  <ZButton
-                    title={strings.uploadDishPhoto}
-                    textType={'b18'}
-                    color={colors.white}
-                    containerStyle={{paddingHorizontal: 20}}
-                    onPress={handlepickImage}
-                  />
-                  <View style={{height: 10}} />
-                  <ZButton
-                    title={strings.captureDishPhoto}
-                    textType={'b18'}
-                    color={colors.white}
-                    containerStyle={{paddingHorizontal: 20}}
-                    onPress={handleCaptureImage}
-                  />
-                </>
-              )}
-              <View style={{height: 10}} />
+                  <>
+                    <ZButton
+                      title={strings.uploadDishPhoto}
+                      textType={'b18'}
+                      color={colors.white}
+                      containerStyle={{ paddingHorizontal: 20 }}
+                      onPress={handlepickImage}
+                    />
+                    <View style={{ height: 10 }} />
+                    <ZButton
+                      title={strings.captureDishPhoto}
+                      textType={'b18'}
+                      color={colors.white}
+                      containerStyle={{ paddingHorizontal: 20 }}
+                      onPress={handleCaptureImage}
+                    />
+                  </>
+                )}
+              <View style={{ height: 10 }} />
 
               {(postDataToBeEdited
                 ? postDataToBeEdited.title && !postDataToBeEdited.avatarUri
                 : !isImage) && (
-                <>
-                  <ZButton
-                    title={strings.uploadDishVideo}
-                    textType={'b18'}
-                    color={colors.white}
-                    containerStyle={{paddingHorizontal: 20}}
-                    onPress={handlePickVideo}
-                  />
-                  <View style={{height: 10}} />
-                  <ZButton
-                    title={strings.captureDishVideo}
-                    textType={'b18'}
-                    color={colors.white}
-                    containerStyle={{paddingHorizontal: 20}}
-                    onPress={handleCaptureVideo}
-                  />
-                  <View style={{height: 10}} />
-                  <ZText>{strings.maxDuration}</ZText>
-                </>
-              )}
+                  <>
+                    <ZButton
+                      title={strings.uploadDishVideo}
+                      textType={'b18'}
+                      color={colors.white}
+                      containerStyle={{ paddingHorizontal: 20 }}
+                      onPress={handlePickVideo}
+                    />
+                    <View style={{ height: 10 }} />
+                    <ZButton
+                      title={strings.captureDishVideo}
+                      textType={'b18'}
+                      color={colors.white}
+                      containerStyle={{ paddingHorizontal: 20 }}
+                      onPress={handleCaptureVideo}
+                    />
+                    <View style={{ height: 10 }} />
+                    <ZText>{strings.maxDuration}</ZText>
+                  </>
+                )}
             </View>
           )}
         </View>
-      </KeyboardAwareScrollView>
-      {modalState.visible && (
-        <BottomActionSheet
-          visible={modalState.visible}
-          title={modalState.title}
-          message={modalState.message}
-          primaryLabel={'Open Menu Management'}
-          secondaryLabel={'Not now'}
-          onPrimary={() => {
-            setModalState({visible: false, title: '', message: ''});
-            navigation.navigate(StackNav.MenuManagement, {fromTabs: true});
-          }}
-          onClose={() => setModalState({visible: false, title: '', message: ''})}
-        />
-      )}
-    </ZSafeAreaView>
+      </KeyboardAwareScrollView >
+      {
+        modalState.visible && (
+          <BottomActionSheet
+            visible={modalState.visible}
+            title={modalState.title}
+            message={modalState.message}
+            primaryLabel={strings.openMenuManagement}
+            secondaryLabel={strings.notNow}
+            onPrimary={() => {
+              setModalState({ visible: false, title: '', message: '' });
+              navigation.navigate(StackNav.MenuManagement, { fromTabs: true });
+            }}
+            onClose={() => setModalState({ visible: false, title: '', message: '' })}
+          />
+        )
+      }
+    </ZSafeAreaView >
   );
 }
 
@@ -804,11 +872,7 @@ const localStyles = StyleSheet.create({
     ...styles.mv20,
     ...styles.flexRow,
   },
-  btnContainer: {
-    ...styles.pv20,
-    ...styles.mh20,
-    ...styles.rowSpaceAround,
-  },
+
   skipBtnContainer: {
     width: '45%',
   },
@@ -818,5 +882,23 @@ const localStyles = StyleSheet.create({
   },
   sectionHeader: {
     marginBottom: moderateScale(12),
+  },
+  reviewSection: {
+    marginVertical: moderateScale(16),
+    paddingHorizontal: moderateScale(5),
+  },
+  sectionTitle: {
+    marginBottom: moderateScale(12),
+  },
+  inputsWrapper: {
+    marginVertical: moderateScale(10),
+    gap: moderateScale(10),
+  },
+  btnContainer: {
+    ...styles.pv20,
+    ...styles.mh20,
+    ...styles.rowSpaceAround,
+    marginBottom: moderateScale(40), // Add extra bottom margin for safety
+    paddingBottom: moderateScale(20),
   },
 });

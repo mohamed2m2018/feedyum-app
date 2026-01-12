@@ -8,14 +8,14 @@ import {
   TouchableOpacity,
   Image,
 } from 'react-native';
-import {useSelector} from 'react-redux';
+import { useSelector } from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 // Local imports
 import ZText from '../../../../components/common/ZText';
 import ZButton from '../../../../components/common/ZButton';
-import {styles} from '../../../../themes';
-import {moderateScale} from '../../../../common/constants';
+import { styles } from '../../../../themes';
+import { moderateScale } from '../../../../common/constants';
 import strings from '../../../../i18n/strings';
 
 const OrderDetailsModal = ({
@@ -42,14 +42,14 @@ const OrderDetailsModal = ({
         return {
           color: colors.orange,
           backgroundColor: colors.orange + '20',
-          text: 'Pending',
+          text: strings.pending,
           icon: 'time-outline',
         };
       case 'preparing':
         return {
           color: colors.blue,
           backgroundColor: colors.blue + '20',
-          text: 'Preparing',
+          text: strings.preparing,
           icon: 'restaurant-outline',
         };
       case 'ready':
@@ -77,7 +77,7 @@ const OrderDetailsModal = ({
         return {
           color: colors.grayScale7,
           backgroundColor: colors.grayScale3,
-          text: 'Unknown',
+          text: strings.unknown,
           icon: 'help-outline',
         };
     }
@@ -114,7 +114,7 @@ const OrderDetailsModal = ({
   const nextStatus = getNextStatus();
   const statusButtonText = getStatusButtonText();
 
-  const OrderItem = ({item}) => (
+  const OrderItem = ({ item }) => (
     <View style={localStyles.orderItem}>
       <Image
         source={{
@@ -146,14 +146,14 @@ const OrderDetailsModal = ({
   const StatusTimeline = () => {
     const statuses = ['pending', 'preparing', 'ready', 'completed'];
     const currentIndex = statuses.indexOf(order.status);
-    
+
     return (
       <View style={localStyles.timeline}>
         {statuses.map((status, index) => {
           const config = getStatusConfig(status);
           const isActive = index <= currentIndex;
           const isCurrent = index === currentIndex;
-          
+
           return (
             <View key={status} style={localStyles.timelineItem}>
               <View
@@ -198,7 +198,7 @@ const OrderDetailsModal = ({
       animationType="slide"
       presentationStyle="pageSheet"
       onRequestClose={onClose}>
-      <View style={[localStyles.container, {backgroundColor: colors.backgroundColor}]}>
+      <View style={[localStyles.container, { backgroundColor: colors.backgroundColor }]}>
         {/* Header */}
         <View style={localStyles.header}>
           <TouchableOpacity onPress={onClose} style={localStyles.closeButton}>
@@ -217,13 +217,13 @@ const OrderDetailsModal = ({
         <ScrollView
           style={localStyles.content}
           showsVerticalScrollIndicator={false}>
-          
+
           {/* Order Status */}
           <View style={localStyles.statusSection}>
             <View
               style={[
                 localStyles.statusBadge,
-                {backgroundColor: statusConfig.backgroundColor},
+                { backgroundColor: statusConfig.backgroundColor },
               ]}>
               <Ionicons
                 name={statusConfig.icon}
@@ -253,7 +253,7 @@ const OrderDetailsModal = ({
             <ZText type="S18" style={localStyles.sectionTitle}>
               Customer Information
             </ZText>
-            <View style={[localStyles.infoCard, {backgroundColor: colors.inputBg}]}>
+            <View style={[localStyles.infoCard, { backgroundColor: colors.inputBg }]}>
               <View style={localStyles.infoRow}>
                 <Ionicons
                   name="person-outline"
@@ -296,7 +296,7 @@ const OrderDetailsModal = ({
             <ZText type="S18" style={localStyles.sectionTitle}>
               Order Items ({order.items?.length || 0})
             </ZText>
-            <View style={[localStyles.itemsCard, {backgroundColor: colors.inputBg}]}>
+            <View style={[localStyles.itemsCard, { backgroundColor: colors.inputBg }]}>
               {order.items?.map((item, index) => (
                 <OrderItem key={index} item={item} />
               ))}
@@ -309,7 +309,7 @@ const OrderDetailsModal = ({
               <ZText type="S18" style={localStyles.sectionTitle}>
                 Special Instructions
               </ZText>
-              <View style={[localStyles.instructionsCard, {backgroundColor: colors.inputBg}]}>
+              <View style={[localStyles.instructionsCard, { backgroundColor: colors.inputBg }]}>
                 <Ionicons
                   name="chatbubble-outline"
                   size={moderateScale(20)}
@@ -328,7 +328,7 @@ const OrderDetailsModal = ({
             <ZText type="S18" style={localStyles.sectionTitle}>
               Order Summary
             </ZText>
-            <View style={[localStyles.summaryCard, {backgroundColor: colors.inputBg}]}>
+            <View style={[localStyles.summaryCard, { backgroundColor: colors.inputBg }]}>
               <View style={localStyles.summaryRow}>
                 <ZText type="M16">{strings.subtotal}</ZText>
                 <ZText type="M16">{order.subtotal?.toFixed(2) || '0.00'}</ZText>
@@ -347,7 +347,7 @@ const OrderDetailsModal = ({
               )}
               {order.tax > 0 && (
                 <View style={localStyles.summaryRow}>
-                  <ZText type="M16">Tax</ZText>
+                  <ZText type="M16">{strings.tax}</ZText>
                   <ZText type="M16">{order.tax?.toFixed(2) || '0.00'}</ZText>
                 </View>
               )}

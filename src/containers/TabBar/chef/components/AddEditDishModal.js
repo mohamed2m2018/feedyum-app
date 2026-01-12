@@ -1,5 +1,5 @@
 // Library imports
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -9,10 +9,10 @@ import {
   Image,
   Alert,
 } from 'react-native';
-import {useSelector} from 'react-redux';
+import { useSelector } from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import ImageCropPicker from 'react-native-image-crop-picker';
-import {useQuery} from 'react-query';
+import { useQuery } from 'react-query';
 
 // Local imports
 import ZText from '../../../../components/common/ZText';
@@ -21,11 +21,11 @@ import ZInput from '../../../../components/common/ZInput';
 import CategorySelectionModal from '../../../../components/modals/CategorySelectionModal';
 import SectionInputModal from '../../../../components/modals/SectionInputModal';
 import request from '../../../../api/request';
-import {moderateScale} from '../../../../common/constants';
+import { moderateScale } from '../../../../common/constants';
 import strings from '../../../../i18n/strings';
 
 // PickerButton component moved outside to avoid React warning
-const PickerButton = ({label, value, onPress, error, colors}) => (
+const PickerButton = ({ label, value, onPress, error, colors }) => (
   <View style={localStyles.pickerContainer}>
     <ZText type="M14" color={colors.textColor} style={localStyles.label}>
       {label} *
@@ -40,7 +40,7 @@ const PickerButton = ({label, value, onPress, error, colors}) => (
       ]}
       onPress={onPress}>
       <ZText type="M16" color={value ? colors.textColor : colors.grayScale7}>
-        {value || `Select ${label.toLowerCase()}`}
+        {value || strings.formatString(strings.selectLabel, label.toLowerCase())}
       </ZText>
       <Ionicons
         name="chevron-down-outline"
@@ -86,17 +86,17 @@ const AddEditDishModal = ({
   const [showSectionModal, setShowSectionModal] = useState(false);
 
   // Fetch current user first
-  const {data: userData} = useQuery('user', () => request.get('/user'));
+  const { data: userData } = useQuery('user', () => request.get('/user'));
   const userId = userData?.data?.user?._id;
 
   // Fetch categories and sections - using real API calls
-  const {data: categoriesData} = useQuery('categories', async () => {
+  const { data: categoriesData } = useQuery('categories', async () => {
     // Fetch categories from real API
     const response = await request.get('/categories');
     return response.data;
   });
 
-  const {data: sectionsData} = useQuery(
+  const { data: sectionsData } = useQuery(
     ['menuSections', userId],
     async () => {
       try {
@@ -119,11 +119,11 @@ const AddEditDishModal = ({
   // Only use sections from API (which now only returns sections with dishes)
   // No default sections fallback - only show sections the chef has actually used
   const apiSections = sectionsData || [];
-  
+
   // Combine API sections with custom sections, avoiding duplicates
   const availableSections = [
     ...apiSections,
-    ...customSections.filter(customSection => 
+    ...customSections.filter(customSection =>
       !apiSections.some(apiSection => apiSection.name.toLowerCase() === customSection.name.toLowerCase())
     )
   ];
@@ -164,25 +164,25 @@ const AddEditDishModal = ({
   }, [dish, visible]);
 
   const updateFormData = (field, value) => {
-    setFormData(prev => ({...prev, [field]: value}));
+    setFormData(prev => ({ ...prev, [field]: value }));
     // Clear error when user starts typing
     if (errors[field]) {
-      setErrors(prev => ({...prev, [field]: ''}));
+      setErrors(prev => ({ ...prev, [field]: '' }));
     }
   };
 
   const handleSectionSelection = (sectionName) => {
     updateFormData('section', sectionName);
-    
+
     // Add to custom sections if it's not already in available sections
-    const existingSection = availableSections.find(section => 
+    const existingSection = availableSections.find(section =>
       section.name.toLowerCase() === sectionName.toLowerCase()
     );
-    
+
     if (!existingSection) {
-      const newSection = { 
-        name: sectionName, 
-        description: `Custom section: ${sectionName}` 
+      const newSection = {
+        name: sectionName,
+        description: `Custom section: ${sectionName}`
       };
       setCustomSections(prev => [...prev, newSection]);
     }
@@ -250,9 +250,9 @@ const AddEditDishModal = ({
 
   const handleImagePicker = () => {
     Alert.alert(strings.selectImage, strings.chooseImageSelection, [
-      {text: strings.camera, onPress: openCamera},
-      {text: strings.gallery, onPress: openGallery},
-      {text: strings.cancel, style: 'cancel'},
+      { text: strings.camera, onPress: openCamera },
+      { text: strings.gallery, onPress: openGallery },
+      { text: strings.cancel, style: 'cancel' },
     ]);
   };
 
@@ -269,7 +269,7 @@ const AddEditDishModal = ({
       })
       .catch(error => {
         if (error.code !== 'E_PICKER_CANCELLED') {
-}
+        }
       });
   };
 
@@ -286,7 +286,7 @@ const AddEditDishModal = ({
       })
       .catch(error => {
         if (error.code !== 'E_PICKER_CANCELLED') {
-}
+        }
       });
   };
 
@@ -301,7 +301,7 @@ const AddEditDishModal = ({
       <View
         style={[
           localStyles.container,
-          {backgroundColor: colors.backgroundColor},
+          { backgroundColor: colors.backgroundColor },
         ]}>
         {/* Header */}
         <View style={localStyles.header}>
@@ -332,11 +332,11 @@ const AddEditDishModal = ({
             <TouchableOpacity
               style={[
                 localStyles.imageContainer,
-                {backgroundColor: colors.inputBg, borderColor: colors.bColor},
+                { backgroundColor: colors.inputBg, borderColor: colors.bColor },
               ]}
               onPress={handleImagePicker}>
               {imageUri ? (
-                <Image source={{uri: imageUri}} style={localStyles.dishImage} />
+                <Image source={{ uri: imageUri }} style={localStyles.dishImage} />
               ) : (
                 <View style={localStyles.imagePlaceholder}>
                   <Ionicons
@@ -416,7 +416,7 @@ const AddEditDishModal = ({
             label={strings.ingredients}
             value={formData.ingredients}
             onChangeText={text => updateFormData('ingredients', text)}
-            placeholder="List main ingredients"
+            placeholder={strings.listMainIngredients}
             multiline
             numberOfLines={2}
           />
@@ -442,7 +442,7 @@ const AddEditDishModal = ({
                   {
                     backgroundColor: colors.white,
                     transform: [
-                      {translateX: formData.visible ? moderateScale(20) : 0},
+                      { translateX: formData.visible ? moderateScale(20) : 0 },
                     ],
                   },
                 ]}
@@ -454,7 +454,7 @@ const AddEditDishModal = ({
         {/* Footer */}
         <View style={localStyles.footer}>
           <ZButton
-            title="Cancel"
+            title={strings.cancel}
             onPress={onClose}
             textType="M16"
             color={colors.textColor}
@@ -462,7 +462,7 @@ const AddEditDishModal = ({
             containerStyle={[localStyles.button, localStyles.cancelButton]}
           />
           <ZButton
-            title={isEditing ? 'Update Dish' : 'Add Dish'}
+            title={isEditing ? strings.updateDish : strings.addDish}
             onPress={handleSave}
             textType="M16"
             color={colors.white}

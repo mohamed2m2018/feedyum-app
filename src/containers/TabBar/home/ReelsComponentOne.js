@@ -53,6 +53,7 @@ export default function ReelsComponentOne() {
   const [selectedDescription, setselectedDescription] = useState('');
   const [selectedAreas, setSelectedAreas] = useState([]);
   const [selectedGov, setselectedGov] = useState('');
+  const [isLocationOpen, setIsLocationOpen] = useState(false);
 
   const fetchReels = page =>
     request.get(
@@ -152,6 +153,7 @@ export default function ReelsComponentOne() {
   const onPressAvailableLocation = (gov, areas) => {
     setSelectedAreas(areas);
     setselectedGov(gov);
+    setIsLocationOpen(true);
     locationSheetRef.current?.show();
   };
 
@@ -175,10 +177,11 @@ export default function ReelsComponentOne() {
           commentSheetRef={commentSheetRef}
           setselectedDescription={setselectedDescription}
           descriptionSheetRef={descriptionSheetRef}
+          isLocationOpen={isLocationOpen}
         />
       );
     },
-    [layoutHeight, route?.params?.profile._id, activeVideoIndex, isFocused],
+    [layoutHeight, route?.params?.profile._id, activeVideoIndex, isFocused, isLocationOpen],
   );
 
   const viewConfig = useRef({ viewAreaCoveragePercentThreshold: 50 }).current;
@@ -219,25 +222,7 @@ export default function ReelsComponentOne() {
             }
           />
         </View>
-        {filteredData?.[activeVideoIndex]?.type !== 'ad' && filteredData?.[activeVideoIndex]?.author?.type === 'chef' && (
-          <View style={localStyles.headerContainer3}>
-            <ZButton
-              onPress={() => {
-                onPressAvailableLocation(
-                  filteredData?.[activeVideoIndex]?.author?.locations,
-                );
-              }}
-              type="m14"
-              containerStyle={localStyles.buttonTag}
-              title={
-                filteredData?.[activeVideoIndex]?.kmAway && filteredData?.[activeVideoIndex]?.kmAway !== null
-                  ? filteredData?.[activeVideoIndex]?.kmAway?.toFixed(2) +
-                  strings.kmAway
-                  : strings.clickbranches
-              }
-            />
-          </View>
-        )}
+
         <View
           style={[localStyles.outerContainer, { color: colors.backgroundColor }]}>
           <ReelsList
@@ -273,6 +258,7 @@ export default function ReelsComponentOne() {
             SheetRef={locationSheetRef}
             selectedAreas={selectedAreas}
             selectedGov={selectedGov}
+            onClose={() => setIsLocationOpen(false)}
           />
           {!adFailedToLoad && (
             <View style={localStyles.bannerContainer}>

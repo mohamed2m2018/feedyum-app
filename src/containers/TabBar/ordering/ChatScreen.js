@@ -852,7 +852,7 @@ export default function ChatScreen({ route }) {
             refetchMessages(); // Refetch to update status
           } catch (e) {
             console.error('Reject order failed', e);
-            Alert.alert('Error', 'Failed to reject order');
+            Alert.alert(strings.error, strings.failedToRejectOrder);
           }
         }}
       />

@@ -41,7 +41,7 @@ const OrderReviewModal = ({ visible, order, onClose, onAccept, onReject }) => {
   const handleAcceptOrder = async () => {
     if (!deliveryFee || isNaN(parseFloat(deliveryFee))) {
       Alert.alert(
-        'Invalid Delivery Fee',
+        strings.invalidDeliveryFeeTitle,
         strings.pleaseEnterValidDeliveryFee,
       );
       return;
@@ -77,9 +77,9 @@ const OrderReviewModal = ({ visible, order, onClose, onAccept, onReject }) => {
               onClose();
             } catch (error) {
               Alert.alert(
-                'Error',
+                strings.error,
                 error.message || strings.failedToAcceptOrder,
-                [{ text: 'OK' }],
+                [{ text: strings.ok }],
               );
             } finally {
               setIsProcessing(false);
@@ -116,9 +116,9 @@ const OrderReviewModal = ({ visible, order, onClose, onAccept, onReject }) => {
               onClose();
             } catch (error) {
               Alert.alert(
-                'Error',
+                strings.error,
                 error.message || strings.failedToRejectOrder,
-                [{ text: 'OK' }],
+                [{ text: strings.ok }],
               );
             } finally {
               setIsProcessing(false);
@@ -233,13 +233,13 @@ const OrderReviewModal = ({ visible, order, onClose, onAccept, onReject }) => {
           />
           <View style={localStyles.itemInfo}>
             <ZText type="B14" color={colors.textColor}>
-              {item.dish?.name || 'Unknown Dish'}
+              {item.dish?.name || strings.unknownDish}
             </ZText>
             <ZText type="M12" color={colors.grayScale7}>
-              Quantity: {item.quantity}
+              {strings.quantityLabel}{item.quantity}
             </ZText>
             <ZText type="M12" color={colors.grayScale7}>
-              Price: {(item.price || item.dish?.price || 0).toFixed(2)} each
+              {strings.priceLabel}{(item.price || item.dish?.price || 0).toFixed(2)}{strings.eachLabel}
             </ZText>
           </View>
           <ZText type="B14" color={colors.primary}>
@@ -260,13 +260,13 @@ const OrderReviewModal = ({ visible, order, onClose, onAccept, onReject }) => {
         type="B16"
         color={colors.primary} // Make title primary color
         style={localStyles.sectionTitle}>
-        Set Delivery Details
+        {strings.setDeliveryDetails}
       </ZText>
 
       <View style={localStyles.rowContainer}>
         <View style={[localStyles.inputWrapper, { marginRight: moderateScale(10) }]}>
           <ZText type="M14" color={colors.textColor} style={localStyles.inputLabel}>
-            Delivery Fee ($)
+            {strings.deliveryFeeLabelInput}
           </ZText>
           <TextInput
             style={[
@@ -279,7 +279,7 @@ const OrderReviewModal = ({ visible, order, onClose, onAccept, onReject }) => {
             ]}
             value={deliveryFee}
             onChangeText={setDeliveryFee}
-            placeholder="0.00"
+            placeholder={strings.zeroPlaceholder}
             placeholderTextColor={colors.grayScale7}
             keyboardType="decimal-pad"
             returnKeyType="done"
@@ -288,7 +288,7 @@ const OrderReviewModal = ({ visible, order, onClose, onAccept, onReject }) => {
 
         <View style={localStyles.inputWrapper}>
           <ZText type="M14" color={colors.textColor} style={localStyles.inputLabel}>
-            Time (mins)
+            {strings.timeLabel}
           </ZText>
           <TextInput
             style={[
@@ -301,7 +301,7 @@ const OrderReviewModal = ({ visible, order, onClose, onAccept, onReject }) => {
             ]}
             value={estimatedTime}
             onChangeText={setEstimatedTime}
-            placeholder="30"
+            placeholder={strings.timePlaceholder}
             placeholderTextColor={colors.grayScale7}
             keyboardType="number-pad"
             returnKeyType="done"
@@ -322,7 +322,7 @@ const OrderReviewModal = ({ visible, order, onClose, onAccept, onReject }) => {
 
       <View style={localStyles.pricingRow}>
         <ZText type="M14" color={colors.textColor}>
-          Subtotal:
+          {strings.subtotalLabel}
         </ZText>
         <ZText type="B14" color={colors.textColor}>
           {order?.subtotal?.toFixed(2) || '0.00'}
@@ -331,7 +331,7 @@ const OrderReviewModal = ({ visible, order, onClose, onAccept, onReject }) => {
 
       <View style={localStyles.pricingRow}>
         <ZText type="M14" color={colors.textColor}>
-          Delivery Fee:
+          {strings.deliveryFeeLabel}:
         </ZText>
         <ZText type="B14" color={colors.textColor}>
           {parseFloat(deliveryFee || 0).toFixed(2)}
@@ -340,7 +340,7 @@ const OrderReviewModal = ({ visible, order, onClose, onAccept, onReject }) => {
 
       <View style={[localStyles.pricingRow, localStyles.totalRow]}>
         <ZText type="B16" color={colors.textColor}>
-          Total:
+          {strings.totalLabel}
         </ZText>
         <ZText type="B16" color={colors.primary}>
           {calculateTotal().toFixed(2)}
@@ -403,7 +403,7 @@ const OrderReviewModal = ({ visible, order, onClose, onAccept, onReject }) => {
           />
 
           <ZButton
-            title={isProcessing ? 'Processing...' : 'Accept Order'}
+            title={isProcessing ? strings.processingOrder : strings.acceptOrder}
             textType="B16"
             color={colors.white}
             containerStyle={[

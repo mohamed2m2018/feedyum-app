@@ -10,15 +10,16 @@ import {
   Platform,
 } from 'react-native';
 import FastImage from 'react-native-fast-image';
+import strings from '../i18n/strings';
 
 const TestImageComponent = () => {
   const [imageLoadState, setImageLoadState] = useState('loading');
   const [fastImageLoadState, setFastImageLoadState] = useState('loading');
-  
+
   const unsplashUrl = 'https://images.unsplash.com/photo-1598103442097-8b74394b95c6?w=400&h=600&fit=crop';
 
   const handleImageLoad = (component) => {
-if (component === 'standard') {
+    if (component === 'standard') {
       setImageLoadState('loaded');
     } else {
       setFastImageLoadState('loaded');
@@ -26,7 +27,7 @@ if (component === 'standard') {
   };
 
   const handleImageError = (component, error) => {
-if (component === 'standard') {
+    if (component === 'standard') {
       setImageLoadState('error');
     } else {
       setFastImageLoadState('error');
@@ -35,18 +36,18 @@ if (component === 'standard') {
 
   const testDirectAccess = () => {
     Alert.alert(
-      'Image URL Test',
+      strings.imageUrlTest,
       `URL: ${unsplashUrl}\n\nTry opening this URL in your browser to verify it's accessible.`
     );
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>External Image Loading Test</Text>
-      
+      <Text style={styles.title}>{strings.testImageTitle}</Text>
+
       {/* Standard React Native Image */}
       <View style={styles.imageContainer}>
-        <Text style={styles.label}>Standard Image Component:</Text>
+        <Text style={styles.label}>{strings.standardImageComp}</Text>
         <View style={styles.imageWrapper}>
           <Image
             source={{ uri: unsplashUrl }}
@@ -72,10 +73,10 @@ if (component === 'standard') {
 
       {/* FastImage Component */}
       <View style={styles.imageContainer}>
-        <Text style={styles.label}>FastImage Component:</Text>
+        <Text style={styles.label}>{strings.fastImageComp}</Text>
         <View style={styles.imageWrapper}>
           <FastImage
-            source={{ 
+            source={{
               uri: unsplashUrl,
               priority: FastImage.priority.normal,
             }}
@@ -100,14 +101,14 @@ if (component === 'standard') {
       </View>
 
       <TouchableOpacity style={styles.button} onPress={testDirectAccess}>
-        <Text style={styles.buttonText}>Test URL in Browser</Text>
+        <Text style={styles.buttonText}>{strings.testUrlBrowser}</Text>
       </TouchableOpacity>
 
       <Text style={styles.debugInfo}>
-        🔍 Debug Info:{'\n'}
+        {strings.debugInfo}{'\n'}
         • URL: {unsplashUrl}{'\n'}
         • Platform: {Platform.OS}{'\n'}
-        • Check console for detailed error logs
+        • {strings.checkConsole}
       </Text>
     </View>
   );

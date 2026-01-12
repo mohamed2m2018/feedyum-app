@@ -32,13 +32,13 @@ const MapLocationPicker = () => {
   const dispatch = useDispatch();
   const navigation = useNavigation();
   const route = useRoute();
-  
+
   const { onLocationSelect, initialLocation } = route.params || {};
-  
+
   // Fetch user data using the same pattern as other components
   const { data } = useQuery('user', () => request.get('/user'), { retry: 1 });
   const user = data?.data?.user;
-  
+
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showAddressForm, setShowAddressForm] = useState(false);
@@ -93,23 +93,23 @@ const MapLocationPicker = () => {
 
     // Validate required fields
     if (!addressDetails.label.trim()) {
-      Alert.alert(strings.error, 'Address label is required');
+      Alert.alert(strings.error, strings.addressLabelRequired);
       return;
     }
     if (!addressDetails.apartmentNumber.trim()) {
-      Alert.alert(strings.error, 'Apartment number is required');
+      Alert.alert(strings.error, strings.apartmentRequired);
       return;
     }
     if (!addressDetails.floorNumber.trim()) {
-      Alert.alert(strings.error, 'Floor number is required');
+      Alert.alert(strings.error, strings.floorRequired);
       return;
     }
     if (!addressDetails.area.trim()) {
-      Alert.alert(strings.error, 'Area is required');
+      Alert.alert(strings.error, strings.areaRequired);
       return;
     }
     if (!addressDetails.phoneNumber.trim()) {
-      Alert.alert(strings.error, 'Phone number is required');
+      Alert.alert(strings.error, strings.phoneNumberRequired);
       return;
     }
 
@@ -141,18 +141,18 @@ const MapLocationPicker = () => {
     };
 
     try {
-const response = await dispatch(addAddress(locationData));
-if (onLocationSelect) {
+      const response = await dispatch(addAddress(locationData));
+      if (onLocationSelect) {
         if (response && response.payload) {
-onLocationSelect(response.payload);
+          onLocationSelect(response.payload);
         } else {
-Alert.alert(strings.error, 'Address was saved but response is invalid');
+          Alert.alert(strings.error, 'Address was saved but response is invalid');
         }
       }
-      
+
       navigation.goBack();
     } catch (error) {
-Alert.alert(strings.error, error.message || strings.failedToSaveLocation);
+      Alert.alert(strings.error, error.message || strings.failedToSaveLocation);
     } finally {
       setLoading(false);
     }
@@ -163,8 +163,8 @@ Alert.alert(strings.error, error.message || strings.failedToSaveLocation);
       <View style={[localStyles.container, { backgroundColor: colors.backgroundColor }]}>
         {/* Header */}
         <View style={[localStyles.header, { backgroundColor: colors.backgroundColor }]}>
-          <TouchableOpacity 
-            onPress={() => navigation.goBack()} 
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
             style={localStyles.backButton}
           >
             <Feather name="arrow-left" size={moderateScale(24)} color={colors.textColor} />
@@ -177,10 +177,10 @@ Alert.alert(strings.error, error.message || strings.failedToSaveLocation);
 
         {/* Search Instructions */}
         <View style={localStyles.instructionsContainer}>
-          <MaterialIcons 
-            name="search" 
-            size={moderateScale(24)} 
-            color={colors.grayScale5} 
+          <MaterialIcons
+            name="search"
+            size={moderateScale(24)}
+            color={colors.grayScale5}
           />
           <ZText type="s16" color={colors.grayScale6} style={localStyles.instructionsText}>
             {strings.searchForLocation}
@@ -192,6 +192,10 @@ Alert.alert(strings.error, error.message || strings.failedToSaveLocation);
           <FreeAddressSearch
             placeholder={strings.searchLocationPlaceholder}
             onLocationSelect={handleLocationSelect}
+            onClear={() => {
+              setSelectedLocation(null);
+              setShowAddressForm(false);
+            }}
             autoFocus={true}
           />
         </View>
@@ -200,10 +204,10 @@ Alert.alert(strings.error, error.message || strings.failedToSaveLocation);
         {selectedLocation && (
           <View style={[localStyles.selectedLocationContainer, { backgroundColor: colors.inputBg }]}>
             <View style={localStyles.selectedLocationContent}>
-              <Feather 
-                name="map-pin" 
-                size={moderateScale(20)} 
-                color={colors.primary} 
+              <Feather
+                name="map-pin"
+                size={moderateScale(20)}
+                color={colors.primary}
                 style={localStyles.locationIcon}
               />
               <View style={localStyles.locationTextContainer}>
@@ -214,10 +218,10 @@ Alert.alert(strings.error, error.message || strings.failedToSaveLocation);
                   {selectedLocation.formattedAddress}
                 </ZText>
               </View>
-              <Feather 
-                name="check-circle" 
-                size={moderateScale(20)} 
-                color={colors.primary} 
+              <Feather
+                name="check-circle"
+                size={moderateScale(20)}
+                color={colors.primary}
               />
             </View>
           </View>
@@ -225,7 +229,7 @@ Alert.alert(strings.error, error.message || strings.failedToSaveLocation);
 
         {/* Address Details Form */}
         {showAddressForm && (
-          <ScrollView 
+          <ScrollView
             style={localStyles.formContainer}
             contentContainerStyle={localStyles.formContent}
             showsVerticalScrollIndicator={false}
@@ -233,10 +237,10 @@ Alert.alert(strings.error, error.message || strings.failedToSaveLocation);
             {/* Address Label */}
             <View style={localStyles.section}>
               <ZText type="B16" color={colors.textColor} style={localStyles.sectionTitle}>
-                {strings.addressLabel || 'Address Label'} *
+                {strings.addressLabel} *
               </ZText>
               <ZInput
-                placeHolder="Home, Work, Friend's Place"
+                placeHolder={strings.addressLabelPlaceholder}
                 _value={addressDetails.label}
                 toGetTextFieldValue={(value) => handleAddressDetailChange('label', value)}
                 inputContainerStyle={[localStyles.inputContainer, { backgroundColor: colors.inputBg }]}
@@ -246,10 +250,10 @@ Alert.alert(strings.error, error.message || strings.failedToSaveLocation);
             {/* Building Details */}
             <View style={localStyles.section}>
               <ZText type="B16" color={colors.textColor} style={localStyles.sectionTitle}>
-                {strings.buildingDetails || 'Building Details'}
+                {strings.buildingDetails}
               </ZText>
               <ZInput
-                placeHolder="Building Name"
+                placeHolder={strings.buildingNamePlaceholder}
                 _value={addressDetails.buildingName}
                 toGetTextFieldValue={(value) => handleAddressDetailChange('buildingName', value)}
                 inputContainerStyle={[localStyles.inputContainer, { backgroundColor: colors.inputBg }]}
@@ -257,7 +261,7 @@ Alert.alert(strings.error, error.message || strings.failedToSaveLocation);
               <View style={localStyles.row}>
                 <View style={localStyles.halfWidth}>
                   <ZInput
-                    placeHolder="Apartment Number *"
+                    placeHolder={strings.apartmentNumberPlaceholder}
                     _value={addressDetails.apartmentNumber}
                     toGetTextFieldValue={(value) => handleAddressDetailChange('apartmentNumber', value)}
                     inputContainerStyle={[localStyles.inputContainer, { backgroundColor: colors.inputBg }]}
@@ -265,7 +269,7 @@ Alert.alert(strings.error, error.message || strings.failedToSaveLocation);
                 </View>
                 <View style={localStyles.halfWidth}>
                   <ZInput
-                    placeHolder="Floor Number *"
+                    placeHolder={strings.floorNumberPlaceholder}
                     _value={addressDetails.floorNumber}
                     toGetTextFieldValue={(value) => handleAddressDetailChange('floorNumber', value)}
                     inputContainerStyle={[localStyles.inputContainer, { backgroundColor: colors.inputBg }]}
@@ -277,10 +281,10 @@ Alert.alert(strings.error, error.message || strings.failedToSaveLocation);
             {/* Area Details */}
             <View style={localStyles.section}>
               <ZText type="B16" color={colors.textColor} style={localStyles.sectionTitle}>
-                {strings.areaDetails || 'Area Details'}
+                {strings.areaDetails}
               </ZText>
               <ZInput
-                placeHolder="Area *"
+                placeHolder={strings.areaPlaceholder}
                 _value={addressDetails.area}
                 toGetTextFieldValue={(value) => handleAddressDetailChange('area', value)}
                 inputContainerStyle={[localStyles.inputContainer, { backgroundColor: colors.inputBg }]}
@@ -290,12 +294,12 @@ Alert.alert(strings.error, error.message || strings.failedToSaveLocation);
             {/* Contact Info */}
             <View style={localStyles.section}>
               <ZText type="B16" color={colors.textColor} style={localStyles.sectionTitle}>
-                {strings.contactInfo || 'Contact Info'}
+                {strings.contactInfo}
               </ZText>
               <View style={localStyles.phoneContainer}>
                 <View style={localStyles.countryCodeContainer}>
                   <ZInput
-                    placeHolder="+20"
+                    placeHolder={strings.phoneCodePlaceholder}
                     _value={addressDetails.countryCode}
                     toGetTextFieldValue={(value) => handleAddressDetailChange('countryCode', value)}
                     inputContainerStyle={[localStyles.inputContainer, { backgroundColor: colors.inputBg }]}
@@ -303,7 +307,7 @@ Alert.alert(strings.error, error.message || strings.failedToSaveLocation);
                 </View>
                 <View style={localStyles.phoneNumberContainer}>
                   <ZInput
-                    placeHolder="Phone Number *"
+                    placeHolder={strings.phoneNumberPlaceholder}
                     _value={addressDetails.phoneNumber}
                     keyBoardType="phone-pad"
                     toGetTextFieldValue={(value) => handleAddressDetailChange('phoneNumber', value)}
@@ -320,7 +324,7 @@ Alert.alert(strings.error, error.message || strings.failedToSaveLocation);
           <TouchableOpacity
             style={[
               localStyles.confirmButton,
-              { 
+              {
                 backgroundColor: colors.primary,
                 opacity: (loading || addingAddress || !selectedLocation) ? 0.6 : 1
               }
@@ -397,7 +401,8 @@ const localStyles = StyleSheet.create({
   },
   buttonContainer: {
     paddingHorizontal: moderateScale(16),
-    paddingVertical: moderateScale(16),
+    paddingTop: moderateScale(16),
+    paddingBottom: moderateScale(40),
   },
   confirmButton: {
     paddingVertical: moderateScale(16),

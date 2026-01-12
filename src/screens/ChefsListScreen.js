@@ -32,7 +32,7 @@ const ChefsListScreen = ({ navigation, userToken }) => {
     try {
       setIsLoading(true);
       const data = await userService.getAllUsers(userToken);
-      
+
       if (data.success) {
         // Filter only chef users and fetch their profiles
         const chefUsers = data.users.filter(user => user.type === 'chef');
@@ -42,17 +42,17 @@ const ChefsListScreen = ({ navigation, userToken }) => {
               const profileData = await userService.getChefProfile(chef._id, userToken);
               return profileData.success ? profileData.chef : chef;
             } catch (error) {
-return chef;
+              return chef;
             }
           })
         );
-        
+
         setChefs(chefsWithProfiles);
       } else {
         Alert.alert(strings.error, data.message || strings.failedToLoadChefs);
       }
     } catch (error) {
-Alert.alert(strings.error, strings.failedToLoadChefs);
+      Alert.alert(strings.error, strings.failedToLoadChefs);
     } finally {
       setIsLoading(false);
     }
@@ -62,11 +62,11 @@ Alert.alert(strings.error, strings.failedToLoadChefs);
     if (!searchQuery.trim()) {
       setFilteredChefs(chefs);
     } else {
-      const filtered = chefs.filter(chef => 
+      const filtered = chefs.filter(chef =>
         (chef.fullName && chef.fullName.toLowerCase().includes(searchQuery.toLowerCase())) ||
         (chef.username && chef.username.toLowerCase().includes(searchQuery.toLowerCase())) ||
         (chef.bio && chef.bio.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (chef.tags && chef.tags.some(tag => 
+        (chef.tags && chef.tags.some(tag =>
           tag.name && tag.name.toLowerCase().includes(searchQuery.toLowerCase())
         ))
       );
@@ -86,7 +86,7 @@ Alert.alert(strings.error, strings.failedToLoadChefs);
 
   const handleViewMenu = (chef) => {
     if (chef.hasMenu) {
-      navigation.navigate('ChefMenu', { 
+      navigation.navigate('ChefMenu', {
         chefId: chef._id,
         chefName: chef.fullName || chef.username,
         averageDishRating: chef.averageDishRating || 0,
@@ -110,11 +110,11 @@ Alert.alert(strings.error, strings.failedToLoadChefs);
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
       <Text style={styles.emptyText}>
-        {searchQuery ? 'No chefs found matching your search' : 'No chefs available'}
+        {searchQuery ? strings.noChefsFoundSearch : strings.noChefsAvailable}
       </Text>
       {searchQuery && (
         <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearButton}>
-          <Text style={styles.clearButtonText}>Clear Search</Text>
+          <Text style={styles.clearButtonText}>{strings.clearSearch}</Text>
         </TouchableOpacity>
       )}
     </View>
@@ -124,7 +124,7 @@ Alert.alert(strings.error, strings.failedToLoadChefs);
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.loadingText}>Loading chefs...</Text>
+        <Text style={styles.loadingText}>{strings.loadingChefs}</Text>
       </View>
     );
   }
@@ -135,7 +135,7 @@ Alert.alert(strings.error, strings.failedToLoadChefs);
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.searchInput}
-          placeholder="Search chefs by name, bio, or specialty..."
+          placeholder={strings.searchChefsPlaceholder}
           value={searchQuery}
           onChangeText={setSearchQuery}
         />

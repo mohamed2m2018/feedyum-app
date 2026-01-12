@@ -1,4 +1,4 @@
-import React, {useState, useCallback, useMemo, useEffect} from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -8,17 +8,17 @@ import {
   Alert,
   TextInput,
 } from 'react-native';
-import {useSelector, useDispatch} from 'react-redux';
-import {useNavigation} from '@react-navigation/native';
-import {useQueryClient} from 'react-query';
+import { useSelector, useDispatch } from 'react-redux';
+import { useNavigation } from '@react-navigation/native';
+import { useQueryClient } from 'react-query';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import ZText from '../../../components/common/ZText';
 import ZHeader from '../../../components/common/ZHeader';
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
 import ZButton from '../../../components/common/ZButton';
 
-import {moderateScale} from '../../../common/constants';
-import {styles} from '../../../themes';
+import { moderateScale } from '../../../common/constants';
+import { styles } from '../../../themes';
 import images from '../../../assets/images';
 import strings from '../../../i18n/strings';
 import {
@@ -37,22 +37,22 @@ import {
   setCurrentOrder,
 } from '../../../redux/reducer/orderSlice';
 import { getAddresses, setSelectedAddress } from '../../../redux/actions/addressActions';
-import {StackNav} from '../../../navigation/NavigationKeys';
+import { StackNav } from '../../../navigation/NavigationKeys';
 
 const ShoppingCart = () => {
-  
+
   const colors = useSelector(state => state.theme.theme);
   const dispatch = useDispatch();
   const navigation = useNavigation();
   const queryClient = useQueryClient();
-  
+
   const cartItems = useSelector(selectCartItems);
   const subtotal = useSelector(selectCartSubtotal);
   const chef = useSelector(selectCartChef);
   const isPlacingOrder = useSelector(selectOrderPlacing);
   const orderError = useSelector(selectOrderError);
   const { selectedAddress } = useSelector(state => state.address);
-  
+
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [specialInstructions, setSpecialInstructions] = useState('');
 
@@ -78,29 +78,29 @@ const ShoppingCart = () => {
         strings.removeItem,
         strings.areYouSureRemoveItem,
         [
-          {text: 'Cancel', style: 'cancel'},
+          { text: strings.cancel, style: 'cancel' },
           {
-            text: 'Remove',
+            text: strings.removeFromCart,
             style: 'destructive',
-            onPress: () => dispatch(removeFromCart({dishId})),
+            onPress: () => dispatch(removeFromCart({ dishId })),
           },
         ]
       );
     } else {
-      dispatch(updateQuantity({dishId, quantity: newQuantity}));
+      dispatch(updateQuantity({ dishId, quantity: newQuantity }));
     }
   }, [dispatch]);
 
   const handleRemoveItem = useCallback((dishId, dishName) => {
     Alert.alert(
       'Remove Item',
-      `Remove ${dishName} from your cart?`,
+      strings.formatString(strings.removeDishConfirm, dishName),
       [
-        {text: strings.cancel, style: 'cancel'},
+        { text: strings.cancel, style: 'cancel' },
         {
           text: strings.removeFromCart,
           style: 'destructive',
-          onPress: () => dispatch(removeFromCart({dishId})),
+          onPress: () => dispatch(removeFromCart({ dishId })),
         },
       ]
     );
@@ -111,7 +111,7 @@ const ShoppingCart = () => {
       strings.clearCart,
       strings.areYouSureClearCart,
       [
-        {text: strings.cancel, style: 'cancel'},
+        { text: strings.cancel, style: 'cancel' },
         {
           text: strings.clearAll,
           style: 'destructive',
@@ -135,13 +135,13 @@ const ShoppingCart = () => {
           onPress: async () => {
             try {
               setIsCheckingOut(true);
-              
+
               // Check if user has selected a delivery address
               if (!selectedAddress) {
                 Alert.alert(
-                  'No Delivery Address',
-                  'Please select a delivery address before placing your order.',
-                  [{ text: 'OK' }]
+                  strings.noDeliveryAddress,
+                  strings.selectDeliveryAddress,
+                  [{ text: strings.ok }]
                 );
                 setIsCheckingOut(false);
                 return;
@@ -149,18 +149,18 @@ const ShoppingCart = () => {
 
               // Debug logging
 
-              
+
 
 
               // Validate chef ID
               if (!chef?.id) {
-Alert.alert(
+                Alert.alert(
                   'Order Error',
                   'Chef information is missing. Clear cart and try again?',
                   [
-                    { text: 'Cancel', style: 'cancel' },
-                    { 
-                      text: 'Clear Cart', 
+                    { text: strings.cancel, style: 'cancel' },
+                    {
+                      text: strings.clearCart,
                       onPress: () => {
                         dispatch(clearCart());
                         navigation.goBack();
@@ -174,10 +174,10 @@ Alert.alert(
 
               // Validate cart items
               if (!cartItems || cartItems.length === 0) {
-Alert.alert(
-                  'Order Error',
-                  'Your cart is empty. Please add items before placing an order.',
-                  [{ text: 'OK' }]
+                Alert.alert(
+                  strings.orderError,
+                  strings.cartEmpty,
+                  [{ text: strings.ok }]
                 );
                 setIsCheckingOut(false);
                 return;
@@ -193,12 +193,12 @@ Alert.alert(
                 deliveryAddress: (() => {
                   // Extract city from formatted address if area is not available
                   let city = selectedAddress.streetDetails?.area || selectedAddress.city || '';
-                  
+
                   if (!city && selectedAddress.formattedAddress) {
                     // Try to extract city from formatted address (usually contains "Cairo" or other city names)
                     const addressParts = selectedAddress.formattedAddress.split(',');
-                    const cityMatch = addressParts.find(part => 
-                      part.trim().toLowerCase().includes('cairo') || 
+                    const cityMatch = addressParts.find(part =>
+                      part.trim().toLowerCase().includes('cairo') ||
                       part.trim().toLowerCase().includes('giza') ||
                       part.trim().toLowerCase().includes('alexandria')
                     );
@@ -211,7 +211,7 @@ Alert.alert(
                       city = 'Cairo'; // Default fallback
                     }
                   }
-                  
+
                   return {
                     street: selectedAddress.streetDetails?.streetName || selectedAddress.formattedAddress || selectedAddress.nameLine || 'Address not specified',
                     city: city || 'Cairo',
@@ -225,12 +225,12 @@ Alert.alert(
                 })(),
                 notes: specialInstructions || '', // Backend expects 'notes' not 'specialInstructions'
               };
-// Place real order using Redux thunk
+              // Place real order using Redux thunk
               const newOrder = await dispatch(placeOrder(orderData));
-if (newOrder && newOrder._id) {
+              if (newOrder && newOrder._id) {
                 // Clear the cart after successful order
                 dispatch(clearCart());
-                
+
                 // Invalidate chat list queries to refresh the chat list
                 queryClient.invalidateQueries(['orderChats']);
                 queryClient.invalidateQueries(['chatList']);
@@ -240,12 +240,12 @@ if (newOrder && newOrder._id) {
                   orderId: newOrder._id,
                 });
               } else {
-                throw new Error('Order was not created properly');
+                throw new Error(strings.orderNotCreatedProperly);
               }
-              
+
             } catch (error) {
-let errorMessage = 'Failed to place order. Please try again.';
-              
+              let errorMessage = 'Failed to place order. Please try again.';
+
               if (error?.message) {
                 errorMessage = error.message;
               } else if (error?.response?.data?.message) {
@@ -253,11 +253,11 @@ let errorMessage = 'Failed to place order. Please try again.';
               } else if (typeof error === 'string') {
                 errorMessage = error;
               }
-              
+
               Alert.alert(
                 strings.orderFailed,
                 errorMessage,
-                [{text: 'OK'}]
+                [{ text: 'OK' }]
               );
             } finally {
               setIsCheckingOut(false);
@@ -268,22 +268,22 @@ let errorMessage = 'Failed to place order. Please try again.';
     );
   };
 
-  const renderCartItem = useCallback(({item}) => {
+  const renderCartItem = useCallback(({ item }) => {
     return (
-      <View style={[localStyles.cartItem, {backgroundColor: colors.white}]}>
+      <View style={[localStyles.cartItem, { backgroundColor: colors.white }]}>
         <Image
-          source={item.dish?.image ? {uri: item.dish.image} : images.dishPlaceholder}
+          source={item.dish?.image ? { uri: item.dish.image } : images.dishPlaceholder}
           style={localStyles.itemImage}
           resizeMode="cover"
         />
-        
+
         <View style={localStyles.itemInfo}>
           {/* Dish Name Section - Always Visible */}
           <View style={localStyles.dishNameSection}>
-            <ZText 
-              type="B18" 
-              numberOfLines={2} 
-              style={[localStyles.dishName, {color: '#000000', fontWeight: 'bold'}]}
+            <ZText
+              type="B18"
+              numberOfLines={2}
+              style={[localStyles.dishName, { color: '#000000', fontWeight: 'bold' }]}
             >
               {item.dish?.name || item.name || strings.testDishName}
             </ZText>
@@ -291,29 +291,29 @@ let errorMessage = 'Failed to place order. Please try again.';
               {item.dish?.price || item.price || 0} EGP
             </ZText>
           </View>
-          
+
           {/* Controls Section */}
           <View style={localStyles.controlsSection}>
             <View style={localStyles.quantityContainer}>
               <TouchableOpacity
                 onPress={() => handleQuantityChange(item.dishId, item.quantity - 1)}
-                style={[localStyles.quantityButton, {backgroundColor: colors.inputBg}]}>
+                style={[localStyles.quantityButton, { backgroundColor: colors.inputBg }]}>
                 <Ionicons name="remove" size={moderateScale(14)} color={colors.textColor} />
               </TouchableOpacity>
-              
-              <View style={[localStyles.quantityBadge, {backgroundColor: colors.primary + '15', borderColor: colors.primary + '30'}]}>
+
+              <View style={[localStyles.quantityBadge, { backgroundColor: colors.primary + '15', borderColor: colors.primary + '30' }]}>
                 <ZText type="B14" color={colors.primary} style={localStyles.quantityText}>
                   {item.quantity}
                 </ZText>
               </View>
-              
+
               <TouchableOpacity
                 onPress={() => handleQuantityChange(item.dishId, item.quantity + 1)}
-                style={[localStyles.quantityButton, {backgroundColor: colors.primary}]}>
+                style={[localStyles.quantityButton, { backgroundColor: colors.primary }]}>
                 <Ionicons name="add" size={moderateScale(14)} color={colors.white} />
               </TouchableOpacity>
             </View>
-            
+
             <View style={localStyles.itemActions}>
               <ZText type="B14" color={colors.textColor} style={localStyles.itemTotal}>
                 {((item.dish?.price || item.price || 0) * item.quantity).toFixed(0)} EGP
@@ -331,7 +331,7 @@ let errorMessage = 'Failed to place order. Please try again.';
   }, [colors, handleQuantityChange, handleRemoveItem]);
 
   const renderHeader = () => (
-    <View style={[localStyles.headerContainer, {backgroundColor: colors.backgroundColor}]}>
+    <View style={[localStyles.headerContainer, { backgroundColor: colors.backgroundColor }]}>
       <View style={localStyles.chefInfo}>
         <Ionicons name="restaurant" size={moderateScale(24)} color={colors.primary} />
         <View style={localStyles.chefDetails}>
@@ -352,22 +352,22 @@ let errorMessage = 'Failed to place order. Please try again.';
   );
 
   const renderFooter = () => (
-    <View style={[localStyles.footerContainer, {backgroundColor: colors.backgroundColor}]}>
+    <View style={[localStyles.footerContainer, { backgroundColor: colors.backgroundColor }]}>
       {/* Delivery Address Section */}
       <View style={localStyles.addressSection}>
         <ZText type="B16" color={colors.textColor} style={localStyles.sectionTitle}>
           Delivery Address
         </ZText>
         <View style={[
-          localStyles.addressDisplay, 
+          localStyles.addressDisplay,
           {
             backgroundColor: colors.inputBg,
             borderColor: colors.borderColor || colors.grayScale3
           }
         ]}>
           <ZText type="M14" color={colors.textColor}>
-            {selectedAddress ? 
-              (selectedAddress.formattedAddress || selectedAddress.nameLine || 'Selected Address') : 
+            {selectedAddress ?
+              (selectedAddress.formattedAddress || selectedAddress.nameLine || 'Selected Address') :
               'No address selected'
             }
           </ZText>
@@ -411,7 +411,7 @@ let errorMessage = 'Failed to place order. Please try again.';
             {cartSummary.formattedSubtotal} EGP
           </ZText>
         </View>
-        
+
         <View style={localStyles.summaryRow}>
           <ZText type="M14" color={colors.grayScale7}>
             Delivery Fee
@@ -420,7 +420,7 @@ let errorMessage = 'Failed to place order. Please try again.';
             To be determined by chef
           </ZText>
         </View>
-        
+
         <View style={[localStyles.summaryRow, localStyles.totalRow]}>
           <ZText type="B18" color={colors.textColor}>
             Total
@@ -430,14 +430,14 @@ let errorMessage = 'Failed to place order. Please try again.';
           </ZText>
         </View>
       </View>
-      
+
       <ZButton
         title={isCheckingOut ? strings.processing : strings.placeOrder}
         textType="B16"
         color={colors.white}
         containerStyle={[
           localStyles.checkoutButton,
-          {backgroundColor: colors.primary}
+          { backgroundColor: colors.primary }
         ]}
         onPress={handleCheckout}
         disabled={isCheckingOut}
@@ -477,8 +477,8 @@ let errorMessage = 'Failed to place order. Please try again.';
 
   return (
     <ZSafeAreaView>
-      <ZHeader title="Shopping Cart" showBack />
-      
+      <ZHeader title={strings.shoppingCart} showBack />
+
       <FlatList
         data={cartItems}
         renderItem={renderCartItem}

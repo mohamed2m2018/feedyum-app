@@ -1,4 +1,4 @@
-import React, {useState, useRef} from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Modal,
   View,
@@ -12,12 +12,13 @@ import {
 } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {useSelector} from 'react-redux';
-import {moderateScale} from '../../common/constants';
+import { useSelector } from 'react-redux';
+import { moderateScale } from '../../common/constants';
+import strings from '../../i18n/strings';
 
-const {width: screenWidth, height: screenHeight} = Dimensions.get('window');
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
-const ImageZoomModal = ({visible, imageUri, onClose}) => {
+const ImageZoomModal = ({ visible, imageUri, onClose }) => {
   const colors = useSelector(state => state.theme.theme);
   const [scale] = useState(new Animated.Value(1));
   const [translateX] = useState(new Animated.Value(0));
@@ -29,7 +30,7 @@ const ImageZoomModal = ({visible, imageUri, onClose}) => {
   const [imageLoading, setImageLoading] = useState(true);
   const initialDistanceRef = useRef(null);
   const isZoomedRef = useRef(false);
-  const lastPanRef = useRef({x: 0, y: 0});
+  const lastPanRef = useRef({ x: 0, y: 0 });
 
   React.useEffect(() => {
     if (visible) {
@@ -66,9 +67,9 @@ const ImageZoomModal = ({visible, imageUri, onClose}) => {
           const touch2 = evt.nativeEvent.touches[1];
           const distance = Math.sqrt(
             Math.pow(touch2.pageX - touch1.pageX, 2) +
-              Math.pow(touch2.pageY - touch1.pageY, 2),
+            Math.pow(touch2.pageY - touch1.pageY, 2),
           );
-          
+
           if (!initialDistanceRef.current) {
             initialDistanceRef.current = distance;
             // Store the focal point (center between two touches)
@@ -77,11 +78,11 @@ const ImageZoomModal = ({visible, imageUri, onClose}) => {
               y: (touch1.pageY + touch2.pageY) / 2,
             };
           }
-          
+
           const scaleValue = distance / initialDistanceRef.current;
           const newScale = Math.max(0.8, Math.min(scaleValue, 4));
           scale.setValue(newScale);
-          
+
           // Update zoom state
           const totalScale = lastScale * newScale;
           isZoomedRef.current = totalScale > 1.1;
@@ -91,10 +92,10 @@ const ImageZoomModal = ({visible, imageUri, onClose}) => {
             // More generous boundaries for better panning experience
             const maxMoveX = screenWidth * lastScale;
             const maxMoveY = screenHeight * lastScale;
-            
+
             const newX = Math.max(-maxMoveX, Math.min(maxMoveX, gestureState.dx));
             const newY = Math.max(-maxMoveY, Math.min(maxMoveY, gestureState.dy));
-            
+
             translateX.setValue(newX);
             translateY.setValue(newY);
           }
@@ -102,27 +103,27 @@ const ImageZoomModal = ({visible, imageUri, onClose}) => {
       },
       onPanResponderRelease: () => {
         initialDistanceRef.current = null;
-        lastPanRef.current = {x: 0, y: 0};
-        
+        lastPanRef.current = { x: 0, y: 0 };
+
         scale.flattenOffset();
         translateX.flattenOffset();
         translateY.flattenOffset();
-        
+
         // Update the last values
-        const scaleListener = scale.addListener(({value}) => {
+        const scaleListener = scale.addListener(({ value }) => {
           setLastScale(value);
           isZoomedRef.current = value > 1.1;
         });
-        const translateXListener = translateX.addListener(({value}) => setLastTranslateX(value));
-        const translateYListener = translateY.addListener(({value}) => setLastTranslateY(value));
-        
+        const translateXListener = translateX.addListener(({ value }) => setLastTranslateX(value));
+        const translateYListener = translateY.addListener(({ value }) => setLastTranslateY(value));
+
         // Remove listeners after a short delay to avoid memory leaks
         setTimeout(() => {
           scale.removeListener(scaleListener);
           translateX.removeListener(translateXListener);
           translateY.removeListener(translateYListener);
         }, 100);
-        
+
         // Reset if zoomed out too much
         if (lastScale < 1) {
           Animated.parallel([
@@ -164,7 +165,7 @@ const ImageZoomModal = ({visible, imageUri, onClose}) => {
         useNativeDriver: true,
       }),
     ]).start();
-    
+
     setLastScale(1);
     setLastTranslateX(0);
     setLastTranslateY(0);
@@ -174,19 +175,19 @@ const ImageZoomModal = ({visible, imageUri, onClose}) => {
 
   const handleDoubleTap = (evt) => {
     const targetScale = lastScale > 1.5 ? 1 : 2.5;
-    
+
     let targetX = 0;
     let targetY = 0;
-    
+
     if (targetScale > 1 && evt?.nativeEvent) {
       // Zoom to the tapped point
       const touchX = evt.nativeEvent.pageX;
       const touchY = evt.nativeEvent.pageY;
-      
+
       // Calculate offset to center the touch point
       const offsetX = (screenWidth / 2 - touchX) * (targetScale - 1) / targetScale;
       const offsetY = (screenHeight / 2 - touchY) * (targetScale - 1) / targetScale;
-      
+
       targetX = offsetX;
       targetY = offsetY;
     }
@@ -225,7 +226,7 @@ const ImageZoomModal = ({visible, imageUri, onClose}) => {
       animationType="fade"
       onRequestClose={handleClose}>
       <StatusBar backgroundColor="black" barStyle="light-content" />
-      <Animated.View style={[styles.modalContainer, {opacity: modalOpacity}]}>
+      <Animated.View style={[styles.modalContainer, { opacity: modalOpacity }]}>
         <TouchableOpacity
           style={styles.closeButton}
           onPress={handleClose}
@@ -247,14 +248,14 @@ const ImageZoomModal = ({visible, imageUri, onClose}) => {
                 styles.animatedImageContainer,
                 {
                   transform: [
-                    {scale},
-                    {translateX},
-                    {translateY},
+                    { scale },
+                    { translateX },
+                    { translateY },
                   ],
                 },
               ]}>
               <FastImage
-                source={{uri: imageUri}}
+                source={{ uri: imageUri }}
                 style={styles.image}
                 resizeMode={FastImage.resizeMode.contain}
                 onLoadStart={() => setImageLoading(true)}
@@ -273,15 +274,15 @@ const ImageZoomModal = ({visible, imageUri, onClose}) => {
         <View style={styles.instructionsContainer}>
           <View style={styles.instructionItem}>
             <Ionicons name="finger-print" size={moderateScale(16)} color="rgba(255,255,255,0.7)" />
-            <Text style={styles.instructionText}>Pinch to zoom</Text>
+            <Text style={styles.instructionText}>{strings.pinchToZoom}</Text>
           </View>
           <View style={styles.instructionItem}>
             <Ionicons name="hand-left" size={moderateScale(16)} color="rgba(255,255,255,0.7)" />
-            <Text style={styles.instructionText}>Double tap to zoom</Text>
+            <Text style={styles.instructionText}>{strings.doubleTapToZoom}</Text>
           </View>
           <View style={styles.instructionItem}>
             <Ionicons name="move" size={moderateScale(16)} color="rgba(255,255,255,0.7)" />
-            <Text style={styles.instructionText}>Drag to pan when zoomed</Text>
+            <Text style={styles.instructionText}>{strings.dragToPan}</Text>
           </View>
         </View>
       </Animated.View>

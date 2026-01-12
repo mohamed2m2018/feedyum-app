@@ -51,7 +51,7 @@ const App = () => {
     };
     handleLanguage();
 
-    if (!firebase.apps.length) {
+    if (firebase.getApps && !firebase.getApps().length) {
       try {
         firebase.initializeApp(firebaseConfig);
       } catch { }

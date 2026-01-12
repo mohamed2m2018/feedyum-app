@@ -55,12 +55,12 @@ const ReelComponent = ({
       setisLoadingSomething(false);
 
       // Show success feedback
-      Alert.alert('Success',
-        item?.reviewMode ? 'Review deleted successfully' : 'Post deleted successfully'
+      Alert.alert(strings.success,
+        item?.reviewMode ? strings.reviewDeleted : strings.postDeleted
       );
     } catch (error) {
       setisLoadingSomething(false);
-      Alert.alert('Error',
+      Alert.alert(strings.error,
         item?.reviewMode ? 'Failed to delete review. Please try again.' : 'Failed to delete post. Please try again.'
       );
     }

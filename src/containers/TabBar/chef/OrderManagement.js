@@ -88,7 +88,7 @@ const EmptyState = ({ selectedStatus, colors }) => (
     <ZText type="M14" color={colors.grayScale7} style={localStyles.emptySubtitle}>
       {selectedStatus === 'all'
         ? 'Orders will appear here when customers place them'
-        : `No ${selectedStatus} orders at the moment`}
+        : strings.formatString(strings.noOrdersStatus, selectedStatus)}
     </ZText>
   </View>
 );

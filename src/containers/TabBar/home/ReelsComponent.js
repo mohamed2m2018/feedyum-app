@@ -43,11 +43,11 @@ export default function ReelsComponent({ amIFocused }) {
   const [storyId, setStoryId] = useState();
   const colors = useSelector(state => state.theme.theme);
   const isFocused = useIsFocused() && amIFocused;
-  const commentSheetRef = useRef('');
-  const descriptionSheetRef = useRef('');
+  const commentSheetRef = useRef(null);
+  const descriptionSheetRef = useRef(null);
   const [notificationReceived, setnotificationReceived] = useState(false);
   const [adFailedToLoad, setadFailedToLoad] = useState(false);
-  const locationSheetRef = useRef('');
+  const locationSheetRef = useRef(null);
   const navigation = useNavigation();
   const route = useRoute();
   const [activeVideoIndex, setActiveVideoIndex] = useState(0);
@@ -63,6 +63,7 @@ export default function ReelsComponent({ amIFocused }) {
   const [categoryIds, setcategoryIds] = useState([]);
   const [user] = useStorage('user');
   const [isCommentOpen, setIsCommentOpen] = useState(false);
+  const [isLocationOpen, setIsLocationOpen] = useState(false);
 
   const location = useLocation();
 
@@ -212,6 +213,8 @@ export default function ReelsComponent({ amIFocused }) {
       setActiveVideoIndex(0);
       setStoryId(null);
     }
+
+
   }, [storyData, filteredData]);
   useEffect(() => {
     setExtraData(e => !e);
@@ -243,6 +246,7 @@ export default function ReelsComponent({ amIFocused }) {
 
   const onPressAvailableLocation = locations => {
     setselectedGov(locations);
+    setIsLocationOpen(true);
     locationSheetRef.current?.show();
   };
 
@@ -265,12 +269,13 @@ export default function ReelsComponent({ amIFocused }) {
           commentSheetRef={commentSheetRef}
           setselectedDescription={setselectedDescription}
           isCommentOpen={isCommentOpen}
+          isLocationOpen={isLocationOpen}
           setIsCommentOpen={setIsCommentOpen}
           descriptionSheetRef={descriptionSheetRef}
         />
       );
     },
-    [layoutHeight, user, activeVideoIndex, isFocused, isCommentOpen],
+    [layoutHeight, user, activeVideoIndex, isFocused, isCommentOpen, isLocationOpen],
   );
 
   const viewConfig = useRef({ viewAreaCoveragePercentThreshold: 50 }).current;
@@ -311,25 +316,7 @@ export default function ReelsComponent({ amIFocused }) {
         />
       </View>
       {isLoadingStory && <ZLoader absolute height={100} top={300} />}
-      {filteredData?.[activeVideoIndex]?.type !== 'ad' && filteredData?.[activeVideoIndex]?.author?.type === 'chef' && (
-        <View style={localStyles.headerContainer3}>
-          <ZButton
-            onPress={() => {
-              onPressAvailableLocation(
-                filteredData?.[activeVideoIndex]?.author?.locations,
-              );
-            }}
-            type="m14"
-            containerStyle={localStyles.buttonTag}
-            title={
-              filteredData?.[activeVideoIndex]?.kmAway && filteredData?.[activeVideoIndex]?.kmAway !== null
-                ? filteredData?.[activeVideoIndex]?.kmAway?.toFixed(2) +
-                strings.kmAway
-                : strings.clickbranches
-            }
-          />
-        </View>
-      )}
+
       <TouchableOpacity
         onPress={() => {
           navigation.navigate(StackNav.SelectCategory, {
@@ -382,7 +369,7 @@ export default function ReelsComponent({ amIFocused }) {
         SheetRef={descriptionSheetRef}
         description={selectedDescription}
       />
-      <Locations SheetRef={locationSheetRef} selectedGov={selectedGov} />
+      <Locations SheetRef={locationSheetRef} selectedGov={selectedGov} onClose={() => setIsLocationOpen(false)} />
       {/* {!adFailedToLoad && (
         <View style={localStyles.bannerContainer}>
           <BannerAd

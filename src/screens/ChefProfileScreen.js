@@ -35,7 +35,7 @@ const ChefProfileScreen = ({ route, navigation }) => {
         Alert.alert(strings.error, data.message || strings.failedToLoadChefProfile);
       }
     } catch (error) {
-Alert.alert(strings.error, strings.failedToLoadChefProfile);
+      Alert.alert(strings.error, strings.failedToLoadChefProfile);
     } finally {
       setIsLoading(false);
     }
@@ -43,7 +43,7 @@ Alert.alert(strings.error, strings.failedToLoadChefProfile);
 
   const navigateToMenu = () => {
     if (chefProfile?.menu) {
-      navigation.navigate('ChefMenu', { 
+      navigation.navigate('ChefMenu', {
         chefId: chefId,
         chefName: chefProfile.fullName || chefProfile.username,
         // Pass rating info for header fallback
@@ -55,7 +55,7 @@ Alert.alert(strings.error, strings.failedToLoadChefProfile);
   };
 
   const navigateToDish = (dish) => {
-    navigation.navigate('DishDetail', { 
+    navigation.navigate('DishDetail', {
       dish: dish,
       chefId: chefId,
       chefName: chefProfile.fullName || chefProfile.username
@@ -64,9 +64,9 @@ Alert.alert(strings.error, strings.failedToLoadChefProfile);
 
   const renderDishItem = ({ item }) => (
     <TouchableOpacity style={styles.dishItem} onPress={() => navigateToDish(item)}>
-      <Image 
-        source={{ uri: item.image || 'https://via.placeholder.com/80' }} 
-        style={styles.dishImage} 
+      <Image
+        source={{ uri: item.image || 'https://via.placeholder.com/80' }}
+        style={styles.dishImage}
       />
       <View style={styles.dishInfo}>
         <Text style={styles.dishName}>{item.name}</Text>
@@ -80,7 +80,7 @@ Alert.alert(strings.error, strings.failedToLoadChefProfile);
           styles.availabilityText,
           item.isAvailable ? styles.available : styles.unavailable
         ]}>
-          {item.isAvailable ? 'Available' : 'Unavailable'}
+          {item.isAvailable ? strings.available : strings.unavailable}
         </Text>
       </View>
     </TouchableOpacity>
@@ -105,7 +105,7 @@ Alert.alert(strings.error, strings.failedToLoadChefProfile);
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.loadingText}>Loading chef profile...</Text>
+        <Text style={styles.loadingText}>{strings.loadingChefProfile}</Text>
       </View>
     );
   }
@@ -113,9 +113,9 @@ Alert.alert(strings.error, strings.failedToLoadChefProfile);
   if (!chefProfile) {
     return (
       <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Chef profile not found</Text>
+        <Text style={styles.errorText}>{strings.chefProfileNotFound}</Text>
         <TouchableOpacity onPress={fetchChefProfile} style={styles.retryButton}>
-          <Text style={styles.retryButtonText}>Retry</Text>
+          <Text style={styles.retryButtonText}>{strings.retry}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -125,27 +125,27 @@ Alert.alert(strings.error, strings.failedToLoadChefProfile);
     <ScrollView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Image 
-          source={{ uri: chefProfile.avatar || 'https://via.placeholder.com/100' }} 
-          style={styles.avatar} 
+        <Image
+          source={{ uri: chefProfile.avatar || 'https://via.placeholder.com/100' }}
+          style={styles.avatar}
         />
         <View style={styles.headerInfo}>
           <View style={styles.nameRow}>
-          <View style={styles.nameRow}>
-            <Text style={styles.chefName}>
-              {chefProfile.fullName || chefProfile.username}
-            </Text>
-            <StarRating
-              rating={chefProfile?.averageDishRating || 0}
-              totalReviews={chefProfile?.ratedDishesCount || 0}
-              size="small"
-              showText={true}
-              showCount={chefProfile?.ratedDishesCount > 0}
-              showWhenNoRating={true}
-            />
+            <View style={styles.nameRow}>
+              <Text style={styles.chefName}>
+                {chefProfile.fullName || chefProfile.username}
+              </Text>
+              <StarRating
+                rating={chefProfile?.averageDishRating || 0}
+                totalReviews={chefProfile?.ratedDishesCount || 0}
+                size="small"
+                showText={true}
+                showCount={chefProfile?.ratedDishesCount > 0}
+                showWhenNoRating={true}
+              />
+            </View>
           </View>
-        </View>
-          <Text style={styles.chefType}>Chef</Text>
+          <Text style={styles.chefType}>{strings.chef}</Text>
           {chefProfile.bio && (
             <Text style={styles.bio}>{chefProfile.bio}</Text>
           )}
@@ -156,24 +156,24 @@ Alert.alert(strings.error, strings.failedToLoadChefProfile);
       <View style={styles.statsContainer}>
         <View style={styles.statItem}>
           <Text style={styles.statNumber}>{chefProfile.postsNo || 0}</Text>
-          <Text style={styles.statLabel}>Posts</Text>
+          <Text style={styles.statLabel}>{strings.posts}</Text>
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statNumber}>{chefProfile.likesNo || 0}</Text>
-          <Text style={styles.statLabel}>Likes</Text>
+          <Text style={styles.statLabel}>{strings.likes}</Text>
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statNumber}>
             {chefProfile.menu?.dishCount || 0}
           </Text>
-          <Text style={styles.statLabel}>Dishes</Text>
+          <Text style={styles.statLabel}>{strings.dishes}</Text>
         </View>
       </View>
 
       {/* Tags */}
       {chefProfile.tags && chefProfile.tags.length > 0 && (
         <View style={styles.tagsContainer}>
-          <Text style={styles.tagsTitle}>Specialties</Text>
+          <Text style={styles.tagsTitle}>{strings.specialties}</Text>
           <View style={styles.tagsWrapper}>
             {chefProfile.tags.map((tag, index) => (
               <View key={index} style={styles.tag}>
@@ -189,8 +189,8 @@ Alert.alert(strings.error, strings.failedToLoadChefProfile);
         <View style={styles.menuAccessContainer}>
           <TouchableOpacity style={styles.menuAccessButton} onPress={navigateToMenu}>
             <Text style={styles.menuAccessButtonText}>
-              {chefProfile.menu && chefProfile.menu.dishes && chefProfile.menu.dishes.length > 0 
-                ? `View Menu (${chefProfile.menu.dishes.length} dishes)` 
+              {chefProfile.menu && chefProfile.menu.dishes && chefProfile.menu.dishes.length > 0
+                ? `View Menu (${chefProfile.menu.dishes.length} dishes)`
                 : 'View Menu'}
             </Text>
           </TouchableOpacity>
@@ -223,7 +223,7 @@ Alert.alert(strings.error, strings.failedToLoadChefProfile);
       {activeTab === 'about' && (
         <View style={styles.tabContent}>
           <View style={styles.infoSection}>
-            <Text style={styles.sectionTitle}>Contact Information</Text>
+            <Text style={styles.sectionTitle}>{strings.contactInformation}</Text>
             {chefProfile.email && (
               <Text style={styles.infoText}>📧 {chefProfile.email}</Text>
             )}
@@ -234,7 +234,7 @@ Alert.alert(strings.error, strings.failedToLoadChefProfile);
 
           {chefProfile.locations && chefProfile.locations.length > 0 && (
             <View style={styles.infoSection}>
-              <Text style={styles.sectionTitle}>Locations</Text>
+              <Text style={styles.sectionTitle}>{strings.locations}</Text>
               {chefProfile.locations.map((location, index) => (
                 <Text key={index} style={styles.infoText}>
                   📍 {location.description}
@@ -246,8 +246,8 @@ Alert.alert(strings.error, strings.failedToLoadChefProfile);
           {chefProfile.type === 'chef' && (
             <TouchableOpacity style={styles.viewMenuButton} onPress={navigateToMenu}>
               <Text style={styles.viewMenuButtonText}>
-                {chefProfile.menu && chefProfile.menu.dishes && chefProfile.menu.dishes.length > 0 
-                  ? 'View Full Menu & Order' 
+                {chefProfile.menu && chefProfile.menu.dishes && chefProfile.menu.dishes.length > 0
+                  ? 'View Full Menu & Order'
                   : 'View Menu (Coming Soon)'}
               </Text>
             </TouchableOpacity>
@@ -269,7 +269,7 @@ Alert.alert(strings.error, strings.failedToLoadChefProfile);
               </View>
 
               <TouchableOpacity style={styles.viewFullMenuButton} onPress={navigateToMenu}>
-                <Text style={styles.viewFullMenuButtonText}>View Full Menu & Order</Text>
+                <Text style={styles.viewFullMenuButtonText}>{strings.viewFullMenuAndOrder}</Text>
               </TouchableOpacity>
 
               {chefProfile.menu.sections && chefProfile.menu.sections.length > 0 ? (
@@ -285,17 +285,17 @@ Alert.alert(strings.error, strings.failedToLoadChefProfile);
                     {chefProfile.menu.dishes.length} dishes available
                   </Text>
                   <TouchableOpacity style={styles.previewButton} onPress={navigateToMenu}>
-                    <Text style={styles.previewButtonText}>View All Dishes</Text>
+                    <Text style={styles.previewButtonText}>{strings.viewAllDishes}</Text>
                   </TouchableOpacity>
                 </View>
               )}
             </View>
           ) : (
             <View style={styles.noMenuContainer}>
-              <Text style={styles.noMenuText}>This chef is preparing their menu</Text>
-              <Text style={styles.noMenuSubtext}>Check back soon for delicious dishes!</Text>
+              <Text style={styles.noMenuText}>{strings.chefPreparingMenu}</Text>
+              <Text style={styles.noMenuSubtext}>{strings.checkBackSoon}</Text>
               <TouchableOpacity style={styles.checkBackButton} onPress={fetchChefProfile}>
-                <Text style={styles.checkBackButtonText}>Refresh</Text>
+                <Text style={styles.checkBackButtonText}>{strings.refresh}</Text>
               </TouchableOpacity>
             </View>
           )}

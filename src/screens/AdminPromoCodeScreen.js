@@ -10,7 +10,12 @@ import {
   ActivityIndicator,
   Switch,
 } from 'react-native';
+import ZText from '../components/common/ZText';
+import ZHeader from '../components/common/ZHeader';
+import { moderateScale } from '../common/constants';
+import strings from '../i18n/strings';
 import { Picker } from '@react-native-picker/picker';
+import { colors } from '../themes/colors'; // Assuming colors are imported from here
 
 const AdminPromoCodeScreen = ({ userToken }) => {
   const [formData, setFormData] = useState({
@@ -36,22 +41,22 @@ const AdminPromoCodeScreen = ({ userToken }) => {
 
   const validateForm = () => {
     if (!formData.code.trim()) {
-      Alert.alert('Error', 'Promo code is required');
+      Alert.alert(strings.error, strings.promoCodeRequired);
       return false;
     }
 
     if (!formData.discountValue || parseFloat(formData.discountValue) <= 0) {
-      Alert.alert('Error', 'Valid discount value is required');
+      Alert.alert(strings.error, strings.validDiscountRequired);
       return false;
     }
 
     if (formData.discountType === 'percentage' && parseFloat(formData.discountValue) > 100) {
-      Alert.alert('Error', 'Percentage discount cannot exceed 100%');
+      Alert.alert(strings.error, strings.percentageLimit);
       return false;
     }
 
     if (!formData.validUntil) {
-      Alert.alert('Error', 'Valid until date is required');
+      Alert.alert(strings.error, strings.validUntilRequired);
       return false;
     }
 
@@ -87,7 +92,7 @@ const AdminPromoCodeScreen = ({ userToken }) => {
       const data = await response.json();
 
       if (data.success) {
-        Alert.alert('Success!', 'Promo code created successfully');
+        Alert.alert(strings.success, strings.promoCodeCreatedSuccess);
         // Reset form
         setFormData({
           code: '',
@@ -102,10 +107,10 @@ const AdminPromoCodeScreen = ({ userToken }) => {
         setHasUsageLimit(false);
         setHasMaxDiscount(false);
       } else {
-        Alert.alert('Error', data.message || 'Failed to create promo code');
+        Alert.alert(strings.error, data.message || strings.failedToCreatePromoCode);
       }
     } catch (error) {
-Alert.alert('Error', 'Failed to create promo code. Please try again.');
+      Alert.alert(strings.error, strings.failedToCreatePromoCode);
     } finally {
       setIsCreating(false);
     }
@@ -114,16 +119,16 @@ Alert.alert('Error', 'Failed to create promo code. Please try again.');
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Create Promo Code</Text>
+        <ZHeader title={strings.createPromoCode} showBack />
       </View>
 
       <View style={styles.form}>
         {/* Promo Code */}
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Promo Code *</Text>
+          <ZText type="B16" color={colors.textColor} style={styles.label}>{strings.promoCodeLabel} *</ZText>
           <TextInput
             style={styles.input}
-            placeholder="Enter promo code (e.g., SAVE20)"
+            placeholder={strings.promoCodeExample}
             value={formData.code}
             onChangeText={(value) => handleInputChange('code', value)}
             autoCapitalize="characters"
@@ -132,24 +137,24 @@ Alert.alert('Error', 'Failed to create promo code. Please try again.');
 
         {/* Discount Type */}
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Discount Type *</Text>
+          <ZText type="B16" color={colors.textColor} style={styles.label}>{strings.discountTypeLabel} *</ZText>
           <View style={styles.pickerContainer}>
             <Picker
               selectedValue={formData.discountType}
               onValueChange={(value) => handleInputChange('discountType', value)}
               style={styles.picker}
             >
-              <Picker.Item label="Percentage" value="percentage" />
-              <Picker.Item label="Fixed Amount" value="fixed" />
+              <Picker.Item label={strings.percentage} value="percentage" />
+              <Picker.Item label={strings.fixedAmount} value="fixed" />
             </Picker>
           </View>
         </View>
 
         {/* Discount Value */}
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>
-            Discount Value * {formData.discountType === 'percentage' ? '(%)' : '(£)'}
-          </Text>
+          <ZText type="B16" color={colors.textColor} style={styles.label}>
+            {strings.discountValueLabel} {formData.discountType === 'percentage' ? '(%)' : '(£)'}
+          </ZText>
           <TextInput
             style={styles.input}
             placeholder={formData.discountType === 'percentage' ? '20' : '5.00'}
@@ -163,7 +168,7 @@ Alert.alert('Error', 'Failed to create promo code. Please try again.');
         {formData.discountType === 'percentage' && (
           <View style={styles.inputGroup}>
             <View style={styles.switchRow}>
-              <Text style={styles.label}>Set Maximum Discount</Text>
+              <ZText type="B16" color={colors.textColor} style={styles.label}>{strings.setMaxDiscount}</ZText>
               <Switch
                 value={hasMaxDiscount}
                 onValueChange={setHasMaxDiscount}
@@ -172,7 +177,7 @@ Alert.alert('Error', 'Failed to create promo code. Please try again.');
             {hasMaxDiscount && (
               <TextInput
                 style={styles.input}
-                placeholder="Maximum discount amount (£)"
+                placeholder={strings.maxDiscountAmountPlaceholder}
                 value={formData.maxDiscount}
                 onChangeText={(value) => handleInputChange('maxDiscount', value)}
                 keyboardType="numeric"
@@ -183,10 +188,10 @@ Alert.alert('Error', 'Failed to create promo code. Please try again.');
 
         {/* Minimum Order Amount */}
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Minimum Order Amount (£)</Text>
+          <ZText type="B16" color={colors.textColor} style={styles.label}>{strings.minOrderAmount}</ZText>
           <TextInput
             style={styles.input}
-            placeholder="0.00"
+            placeholder={strings.amountPlaceholder}
             value={formData.minOrderAmount}
             onChangeText={(value) => handleInputChange('minOrderAmount', value)}
             keyboardType="numeric"
@@ -196,7 +201,7 @@ Alert.alert('Error', 'Failed to create promo code. Please try again.');
         {/* Usage Limit */}
         <View style={styles.inputGroup}>
           <View style={styles.switchRow}>
-            <Text style={styles.label}>Set Usage Limit</Text>
+            <ZText type="B16" color={colors.textColor} style={styles.label}>{strings.setUsageLimit}</ZText>
             <Switch
               value={hasUsageLimit}
               onValueChange={setHasUsageLimit}
@@ -205,7 +210,7 @@ Alert.alert('Error', 'Failed to create promo code. Please try again.');
           {hasUsageLimit && (
             <TextInput
               style={styles.input}
-              placeholder="Maximum number of uses"
+              placeholder={strings.maxUsesPlaceholder}
               value={formData.usageLimit}
               onChangeText={(value) => handleInputChange('usageLimit', value)}
               keyboardType="numeric"
@@ -215,10 +220,10 @@ Alert.alert('Error', 'Failed to create promo code. Please try again.');
 
         {/* Valid From */}
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Valid From (Optional)</Text>
+          <ZText type="B16" color={colors.textColor} style={styles.label}>{strings.validFromOptional}</ZText>
           <TextInput
             style={styles.input}
-            placeholder="YYYY-MM-DD (leave empty for immediate)"
+            placeholder={strings.datePlaceholderOptional}
             value={formData.validFrom}
             onChangeText={(value) => handleInputChange('validFrom', value)}
           />
@@ -226,10 +231,10 @@ Alert.alert('Error', 'Failed to create promo code. Please try again.');
 
         {/* Valid Until */}
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Valid Until *</Text>
+          <ZText type="B16" color={colors.textColor} style={styles.label}>{strings.validUntilLabel} *</ZText>
           <TextInput
             style={styles.input}
-            placeholder="YYYY-MM-DD"
+            placeholder={strings.datePlaceholder}
             value={formData.validUntil}
             onChangeText={(value) => handleInputChange('validUntil', value)}
           />
@@ -244,7 +249,7 @@ Alert.alert('Error', 'Failed to create promo code. Please try again.');
           {isCreating ? (
             <ActivityIndicator size="small" color="#fff" />
           ) : (
-            <Text style={styles.createButtonText}>Create Promo Code</Text>
+            <Text style={styles.createButtonText}>{strings.createPromoCode}</Text>
           )}
         </TouchableOpacity>
       </View>

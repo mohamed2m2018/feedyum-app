@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -9,8 +9,8 @@ import {
   Switch,
   ActivityIndicator,
 } from 'react-native';
-import {useSelector} from 'react-redux';
-import {useQuery, useMutation, useQueryClient} from 'react-query';
+import { useSelector } from 'react-redux';
+import { useQuery, useMutation, useQueryClient } from 'react-query';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 
@@ -19,12 +19,12 @@ import ZHeader from '../../../components/common/ZHeader';
 import ZText from '../../../components/common/ZText';
 import ZButton from '../../../components/common/ZButton';
 import ZLoader from '../../../components/common/ZLoader';
-import {styles} from '../../../themes';
-import {moderateScale} from '../../../common/constants';
+import { styles } from '../../../themes';
+import { moderateScale } from '../../../common/constants';
 import request from '../../../api/request';
 import strings from '../../../i18n/strings';
 
-export default function Wallet({navigation}) {
+export default function Wallet({ navigation }) {
   const colors = useSelector(state => state.theme.theme);
   const [selectedTab, setSelectedTab] = useState('balance');
   const queryClient = useQueryClient();
@@ -44,7 +44,7 @@ export default function Wallet({navigation}) {
   const [showCreateForm, setShowCreateForm] = useState(false);
 
   // Get current user
-  const {data: userData} = useQuery('user', () => request.get('/user'), {
+  const { data: userData } = useQuery('user', () => request.get('/user'), {
     retry: 1,
   });
   const user = userData?.data?.user;
@@ -67,7 +67,7 @@ export default function Wallet({navigation}) {
       enabled: !!user?._id,
       retry: 2,
       onError: error => {
-},
+      },
     },
   );
 
@@ -113,7 +113,7 @@ export default function Wallet({navigation}) {
         refetchPromocodes();
       },
       onError: error => {
-        Alert.alert('Error', error.message || 'Failed to create promocode');
+        Alert.alert(strings.error, error.message || strings.failedToCreatePromocode);
       },
     },
   );
@@ -130,7 +130,7 @@ export default function Wallet({navigation}) {
         refetchPromocodes();
       },
       onError: error => {
-        Alert.alert('Error', error.message || 'Failed to delete promocode');
+        Alert.alert(strings.error, error.message || strings.failedToDeletePromocode);
       },
     },
   );
@@ -176,17 +176,17 @@ export default function Wallet({navigation}) {
     }
 
     Alert.alert(
-      'Payment Required',
-      `You need to pay £${walletData.summary.paymentDueAmount.toFixed(2)} to continue receiving orders.`,
+      strings.paymentRequiredTitle,
+      strings.paymentRequiredMessage.replace('{amount}', walletData.summary.paymentDueAmount.toFixed(2)),
       [
-        {text: strings.cancel, style: 'cancel'},
+        { text: strings.cancel, style: 'cancel' },
         {
           text: strings.payNow,
           onPress: () => {
             // Navigate to payment screen or handle payment
             Alert.alert(
-              'Payment',
-              'Payment functionality will be implemented here.',
+              strings.paymentTitle,
+              strings.paymentFunctionalityNotImplemented,
             );
           },
         },
@@ -321,7 +321,7 @@ export default function Wallet({navigation}) {
             <TouchableOpacity
               style={[
                 localStyles.actionButton,
-                {backgroundColor: colors.white},
+                { backgroundColor: colors.white },
               ]}
               onPress={handlePayment}>
               <Ionicons
@@ -340,10 +340,10 @@ export default function Wallet({navigation}) {
             <TouchableOpacity
               style={[
                 localStyles.actionButton,
-                {backgroundColor: 'rgba(255,255,255,0.2)'},
+                { backgroundColor: 'rgba(255,255,255,0.2)' },
               ]}
               onPress={() =>
-                Alert.alert('Info', strings.noPaymentRequiredAtThisTime)
+                Alert.alert(strings.info, strings.noPaymentRequiredAtThisTime)
               }>
               <Ionicons
                 name="checkmark-circle"
@@ -359,7 +359,7 @@ export default function Wallet({navigation}) {
           <TouchableOpacity
             style={[
               localStyles.actionButton,
-              {backgroundColor: 'rgba(255,255,255,0.2)'},
+              { backgroundColor: 'rgba(255,255,255,0.2)' },
             ]}
             onPress={refetch}>
             <Ionicons
@@ -378,7 +378,7 @@ export default function Wallet({navigation}) {
 
   const renderStatsCards = () => (
     <View style={localStyles.statsContainer}>
-      <View style={[localStyles.statCard, {backgroundColor: colors.inputBg}]}>
+      <View style={[localStyles.statCard, { backgroundColor: colors.inputBg }]}>
         <MaterialIcon
           name="receipt"
           size={moderateScale(24)}
@@ -392,7 +392,7 @@ export default function Wallet({navigation}) {
         </ZText>
       </View>
 
-      <View style={[localStyles.statCard, {backgroundColor: colors.inputBg}]}>
+      <View style={[localStyles.statCard, { backgroundColor: colors.inputBg }]}>
         <MaterialIcon
           name="cash"
           size={moderateScale(24)}
@@ -409,11 +409,11 @@ export default function Wallet({navigation}) {
   );
 
   const renderTabBar = () => (
-    <View style={[localStyles.tabBar, {backgroundColor: colors.inputBg}]}>
+    <View style={[localStyles.tabBar, { backgroundColor: colors.inputBg }]}>
       <TouchableOpacity
         style={[
           localStyles.tab,
-          selectedTab === 'balance' && {backgroundColor: colors.primary},
+          selectedTab === 'balance' && { backgroundColor: colors.primary },
         ]}
         onPress={() => setSelectedTab('balance')}>
         <ZText
@@ -426,7 +426,7 @@ export default function Wallet({navigation}) {
       <TouchableOpacity
         style={[
           localStyles.tab,
-          selectedTab === 'promocodes' && {backgroundColor: colors.primary},
+          selectedTab === 'promocodes' && { backgroundColor: colors.primary },
         ]}
         onPress={() => setSelectedTab('promocodes')}>
         <ZText
@@ -441,7 +441,7 @@ export default function Wallet({navigation}) {
       <TouchableOpacity
         style={[
           localStyles.tab,
-          selectedTab === 'settings' && {backgroundColor: colors.primary},
+          selectedTab === 'settings' && { backgroundColor: colors.primary },
         ]}
         onPress={() => setSelectedTab('settings')}>
         <ZText
@@ -482,7 +482,7 @@ export default function Wallet({navigation}) {
               key={transaction._id || index}
               style={[
                 localStyles.transactionItem,
-                {backgroundColor: colors.inputBg},
+                { backgroundColor: colors.inputBg },
               ]}>
               <View style={localStyles.transactionLeft}>
                 <View
@@ -552,7 +552,7 @@ export default function Wallet({navigation}) {
           <TouchableOpacity
             style={[
               localStyles.createButton,
-              {backgroundColor: colors.primary},
+              { backgroundColor: colors.primary },
             ]}
             onPress={() => setShowCreateForm(!showCreateForm)}>
             <Ionicons
@@ -594,7 +594,7 @@ export default function Wallet({navigation}) {
               key={promocode._id}
               style={[
                 localStyles.promocodeItem,
-                {backgroundColor: colors.inputBg},
+                { backgroundColor: colors.inputBg },
               ]}>
               <View style={localStyles.promocodeHeader}>
                 <ZText type="b16" color={colors.textColor}>
@@ -621,7 +621,7 @@ export default function Wallet({navigation}) {
                   <TouchableOpacity
                     style={[
                       localStyles.deleteButton,
-                      {backgroundColor: '#FF4444' + '20'},
+                      { backgroundColor: '#FF4444' + '20' },
                     ]}
                     onPress={() => handleDeletePromocode(promocode)}
                     disabled={deletePromocodeMutation.isLoading}>
@@ -667,7 +667,7 @@ export default function Wallet({navigation}) {
   };
 
   const renderCreatePromocodeForm = () => (
-    <View style={[localStyles.createForm, {backgroundColor: colors.inputBg}]}>
+    <View style={[localStyles.createForm, { backgroundColor: colors.inputBg }]}>
       <ZText type="b16" color={colors.textColor} style={styles.mb15}>
         {strings.createNewPromocode}
       </ZText>
@@ -680,7 +680,7 @@ export default function Wallet({navigation}) {
         <TextInput
           style={[
             localStyles.textInput,
-            {backgroundColor: colors.white, color: '#000000'},
+            { backgroundColor: colors.white, color: '#000000' },
           ]}
           placeholder={strings.enterCode}
           value={promocodeForm.code}
@@ -740,12 +740,12 @@ export default function Wallet({navigation}) {
       <View style={localStyles.inputGroup}>
         <ZText type="m14" color={colors.textColor} style={styles.mb5}>
           {strings.discountValue} *{' '}
-          {promocodeForm.discountType === 'percentage' ? '(%)' : '(£)'}
+          {promocodeForm.discountType === 'percentage' ? strings.percentageSymbol : strings.currencySymbol}
         </ZText>
         <TextInput
           style={[
             localStyles.textInput,
-            {backgroundColor: colors.white, color: '#000000'},
+            { backgroundColor: colors.white, color: '#000000' },
           ]}
           placeholder={
             promocodeForm.discountType === 'percentage' ? '20' : '5.00'
@@ -768,14 +768,14 @@ export default function Wallet({navigation}) {
             <Switch
               value={hasMaxDiscount}
               onValueChange={setHasMaxDiscount}
-              trackColor={{false: colors.grayScale7, true: colors.primary}}
+              trackColor={{ false: colors.grayScale7, true: colors.primary }}
             />
           </View>
           {hasMaxDiscount && (
             <TextInput
               style={[
                 localStyles.textInput,
-                {backgroundColor: colors.white, color: '#000000'},
+                { backgroundColor: colors.white, color: '#000000' },
               ]}
               placeholder={strings.maximumDiscount}
               value={promocodeForm.maxDiscount}
@@ -791,12 +791,12 @@ export default function Wallet({navigation}) {
       {/* Min Order Amount */}
       <View style={localStyles.inputGroup}>
         <ZText type="m14" color={colors.textColor} style={styles.mb5}>
-          {strings.minimumOrderAmount} (£)
+          {strings.minimumOrderAmount} {strings.currencySymbol}
         </ZText>
         <TextInput
           style={[
             localStyles.textInput,
-            {backgroundColor: colors.white, color: '#000000'},
+            { backgroundColor: colors.white, color: '#000000' },
           ]}
           placeholder="0.00"
           value={promocodeForm.minOrderAmount}
@@ -816,14 +816,14 @@ export default function Wallet({navigation}) {
           <Switch
             value={hasUsageLimit}
             onValueChange={setHasUsageLimit}
-            trackColor={{false: colors.grayScale7, true: colors.primary}}
+            trackColor={{ false: colors.grayScale7, true: colors.primary }}
           />
         </View>
         {hasUsageLimit && (
           <TextInput
             style={[
               localStyles.textInput,
-              {backgroundColor: colors.white, color: '#000000'},
+              { backgroundColor: colors.white, color: '#000000' },
             ]}
             placeholder={strings.maximumUses}
             value={promocodeForm.usageLimit}
@@ -843,7 +843,7 @@ export default function Wallet({navigation}) {
         <TextInput
           style={[
             localStyles.textInput,
-            {backgroundColor: colors.white, color: '#000000'},
+            { backgroundColor: colors.white, color: '#000000' },
           ]}
           placeholder="2024-12-31"
           value={promocodeForm.validUntil}
@@ -857,8 +857,8 @@ export default function Wallet({navigation}) {
       <TouchableOpacity
         style={[
           localStyles.submitButton,
-          {backgroundColor: colors.primary},
-          createPromocodeMutation.isLoading && {opacity: 0.7},
+          { backgroundColor: colors.primary },
+          createPromocodeMutation.isLoading && { opacity: 0.7 },
         ]}
         onPress={handleCreatePromocode}
         disabled={createPromocodeMutation.isLoading}>
@@ -880,7 +880,7 @@ export default function Wallet({navigation}) {
       </ZText>
 
       <View
-        style={[localStyles.settingItem, {backgroundColor: colors.inputBg}]}>
+        style={[localStyles.settingItem, { backgroundColor: colors.inputBg }]}>
         <View style={localStyles.settingLeft}>
           <Ionicons
             name="information-circle-outline"
@@ -899,7 +899,7 @@ export default function Wallet({navigation}) {
       </View>
 
       <View
-        style={[localStyles.settingItem, {backgroundColor: colors.inputBg}]}>
+        style={[localStyles.settingItem, { backgroundColor: colors.inputBg }]}>
         <View style={localStyles.settingLeft}>
           <Ionicons
             name="warning-outline"
@@ -919,7 +919,7 @@ export default function Wallet({navigation}) {
 
       {walletData?.summary?.lastPaymentDate && (
         <View
-          style={[localStyles.settingItem, {backgroundColor: colors.inputBg}]}>
+          style={[localStyles.settingItem, { backgroundColor: colors.inputBg }]}>
           <View style={localStyles.settingLeft}>
             <Ionicons
               name="calendar-outline"
@@ -941,7 +941,7 @@ export default function Wallet({navigation}) {
       )}
 
       <TouchableOpacity
-        style={[localStyles.settingItem, {backgroundColor: colors.inputBg}]}
+        style={[localStyles.settingItem, { backgroundColor: colors.inputBg }]}
         onPress={refetch}>
         <View style={localStyles.settingLeft}>
           <Ionicons
@@ -988,7 +988,7 @@ export default function Wallet({navigation}) {
             Please check your connection and try again
           </ZText>
           <TouchableOpacity
-            style={[localStyles.retryButton, {backgroundColor: colors.primary}]}
+            style={[localStyles.retryButton, { backgroundColor: colors.primary }]}
             onPress={refetch}>
             <ZText type="m14" color={colors.white}>
               Retry
@@ -1025,7 +1025,7 @@ const localStyles = StyleSheet.create({
     borderRadius: moderateScale(16),
     backgroundColor: '#FFFFFF', // Background color for shadow efficiency
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 4},
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 5,

@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -6,8 +6,8 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
-import {useSelector} from 'react-redux';
-import {useNavigation} from '@react-navigation/native';
+import { useSelector } from 'react-redux';
+import { useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
@@ -15,8 +15,8 @@ import ZText from '../../../components/common/ZText';
 import ZButton from '../../../components/common/ZButton';
 import MenuCard from '../../../components/MenuCard';
 import ReelComponent from '../../../components/ReelComponent';
-import {moderateScale} from '../../../common/constants';
-import {styles} from '../../../themes';
+import { moderateScale } from '../../../common/constants';
+import { styles } from '../../../themes';
 
 const ReviewReelDemo = () => {
   const colors = useSelector(state => state.theme.theme);
@@ -34,9 +34,9 @@ const ReviewReelDemo = () => {
       avatar: 'https://images.unsplash.com/photo-1559339352-11d035aa65de?w=100&h=100&fit=crop&crop=face',
     },
     dishes: [
-      {_id: 'dish-1', name: 'Grilled Salmon'},
-      {_id: 'dish-2', name: 'Greek Salad'},
-      {_id: 'dish-3', name: 'Lamb Souvlaki'},
+      { _id: 'dish-1', name: 'Grilled Salmon' },
+      { _id: 'dish-2', name: 'Greek Salad' },
+      { _id: 'dish-3', name: 'Lamb Souvlaki' },
     ],
   };
 
@@ -106,27 +106,27 @@ const ReviewReelDemo = () => {
   };
 
   const renderHeader = () => (
-    <View style={[localStyles.header, {backgroundColor: colors.backgroundColor}]}>
+    <View style={[localStyles.header, { backgroundColor: colors.backgroundColor }]}>
       <TouchableOpacity
         style={localStyles.backButton}
         onPress={() => navigation.goBack()}>
         <Ionicons name="arrow-back" size={moderateScale(24)} color={colors.textColor} />
       </TouchableOpacity>
-      
+
       <ZText type="B18" color={colors.textColor}>
         Review Reel System Demo
       </ZText>
-      
+
       <View style={localStyles.backButton} />
     </View>
   );
 
   const renderFeatureOverview = () => (
-    <View style={[localStyles.section, {backgroundColor: colors.white}]}>
+    <View style={[localStyles.section, { backgroundColor: colors.white }]}>
       <ZText type="B18" color="#1A1A1A" style={localStyles.sectionTitle}>
         🎬 Review Reel Features
       </ZText>
-      
+
       <View style={localStyles.featureList}>
         <View style={localStyles.featureItem}>
           <Ionicons name="videocam" size={moderateScale(20)} color={colors.primary} />
@@ -134,21 +134,21 @@ const ReviewReelDemo = () => {
             Create video reviews for dishes and menus
           </ZText>
         </View>
-        
+
         <View style={localStyles.featureItem}>
           <Ionicons name="star" size={moderateScale(20)} color="#FFD700" />
           <ZText type="M14" color="#333333" style={styles.ml12}>
             Rate your experience with 1-5 stars
           </ZText>
         </View>
-        
+
         <View style={localStyles.featureItem}>
           <Ionicons name="link" size={moderateScale(20)} color={colors.primary} />
           <ZText type="M14" color="#333333" style={styles.ml12}>
             Reels are linked to specific dishes/menus
           </ZText>
         </View>
-        
+
         <View style={localStyles.featureItem}>
           <Ionicons name="eye" size={moderateScale(20)} color={colors.primary} />
           <ZText type="M14" color="#333333" style={styles.ml12}>
@@ -160,27 +160,27 @@ const ReviewReelDemo = () => {
   );
 
   const renderDemoMenu = () => (
-    <View style={[localStyles.section, {backgroundColor: colors.backgroundColor}]}>
+    <View style={[localStyles.section, { backgroundColor: colors.backgroundColor }]}>
       <ZText type="B18" color={colors.textColor} style={localStyles.sectionTitle}>
         📋 Demo Menu
       </ZText>
-      
+
       <MenuCard menu={demoMenu} chefId={demoMenu.chef._id} />
-      
+
       <ZButton
-        title="Create Menu Review Reel"
+        title={strings.createMenuReviewReel}
         onPress={handleCreateMenuReview}
-        containerStyle={[localStyles.actionButton, {backgroundColor: colors.primary}]}
+        containerStyle={[localStyles.actionButton, { backgroundColor: colors.primary }]}
       />
     </View>
   );
 
   const renderDemoDish = () => (
-    <View style={[localStyles.section, {backgroundColor: colors.white}]}>
+    <View style={[localStyles.section, { backgroundColor: colors.white }]}>
       <ZText type="B18" color="#1A1A1A" style={localStyles.sectionTitle}>
         🍽️ Demo Dish
       </ZText>
-      
+
       <View style={localStyles.dishCard}>
         <ZText type="B16" color="#1A1A1A">
           {demoDish.name}
@@ -192,21 +192,21 @@ const ReviewReelDemo = () => {
           {demoDish.price} EGP
         </ZText>
       </View>
-      
+
       <ZButton
-        title="Create Dish Review Reel"
+        title={strings.createDishReviewReel}
         onPress={handleCreateDishReview}
-        containerStyle={[localStyles.actionButton, {backgroundColor: colors.primary}]}
+        containerStyle={[localStyles.actionButton, { backgroundColor: colors.primary }]}
       />
     </View>
   );
 
   const renderReviewReels = () => (
-    <View style={[localStyles.section, {backgroundColor: colors.backgroundColor}]}>
+    <View style={[localStyles.section, { backgroundColor: colors.backgroundColor }]}>
       <ZText type="B18" color={colors.textColor} style={localStyles.sectionTitle}>
         🎥 Sample Review Reels
       </ZText>
-      
+
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <View style={localStyles.reelsContainer}>
           {demoReviewReels.map((reel, index) => (
@@ -222,7 +222,7 @@ const ReviewReelDemo = () => {
           ))}
         </View>
       </ScrollView>
-      
+
       <ZText type="M12" color={colors.grayScale5} style={localStyles.note}>
         Notice the "REVIEW" badge and star ratings on the reels above
       </ZText>
@@ -230,50 +230,50 @@ const ReviewReelDemo = () => {
   );
 
   const renderUserFlow = () => (
-    <View style={[localStyles.section, {backgroundColor: colors.white}]}>
+    <View style={[localStyles.section, { backgroundColor: colors.white }]}>
       <ZText type="B18" color="#1A1A1A" style={localStyles.sectionTitle}>
         🔄 User Flow
       </ZText>
-      
+
       <View style={localStyles.flowSteps}>
         <View style={localStyles.flowStep}>
-          <View style={[localStyles.stepNumber, {backgroundColor: colors.primary}]}>
+          <View style={[localStyles.stepNumber, { backgroundColor: colors.primary }]}>
             <ZText type="B12" color={colors.white}>1</ZText>
           </View>
           <ZText type="M14" color="#333333" style={styles.ml12}>
             User browses dishes/menus
           </ZText>
         </View>
-        
+
         <View style={localStyles.flowStep}>
-          <View style={[localStyles.stepNumber, {backgroundColor: colors.primary}]}>
+          <View style={[localStyles.stepNumber, { backgroundColor: colors.primary }]}>
             <ZText type="B12" color={colors.white}>2</ZText>
           </View>
           <ZText type="M14" color="#333333" style={styles.ml12}>
             Taps "Create Review" button
           </ZText>
         </View>
-        
+
         <View style={localStyles.flowStep}>
-          <View style={[localStyles.stepNumber, {backgroundColor: colors.primary}]}>
+          <View style={[localStyles.stepNumber, { backgroundColor: colors.primary }]}>
             <ZText type="B12" color={colors.white}>3</ZText>
           </View>
           <ZText type="M14" color="#333333" style={styles.ml12}>
             Records video review with rating
           </ZText>
         </View>
-        
+
         <View style={localStyles.flowStep}>
-          <View style={[localStyles.stepNumber, {backgroundColor: colors.primary}]}>
+          <View style={[localStyles.stepNumber, { backgroundColor: colors.primary }]}>
             <ZText type="B12" color={colors.white}>4</ZText>
           </View>
           <ZText type="M14" color="#333333" style={styles.ml12}>
             Reel appears in feed with review badge
           </ZText>
         </View>
-        
+
         <View style={localStyles.flowStep}>
-          <View style={[localStyles.stepNumber, {backgroundColor: colors.primary}]}>
+          <View style={[localStyles.stepNumber, { backgroundColor: colors.primary }]}>
             <ZText type="B12" color={colors.white}>5</ZText>
           </View>
           <ZText type="M14" color="#333333" style={styles.ml12}>
@@ -287,7 +287,7 @@ const ReviewReelDemo = () => {
   return (
     <ZSafeAreaView>
       {renderHeader()}
-      
+
       <ScrollView style={localStyles.container} showsVerticalScrollIndicator={false}>
         {renderFeatureOverview()}
         {renderDemoMenu()}

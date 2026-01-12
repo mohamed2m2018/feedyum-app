@@ -8,18 +8,18 @@ import {
   View,
   ScrollView,
 } from 'react-native';
-import React, {useCallback, useState} from 'react';
+import React, { useCallback, useState } from 'react';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {useSelector} from 'react-redux';
-import {useNavigation} from '@react-navigation/native';
+import { useSelector } from 'react-redux';
+import { useNavigation } from '@react-navigation/native';
 
 // Local import
-import {moderateScale} from '../../../common/constants';
+import { moderateScale } from '../../../common/constants';
 import ZText from '../../../components/common/ZText';
-import {styles} from '../../../themes';
+import { styles } from '../../../themes';
 import ReelComponent from '../../../components/ReelComponent';
-import {StackNav, TabNav} from '../../../navigation/NavigationKeys';
-import {useInfiniteQuery, useQuery, useQueryClient} from 'react-query';
+import { StackNav, TabNav } from '../../../navigation/NavigationKeys';
+import { useInfiniteQuery, useQuery, useQueryClient } from 'react-query';
 import request from '../../../api/request';
 import ZLoader from '../../../components/common/ZLoader';
 import { useStorage } from '../../../utils/useStorage';
@@ -30,15 +30,15 @@ import StarRating from '../../../components/StarRating';
 import { optimizeImageUrl, ImagePresets } from '../../../utils/imageOptimizer';
 import { useDiscoverCategory } from '../../../hooks/useDiscoverBatch';
 
-export default function HashtagCategory({selectedTag, isLocationChanging}) {
+export default function HashtagCategory({ selectedTag, isLocationChanging }) {
   const colors = useSelector(state => state.theme.theme);
   const navigation = useNavigation();
   const location = useLocation();
   const [user] = useStorage('user');
-  
+
   // State to track which tab is selected for each kitchen
   const [kitchenTabs, setKitchenTabs] = useState({});
-  
+
   // OPTIMIZED BATCH LOADING - Single API call for all data
   const {
     users: batchUsers,
@@ -70,9 +70,9 @@ export default function HashtagCategory({selectedTag, isLocationChanging}) {
       return response.data;
     },
     {
-      getNextPageParam: (lastPage) => 
-        lastPage?.currentPage < lastPage?.totalPages 
-          ? lastPage.currentPage + 1 
+      getNextPageParam: (lastPage) =>
+        lastPage?.currentPage < lastPage?.totalPages
+          ? lastPage.currentPage + 1
           : undefined,
       enabled: !!selectedTag && (!hasData || !!batchError), // Only use fallback if batch fails
       staleTime: 1 * 60 * 1000,
@@ -80,7 +80,7 @@ export default function HashtagCategory({selectedTag, isLocationChanging}) {
       refetchOnWindowFocus: false,
     }
   );
-  
+
   const {
     data: categoryDishes,
     isLoading: isLoadingCategoryDishes,
@@ -124,18 +124,18 @@ export default function HashtagCategory({selectedTag, isLocationChanging}) {
   // Use batch data if available, otherwise fallback to individual calls
   const finalUsers = hasData && !batchError ? batchUsers : fallbackUsers;
   const finalDishes = hasData && !batchError ? batchDishes : (categoryDishes || []);
-  
+
   // Show loading until we have at least some data
   const isInitialLoading = isBatchLoading || (!!batchError && (isLoadingUsers || isLoadingCategoryDishes));
 
   // Combine users and dishes based on the logic you described
   const kitchensWithTaggedContent = React.useMemo(() => {
-if (!finalUsers.length && !finalDishes.length) {
-return [];
+    if (!finalUsers.length && !finalDishes.length) {
+      return [];
     }
-    
+
     const kitchenMap = new Map();
-    
+
     // 1. Add kitchens that appear because their reels have the tag
     finalUsers.forEach(user => {
       if (!kitchenMap.has(user._id)) {
@@ -146,9 +146,9 @@ return [];
           categoryDishes: [] // Dishes that match category but not attached to reels
         });
       }
-      
+
       const kitchen = kitchenMap.get(user._id);
-      
+
       // Extract dishes from tagged stories/reels
       if (user.stories) {
         user.stories.forEach(story => {
@@ -163,12 +163,12 @@ return [];
         });
       }
     });
-    
+
     // 2. Add dishes that match the category (whether attached to reels or not)
     finalDishes.forEach(dish => {
-// Handle different dish structures from API
+      // Handle different dish structures from API
       let chefId, chefInfo;
-      
+
       if (dish.chef && dish.chef._id) {
         // New API structure with populated chef
         chefId = dish.chef._id;
@@ -178,16 +178,16 @@ return [];
         chefId = dish.user_id._id || dish.user_id;
         chefInfo = dish.user_id;
       } else {
-return;
+        return;
       }
-      
+
       // If this chef is not already in our map, add them
       if (!kitchenMap.has(chefId)) {
         kitchenMap.set(chefId, {
           _id: chefId,
           fullName: chefInfo.fullName || 'Unknown Chef',
           avatar: chefInfo.avatar,
-          bio: chefInfo.bio || 'Food creator',
+          bio: chefInfo.bio || strings.foodCreator,
           kmAway: dish.distance, // Use distance from dish
           stories: [], // No stories for this chef
           dishes: [],
@@ -195,17 +195,17 @@ return;
           categoryDishes: []
         });
       }
-      
+
       const kitchen = kitchenMap.get(chefId);
-      
+
       // Update distance to keep the minimum distance (closest location)
       if (dish.distance !== undefined && (kitchen.kmAway === undefined || dish.distance < kitchen.kmAway)) {
         kitchen.kmAway = dish.distance;
       }
-      
+
       // Check if this dish is already in reelDishes
       const isInReelDishes = kitchen.reelDishes.find(d => d._id === dish._id);
-      
+
       if (isInReelDishes) {
         // Dish is attached to a reel, don't add to categoryDishes
       } else {
@@ -213,19 +213,19 @@ return;
         kitchen.categoryDishes.push(dish);
       }
     });
-    
+
     // 3. Combine reelDishes and categoryDishes into final dishes array
     const result = Array.from(kitchenMap.values()).map(kitchen => ({
       ...kitchen,
       dishes: [...kitchen.reelDishes, ...kitchen.categoryDishes]
     }));
-    
+
     // Only return kitchens that have either stories or dishes
-    const filteredResult = result.filter(kitchen => 
-      (kitchen.stories && kitchen.stories.length > 0) || 
+    const filteredResult = result.filter(kitchen =>
+      (kitchen.stories && kitchen.stories.length > 0) ||
       (kitchen.dishes && kitchen.dishes.length > 0)
     );
-return filteredResult;
+    return filteredResult;
   }, [finalUsers, finalDishes]);
 
   // Function to get dishes for a specific chef
@@ -248,7 +248,7 @@ return filteredResult;
   };
 
   const onPressTrendingHashtag = item =>
-    navigation.navigate(StackNav.TrendingHashtag, {item: item});
+    navigation.navigate(StackNav.TrendingHashtag, { item: item });
   // Function to handle tab change for a specific kitchen
   const handleKitchenTabChange = (kitchenId, tabIndex) => {
     setKitchenTabs(prev => ({
@@ -258,7 +258,7 @@ return filteredResult;
   };
 
   // Component to render dishes for a specific chef
-  const RenderChefDishes = ({chefId, chefName}) => {
+  const RenderChefDishes = ({ chefId, chefName }) => {
     const dishes = getChefDishes(chefId);
 
     if (isBatchLoading || (!!batchError && isLoadingCategoryDishes)) {
@@ -282,7 +282,7 @@ return filteredResult;
             align="center"
             color={colors.grayScale7}
             style={styles.mt10}>
-            No {selectedTag} dishes available
+            {strings.noCategoryDishesAvailable.replace('{category}', selectedTag)}
           </ZText>
         </View>
       );
@@ -291,11 +291,11 @@ return filteredResult;
     return (
       <FlatList
         data={dishes.slice(0, 6)} // Show max 6 dishes
-        renderItem={({item}) => (
+        renderItem={({ item }) => (
           <TouchableOpacity
             style={[
               localStyles.dishCard,
-              {backgroundColor: colors.backgroundColor},
+              { backgroundColor: colors.backgroundColor },
             ]}
             onPress={() => {
               navigation.navigate(StackNav.DishDetailScreen, {
@@ -309,7 +309,7 @@ return filteredResult;
             <Image
               source={
                 item.image
-                  ? {uri: item.image}
+                  ? { uri: item.image }
                   : images.dishPlaceholder
               }
               style={localStyles.dishImage}
@@ -351,17 +351,17 @@ return filteredResult;
   };
 
   const RenderKitchenItem = useCallback(
-    ({item, index}) => {
+    ({ item, index }) => {
       // Default to dishes tab (1) if no reels, otherwise reels tab (0)
       const hasReels = item.stories && item.stories.length > 0;
       const defaultTab = hasReels ? 0 : 1;
       const currentTab = kitchenTabs[item._id] !== undefined ? kitchenTabs[item._id] : defaultTab;
-      
+
       return (
         <View key={index} style={localStyles.kitchenContainer}>
           {/* Kitchen Header */}
           <TouchableOpacity
-            onPress={()=>onPressUser( item?._id, item?.fullName, item?.avatar)}
+            onPress={() => onPressUser(item?._id, item?.fullName, item?.avatar)}
             style={localStyles.kitchenHeader}>
             <View
               style={[
@@ -372,7 +372,7 @@ return filteredResult;
               ]}>
               <Image
                 style={localStyles.kitchenAvatar}
-                source={item?.avatar? {uri: item?.avatar} : images.userDark}
+                source={item?.avatar ? { uri: item?.avatar } : images.userDark}
               />
             </View>
             <View style={[styles.mh10, styles.flex]}>
@@ -384,7 +384,7 @@ return filteredResult;
                 <TouchableOpacity
                   style={[
                     localStyles.visitMenuButton,
-                    {backgroundColor: colors.primary},
+                    { backgroundColor: colors.primary },
                   ]}
                   onPress={() => {
                     navigation.navigate(StackNav.ChefMenu, {
@@ -401,12 +401,12 @@ return filteredResult;
                     color={colors.white}
                   />
                   <ZText style={localStyles.visitMenuText} color={colors.white}>
-                    Menu
+                    {strings.menu}
                   </ZText>
                 </TouchableOpacity>
               </View>
               {/* Rating next to name */}
-              <View style={{flexDirection: 'row', alignItems: 'center', marginTop: moderateScale(4)}}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: moderateScale(4) }}>
                 <StarRating
                   rating={item?.averageDishRating || 0}
                   totalReviews={item?.ratedDishesCount || 0}
@@ -444,7 +444,7 @@ return filteredResult;
 
           {/* Tab Bar for Kitchen - Only show if both reels and dishes exist */}
           {hasReels && getChefDishes(item._id).length > 0 ? (
-            <View style={[localStyles.kitchenTabBar, {backgroundColor: colors.backgroundColor}]}>
+            <View style={[localStyles.kitchenTabBar, { backgroundColor: colors.backgroundColor }]}>
               <TouchableOpacity
                 style={[
                   localStyles.kitchenTabItem,
@@ -465,7 +465,7 @@ return filteredResult;
                   Reels
                 </ZText>
               </TouchableOpacity>
-              
+
               <TouchableOpacity
                 style={[
                   localStyles.kitchenTabItem,
@@ -496,8 +496,8 @@ return filteredResult;
               currentTab === 0 ? (
                 // Reels Tab
                 <FlatList
-                  data={item.stories.slice(0,3)} // Display the first 3 stories
-                  renderItem={({item: story, index}) => (
+                  data={item.stories.slice(0, 3)} // Display the first 3 stories
+                  renderItem={({ item: story, index }) => (
                     <ReelComponent
                       data={story?.views}
                       reelUrl={
@@ -529,8 +529,8 @@ return filteredResult;
             ) : hasReels ? (
               // Only reels, no dishes
               <FlatList
-                data={item.stories.slice(0,3)} // Display the first 3 stories
-                renderItem={({item: story, index}) => (
+                data={item.stories.slice(0, 3)} // Display the first 3 stories
+                renderItem={({ item: story, index }) => (
                   <ReelComponent
                     data={story?.views}
                     reelUrl={
@@ -564,10 +564,10 @@ return filteredResult;
 
   // Show loading during initial load, location changes, or when refetching due to location changes
   // BUT NOT during pagination (isFetchingNextPageUsers)
-  const isInitialOrLocationLoading = isInitialLoading || 
-    (!!batchError && ((isFetchingUsers && !isFetchingNextPageUsers) || isFetchingCategoryDishes)) || 
+  const isInitialOrLocationLoading = isInitialLoading ||
+    (!!batchError && ((isFetchingUsers && !isFetchingNextPageUsers) || isFetchingCategoryDishes)) ||
     isLocationChanging;
-    
+
   if (isInitialOrLocationLoading) {
     return <ZLoader absolute height={80} top={300} />;
   }
@@ -575,7 +575,7 @@ return filteredResult;
   return (
     <FlatList
       data={kitchensWithTaggedContent}
-      renderItem={({item, index}) => (
+      renderItem={({ item, index }) => (
         <RenderKitchenItem item={item} index={index} />
       )}
       showsVerticalScrollIndicator={false}
@@ -606,7 +606,7 @@ const localStyles = StyleSheet.create({
     marginHorizontal: moderateScale(20),
     backgroundColor: 'transparent',
   },
-  
+
   // Kitchen Header
   kitchenHeader: {
     flexDirection: 'row',

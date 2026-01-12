@@ -3,6 +3,7 @@ import { View, Image, StyleSheet, TouchableOpacity, Platform, UIManager, Animate
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import ZText from '../../../../components/common/ZText';
 import { moderateScale } from '../../../../common/constants';
+import strings from '../../../../i18n/strings';
 
 const formatCurrency = (value) => {
   if (value === null || value === undefined || isNaN(value)) return '0.00';
@@ -16,18 +17,18 @@ const formatCurrency = (value) => {
 const StatusPill = ({ status, colors }) => {
   const normalized = String(status || 'pending').toLowerCase();
   const map = {
-    pending: { bg: '#FFF4E5', fg: '#C47F00' },
-    accepted: { bg: '#E8FFF3', fg: '#0A7A45' },
-    preparing: { bg: '#E8F1FF', fg: '#2456E6' },
-    delivering: { bg: '#E8F1FF', fg: '#2456E6' },
-    completed: { bg: '#EAFBF3', fg: '#0D8556' },
-    cancelled: { bg: '#FFEAEA', fg: '#C62828' },
+    pending: { bg: '#FFF4E5', fg: '#C47F00', label: strings.pending },
+    accepted: { bg: '#E8FFF3', fg: '#0A7A45', label: strings.accepted },
+    preparing: { bg: '#E8F1FF', fg: '#2456E6', label: strings.preparing },
+    delivering: { bg: '#E8F1FF', fg: '#2456E6', label: strings.delivering },
+    completed: { bg: '#EAFBF3', fg: '#0D8556', label: strings.completed },
+    cancelled: { bg: '#FFEAEA', fg: '#C62828', label: strings.cancelled },
   };
-  const c = map[normalized] || { bg: colors.inputBg, fg: colors.textColor };
+  const c = map[normalized] || { bg: colors.inputBg, fg: colors.textColor, label: status };
   return (
     <View style={[styles.statusPill, { backgroundColor: c.bg }]}>
       <ZText type="M12" color={c.fg}>
-        {String(status || 'PENDING').toUpperCase()}
+        {String(c.label || 'PENDING').toUpperCase()}
       </ZText>
     </View>
   );
@@ -112,27 +113,27 @@ const OrderSummaryCard = ({ order, colors, onPressPrimary, initialCollapsed = tr
 
         {extraCount > 0 && (
           <View style={[styles.extraRow, { backgroundColor: colors.inputBg }]}>
-            <ZText type="M12" color={colors.grayScale7}>+{extraCount} more item(s)</ZText>
+            <ZText type="M12" color={colors.grayScale7}>{strings.moreItems.replace('{count}', extraCount)}</ZText>
           </View>
         )}
       </View>
 
       <View style={styles.pricesContainer}>
-        <PriceRow label="Subtotal" value={order?.subtotal} colors={colors} />
+        <PriceRow label={strings.subtotal} value={order?.subtotal} colors={colors} />
         {order?.deliveryFee !== undefined && (
-          <PriceRow label="Delivery" value={order?.deliveryFee} colors={colors} />
+          <PriceRow label={strings.delivery} value={order?.deliveryFee} colors={colors} />
         )}
         {order?.serviceFee !== undefined && !!order?.serviceFee && (
-          <PriceRow label="Service" value={order?.serviceFee} colors={colors} />
+          <PriceRow label={strings.service} value={order?.serviceFee} colors={colors} />
         )}
         {order?.tax !== undefined && !!order?.tax && (
-          <PriceRow label="Tax" value={order?.tax} colors={colors} />
+          <PriceRow label={strings.tax} value={order?.tax} colors={colors} />
         )}
         {order?.promocode?.discountAmount ? (
-          <PriceRow label={`Promo (${order?.promocode?.code || ''})`} value={-Math.abs(order?.promocode?.discountAmount)} colors={colors} />
+          <PriceRow label={`${strings.promo} (${order?.promocode?.code || ''})`} value={-Math.abs(order?.promocode?.discountAmount)} colors={colors} />
         ) : null}
         <View style={styles.divider} />
-        <PriceRow label="Total" value={order?.totalPrice} colors={colors} bold />
+        <PriceRow label={strings.total} value={order?.totalPrice} colors={colors} bold />
       </View>
 
       {!!order?.address && (
@@ -147,15 +148,15 @@ const OrderSummaryCard = ({ order, colors, onPressPrimary, initialCollapsed = tr
         {isChef && order?.status === 'pending' ? (
           <>
             <TouchableOpacity style={[styles.secondaryBtn, { borderColor: colors.error, marginRight: moderateScale(10) }]} onPress={onReject}>
-              <ZText type="B14" color={colors.error}>Reject</ZText>
+              <ZText type="B14" color={colors.error}>{strings.reject}</ZText>
             </TouchableOpacity>
             <TouchableOpacity style={[styles.primaryBtn, { backgroundColor: colors.primary }]} onPress={onAccept}>
-              <ZText type="B14" color={colors.white}>Accept Order</ZText>
+              <ZText type="B14" color={colors.white}>{strings.acceptOrder}</ZText>
             </TouchableOpacity>
           </>
         ) : (
           <TouchableOpacity style={[styles.primaryBtn, { backgroundColor: colors.primary }]} onPress={onPressPrimary}>
-            <ZText type="B14" color={colors.white}>Track order</ZText>
+            <ZText type="B14" color={colors.white}>{strings.trackOrder}</ZText>
           </TouchableOpacity>
         )}
       </View>
@@ -167,7 +168,7 @@ const OrderSummaryCard = ({ order, colors, onPressPrimary, initialCollapsed = tr
       <TouchableOpacity style={styles.headerRow} activeOpacity={0.8} onPress={collapsed ? expand : collapse}>
         <View style={styles.headerLeft}>
           <ZText type={collapsed ? 'B14' : 'B16'} color={colors.textColor}>
-            Order #{String(order?.id || order?._id || '').slice(-6) || '—'}
+            {strings.orderNumber}{String(order?.id || order?._id || '').slice(-6) || '—'}
           </ZText>
           {collapsed ? (
             <View style={styles.collapseMeta}>

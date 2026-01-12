@@ -48,11 +48,11 @@ export default function Chat({ navigation, route }) {
       socketRef.current = io(socketUrl); // Ensure the URL is correct
 
       socketRef.current.on('connect', () => {
-loadMessages(page);
+        loadMessages(page);
       });
 
       socketRef.current.on('disconnect', () => {
-});
+      });
 
       socketRef.current.on('chatHistory', (data) => {
         const messages = data.messages.map(msg => ({
@@ -130,7 +130,7 @@ loadMessages(page);
 
       socketRef.current.emit('sendMessage', messageData, (response) => {
         if (response.error) {
-}
+        }
       });
     });
 
@@ -162,7 +162,7 @@ loadMessages(page);
       createdAt: new Date(),
       user: { _id: userId },
     };
-onSend([testAudioMessage]);
+    onSend([testAudioMessage]);
   };
 
   const onPressProfile = () => {
@@ -250,15 +250,15 @@ onSend([testAudioMessage]);
       <Bubble
         {...props}
         wrapperStyle={{
-          left: { 
-            backgroundColor: colors.grayScale1, 
-            borderRadius: 12, 
+          left: {
+            backgroundColor: colors.grayScale1,
+            borderRadius: 12,
             padding: 10,
             marginLeft: 0, // Adjust to reduce left space
           },
-          right: { 
-            backgroundColor: colors.primary, 
-            borderRadius: 12, 
+          right: {
+            backgroundColor: colors.primary,
+            borderRadius: 12,
             padding: 10,
             marginRight: 0, // Adjust to reduce right space if necessary
           },
@@ -275,7 +275,7 @@ onSend([testAudioMessage]);
     if (showVoiceRecorder) {
       return (
         <View style={localStyles.voiceRecorderContainer}>
-          <VoiceRecorder 
+          <VoiceRecorder
             onSendAudio={handleSendAudio}
             onCancel={() => setShowVoiceRecorder(false)}
           />
@@ -293,13 +293,12 @@ onSend([testAudioMessage]);
             borderTopWidth: 1,
             borderRadius: 20,
             marginHorizontal: 10,
-            marginBottom: Platform.OS === 'android' ? 10 : 5, // Add bottom margin
             flex: 1,
           }}
         />
         {!text.trim() && (
-          <TouchableOpacity 
-            style={[localStyles.micButton, {backgroundColor: colors.primary}]}
+          <TouchableOpacity
+            style={[localStyles.micButton, { backgroundColor: colors.primary }]}
             onPress={() => setShowVoiceRecorder(true)}
           >
             <Ionicons
@@ -363,7 +362,7 @@ onSend([testAudioMessage]);
           onInputTextChanged={setText}
           textInputRef={textInputRef}
           messageContainerRef={messageContainerRef}
-          placeholder="Type a message..."
+          placeholder={strings.typeMessagePlaceholder}
         />
       </KeyboardAvoidingView>
     </ZSafeAreaView>
@@ -400,8 +399,10 @@ const localStyles = StyleSheet.create({
   },
   inputToolbarContainer: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
+    alignItems: 'center',
     paddingRight: 10,
+    paddingBottom: Platform.OS === 'android' ? 10 : 0,
+    paddingTop: 5,
   },
   micButton: {
     width: 40,
@@ -410,6 +411,5 @@ const localStyles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 5,
-    marginBottom: Platform.OS === 'android' ? 10 : 5,
   },
 });

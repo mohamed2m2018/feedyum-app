@@ -24,6 +24,7 @@ class NotificationService {
       // Request permission
       OneSignal.Notifications.requestPermission(true);
 
+
       // Setup notification handlers
       this.setupNotificationHandlers();
 

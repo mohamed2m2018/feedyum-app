@@ -30,10 +30,10 @@ const EditAddress = () => {
   const dispatch = useDispatch();
   const navigation = useNavigation();
   const route = useRoute();
-  
+
   const { address: initialAddress } = route.params || {};
   const isEditing = !!initialAddress;
-  
+
   const [formData, setFormData] = useState({
     label: '',
     addressType: 'house',
@@ -229,8 +229,8 @@ const EditAddress = () => {
       <ZText type="B16" color={colors.textColor} style={localStyles.sectionTitle}>
         {strings.location}
       </ZText>
-      <TouchableOpacity 
-        style={[localStyles.mapContainer, { backgroundColor: colors.inputBg }]} 
+      <TouchableOpacity
+        style={[localStyles.mapContainer, { backgroundColor: colors.inputBg }]}
         onPress={handleMapPress}
       >
         <View style={localStyles.locationPreview}>
@@ -261,8 +261,8 @@ const EditAddress = () => {
       <View style={[localStyles.container, { backgroundColor: colors.backgroundColor }]}>
         {/* Header */}
         <View style={localStyles.header}>
-          <TouchableOpacity 
-            onPress={() => navigation.goBack()} 
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
             style={localStyles.backButton}
           >
             <Feather name="arrow-left" size={moderateScale(24)} color={colors.textColor} />
@@ -273,7 +273,7 @@ const EditAddress = () => {
           <View style={localStyles.placeholder} />
         </View>
 
-        <ScrollView 
+        <ScrollView
           style={localStyles.scrollView}
           contentContainerStyle={localStyles.scrollContent}
           showsVerticalScrollIndicator={false}
@@ -358,7 +358,7 @@ const EditAddress = () => {
             <View style={localStyles.phoneContainer}>
               <View style={localStyles.countryCodeContainer}>
                 <ZInput
-                  placeHolder="+20"
+                  placeHolder={strings.phoneCodePlaceholder}
                   _value={formData.countryCode}
                   toGetTextFieldValue={(value) => handleInputChange('countryCode', value)}
                   inputContainerStyle={[localStyles.inputContainer, { backgroundColor: colors.inputBg }]}

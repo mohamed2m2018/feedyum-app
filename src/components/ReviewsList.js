@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,12 +9,12 @@ import {
   Alert,
   RefreshControl,
 } from 'react-native';
-import {useSelector} from 'react-redux';
+import { useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import {useQuery} from 'react-query';
-import {moderateScale} from '../common/constants';
+import { useQuery } from 'react-query';
+import { moderateScale } from '../common/constants';
 import StarRating from './StarRating';
-import {reviewService} from '../api/reviewService';
+import { reviewService } from '../api/reviewService';
 import request from '../api/request';
 import strings from '../i18n/strings';
 
@@ -31,7 +31,7 @@ const ReviewsList = ({
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  
+
   // Get current user
   const { data: userData } = useQuery('user', () => request.get('/user'));
   const currentUser = userData?.data?.user;
@@ -76,7 +76,7 @@ const ReviewsList = ({
         setPage(pageNum);
       }
     } catch (error) {
-Alert.alert(strings.error, strings.failedToLoadReviews);
+      Alert.alert(strings.error, strings.failedToLoadReviews);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -103,23 +103,23 @@ Alert.alert(strings.error, strings.failedToLoadReviews);
       // Refresh the specific review or reload all reviews
       handleRefresh();
     } catch (error) {
-Alert.alert(strings.error, strings.failedToMarkHelpful);
+      Alert.alert(strings.error, strings.failedToMarkHelpful);
     }
   };
 
   const handleReport = reviewId => {
     Alert.alert(strings.reportReview, strings.whyReportingReview, [
-      {text: 'Cancel', style: 'cancel'},
+      { text: strings.cancel, style: 'cancel' },
       {
-        text: 'Inappropriate Content',
+        text: strings.inappropriateContent,
         onPress: () => submitReport(reviewId, 'inappropriate'),
       },
       {
-        text: 'Spam',
+        text: strings.spam,
         onPress: () => submitReport(reviewId, 'spam'),
       },
       {
-        text: 'Fake Review',
+        text: strings.fakeReview,
         onPress: () => submitReport(reviewId, 'fake'),
       },
     ]);
@@ -127,12 +127,12 @@ Alert.alert(strings.error, strings.failedToMarkHelpful);
 
   const handleDelete = reviewId => {
     Alert.alert(
-      'Delete Review',
-      'Are you sure you want to delete this review? This action cannot be undone.',
+      strings.deleteReviewTitle,
+      strings.deleteReviewConfirm,
       [
-        {text: 'Cancel', style: 'cancel'},
+        { text: strings.cancel, style: 'cancel' },
         {
-          text: 'Delete',
+          text: strings.delete,
           style: 'destructive',
           onPress: () => confirmDelete(reviewId),
         },
@@ -143,20 +143,20 @@ Alert.alert(strings.error, strings.failedToMarkHelpful);
   const confirmDelete = async reviewId => {
     try {
       await reviewService.deleteReview(reviewId);
-      Alert.alert(strings.success, strings.reviewDeletedSuccessfully);
+      Alert.alert(strings.success, strings.reviewDeleted);
       // Refresh the reviews list
       handleRefresh();
     } catch (error) {
-Alert.alert('Error', 'Failed to delete review. Please try again.');
+      Alert.alert(strings.error, strings.failedToDeleteReview);
     }
   };
 
   const submitReport = async (reviewId, reason) => {
     try {
       await reviewService.reportReview(reviewId, reason);
-      Alert.alert('Thank You', 'Your report has been submitted.');
+      Alert.alert(strings.thankYou, strings.reportSubmitted);
     } catch (error) {
-Alert.alert('Error', 'Failed to report review');
+      Alert.alert(strings.error, strings.failedToReportReview);
     }
   };
 
@@ -166,15 +166,15 @@ Alert.alert('Error', 'Failed to report review');
     const diffTime = Math.abs(now - date);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 1) return 'Yesterday';
-    if (diffDays < 7) return `${diffDays} days ago`;
-    if (diffDays < 30) return `${Math.ceil(diffDays / 7)} weeks ago`;
-    if (diffDays < 365) return `${Math.ceil(diffDays / 30)} months ago`;
-    return `${Math.ceil(diffDays / 365)} years ago`;
+    if (diffDays === 1) return strings.yesterday;
+    if (diffDays < 7) return strings.formatString(strings.daysAgo, diffDays);
+    if (diffDays < 30) return strings.formatString(strings.weeksAgo, Math.ceil(diffDays / 7));
+    if (diffDays < 365) return strings.formatString(strings.monthsAgo, Math.ceil(diffDays / 30));
+    return strings.formatString(strings.yearsAgo, Math.ceil(diffDays / 365));
   };
 
-  const renderReviewItem = ({item}) => (
-    <View style={[styles.reviewItem, {borderBottomColor: colors.borderColor}]}>
+  const renderReviewItem = ({ item }) => (
+    <View style={[styles.reviewItem, { borderBottomColor: colors.borderColor }]}>
       {/* User Info */}
       <View style={styles.userInfo}>
         <Image
@@ -184,8 +184,8 @@ Alert.alert('Error', 'Failed to report review');
           style={styles.userAvatar}
         />
         <View style={styles.userDetails}>
-          <Text style={[styles.userName, {color: colors.textColor}]}>
-            {item.user?.fullName || item.user?.username || 'Anonymous'}
+          <Text style={[styles.userName, { color: colors.textColor }]}>
+            {item.user?.fullName || item.user?.username || strings.anonymous}
           </Text>
           <View style={styles.reviewMeta}>
             <StarRating
@@ -194,7 +194,7 @@ Alert.alert('Error', 'Failed to report review');
               showText={false}
               showCount={false}
             />
-            <Text style={[styles.reviewDate, {color: colors.grayScale5}]}>
+            <Text style={[styles.reviewDate, { color: colors.grayScale5 }]}>
               • {formatDate(item.createdAt)}
             </Text>
             {item.isVerified && (
@@ -204,7 +204,7 @@ Alert.alert('Error', 'Failed to report review');
                   size={moderateScale(12)}
                   color="#4CAF50"
                 />
-                <Text style={styles.verifiedText}>Verified</Text>
+                <Text style={styles.verifiedText}>{strings.verified}</Text>
               </View>
             )}
           </View>
@@ -213,7 +213,7 @@ Alert.alert('Error', 'Failed to report review');
 
       {/* Review Content */}
       {item.comment && (
-        <Text style={[styles.reviewComment, {color: colors.textColor}]}>
+        <Text style={[styles.reviewComment, { color: colors.textColor }]}>
           {item.comment}
         </Text>
       )}
@@ -224,15 +224,15 @@ Alert.alert('Error', 'Failed to report review');
           {item.tags.slice(0, 3).map((tag, index) => (
             <View
               key={index}
-              style={[styles.tag, {backgroundColor: colors.grayScale1}]}>
-              <Text style={[styles.tagText, {color: colors.grayScale6}]}>
+              style={[styles.tag, { backgroundColor: colors.grayScale1 }]}>
+              <Text style={[styles.tagText, { color: colors.grayScale6 }]}>
                 {tag.replace('_', ' ')}
               </Text>
             </View>
           ))}
           {item.tags.length > 3 && (
-            <Text style={[styles.moreTagsText, {color: colors.grayScale5}]}>
-              +{item.tags.length - 3} more
+            <Text style={[styles.moreTagsText, { color: colors.grayScale5 }]}>
+              {strings.formatString(strings.moreTags, item.tags.length - 3)}
             </Text>
           )}
         </View>
@@ -244,7 +244,7 @@ Alert.alert('Error', 'Failed to report review');
           {item.images.slice(0, 3).map((image, index) => (
             <Image
               key={index}
-              source={{uri: image}}
+              source={{ uri: image }}
               style={styles.reviewImage}
             />
           ))}
@@ -261,8 +261,8 @@ Alert.alert('Error', 'Failed to report review');
             size={moderateScale(16)}
             color={colors.grayScale5}
           />
-          <Text style={[styles.actionText, {color: colors.grayScale5}]}>
-            Helpful ({item.helpfulCount || 0})
+          <Text style={[styles.actionText, { color: colors.grayScale5 }]}>
+            {strings.formatString(strings.helpfulCount, item.helpfulCount || 0)}
           </Text>
         </TouchableOpacity>
 
@@ -274,25 +274,25 @@ Alert.alert('Error', 'Failed to report review');
             size={moderateScale(16)}
             color={colors.grayScale5}
           />
-          <Text style={[styles.actionText, {color: colors.grayScale5}]}>
-            Report
+          <Text style={[styles.actionText, { color: colors.grayScale5 }]}>
+            {strings.report}
           </Text>
         </TouchableOpacity>
 
-                 {item.user?._id === currentUser?._id && (
-           <TouchableOpacity
-             onPress={() => handleDelete(item._id)}
-             style={styles.actionButton}>
-             <Icon
-               name="delete"
-               size={moderateScale(16)}
-               color={colors.grayScale5}
-             />
-             <Text style={[styles.actionText, {color: colors.grayScale5}]}>
-               Delete
-             </Text>
-           </TouchableOpacity>
-         )}
+        {item.user?._id === currentUser?._id && (
+          <TouchableOpacity
+            onPress={() => handleDelete(item._id)}
+            style={styles.actionButton}>
+            <Icon
+              name="delete"
+              size={moderateScale(16)}
+              color={colors.grayScale5}
+            />
+            <Text style={[styles.actionText, { color: colors.grayScale5 }]}>
+              {strings.delete}
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
@@ -314,14 +314,14 @@ Alert.alert('Error', 'Failed to report review');
           <View style={styles.distributionContainer}>
             {[5, 4, 3, 2, 1].map(rating => (
               <View key={rating} style={styles.distributionRow}>
-                <Text style={[styles.ratingLabel, {color: colors.textColor}]}>
+                <Text style={[styles.ratingLabel, { color: colors.textColor }]}>
                   {rating}
                 </Text>
                 <Icon name="star" size={moderateScale(12)} color="#FFD700" />
                 <View
                   style={[
                     styles.distributionBar,
-                    {backgroundColor: colors.grayScale2},
+                    { backgroundColor: colors.grayScale2 },
                   ]}>
                   <View
                     style={[
@@ -336,7 +336,7 @@ Alert.alert('Error', 'Failed to report review');
                 <Text
                   style={[
                     styles.distributionCount,
-                    {color: colors.grayScale5},
+                    { color: colors.grayScale5 },
                   ]}>
                   {stats.distribution[rating] || 0}
                 </Text>
@@ -347,8 +347,8 @@ Alert.alert('Error', 'Failed to report review');
 
         {onViewAll && stats.totalReviews > (maxItems || 10) && (
           <TouchableOpacity onPress={onViewAll} style={styles.viewAllButton}>
-            <Text style={[styles.viewAllText, {color: colors.primary}]}>
-              View All Reviews ({stats.totalReviews})
+            <Text style={[styles.viewAllText, { color: colors.primary }]}>
+              {strings.formatString(strings.viewAllReviews, stats.totalReviews)}
             </Text>
           </TouchableOpacity>
         )}
@@ -361,8 +361,8 @@ Alert.alert('Error', 'Failed to report review');
 
     return (
       <View style={styles.loadingFooter}>
-        <Text style={[styles.loadingText, {color: colors.grayScale5}]}>
-          Loading more reviews...
+        <Text style={[styles.loadingText, { color: colors.grayScale5 }]}>
+          {strings.loadingMoreReviews}
         </Text>
       </View>
     );
@@ -375,11 +375,11 @@ Alert.alert('Error', 'Failed to report review');
         size={moderateScale(48)}
         color={colors.grayScale3}
       />
-      <Text style={[styles.emptyTitle, {color: colors.textColor}]}>
-        No Reviews Yet
+      <Text style={[styles.emptyTitle, { color: colors.textColor }]}>
+        {strings.noReviewsYetTitle}
       </Text>
-      <Text style={[styles.emptySubtitle, {color: colors.grayScale5}]}>
-        Be the first to share your experience!
+      <Text style={[styles.emptySubtitle, { color: colors.grayScale5 }]}>
+        {strings.beTheFirstToReview}
       </Text>
     </View>
   );

@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useMemo} from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -7,27 +7,27 @@ import {
   RefreshControl,
   Image,
 } from 'react-native';
-import {useSelector} from 'react-redux';
-import {useQuery} from 'react-query';
-import {useFocusEffect} from '@react-navigation/native';
+import { useSelector } from 'react-redux';
+import { useQuery } from 'react-query';
+import { useFocusEffect } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {debounce, getOptimizedQueryConfig, optimizeImageUri} from '../../../utils/performanceUtils';
-import {useStableCallback} from '../../../hooks/useStableCallback';
+import { debounce, getOptimizedQueryConfig, optimizeImageUri } from '../../../utils/performanceUtils';
+import { useStableCallback } from '../../../hooks/useStableCallback';
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
 import ZHeader from '../../../components/common/ZHeader';
 import ZText from '../../../components/common/ZText';
 import ZLoader from '../../../components/common/ZLoader';
-import {moderateScale} from '../../../common/constants';
-import {StackNav} from '../../../navigation/NavigationKeys';
+import { moderateScale } from '../../../common/constants';
+import { StackNav } from '../../../navigation/NavigationKeys';
 import request from '../../../api/request';
 import strings from '../../../i18n/strings';
 
-export default function Orders({navigation}) {
+export default function Orders({ navigation }) {
   const colors = useSelector(state => state.theme.theme);
   const [refreshing, setRefreshing] = useState(false);
 
   // Get current user
-  const {data: userData} = useQuery('user', () => request.get('/user'));
+  const { data: userData } = useQuery('user', () => request.get('/user'));
   const currentUser = userData?.data?.user;
 
   // Get user orders
@@ -65,7 +65,7 @@ export default function Orders({navigation}) {
     try {
       await refetchOrders();
     } catch (error) {
-} finally {
+    } finally {
       setRefreshing(false);
     }
   }, 1000)); // Debounce refresh to prevent multiple rapid calls
@@ -83,7 +83,7 @@ export default function Orders({navigation}) {
     const diffInHours = (now - date) / (1000 * 60 * 60);
 
     if (diffInHours < 24) {
-      return date.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     } else {
       return date.toLocaleDateString();
     }
@@ -131,9 +131,9 @@ export default function Orders({navigation}) {
     }
   };
 
-  const renderOrderItem = React.useCallback(({item}) => (
+  const renderOrderItem = React.useCallback(({ item }) => (
     <TouchableOpacity
-      style={[localStyles.orderItem, {backgroundColor: colors.inputBg}]}
+      style={[localStyles.orderItem, { backgroundColor: colors.inputBg }]}
       onPress={() => handleOrderPress(item)}
       activeOpacity={0.7}>
       <Image
@@ -159,9 +159,9 @@ export default function Orders({navigation}) {
             </ZText>
           </View>
           <View style={localStyles.orderStatus}>
-            <View 
+            <View
               style={[
-                localStyles.statusBadge, 
+                localStyles.statusBadge,
                 { backgroundColor: getOrderStatusColor(item.status) }
               ]}>
               <ZText type="M10" color={colors.white}>
@@ -200,13 +200,13 @@ export default function Orders({navigation}) {
         type="B18"
         color={colors.grayScale7}
         style={localStyles.emptyTitle}>
-        No orders yet
+        {strings.noOrdersYet}
       </ZText>
       <ZText
         type="M14"
         color={colors.grayScale7}
         style={localStyles.emptySubtitle}>
-        Start exploring and place your first order
+        {strings.startExploringOrders}
       </ZText>
     </View>
   );

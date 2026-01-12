@@ -82,7 +82,7 @@ const OrderTracking = () => {
   useEffect(() => {
     if (error) {
       Alert.alert(strings.error, error, [
-        { text: 'OK', onPress: () => dispatch(clearError()) },
+        { text: strings.ok, onPress: () => dispatch(clearError()) },
       ]);
     }
   }, [error, dispatch]);
