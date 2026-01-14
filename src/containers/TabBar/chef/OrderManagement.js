@@ -9,7 +9,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { useSelector } from 'react-redux';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useQuery, useQueryClient, useMutation } from 'react-query';
 import { showSuccessToast, showErrorToast } from '../../../utils/toast';
@@ -129,6 +129,7 @@ const ErrorState = ({ onRetry, colors }) => (
 export default function OrderManagement() {
   const colors = useSelector(state => state.theme.theme);
   const navigation = useNavigation();
+  const route = useRoute();
   const queryClient = useQueryClient();
 
   const [selectedStatus, setSelectedStatus] = useState('all');
@@ -186,6 +187,9 @@ export default function OrderManagement() {
 
   // Extract orders from response
   const ordersData = ordersResponse?.orders || [];
+
+  // Note: Deep link navigation to order details now goes directly to ChefOrderDetailsScreen
+  // instead of opening a modal here. See DeepLinkingService.navigateToChefOrderDetails()
 
   const tabsScrollViewRef = React.useRef(null);
 
@@ -265,8 +269,8 @@ export default function OrderManagement() {
   };
 
   const handleViewOrderDetails = order => {
-    setSelectedOrder(order);
-    setOrderDetailsVisible(true);
+    // Navigate to the ChefOrderDetailsScreen instead of using modal
+    navigation.navigate(StackNav.ChefOrderDetails, { orderId: order._id });
   };
 
   const handleCloseOrderDetails = () => {

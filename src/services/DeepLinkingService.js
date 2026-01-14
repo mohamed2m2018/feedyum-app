@@ -192,7 +192,7 @@ class DeepLinkingService {
           this.navigateToChefMenu(id, params);
           break;
         case 'chefDashboard':
-          this.navigateToChefDashboard();
+          this.navigateToChefDashboard(params);
           break;
 
         // Menu navigation
@@ -373,10 +373,74 @@ class DeepLinkingService {
     );
   }
 
-  navigateToChefDashboard() {
+  navigateToChefDashboard(params = {}) {
+    if (params?.action === 'new_order') {
+      DeepLinkingService.navigationRef?.dispatch(
+        CommonActions.navigate('TabBar', {
+          screen: 'Orders',
+          params: {
+            orderId: params.orderId,
+            action: params.action
+          }
+        })
+      );
+    } else {
+      DeepLinkingService.navigationRef?.dispatch(
+        CommonActions.navigate('TabBar', {
+          screen: 'Discover'
+        })
+      );
+    }
+  }
+
+  // Navigate directly to chef order details modal screen
+  navigateToChefOrderDetails(orderId) {
+    console.log('🐞 [DeepLinkingService] Navigating to ChefOrderDetails with orderId:', orderId);
     DeepLinkingService.navigationRef?.dispatch(
-      CommonActions.navigate('ChefDashboard')
+      CommonActions.navigate('ChefOrderDetails', {
+        orderId
+      })
     );
+  }
+
+  /**
+   * Handle pending notification after app cold start.
+   * Call this from Splash.js after navigation is ready.
+   * Returns the target tab if navigation should change, or null if notification was handled.
+   */
+  handlePendingNotification() {
+    const lastNotif = DeepLinkingService.lastNotification;
+    if (!lastNotif) {
+      return { handled: false, targetTab: null };
+    }
+
+    console.log('🐞 [DeepLinkingService] Processing pending notification:', lastNotif);
+
+    // New order notification - navigate to ChefOrderDetails
+    if (lastNotif.type === 'chefDashboard' || lastNotif.action === 'new_order') {
+      const orderId = lastNotif.orderId;
+      // Clear the notification so we don't handle it twice
+      DeepLinkingService.lastNotification = null;
+
+      // Return that we need to navigate to ChefOrderDetails after TabBar loads
+      return {
+        handled: true,
+        navigateAfterTabBar: () => {
+          console.log('🐞 [DeepLinkingService] Deferred navigation to ChefOrderDetails');
+          this.navigateToChefOrderDetails(orderId);
+        }
+      };
+    }
+
+    // FollowingTab notification
+    if (lastNotif.screen === 'FollowingTab') {
+      DeepLinkingService.lastNotification = null;
+      return { handled: true, targetTab: 'FollowingTab' };
+    }
+
+    // Default: clear and don't change navigation
+    DeepLinkingService.lastNotification = null;
+    return { handled: false, targetTab: null };
   }
 
   // Menu navigation
@@ -665,14 +729,34 @@ class DeepLinkingService {
 
   // Handle notification-based navigation
   handleNotificationTap(notificationData) {
+    // Store for Splash screen or other consumers to check
+    DeepLinkingService.lastNotification = notificationData;
+    console.log('🐞 [DeepLinkingService] Stored lastNotification:', notificationData);
+
+    // For new order notifications, navigate directly to the order details modal
+    if (notificationData.action === 'new_order' && notificationData.orderId) {
+      console.log('🐞 [DeepLinkingService] New order notification, navigating to ChefOrderDetails screen');
+      this.navigateToChefOrderDetails(notificationData.orderId);
+      return;
+    }
+
     if (notificationData.deepLink) {
-      this.handleDeepLink(notificationData.deepLink);
-    } else if (notificationData.type && notificationData.id) {
+      // Parse the deep link URL, but also merge in additionalData as params
+      const parsed = this.parseDeepLink(notificationData.deepLink);
+      if (parsed) {
+        // Merge notification additionalData into params
+        parsed.params = { ...parsed.params, ...notificationData };
+        this.navigateToScreen(parsed);
+        return;
+      }
+    }
+
+    if (notificationData.type && notificationData.id) {
       // Legacy support for old notification format
       const linkData = {
         type: notificationData.type,
         id: notificationData.id,
-        params: notificationData.params || {}
+        params: { ...notificationData.params, ...notificationData }
       };
       this.navigateToScreen(linkData);
     }

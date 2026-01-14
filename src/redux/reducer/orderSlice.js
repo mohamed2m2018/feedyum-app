@@ -241,6 +241,36 @@ export const updateOrderStatusAsync = (orderId, status, deliveryFee) => async (d
   }
 };
 
+export const cancelOrderByUser = (orderId, reason) => async (dispatch) => {
+  try {
+    if (!orderId) {
+      throw new Error('Order ID is required');
+    }
+    
+    dispatch(setLoading(true));
+    dispatch(clearError());
+
+    const response = await request.put(`/orders/${orderId}/cancel`, { reason });
+    const cancelledOrder = response.data.order;
+
+    dispatch(updateOrderStatus({
+      orderId,
+      status: 'cancelled',
+    }));
+
+    // Re-fetch the order to get full updated data
+    await dispatch(fetchOrderById(orderId));
+
+    return cancelledOrder;
+  } catch (error) {
+    const errorMessage = error?.message || error || 'Failed to cancel order';
+    dispatch(setError(errorMessage));
+    throw new Error(errorMessage);
+  } finally {
+    dispatch(setLoading(false));
+  }
+};
+
 // Selectors
 export const selectCurrentOrder = (state) => state.order.currentOrder;
 export const selectOrderHistory = (state) => state.order.orderHistory;

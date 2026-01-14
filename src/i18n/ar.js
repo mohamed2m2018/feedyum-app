@@ -468,6 +468,14 @@ export default {
   orderTracking: 'تتبع الطلب',
   goBack: 'العودة',
   chatWithChef: 'محادثة مع المطبخ',
+  cancelOrder: 'إلغاء الطلب',
+  cancelOrderConfirmation: 'هل أنت متأكد أنك تريد إلغاء هذا الطلب؟',
+  keepOrder: 'الاحتفاظ بالطلب',
+  yesCancelOrder: 'نعم، إلغاء',
+  orderCancelled: 'تم إلغاء الطلب',
+  orderCancelledMessage: 'تم إلغاء طلبك بنجاح.',
+  failedToCancelOrder: 'فشل في إلغاء الطلب. يرجى المحاولة مرة أخرى.',
+  cancelling: 'جاري الإلغاء...',
 
   // Dish Details
   shareYourExperience: '⭐ شارك تجربتك',

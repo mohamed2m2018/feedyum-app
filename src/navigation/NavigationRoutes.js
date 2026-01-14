@@ -68,6 +68,7 @@ import DishDetailScreen from '../containers/TabBar/ordering/DishDetailScreen';
 import MenuDetailScreen from '../containers/TabBar/ordering/MenuDetailScreen';
 import ShoppingCart from '../containers/TabBar/ordering/ShoppingCart';
 import OrderTracking from '../containers/TabBar/ordering/OrderTracking';
+import ChefOrderDetailsScreen from '../containers/TabBar/chef/ChefOrderDetailsScreen';
 import ChatScreen from '../containers/TabBar/ordering/ChatScreen';
 import ChatList from '../containers/TabBar/ordering/ChatList';
 import Orders from '../containers/TabBar/orders/Orders';
@@ -152,6 +153,7 @@ export const StackRoute = {
   MenuDetailScreen,
   ShoppingCart,
   OrderTracking,
+  ChefOrderDetailsScreen,
   ChatScreen,
   ChatList,
   Wallet,

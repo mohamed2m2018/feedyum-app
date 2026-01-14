@@ -48,7 +48,6 @@ export default function TabBarNavigation({ route, navigation }) {
   const { currentScreen: previousScreen } = useScreen();
   const [modalState, setModalState] = React.useState({ visible: false, title: '', message: '' });
 
-  // Avoid flashing Discover before user type is known
   if (isLoading && !data) {
     return (
       <View style={{ flex: 1 }}>
@@ -59,6 +58,16 @@ export default function TabBarNavigation({ route, navigation }) {
 
   // Extract initialTab from route params or default to Discover
   const { initialTab = TabNav.Discover } = route.params || {};
+
+  // Handle deep linking navigation
+  React.useEffect(() => {
+    if (route.params?.initialTab) {
+      const targetTab = route.params.initialTab;
+      const targetParams = route.params.params;
+      console.log('🐞 [TabBar] Navigating to:', targetTab, 'Params:', targetParams);
+      navigation.navigate(targetTab, targetParams);
+    }
+  }, [route.params]);
 
   // Determine which component to use for Orders tab based on user type
   const user = data?.data?.user;
@@ -150,6 +159,7 @@ export default function TabBarNavigation({ route, navigation }) {
           animationEnabled: false,
           tabBarLabelStyle: { fontSize: 12 },
           freezeOnBlur: true,
+          swipeEnabled: false,
           tabBarContentContainerStyle: { backgroundColor: colors.backgroundColor },
           tabBarStyle: {
             backgroundColor: colors.backgroundColor,

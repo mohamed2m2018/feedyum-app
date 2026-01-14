@@ -454,6 +454,14 @@ export default {
   orderTracking: 'Order Tracking',
   goBack: 'Go Back',
   chatWithChef: 'Chat with Kitchen',
+  cancelOrder: 'Cancel Order',
+  cancelOrderConfirmation: 'Are you sure you want to cancel this order?',
+  keepOrder: 'Keep Order',
+  yesCancelOrder: 'Yes, Cancel',
+  orderCancelled: 'Order Cancelled',
+  orderCancelledMessage: 'Your order has been cancelled successfully.',
+  failedToCancelOrder: 'Failed to cancel order. Please try again.',
+  cancelling: 'Cancelling...',
 
   // Dish Details
   pricingSummary: 'Pricing Summary',

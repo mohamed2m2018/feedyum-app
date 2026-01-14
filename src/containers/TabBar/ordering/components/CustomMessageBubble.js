@@ -6,6 +6,7 @@ import {
   TouchableWithoutFeedback,
   Text,
   Image,
+  Modal,
 } from 'react-native';
 import { showActionDialog } from '../../../../utils/toast';
 import { ALERT_TYPE } from 'react-native-alert-notification';

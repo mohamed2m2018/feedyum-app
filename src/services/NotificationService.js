@@ -1,5 +1,6 @@
 import { OneSignal } from 'react-native-onesignal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Alert } from 'react-native';
 import DeepLinkingService from './DeepLinkingService';
 
 class NotificationService {
@@ -24,7 +25,6 @@ class NotificationService {
       // Request permission
       OneSignal.Notifications.requestPermission(true);
 
-
       // Setup notification handlers
       this.setupNotificationHandlers();
 
@@ -36,11 +36,16 @@ class NotificationService {
   }
 
   setupNotificationHandlers() {
-    // Check if handlers are already attached to avoid duplication (optional logic could go here)
-    // For OneSignal v5, we use OneSignal.Notifications.addEventListener
+    // Flag to prevent showing alert when coming from a background notification tap
+    let justHandledClick = false;
 
-    // Handle notification clicks
+    // Handle notification clicks (background/killed state taps)
     OneSignal.Notifications.addEventListener('click', (event) => {
+      console.log('🐞 [NotificationService] Notification clicked');
+      justHandledClick = true;
+      // Reset flag after a short delay
+      setTimeout(() => { justHandledClick = false; }, 1000);
+
       const data = event.notification.additionalData;
       if (data) {
         this.handleNotificationTap(data);
@@ -48,9 +53,40 @@ class NotificationService {
     });
 
     // Handle foreground notifications
+    // Using native Alert.alert because Toast library requires AlertNotificationRoot
+    // to be mounted first, which happens AFTER this service initializes
     OneSignal.Notifications.addEventListener('foregroundWillDisplay', (event) => {
-      // You can prevent default here via event.preventDefault() if needed specific logic
-      // For now, allow it to show
+      console.log('🐞 [NotificationService] Foreground notification received');
+
+      // Prevent default OneSignal banner
+      event.preventDefault();
+
+      // Don't show alert if this is from a background notification tap
+      if (justHandledClick) {
+        console.log('🐞 [NotificationService] Skipping alert - coming from background tap');
+        return;
+      }
+
+      const notification = event.notification;
+      const data = notification.additionalData;
+
+      // Use native Alert - guaranteed to work
+      Alert.alert(
+        notification.title || 'New Notification',
+        notification.body || '',
+        [
+          {
+            text: 'View Details',
+            onPress: () => {
+              console.log('🐞 [NotificationService] Alert clicked!', data);
+              if (data) {
+                this.handleNotificationTap(data);
+              }
+            }
+          },
+          { text: 'Close', style: 'cancel' }
+        ]
+      );
     });
   }
 

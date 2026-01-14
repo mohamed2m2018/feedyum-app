@@ -1,10 +1,10 @@
 /* eslint-disable react/no-unstable-nested-components */
 import React from 'react';
-import {createStackNavigator, TransitionPresets} from '@react-navigation/stack';
-import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import {StackRoute} from '../NavigationRoutes';
-import {StackNav} from '../NavigationKeys';
-import {isAndroid} from '../../common/constants';
+import { createStackNavigator, TransitionPresets } from '@react-navigation/stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { StackRoute } from '../NavigationRoutes';
+import { StackNav } from '../NavigationKeys';
+import { isAndroid } from '../../common/constants';
 
 const Stack = createStackNavigator();
 const AuthStack = createNativeStackNavigator();
@@ -126,7 +126,7 @@ export default function StackNavigation() {
       initialRouteName={StackNav.Splash}>
       <Stack.Screen
         name={StackNav.Splash}
-        options={{animation: 'none'}}
+        options={{ animation: 'none' }}
         component={StackRoute.Splash}
       />
       <Stack.Group
@@ -303,6 +303,15 @@ export default function StackNavigation() {
       <Stack.Screen
         name={StackNav.OrderTracking}
         component={StackRoute.OrderTracking}
+      />
+      <Stack.Screen
+        name={StackNav.ChefOrderDetails}
+        component={StackRoute.ChefOrderDetailsScreen}
+        options={{
+          presentation: 'modal',
+          gestureEnabled: true,
+          ...TransitionPresets.ModalPresentationIOS,
+        }}
       />
       <Stack.Screen
         name={StackNav.ChatScreen}

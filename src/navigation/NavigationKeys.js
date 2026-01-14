@@ -74,6 +74,7 @@ export const StackNav = {
   MenuDetailScreen: 'MenuDetailScreen',
   ShoppingCart: 'ShoppingCart',
   OrderTracking: 'OrderTracking',
+  ChefOrderDetails: 'ChefOrderDetails',
   ChatScreen: 'ChatScreen',
   ChatList: 'ChatList',
   Wallet: 'Wallet',

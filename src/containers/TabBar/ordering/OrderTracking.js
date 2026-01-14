@@ -7,7 +7,8 @@ import {
   AppState,
   Text,
 } from 'react-native';
-import { showErrorToast } from '../../../utils/toast';
+import { showErrorToast, showSuccessToast, showActionDialog } from '../../../utils/toast';
+import { ALERT_TYPE } from 'react-native-alert-notification';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -28,6 +29,7 @@ import {
   clearError,
   setCurrentOrder,
   updateOrderStatus,
+  cancelOrderByUser,
 } from '../../../redux/reducer/orderSlice';
 import { StackNav } from '../../../navigation/NavigationKeys';
 
@@ -49,6 +51,7 @@ const OrderTracking = () => {
 
   const [refreshing, setRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [cancelling, setCancelling] = useState(false);
   const intervalRef = useRef(null);
   const appStateRef = useRef(AppState.currentState);
 
@@ -181,6 +184,33 @@ const OrderTracking = () => {
         orderId: currentOrder._id,
       });
     }
+  };
+
+  const handleCancelOrder = () => {
+    showActionDialog({
+      type: ALERT_TYPE.DANGER,
+      title: strings.cancelOrder || 'Cancel Order',
+      message: strings.cancelOrderConfirmation || 'Are you sure you want to cancel this order?',
+      confirmText: strings.keepOrder || 'Keep Order',
+      cancelText: strings.yesCancelOrder || 'Yes, Cancel',
+      onCancel: async () => {
+        try {
+          setCancelling(true);
+          await dispatch(cancelOrderByUser(currentOrder._id, 'Cancelled by customer'));
+          showSuccessToast(
+            strings.orderCancelled || 'Order Cancelled',
+            strings.orderCancelledMessage || 'Your order has been cancelled successfully.'
+          );
+        } catch (error) {
+          showErrorToast(
+            strings.error || 'Error',
+            error.message || strings.failedToCancelOrder || 'Failed to cancel order. Please try again.'
+          );
+        } finally {
+          setCancelling(false);
+        }
+      },
+    });
   };
 
   const getStatusColor = status => {
@@ -805,6 +835,21 @@ const OrderTracking = () => {
           ]}
           onPress={handleChatWithChef}
         />
+
+        {/* Cancel Order Button - only show before order is preparing (pending/confirmed) */}
+        {currentOrder && ['pending', 'confirmed'].includes(currentOrder.status) && (
+          <ZButton
+            title={cancelling ? (strings.cancelling || 'Cancelling...') : (strings.cancelOrder || 'Cancel Order')}
+            textType="B16"
+            color={'#FFFFFF'}
+            containerStyle={[
+              localStyles.cancelButton,
+              { backgroundColor: '#F44336' },
+            ]}
+            onPress={handleCancelOrder}
+            disabled={cancelling}
+          />
+        )}
         <View style={{ height: moderateScale(50) }} />
       </ScrollView>
     </ZSafeAreaView>
@@ -956,6 +1001,12 @@ const localStyles = StyleSheet.create({
   },
   chatButton: {
     margin: moderateScale(16),
+    height: moderateScale(50),
+    borderRadius: moderateScale(25),
+  },
+  cancelButton: {
+    marginHorizontal: moderateScale(16),
+    marginBottom: moderateScale(8),
     height: moderateScale(50),
     borderRadius: moderateScale(25),
   },

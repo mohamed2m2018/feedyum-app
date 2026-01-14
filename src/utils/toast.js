@@ -13,11 +13,39 @@ import { colors } from '../themes';
  * @param {string} message - The toast message (optional)
  */
 export const showSuccessToast = (title, message) => {
+    if (Toast && typeof Toast.show === 'function') {
+        Toast.show({
+            type: ALERT_TYPE.SUCCESS,
+            title: title,
+            textBody: message || '',
+            autoClose: 3000,
+        });
+    }
+};
+
+/**
+ * Show a clickable success toast notification
+ * @param {string} title - The toast title
+ * @param {string} message - The toast message
+ * @param {Function} onPress - Callback when toast is pressed
+ */
+export const showClickableToast = (title, message, onPress) => {
+    if (!Toast || typeof Toast.show !== 'function') {
+        console.error('🐞 [toast.js] Toast.show is not available!', { Toast });
+        // Error will be caught by the caller and fallback Alert will be shown
+        throw new Error('Toast library not available');
+    }
+
     Toast.show({
         type: ALERT_TYPE.SUCCESS,
         title: title,
         textBody: message || '',
-        autoClose: 3000,
+        autoClose: 5000,
+        onPress: () => {
+            // Close toast first
+            if (Toast.hide) Toast.hide();
+            onPress?.();
+        }
     });
 };
 
@@ -27,12 +55,14 @@ export const showSuccessToast = (title, message) => {
  * @param {string} message - The toast message (optional)
  */
 export const showErrorToast = (title, message) => {
-    Toast.show({
-        type: ALERT_TYPE.DANGER,
-        title: title,
-        textBody: message || '',
-        autoClose: 4000,
-    });
+    if (Toast && typeof Toast.show === 'function') {
+        Toast.show({
+            type: ALERT_TYPE.DANGER,
+            title: title,
+            textBody: message || '',
+            autoClose: 4000,
+        });
+    }
 };
 
 /**
@@ -41,12 +71,14 @@ export const showErrorToast = (title, message) => {
  * @param {string} message - The toast message (optional)
  */
 export const showWarningToast = (title, message) => {
-    Toast.show({
-        type: ALERT_TYPE.WARNING,
-        title: title,
-        textBody: message || '',
-        autoClose: 3500,
-    });
+    if (Toast && typeof Toast.show === 'function') {
+        Toast.show({
+            type: ALERT_TYPE.WARNING,
+            title: title,
+            textBody: message || '',
+            autoClose: 3500,
+        });
+    }
 };
 
 /**
@@ -55,12 +87,14 @@ export const showWarningToast = (title, message) => {
  * @param {string} message - The toast message (optional)
  */
 export const showInfoToast = (title, message) => {
-    Toast.show({
-        type: ALERT_TYPE.INFO,
-        title: title,
-        textBody: message || '',
-        autoClose: 3000,
-    });
+    if (Toast && typeof Toast.show === 'function') {
+        Toast.show({
+            type: ALERT_TYPE.INFO,
+            title: title,
+            textBody: message || '',
+            autoClose: 3000,
+        });
+    }
 };
 
 /**
@@ -71,12 +105,14 @@ export const showInfoToast = (title, message) => {
  * @param {number} duration - Auto close duration in ms (optional, default 3000)
  */
 export const showToast = (type, title, message, duration = 3000) => {
-    Toast.show({
-        type: type,
-        title: title,
-        textBody: message || '',
-        autoClose: duration,
-    });
+    if (Toast && typeof Toast.show === 'function') {
+        Toast.show({
+            type: type,
+            title: title,
+            textBody: message || '',
+            autoClose: duration,
+        });
+    }
 };
 
 /**

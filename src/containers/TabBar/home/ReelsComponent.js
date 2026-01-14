@@ -67,74 +67,7 @@ export default function ReelsComponent({ amIFocused }) {
 
   const location = useLocation();
 
-  React.useEffect(() => {
-    // Handle notifications received while the app is in the foreground
 
-    const handleNotificationClick = (event) => {
-      const notification = event.notification;
-      // Display or handle the notification as needed
-      navigation.navigate(TabNav.FollowingTab);
-      setTimeout(() => {
-        setStoryId(notification?.additionalData?._id);
-      }, 300);
-
-      queryClient.invalidateQueries({ queryKey: 'user' });
-      queryClient.invalidateQueries({ queryKey: 'profile-stories' });
-
-      setnotificationReceived(true);
-      if (notification?.body?.includes('comment')) {
-        setSelectedPostId(
-          notification?.additionalData?._id,
-        );
-        setTimeout(() => {
-          commentSheetRef.current?.show();
-        }, 300);
-      }
-    };
-
-    const handleForegroundNotification = (event) => {
-      // Display or handle the notification as needed
-      const notification = event.getNotification();
-
-      // Build behavior preserved from legacy code:
-      navigation.navigate(TabNav.FollowingTab);
-
-      showSuccessToast(
-        strings.notification,
-        notification.body
-          ?.replace('got a comment', strings.gotAcomment)
-          ?.replace('got a like', strings.gotALike)
-      );
-
-      // Handle navigation after toast
-      navigation.navigate(TabNav.ForYou);
-      setStoryId(notification.additionalData?._id);
-      setTimeout(() => {
-        refetchStory();
-      }, 500);
-      queryClient.invalidateQueries({ queryKey: 'user' });
-      queryClient.invalidateQueries({ queryKey: 'profile-stories' });
-      if (notification?.body?.includes('comment')) {
-        setSelectedPostId(notification.additionalData?._id);
-        setTimeout(() => {
-          commentSheetRef.current?.show();
-        }, 300);
-      }
-      setnotificationReceived(true);
-
-      // v5: Notification displays by default unless event.preventDefault() is called.
-    };
-
-    OneSignal.Notifications.addEventListener('click', handleNotificationClick);
-    OneSignal.Notifications.addEventListener('foregroundWillDisplay', handleForegroundNotification);
-
-    return () => {
-      // Clean up OneSignal event handlers when the component unmounts
-      OneSignal.Notifications.removeEventListener('click', handleNotificationClick);
-      OneSignal.Notifications.removeEventListener('foregroundWillDisplay', handleForegroundNotification);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [commentSheetRef]);
 
   // Use optimized reels hook
   const {
@@ -215,7 +148,7 @@ export default function ReelsComponent({ amIFocused }) {
   }, [storyData, filteredData]);
   useEffect(() => {
     setExtraData(e => !e);
-  }, [activeVideoIndex, isFocused, isCommentOpen, notificationReceived]);
+  }, [activeVideoIndex, isFocused, isCommentOpen]);
 
   const onPressSearch = () => navigation.navigate(TabNav.Search);
 
