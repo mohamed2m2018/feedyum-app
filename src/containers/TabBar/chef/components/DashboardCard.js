@@ -65,11 +65,11 @@ const DashboardCard = ({
 
 const localStyles = StyleSheet.create({
   container: {
-    padding: moderateScale(16),
+    padding: moderateScale(18),
     borderRadius: moderateScale(12),
     borderWidth: 1,
     backgroundColor: '#FFFFFF', // Background color for shadow efficiency
-    minHeight: moderateScale(100),
+    minHeight: moderateScale(110),
     justifyContent: 'space-between',
     ...styles.shadowStyle,
     shadowOpacity: 0.1,
@@ -78,15 +78,15 @@ const localStyles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: moderateScale(8),
+    marginBottom: moderateScale(12),
   },
   iconContainer: {
-    width: moderateScale(40),
-    height: moderateScale(40),
-    borderRadius: moderateScale(20),
+    width: moderateScale(44),
+    height: moderateScale(44),
+    borderRadius: moderateScale(22),
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: moderateScale(12),
+    marginRight: moderateScale(14),
   },
   valueContainer: {
     flex: 1,
@@ -96,7 +96,7 @@ const localStyles = StyleSheet.create({
   },
   title: {
     textAlign: 'left',
-    lineHeight: moderateScale(18),
+    lineHeight: moderateScale(20),
   },
 });
 

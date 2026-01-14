@@ -43,6 +43,8 @@ import InstagramBg from './instagramBg.svg';
 import LikeBg from './likeBg.svg';
 import LikeIconModal from './likeIconModal.svg';
 import QrCodeIcon from './qrCodeIcon.svg';
+import ChefDashboard_Dark from './chefDashboardDark.svg';
+import ChefDashboard_Light from './chefDashboardLight.svg';
 
 export {
   Home_Light,
@@ -87,4 +89,6 @@ export {
   LikeBg,
   LikeIconModal,
   QrCodeIcon,
+  ChefDashboard_Dark,
+  ChefDashboard_Light,
 };

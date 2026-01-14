@@ -814,6 +814,32 @@ export default {
   analyticsDashboard: 'Analytics Dashboard',
   revenueChartsAndMetrics:
     'Revenue charts and performance metrics will be displayed here',
+  
+  // Analytics Screen
+  overview: 'Overview',
+  periodRevenue: 'Period Revenue',
+  totalRevenue: 'Total Revenue',
+  avgOrderValue: 'Avg Order Value',
+  activeDishes: 'active dishes',
+  revenueChart: 'Revenue Trend',
+  noDataAvailable: 'No data available',
+  orderStatusBreakdown: 'Order Status',
+  popularDishes: 'Top Selling Dishes',
+  recentOrders: 'Recent Orders',
+  days7: '7 Days',
+  days30: '30 Days',
+  days90: '90 Days',
+  ordersCount: 'orders',
+  totalOrdersCount: 'total orders',
+  items: 'items',
+  
+  // Order Statuses
+  statusPending: 'Pending',
+  statusAccepted: 'Accepted',
+  statusPreparing: 'Preparing',
+  statusReady: 'Ready',
+  statusCompleted: 'Completed',
+  statusCancelled: 'Cancelled',
 
   // Order Status Actions
   startPreparing: 'Start Preparing',

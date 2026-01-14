@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { showErrorToast } from '../../../utils/toast';
 import { useSelector, useDispatch } from 'react-redux';
-import { useQuery } from 'react-query';
+import { useQuery, useInfiniteQuery } from 'react-query';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import ZText from '../../../components/common/ZText';
@@ -56,11 +56,10 @@ const ChefMenu = () => {
   const cartItemCount = useSelector(selectCartItemCount);
   const cartError = useSelector(selectCartError);
 
-  // Define fetch function first
-  const fetchChefMenu = async chefId => {
+  // Fetch chef/menu info (Static)
+  const fetchChefInfo = async (chefId) => {
     try {
       let menu = null;
-      let dishes = [];
       let chef = null;
 
       // First try to get the chef's menu
@@ -75,7 +74,6 @@ const ChefMenu = () => {
         const chefResponse = await request.get(`/user/${chefId}`);
         chef = chefResponse.data;
       } catch (chefError) {
-        // If we can't get chef info, create a basic chef object
         chef = {
           _id: chefId,
           fullName: chefName || strings.unknownChef,
@@ -83,61 +81,101 @@ const ChefMenu = () => {
         };
       }
 
-      // Fetch dishes for this chef
-      try {
-        const dishesResponse = await request.get(`/dishes/chef/${chefId}`);
-        dishes = dishesResponse.data || [];
-      } catch (dishError) {
-        dishes = [];
-      }
-
-      return {
-        menu,
-        dishes,
-        chef,
-      };
+      return { menu, chef };
     } catch (error) {
       throw error;
     }
   };
 
   const {
-    data: menuData,
-    isLoading,
-    error,
-    refetch,
-  } = useQuery(['chefMenu', chefId], () => fetchChefMenu(chefId), {
+    data: chefInfoData,
+    isLoading: isChefInfoLoading,
+    error: chefInfoError,
+    refetch: refetchChefInfo,
+  } = useQuery(['chefInfo', chefId], () => fetchChefInfo(chefId), {
     enabled: !!chefId,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    cacheTime: 1000 * 60 * 10, // 10 minutes
-    retry: 2,
-    onError: error => {
-    },
-    onSuccess: data => {
-      // Auto-scroll to specific dish if provided
-      if (scrollToDishId && data?.dishes && flatListRef.current) {
-        // Defer until interactions complete to ensure list has measured content
-        InteractionManager.runAfterInteractions(() => {
-          setTimeout(() => {
-            const dishIndex = data.dishes.findIndex(
-              dish => dish._id === scrollToDishId || dish.id === scrollToDishId,
-            );
-            if (dishIndex !== -1) {
-              try {
-                flatListRef.current.scrollToIndex({
-                  index: dishIndex,
-                  animated: true,
-                  viewPosition: 0.1,
-                });
-                hasAttemptedScrollRef.current = true;
-              } catch (e) {
-              }
-            }
-          }, 300);
-        });
-      }
-    },
+    staleTime: 1000 * 60 * 5,
   });
+
+  // Fetch dishes (Infinite Scroll)
+  const {
+    data: dishesData,
+    isLoading: isDishesLoading,
+    error: dishesError,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    refetch: refetchDishes,
+  } = useInfiniteQuery(
+    ['chefDishes', chefId],
+    async ({ pageParam = 1 }) => {
+      // Use getDishesByChef endpoint which now supports pagination
+      // Note: Endpoint returns OBJECT { dishes, ... } if page/limit present, or ARRAY if legacy
+      // We explicitly ask for page/limit so we expect object style response if backend was updated correctly
+      // However, to be safe given recent changes, we inspect response structure
+      const response = await request.get(`/dishes/chef/${chefId}?page=${pageParam}&limit=20`);
+      return response.data;
+    },
+    {
+      enabled: !!chefId,
+      getNextPageParam: (lastPage) => {
+        // Handle both possible backend structures (Array vs Object)
+        if (Array.isArray(lastPage)) {
+          // Should not happen if page param is respected, but fallback
+          return undefined;
+        }
+        if (lastPage.currentPage < lastPage.totalPages) {
+          return lastPage.currentPage + 1;
+        }
+        return undefined;
+      },
+    }
+  );
+
+  // Flatten dishes
+  const allDishes = React.useMemo(() => {
+    if (!dishesData) return [];
+    return dishesData.pages.flatMap(page => {
+      // If page is array (Legacy), return it all
+      if (Array.isArray(page)) return page;
+      // If page is object (New Paginated), return .dishes
+      return page.dishes || [];
+    });
+  }, [dishesData]);
+
+  // Combine into a single 'menuData' object to minimize code changes downstream
+  const menuData = React.useMemo(() => ({
+    ...chefInfoData,
+    dishes: allDishes
+  }), [chefInfoData, allDishes]);
+
+  const isLoading = isChefInfoLoading; // Initial loading only blocks on chef info, dishes can stream
+  const error = chefInfoError;
+  const refetch = () => { refetchChefInfo(); refetchDishes(); };
+
+  // Scroll to dish logic (simplified to wait for dishes load)
+  useEffect(() => {
+    if (scrollToDishId && allDishes.length > 0 && flatListRef.current && !hasAttemptedScrollRef.current) {
+      InteractionManager.runAfterInteractions(() => {
+        setTimeout(() => {
+          const dishIndex = allDishes.findIndex(
+            dish => dish._id === scrollToDishId || dish.id === scrollToDishId,
+          );
+          if (dishIndex !== -1) {
+            try {
+              flatListRef.current.scrollToIndex({
+                index: dishIndex,
+                animated: true,
+                viewPosition: 0.1,
+              });
+              hasAttemptedScrollRef.current = true;
+            } catch (e) {
+            }
+          }
+        }, 500); // Increased timeout to allow rendering
+      });
+    }
+  }, [scrollToDishId, allDishes]); // Re-run when new dishes loaded
 
   // Search state for within-chef menu
   const [search, setSearch] = useState('');
@@ -767,6 +805,7 @@ const ChefMenu = () => {
                     index: info.index,
                     animated: true,
                     viewPosition: 0.1,
+
                   });
                 } catch (e2) {
                 }
@@ -775,6 +814,15 @@ const ChefMenu = () => {
           } catch (e) {
           }
         }}
+        onEndReached={() => {
+          if (hasNextPage && !isFetchingNextPage) {
+            fetchNextPage();
+          }
+        }}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={() => isFetchingNextPage ?
+          <View style={{ padding: 20 }}><ZLoader /></View> : null
+        }
       />
 
       <CartFloatingButton onPress={handleCartPress} />

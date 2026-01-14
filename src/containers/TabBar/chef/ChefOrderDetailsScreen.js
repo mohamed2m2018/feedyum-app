@@ -23,6 +23,7 @@ import { moderateScale } from '../../../common/constants';
 import strings from '../../../i18n/strings';
 import request from '../../../api/request';
 import { showSuccessToast, showErrorToast } from '../../../utils/toast';
+import RejectReasonModal from '../ordering/components/RejectReasonModal';
 
 /**
  * ChefOrderDetailsScreen - A modal screen for viewing and managing order details
@@ -35,6 +36,7 @@ const ChefOrderDetailsScreen = () => {
     const queryClient = useQueryClient();
     const insets = useSafeAreaInsets();
     const { orderId } = route.params || {};
+    const [rejectModalVisible, setRejectModalVisible] = useState(false);
 
     // Fetch order by ID
     const {
@@ -71,6 +73,39 @@ const ChefOrderDetailsScreen = () => {
             },
         }
     );
+
+    // Reject order mutation
+    const rejectOrderMutation = useMutation(
+        async ({ orderId, reason }) => {
+            const response = await request.put(`/orders/${orderId}/status`, { 
+                status: 'cancelled',
+                notes: reason 
+            });
+            return response.data;
+        },
+        {
+            onSuccess: () => {
+                showSuccessToast(strings.success, strings.orderUpdatedSuccess);
+                queryClient.invalidateQueries(['order', orderId]);
+                queryClient.invalidateQueries('chefOrders');
+                setRejectModalVisible(false);
+                navigation.goBack();
+            },
+            onError: (error) => {
+                showErrorToast(strings.error, error?.message || strings.failedToRejectOrder);
+            },
+        }
+    );
+
+    const handleRejectOrder = () => {
+        setRejectModalVisible(true);
+    };
+
+    const handleConfirmReject = (reason) => {
+        if (order) {
+            rejectOrderMutation.mutate({ orderId: order._id, reason });
+        }
+    };
 
     const handleClose = () => {
         navigation.goBack();
@@ -489,8 +524,27 @@ const ChefOrderDetailsScreen = () => {
                         containerStyle={localStyles.actionButton}
                         loading={updateStatusMutation.isLoading}
                     />
+                    {order?.status === 'pending' && (
+                        <ZButton
+                            title={strings.rejectOrder || 'Reject Order'}
+                            onPress={handleRejectOrder}
+                            textType="B16"
+                            color={colors.redColor}
+                            containerStyle={[localStyles.actionButton, localStyles.rejectButton, { borderColor: colors.redColor }]}
+                            bgColor="transparent"
+                            loading={rejectOrderMutation.isLoading}
+                        />
+                    )}
                 </View>
             )}
+
+            {/* Reject Reason Modal */}
+            <RejectReasonModal
+                visible={rejectModalVisible}
+                onClose={() => setRejectModalVisible(false)}
+                onConfirm={handleConfirmReject}
+                colors={colors}
+            />
         </ZSafeAreaView>
     );
 };
@@ -657,6 +711,10 @@ const localStyles = StyleSheet.create({
     actionButton: {
         height: moderateScale(48),
         borderRadius: moderateScale(24),
+    },
+    rejectButton: {
+        marginTop: moderateScale(12),
+        borderWidth: 1.5,
     },
 });
 

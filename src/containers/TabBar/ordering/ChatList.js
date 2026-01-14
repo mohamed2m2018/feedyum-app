@@ -8,7 +8,7 @@ import {
   Image,
 } from 'react-native';
 import { useSelector } from 'react-redux';
-import { useQuery } from 'react-query';
+import { useQuery, useInfiniteQuery } from 'react-query';
 import { useFocusEffect } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
@@ -34,49 +34,69 @@ export default function ChatList({ navigation }) {
   const currentOrder = useSelector(state => state.order?.currentOrder);
   const isPlacing = useSelector(state => state.order?.isPlacing);
 
-  // Get order-based chats directly from backend
+  // Get order-based chats using Infinite Query
   const {
     data: chatsData,
     isLoading: chatsLoading,
     error: chatsError,
-    refetch: refetchChats,
-  } = useQuery(
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    refetch,
+  } = useInfiniteQuery(
     ['orderChats', currentUser?._id],
-    () => request.get('/chat/order-chats'),
+    async ({ pageParam = 1 }) => {
+      const response = await request.get(`/chat/order-chats?page=${pageParam}&limit=10`);
+      return response.data;
+    },
     {
       enabled: !!currentUser?._id,
-      refetchInterval: false, // Polling disabled - manual refresh only
-      staleTime: 0, // Always consider data stale for immediate updates
-      cacheTime: 30000, // Keep in cache for 30 seconds
+      getNextPageParam: (lastPage, allPages) => {
+        if (lastPage.currentPage < lastPage.totalPages) {
+          return lastPage.currentPage + 1;
+        }
+        return undefined;
+      },
+      refetchInterval: false,
+      staleTime: 0,
+      cacheTime: 30000,
     },
   );
 
-  const orderChats = chatsData?.data?.orderChats || [];
+  // Flatten the pages into a single array
+  const orderChats = React.useMemo(() => {
+    return chatsData?.pages?.flatMap(page => page.orderChats) || [];
+  }, [chatsData]);
 
   // Refresh chat list when screen comes into focus
   useFocusEffect(
     React.useCallback(() => {
-      refetchChats();
-    }, [refetchChats])
+      refetch();
+    }, [refetch])
   );
 
   // Refresh chat list when a new order is created
   useEffect(() => {
     if (currentOrder && !isPlacing) {
-      // Order was just created, refresh the chat list
       setTimeout(() => {
-        refetchChats();
-      }, 1000); // Small delay to allow backend to process
+        refetch();
+      }, 1000);
     }
-  }, [currentOrder, isPlacing, refetchChats]);
+  }, [currentOrder, isPlacing, refetch]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
-      await refetchChats();
+      await refetch();
     } catch (error) {
     } finally {
       setRefreshing(false);
+    }
+  };
+
+  const loadMore = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
     }
   };
 
@@ -106,40 +126,23 @@ export default function ChatList({ navigation }) {
     // Try to parse as JSON first (for structured messages like audio, images, etc.)
     try {
       const parsedContent = JSON.parse(content);
-
       if (parsedContent.type === 'audio_with_duration') {
         return strings.audioMessage;
       }
-
       if (parsedContent.type === 'image_with_text') {
         return parsedContent.text ? `📷 ${parsedContent.text}` : strings.imageMessage;
       }
-
-      // If it's JSON but unknown type, return a generic message
       return strings.mediaMessage;
-
     } catch (e) {
-      // Not JSON, check if it's an image path
+      // Not JSON, check checks
       const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
-      const isImagePath = imageExtensions.some(ext =>
-        content.toLowerCase().includes(ext)
-      );
+      const isImagePath = imageExtensions.some(ext => content.toLowerCase().includes(ext));
+      if (isImagePath) return strings.imageMessage;
 
-      if (isImagePath) {
-        return strings.imageMessage;
-      }
-
-      // Check if it's an audio file path
       const audioExtensions = ['.mp3', '.wav', '.m4a', '.aac'];
-      const isAudioPath = audioExtensions.some(ext =>
-        content.toLowerCase().includes(ext)
-      );
+      const isAudioPath = audioExtensions.some(ext => content.toLowerCase().includes(ext));
+      if (isAudioPath) return strings.audioMessage;
 
-      if (isAudioPath) {
-        return strings.audioMessage;
-      }
-
-      // Check if it's an order summary message
       if (content.includes('🍽️ ORDER #')) {
         const orderMatch = content.match(/🍽️ ORDER #(\w+)/);
         const statusMatch = content.match(/🔄 Status: (\w+)/);
@@ -148,51 +151,33 @@ export default function ChatList({ navigation }) {
         }
         return strings.orderSummary;
       }
-
-      // Regular text message - truncate if too long
       return content.length > 50 ? `${content.substring(0, 50)}...` : content;
     }
   };
 
   const getOrderStatusColor = (status) => {
     switch (status) {
-      case 'pending':
-        return colors.warning || '#FF9800';
-      case 'chef_review':
-        return colors.info || '#2196F3';
-      case 'accepted':
-        return colors.success || '#4CAF50';
-      case 'preparing':
-        return colors.info || '#2196F3';
-      case 'ready':
-        return colors.success || '#4CAF50';
-      case 'delivered':
-        return colors.success || '#4CAF50';
-      case 'cancelled':
-        return colors.error || '#F44336';
-      default:
-        return colors.grayScale7;
+      case 'pending': return colors.warning || '#FF9800';
+      case 'chef_review': return colors.info || '#2196F3';
+      case 'accepted': return colors.success || '#4CAF50';
+      case 'preparing': return colors.info || '#2196F3';
+      case 'ready': return colors.success || '#4CAF50';
+      case 'delivered': return colors.success || '#4CAF50';
+      case 'cancelled': return colors.error || '#F44336';
+      default: return colors.grayScale7;
     }
   };
 
   const getOrderStatusText = (status) => {
     switch (status) {
-      case 'pending':
-        return strings.pending;
-      case 'chef_review':
-        return strings.chefReviewing;
-      case 'accepted':
-        return strings.orderAccepted;
-      case 'preparing':
-        return strings.preparing;
-      case 'ready':
-        return strings.ready;
-      case 'delivered':
-        return strings.delivered;
-      case 'cancelled':
-        return strings.cancelled;
-      default:
-        return status?.charAt(0).toUpperCase() + status?.slice(1) || 'Unknown';
+      case 'pending': return strings.pending;
+      case 'chef_review': return strings.chefReviewing;
+      case 'accepted': return strings.orderAccepted;
+      case 'preparing': return strings.preparing;
+      case 'ready': return strings.ready;
+      case 'delivered': return strings.delivered;
+      case 'cancelled': return strings.cancelled;
+      default: return status?.charAt(0).toUpperCase() + status?.slice(1) || 'Unknown';
     }
   };
 
@@ -203,13 +188,10 @@ export default function ChatList({ navigation }) {
       activeOpacity={0.7}>
       <Image
         source={{
-          uri:
-            item.chef.avatar ||
-            'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?w=200',
+          uri: item.chef.avatar || 'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?w=200',
         }}
         style={localStyles.avatar}
       />
-
       <View style={localStyles.chatInfo}>
         <View style={localStyles.chatHeader}>
           <View style={localStyles.chefInfo}>
@@ -221,11 +203,7 @@ export default function ChatList({ navigation }) {
             </ZText>
           </View>
           <View style={localStyles.orderStatus}>
-            <View
-              style={[
-                localStyles.statusBadge,
-                { backgroundColor: getOrderStatusColor(item.order.status) }
-              ]}>
+            <View style={[localStyles.statusBadge, { backgroundColor: getOrderStatusColor(item.order.status) }]}>
               <ZText type="M10" color={colors.white}>
                 {getOrderStatusText(item.order.status)}
               </ZText>
@@ -235,47 +213,38 @@ export default function ChatList({ navigation }) {
             </ZText>
           </View>
         </View>
-
-        <ZText
-          type="M14"
-          color={colors.grayScale7}
-          numberOfLines={2}
-          style={localStyles.lastMessage}>
+        <ZText type="M14" color={colors.grayScale7} numberOfLines={2} style={localStyles.lastMessage}>
           {formatMessagePreview(item.latestMessage?.content) || strings.orderPlacedStartChatting}
         </ZText>
       </View>
-
-      <Ionicons
-        name="chevron-forward"
-        size={moderateScale(20)}
-        color={colors.grayScale7}
-      />
+      <Ionicons name="chevron-forward" size={moderateScale(20)} color={colors.grayScale7} />
     </TouchableOpacity>
   );
 
   const renderEmptyState = () => (
     <View style={localStyles.emptyContainer}>
-      <Ionicons
-        name="chatbubbles-outline"
-        size={moderateScale(64)}
-        color={colors.grayScale4}
-      />
-      <ZText
-        type="B18"
-        color={colors.grayScale7}
-        style={localStyles.emptyTitle}>
+      <Ionicons name="chatbubbles-outline" size={moderateScale(64)} color={colors.grayScale4} />
+      <ZText type="B18" color={colors.grayScale7} style={localStyles.emptyTitle}>
         {strings.noOrderChatsYet}
       </ZText>
-      <ZText
-        type="M14"
-        color={colors.grayScale7}
-        style={localStyles.emptySubtitle}>
+      <ZText type="M14" color={colors.grayScale7} style={localStyles.emptySubtitle}>
         {strings.startConversationInfo}
       </ZText>
     </View>
   );
 
-  if ((chatsLoading) && !orderChats.length) {
+  const renderFooter = () => {
+    if (isFetchingNextPage) {
+      return (
+        <View style={{ paddingVertical: 20 }}>
+          <ZLoader />
+        </View>
+      );
+    }
+    return null;
+  };
+
+  if (chatsLoading && !orderChats.length) {
     return (
       <ZSafeAreaView>
         <ZHeader title={strings.orderChats} showBack />
@@ -299,6 +268,9 @@ export default function ChatList({ navigation }) {
           />
         }
         ListEmptyComponent={renderEmptyState}
+        ListFooterComponent={renderFooter}
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.5}
         contentContainerStyle={localStyles.listContainer}
         showsVerticalScrollIndicator={false}
       />

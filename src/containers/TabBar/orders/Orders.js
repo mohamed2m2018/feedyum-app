@@ -8,7 +8,7 @@ import {
   Image,
 } from 'react-native';
 import { useSelector } from 'react-redux';
-import { useQuery } from 'react-query';
+import { useQuery, useInfiniteQuery } from 'react-query';
 import { useFocusEffect } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { debounce, getOptimizedQueryConfig, optimizeImageUri } from '../../../utils/performanceUtils';
@@ -30,29 +30,44 @@ export default function Orders({ navigation }) {
   const { data: userData } = useQuery('user', () => request.get('/user'));
   const currentUser = userData?.data?.user;
 
-  // Get user orders
+  // Get user orders with infinite scroll
   const {
     data: ordersData,
     isLoading: ordersLoading,
     error: ordersError,
     refetch: refetchOrders,
-  } = useQuery(
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery(
     ['userOrders', currentUser?._id],
-    () => request.get('/orders/user'),
+    async ({ pageParam = 1 }) => {
+      const response = await request.get(`/orders/user?page=${pageParam}&limit=10`);
+      return response.data;
+    },
     {
       enabled: !!currentUser?._id,
-      refetchInterval: false, // Disable auto-refresh - use manual refresh instead
+      getNextPageParam: (lastPage) => {
+        if (lastPage.currentPage < lastPage.totalPages) {
+          return lastPage.currentPage + 1;
+        }
+        return undefined;
+      },
+      refetchInterval: false,
       ...getOptimizedQueryConfig('frequent'),
     },
   );
 
-  const orders = ordersData?.data?.orders || [];
+  // Flatten orders from pages
+  const orders = useMemo(() => {
+    return ordersData?.pages?.flatMap(page => page.orders || []) || [];
+  }, [ordersData]);
 
   // Refresh orders when screen comes into focus (with throttling)
   useFocusEffect(
     React.useCallback(() => {
       // Only refetch if data is stale (older than 30 seconds)
-      const lastFetch = ordersData?._lastFetch || 0;
+      const lastFetch = ordersData?.pages?.[0]?._lastFetch || 0;
       const now = Date.now();
       if (now - lastFetch > 30000) {
         refetchOrders();
@@ -211,6 +226,15 @@ export default function Orders({ navigation }) {
     </View>
   );
 
+  const renderFooter = () => {
+    if (!isFetchingNextPage) return null;
+    return (
+      <View style={{ paddingVertical: 20 }}>
+        <ZLoader />
+      </View>
+    );
+  };
+
   if (ordersLoading && !orders.length) {
     return (
       <ZSafeAreaView>
@@ -237,6 +261,13 @@ export default function Orders({ navigation }) {
         ListEmptyComponent={renderEmptyState}
         contentContainerStyle={localStyles.listContainer}
         showsVerticalScrollIndicator={false}
+        onEndReached={() => {
+          if (hasNextPage) {
+            fetchNextPage();
+          }
+        }}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={renderFooter}
       />
     </ZSafeAreaView>
   );

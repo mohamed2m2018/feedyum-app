@@ -5,7 +5,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   Image,
-  Dimensions
+  Dimensions,
+  RefreshControl
 } from 'react-native';
 import { useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
@@ -27,7 +28,9 @@ const SearchDishes = ({
   onEndReachedThreshold,
   isFetching,
   isFetchingNextPage,
-  onMomentumScrollBegin
+  onMomentumScrollBegin,
+  refreshing,
+  onRefresh
 }) => {
   const colors = useSelector(state => state.theme.theme);
   const navigation = useNavigation();
@@ -123,6 +126,14 @@ const SearchDishes = ({
       onEndReachedThreshold={onEndReachedThreshold}
       showsVerticalScrollIndicator={false}
       ListEmptyComponent={renderEmptyState}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor={colors.primary}
+          colors={[colors.primary]}
+        />
+      }
     />
   );
 };

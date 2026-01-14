@@ -1,12 +1,12 @@
 import React from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, View, RefreshControl } from 'react-native';
 import UserDetailComponent from '../../../../components/UserDetailComponent';
 import { FlashList } from '@shopify/flash-list';
 import ZText from '../../../../components/common/ZText';
 import strings from '../../../../i18n/strings';
 import { useSelector } from 'react-redux';
 
-export default function SearchUser({ users, currentUserId, ...props }) {
+export default function SearchUser({ users, currentUserId, refreshing, onRefresh, ...props }) {
   const colors = useSelector(state => state.theme.theme);
   return (
     <View style={{ flex: 1 }}>
@@ -14,6 +14,14 @@ export default function SearchUser({ users, currentUserId, ...props }) {
         data={users}
         {...props}
         estimatedItemSize={100}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+          />
+        }
         ListEmptyComponent={
           !props.isFetching && (
             <ZText style={{ textAlign: 'center', marginTop: 250 }} type={'B20'}>
@@ -24,7 +32,7 @@ export default function SearchUser({ users, currentUserId, ...props }) {
         renderItem={({ item }) => {
           return (
             <UserDetailComponent
-              userName={item?.fullName}
+              userName={item?.fullName || item?.username || 'User'}
               userImage={item?.avatar}
               userDescription={item?.description}
               isFollowed={item?.currentUserFollowed}

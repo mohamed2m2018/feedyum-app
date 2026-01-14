@@ -11,7 +11,7 @@ import {
 import { useSelector } from 'react-redux';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { useQuery, useQueryClient, useMutation } from 'react-query';
+import { useQuery, useInfiniteQuery, useQueryClient, useMutation } from 'react-query';
 import { showSuccessToast, showErrorToast } from '../../../utils/toast';
 
 // Local imports
@@ -159,24 +159,36 @@ export default function OrderManagement() {
   // Connect to socket for real-time updates
   useChefSocket(userId);
 
-  // Fetch orders - using real API data
+  // Fetch orders with infinite scroll pagination
+  const ORDERS_PER_PAGE = 20;
+
   const {
     data: ordersResponse,
     isLoading: ordersLoading,
     error: ordersError,
-  } = useQuery(
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery(
     ['chefOrders', userId],
-    async () => {
+    async ({ pageParam = 1 }) => {
       try {
-        // Fetch real orders from API
-        const response = await request.get(`/orders/chef/${userId}`);
-        return response.data;
+        // Fetch real orders from API with pagination
+        const response = await request.get(`/orders/chef/${userId}?page=${pageParam}&limit=${ORDERS_PER_PAGE}`);
+        return {
+          orders: response.data.orders || [],
+          page: pageParam,
+          hasMore: (response.data.orders || []).length === ORDERS_PER_PAGE,
+        };
       } catch (error) {
         throw error;
       }
     },
     {
       enabled: !!userId,
+      getNextPageParam: (lastPage) => {
+        return lastPage.hasMore ? lastPage.page + 1 : undefined;
+      },
       refetchInterval: 30000, // Auto-refresh every 30 seconds
       staleTime: 2 * 60 * 1000, // Consider data stale after 2 minutes
       cacheTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
@@ -185,8 +197,8 @@ export default function OrderManagement() {
     },
   );
 
-  // Extract orders from response
-  const ordersData = ordersResponse?.orders || [];
+  // Flatten all pages of orders into a single array
+  const ordersData = ordersResponse?.pages?.flatMap(page => page.orders) || [];
 
   // Note: Deep link navigation to order details now goes directly to ChefOrderDetailsScreen
   // instead of opening a modal here. See DeepLinkingService.navigateToChefOrderDetails()
@@ -439,6 +451,22 @@ export default function OrderManagement() {
                 <EmptyState selectedStatus={selectedStatus} colors={colors} />
               }
               contentContainerStyle={localStyles.ordersContent}
+              onEndReached={() => {
+                if (hasNextPage && !isFetchingNextPage && selectedStatus === 'all') {
+                  fetchNextPage();
+                }
+              }}
+              onEndReachedThreshold={0.3}
+              ListFooterComponent={
+                isFetchingNextPage ? (
+                  <View style={localStyles.loadingFooter}>
+                    <ZLoader isLoading={true} />
+                    <ZText type="M14" color={colors.grayScale7} style={{ marginTop: 8 }}>
+                      {strings.loadingMoreOrders || 'Loading more orders...'}
+                    </ZText>
+                  </View>
+                ) : null
+              }
             />
           )}
         </View>
@@ -606,5 +634,10 @@ const localStyles = StyleSheet.create({
   summaryItem: {
     alignItems: 'center',
     flex: 1,
+  },
+  loadingFooter: {
+    paddingVertical: moderateScale(20),
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

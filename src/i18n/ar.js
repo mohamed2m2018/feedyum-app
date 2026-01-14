@@ -791,6 +791,32 @@ export default {
   // Analytics & Dashboard
   analyticsDashboard: 'لوحة تحكم التحليلات',
   revenueChartsAndMetrics: 'سيتم عرض مخططات الإيرادات ومقاييس الأداء هنا',
+  
+  // Analytics Screen
+  overview: 'نظرة عامة',
+  periodRevenue: 'إيرادات الفترة',
+  totalRevenue: 'إجمالي الإيرادات',
+  avgOrderValue: 'متوسط قيمة الطلب',
+  activeDishes: 'أطباق نشطة',
+  revenueChart: 'اتجاه الإيرادات',
+  noDataAvailable: 'لا توجد بيانات متاحة',
+  orderStatusBreakdown: 'حالة الطلبات',
+  popularDishes: 'الأطباق الأكثر مبيعاً',
+  recentOrders: 'الطلبات الأخيرة',
+  days7: '٧ أيام',
+  days30: '٣٠ يوم',
+  days90: '٩٠ يوم',
+  ordersCount: 'طلبات',
+  totalOrdersCount: 'إجمالي الطلبات',
+  items: 'عناصر',
+  
+  // Order Statuses
+  statusPending: 'قيد الانتظار',
+  statusAccepted: 'مقبول',
+  statusPreparing: 'قيد التحضير',
+  statusReady: 'جاهز',
+  statusCompleted: 'مكتمل',
+  statusCancelled: 'ملغي',
 
   // Order Status Actions
   startPreparing: 'بدء التحضير',
@@ -894,7 +920,7 @@ export default {
   lastPayment: 'آخر دفعة',
 
   // Chef Dashboard translations
-  welcomeBackChef: 'مرحباً بعودتك أيها المطبخ!',
+  welcomeBackChef: 'مرحباً بعودتك',
   pinchToZoom: 'قرص للتكبير',
   doubleTapToZoom: 'انقر نقرًا مزدوجًا للتكبير',
   dragToPan: 'اسحب للتحريك عند التكبير',

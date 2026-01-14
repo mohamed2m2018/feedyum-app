@@ -135,7 +135,11 @@ class DeepLinkingService {
   }
 
   navigateToScreen(linkData) {
-    if (!DeepLinkingService.navigationRef?.isReady()) {
+    // Check if navigation is ready - handle both navigationRef (has isReady) and navigation prop (has dispatch directly)
+    const navRef = DeepLinkingService.navigationRef;
+    const isNavReady = navRef && (typeof navRef.isReady === 'function' ? navRef.isReady() : typeof navRef.dispatch === 'function');
+
+    if (!isNavReady) {
       // Queue navigation for when navigation is ready
       setTimeout(() => this.navigateToScreen(linkData), 500);
       return;
@@ -277,9 +281,13 @@ class DeepLinkingService {
 
   // Chat navigation
   navigateToChat(userId, params) {
+    // ChatScreen expects 'chefId' parameter for order-related chats or user-user chats
+    // It also supports 'orderId' if provided
+    console.log('🐞 [DeepLinkingService] Navigating to ChatScreen:', userId, params);
     DeepLinkingService.navigationRef?.dispatch(
       CommonActions.navigate('ChatScreen', {
-        otherUserId: userId,
+        chefId: userId, // Map userId to chefId as expected by ChatScreen
+        orderId: params?.orderId || null,
         ...params
       })
     );
@@ -438,6 +446,46 @@ class DeepLinkingService {
       return { handled: true, targetTab: 'FollowingTab' };
     }
 
+    // Generic deep link or chat notification
+    if (lastNotif.deepLink || (lastNotif.type && lastNotif.id) || lastNotif.chatId) {
+      console.log('🐞 [DeepLinkingService] Generic/Chat notification found, deferring navigation');
+
+      const notifData = { ...lastNotif };
+      DeepLinkingService.lastNotification = null;
+
+      return {
+        handled: true,
+        navigateAfterTabBar: () => {
+          console.log('🐞 [DeepLinkingService] Executing deferred navigation for:', notifData);
+          // Re-use handleNotificationTap logic but bypassing the setLastNotification part to avoid loops? 
+          // Actually handleNotificationTap sets lastNotification, but we just cleared it. 
+          // If we call handleNotificationTap, it will set it again, but Splash is already done.
+          // Better to call internal navigation helpers directly or handleDeepLink.
+
+          if (notifData.deepLink) {
+            const parsed = this.parseDeepLink(notifData.deepLink);
+            if (parsed) {
+              parsed.params = { ...parsed.params, ...notifData };
+              this.navigateToScreen(parsed);
+            }
+          } else if (notifData.type && notifData.id) {
+            const linkData = {
+              type: notifData.type,
+              id: notifData.id,
+              params: { ...notifData.params, ...notifData }
+            };
+            this.navigateToScreen(linkData);
+          } else if (notifData.chatId || notifData.custom?.a?.chatId) {
+            // Handle pure OneSignal chat payload if it lacks deepLink but has data
+            // Typically senderId is the chatId
+            const chatId = notifData.chatId || notifData.custom?.a?.chatId;
+            // Map to navigateToChat
+            this.navigateToChat(chatId, { ...notifData, orderId: notifData.orderId });
+          }
+        }
+      };
+    }
+
     // Default: clear and don't change navigation
     DeepLinkingService.lastNotification = null;
     return { handled: false, targetTab: null };
@@ -580,9 +628,12 @@ class DeepLinkingService {
 
   // General navigation
   navigateToPost(postId, params) {
+    // Navigate to ReelsComponent to view the post (PostDetail is for creating posts)
+    console.log('🐞 [DeepLinkingService] Navigating to post/story:', postId, params);
     DeepLinkingService.navigationRef?.dispatch(
-      CommonActions.navigate('PostDetail', {
+      CommonActions.navigate('ReelsComponent', {
         postId,
+        storyId: postId, // Some components use storyId
         ...params
       })
     );

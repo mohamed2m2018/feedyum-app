@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, View, RefreshControl } from 'react-native';
 import LiveComponent from '../../../../components/LiveComponent';
 import ZText from '../../../../components/common/ZText';
 import strings from '../../../../i18n/strings';
@@ -9,6 +9,8 @@ import { useSelector } from 'react-redux';
 export default function SearchVideo({
   stories = [],
   isFetchingNextPage,
+  refreshing,
+  onRefresh,
   ...props
 }) {
   const colors = useSelector(state => state.theme.theme);
@@ -17,6 +19,14 @@ export default function SearchVideo({
     <View>
       <FlatList
         data={stories}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+          />
+        }
         ListFooterComponent={
           <View style={{ height: 100 }}>
             {isFetchingNextPage && (

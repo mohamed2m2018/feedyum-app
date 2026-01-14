@@ -17,6 +17,17 @@ import { moderateScale } from '../../../common/constants';
 import { StackNav } from '../../../navigation/NavigationKeys';
 import strings from '../../../i18n/strings';
 
+// Format currency with K/M suffix for large numbers
+const formatCurrency = (value) => {
+  if (!value || isNaN(value)) return '0.00';
+  if (value >= 1000000) {
+    return `${(value / 1000000).toFixed(1)}M`;
+  } else if (value >= 1000) {
+    return `${(value / 1000).toFixed(1)}K`;
+  }
+  return value.toFixed(2);
+};
+
 export default function ChefDashboard() {
   const colors = useSelector(state => state.theme.theme);
   const navigation = useNavigation();
@@ -48,7 +59,7 @@ export default function ChefDashboard() {
 
   return (
     <ZSafeAreaView>
-      <ZHeader title={strings.chefDashboard} />
+      <ZHeader title={strings.chefDashboard} isHideBack={true} />
       <ScrollView
         style={localStyles.container}
         showsVerticalScrollIndicator={false}
@@ -66,6 +77,32 @@ export default function ChefDashboard() {
           </ZText>
         </View>
 
+        {/* Wallet Card */}
+        <TouchableOpacity
+          style={[localStyles.walletCard, { backgroundColor: colors.primary }]}
+          onPress={() => navigation.navigate(StackNav.Wallet)}
+          activeOpacity={0.9}>
+          <View style={localStyles.walletHeader}>
+            <View style={localStyles.walletIconContainer}>
+              <Ionicons name="wallet-outline" size={moderateScale(28)} color={colors.white} />
+            </View>
+            <View style={localStyles.walletInfo}>
+              <ZText type="M14" color={colors.white} style={{ opacity: 0.9 }}>
+                {strings.wallet}
+              </ZText>
+              <ZText type="B28" color={colors.white}>
+                {strings.currency} {formatCurrency(stats?.walletBalance || 500)}
+              </ZText>
+            </View>
+            <Ionicons name="chevron-forward" size={moderateScale(24)} color={colors.white} />
+          </View>
+          <View style={localStyles.walletFooter}>
+            <ZText type="M12" color={colors.white} style={{ opacity: 0.8 }}>
+              {strings.currentBalance}
+            </ZText>
+          </View>
+        </TouchableOpacity>
+
         {/* Quick Stats Grid */}
         <View style={localStyles.statsContainer}>
           <ZText type="S18" style={localStyles.sectionTitle}>
@@ -74,7 +111,7 @@ export default function ChefDashboard() {
           <View style={localStyles.statsGrid}>
             <DashboardCard
               title={strings.todaysRevenue}
-              value={`${strings.currency} ${stats?.todayRevenue?.toFixed(2) || '0.00'}`}
+              value={`${strings.currency} ${formatCurrency(stats?.todayRevenue)}`}
               icon="cash-outline"
               color={colors.primary}
               containerStyle={localStyles.statCard}
@@ -102,7 +139,7 @@ export default function ChefDashboard() {
               title={strings.completedOrders}
               value={stats?.completedOrders?.toString() || '0'}
               icon="checkmark-circle-outline"
-              color={colors.primary}
+              color={colors.green}
               containerStyle={localStyles.statCard}
               onPress={() => navigateToSection('Analytics')}
             />
@@ -285,37 +322,68 @@ const localStyles = StyleSheet.create({
     paddingHorizontal: moderateScale(20),
   },
   welcomeSection: {
-    paddingVertical: moderateScale(20),
+    paddingVertical: moderateScale(24),
   },
   welcomeText: {
-    marginBottom: moderateScale(8),
+    marginBottom: moderateScale(10),
+  },
+  walletCard: {
+    borderRadius: moderateScale(16),
+    padding: moderateScale(20),
+    marginBottom: moderateScale(24),
+    ...styles.shadowStyle,
+    shadowOpacity: 0.3,
+    elevation: 4,
+  },
+  walletHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  walletIconContainer: {
+    width: moderateScale(52),
+    height: moderateScale(52),
+    borderRadius: moderateScale(26),
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: moderateScale(16),
+  },
+  walletInfo: {
+    flex: 1,
+  },
+  walletFooter: {
+    marginTop: moderateScale(12),
+    paddingTop: moderateScale(12),
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.2)',
   },
   statsContainer: {
-    marginBottom: moderateScale(24),
+    marginBottom: moderateScale(32),
   },
   sectionTitle: {
-    marginBottom: moderateScale(16),
+    marginBottom: moderateScale(20),
   },
   statsGrid: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     gap: moderateScale(12),
-    marginBottom: moderateScale(12),
+    marginBottom: moderateScale(16),
   },
   statCard: {
     flex: 1,
   },
   quickActionsSection: {
-    marginBottom: moderateScale(24),
+    marginBottom: moderateScale(32),
   },
   actionsGrid: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     gap: moderateScale(12),
+    marginBottom: moderateScale(16),
   },
   actionCard: {
     flex: 1,
-    padding: moderateScale(16),
+    padding: moderateScale(18),
     borderRadius: moderateScale(12),
     backgroundColor: '#FFFFFF', // Background color for shadow efficiency
     alignItems: 'center',
@@ -329,24 +397,24 @@ const localStyles = StyleSheet.create({
     borderRadius: moderateScale(24),
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: moderateScale(12),
+    marginBottom: moderateScale(14),
   },
   actionTitle: {
-    marginBottom: moderateScale(8),
+    marginBottom: moderateScale(10),
     textAlign: 'center',
   },
   sectionContainer: {
-    marginBottom: moderateScale(24),
+    marginBottom: moderateScale(32),
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: moderateScale(16),
+    marginBottom: moderateScale(18),
   },
   sectionCard: {
     borderRadius: moderateScale(12),
-    padding: moderateScale(16),
+    padding: moderateScale(18),
     ...styles.shadowStyle,
     shadowOpacity: 0.1,
     elevation: 2,
@@ -361,7 +429,7 @@ const localStyles = StyleSheet.create({
     marginRight: moderateScale(12),
   },
   activityCard: {
-    padding: moderateScale(24),
+    padding: moderateScale(28),
     borderRadius: moderateScale(12),
     backgroundColor: '#FFFFFF', // Background color for shadow efficiency
     alignItems: 'center',
@@ -370,7 +438,7 @@ const localStyles = StyleSheet.create({
     elevation: 2,
   },
   activityText: {
-    marginTop: moderateScale(12),
-    marginBottom: moderateScale(8),
+    marginTop: moderateScale(14),
+    marginBottom: moderateScale(10),
   },
 });

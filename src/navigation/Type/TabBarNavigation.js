@@ -26,6 +26,8 @@ import {
   Orders_Light,
   Inbox_Dark,
   Inbox_Light,
+  ChefDashboard_Dark,
+  ChefDashboard_Light,
 } from '../../assets/svgs';
 import { styles } from '../../themes';
 import ProfilePicture from '../../components/models/ProfilePicture';
@@ -178,7 +180,11 @@ export default function TabBarNavigation({ route, navigation }) {
               <TabText
                 text={isChef ? strings.chefDashboard : strings.explore}
                 focused={focused}
-                icon={focused ? <Discover_Dark /> : <Discover_Light />}
+                icon={
+                  isChef
+                    ? (focused ? <ChefDashboard_Dark /> : <ChefDashboard_Light />)
+                    : (focused ? <Discover_Dark /> : <Discover_Light />)
+                }
               />
             ),
           }}

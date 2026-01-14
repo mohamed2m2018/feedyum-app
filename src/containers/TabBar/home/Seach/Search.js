@@ -1,9 +1,10 @@
 // Library import
-import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { FlatList, StyleSheet, TouchableOpacity, View, RefreshControl, I18nManager, Dimensions } from 'react-native';
 import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import Feather from 'react-native-vector-icons/Feather';
 import debounce from 'debounce';
+import { TabView } from 'react-native-tab-view';
 // Local import
 import ZSafeAreaView from '../../../../components/common/ZSafeAreaView';
 import ZInput from '../../../../components/common/ZInput';
@@ -21,6 +22,77 @@ import { useScreen } from '../../../../navigation/screenContext';
 import { TabNav } from '../../../../navigation/NavigationKeys';
 import ZLoader from '../../../../components/common/ZLoader';
 
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+// Memoized tab header item
+const HeaderCategoryItem = memo(({ title, index, isSelected, onPress, colors }) => {
+  return (
+    <TouchableOpacity
+      onPress={() => onPress(index)}
+      style={[
+        localStyles.tabItem,
+        {
+          borderBottomColor: isSelected ? colors.primary : colors.dark3,
+        },
+      ]}>
+      <ZText
+        type={'s18'}
+        align={'center'}
+        style={styles.pb20}
+        color={isSelected ? colors.primary : colors.grayScale7}>
+        {title}
+      </ZText>
+    </TouchableOpacity>
+  );
+});
+
+// Memoized tab bar component
+const SearchTabBar = memo(({ navigationState, index, onIndexChange, colors }) => {
+  const flatListRef = useRef(null);
+
+  // Scroll to selected tab when index changes
+  useEffect(() => {
+    if (flatListRef.current && navigationState.routes.length > 0) {
+      flatListRef.current.scrollToIndex({
+        index: index,
+        animated: true,
+        viewPosition: 0.5,
+      });
+    }
+  }, [index, navigationState.routes.length]);
+
+  const renderItem = useCallback(({ item, index: itemIndex }) => (
+    <HeaderCategoryItem
+      title={item.title}
+      index={itemIndex}
+      isSelected={index === itemIndex}
+      onPress={onIndexChange}
+      colors={colors}
+    />
+  ), [index, onIndexChange, colors]);
+
+  return (
+    <View style={localStyles.tabBarContainer}>
+      <FlatList
+        ref={flatListRef}
+        data={navigationState.routes}
+        renderItem={renderItem}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={localStyles.tabBarContent}
+        keyExtractor={(item, idx) => idx.toString()}
+        keyboardShouldPersistTaps="always"
+        onScrollToIndexFailed={info => {
+          const wait = new Promise(resolve => setTimeout(resolve, 500));
+          wait.then(() => {
+            flatListRef.current?.scrollToIndex({ index: info.index, animated: true });
+          });
+        }}
+      />
+    </View>
+  );
+});
+
 export default function Search() {
   const colors = useSelector(state => state.theme.theme);
 
@@ -28,27 +100,11 @@ export default function Search() {
   const [debouncedSearch, setDebouncedSearch] = useState('');
 
   const searchCategoryData = [
-    {
-      id: 0,
-      title: strings.user,
-    },
-    {
-      id: 1,
-      title: strings.chefs,
-    },
-    {
-      id: 2,
-      // Renamed to "Kitchen Posts"
-      title: strings.kitchenPosts,
-    },
-    {
-      id: 3,
-      title: strings.reviews,
-    },
-    {
-      id: 4,
-      title: strings.dishes,
-    },
+    { key: 'users', title: strings.user },
+    { key: 'chefs', title: strings.chefs },
+    { key: 'kitchenPosts', title: strings.kitchenPosts },
+    { key: 'reviews', title: strings.reviews },
+    { key: 'dishes', title: strings.dishes },
   ];
 
   const BlurredStyle = {
@@ -65,8 +121,12 @@ export default function Search() {
 
   const [searchInputStyle, setSearchInputStyle] = useState(BlurredStyle);
   const [searchIconStyle, setSearchIconStyle] = useState(BlurredIconStyle);
-  const [isSelect, setIsSelect] = useState(0);
-  const [useSemanticSearch, setUseSemanticSearch] = useState(true); // Toggle for semantic search
+  const [tabState, setTabState] = useState({
+    index: 0,
+    routes: searchCategoryData,
+  });
+  const [useSemanticSearch, setUseSemanticSearch] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const isFocused = useIsFocused();
   const { updateCurrentScreen } = useScreen();
@@ -93,7 +153,7 @@ export default function Search() {
     const endpoint = useSemanticSearch ? '/story/semantic-search' : '/story/search';
     const params = {
       searchString: debouncedSearch || '',
-      authorType: 'chef', // Filter specific for Kitchen Posts
+      authorType: 'chef',
       searchType: useSemanticSearch ? 'hybrid' : 'text',
       limit: 10,
       page: pageParam || 1,
@@ -107,10 +167,11 @@ export default function Search() {
     fetchNextPage,
     isFetching: isFetchingsStories,
     isFetchingNextPage,
+    refetch: refetchStories,
     error: storiesError,
   } = useInfiniteQuery(['search_story', debouncedSearch, useSemanticSearch], searchStory, {
     keepPreviousData: true,
-    enabled: isSelect === 2 && !!user,
+    enabled: tabState.index === 2 && !!user,
     getNextPageParam: (lastPage, allPages) => {
       const nextPage =
         lastPage?.data?.data?.hasNextPage || lastPage?.data?.data?.pagination?.hasNextPage
@@ -130,7 +191,7 @@ export default function Search() {
     const endpoint = useSemanticSearch ? '/story/semantic-search' : '/story/search';
     const params = {
       searchString: debouncedSearch || '',
-      authorType: 'user', // Filter specific for User Reviews/Posts
+      authorType: 'user',
       searchType: useSemanticSearch ? 'hybrid' : 'text',
       limit: 10,
       page: pageParam || 1,
@@ -144,10 +205,11 @@ export default function Search() {
     fetchNextPage: fetchNextPageReviews,
     isFetching: isFetchingReviews,
     isFetchingNextPage: isFetchingNextPageReviews,
+    refetch: refetchReviews,
     error: reviewsError,
   } = useInfiniteQuery(['search_reviews', debouncedSearch, useSemanticSearch], searchReviews, {
     keepPreviousData: true,
-    enabled: isSelect === 3 && !!user,
+    enabled: tabState.index === 3 && !!user,
     getNextPageParam: (lastPage, allPages) => {
       const nextPage =
         lastPage?.data?.data?.hasNextPage || lastPage?.data?.data?.pagination?.hasNextPage
@@ -179,7 +241,6 @@ export default function Search() {
     const endpoint = useSemanticSearch ? '/user/semantic-search' : '/user/search';
     const params = {
       searchString: debouncedSearch || '',
-      // Don't pass currentUserId for kitchen search - we want to show all kitchens including the user's own
       searchType: useSemanticSearch ? 'hybrid' : 'text',
       limit: 10,
       page: pageParam || 1,
@@ -196,10 +257,11 @@ export default function Search() {
     fetchNextPage: fetchNextPageUsers,
     isFetching: isFetchingUser,
     isFetchingNextPage: isFetchingNextPageUsers,
+    refetch: refetchUsers,
     error: usersError,
   } = useInfiniteQuery(['search_user', debouncedSearch, useSemanticSearch], searchUser, {
     keepPreviousData: true,
-    enabled: isSelect === 0 && !!user?._id,
+    enabled: tabState.index === 0 && !!user?._id,
     getNextPageParam: (lastPage, allPages) => {
       const nextPage =
         lastPage?.data?.currentPage < lastPage?.data?.totalPages ||
@@ -217,10 +279,11 @@ export default function Search() {
     fetchNextPage: fetchNextPageChefs,
     isFetching: isFetchingChefs,
     isFetchingNextPage: isFetchingNextPageChefs,
+    refetch: refetchChefs,
     error: chefsError,
   } = useInfiniteQuery(['search_chef', debouncedSearch, useSemanticSearch], searchChef, {
     keepPreviousData: true,
-    enabled: isSelect === 1 && !!user?._id,
+    enabled: tabState.index === 1 && !!user?._id,
     getNextPageParam: (lastPage, allPages) => {
       const nextPage =
         lastPage?.data?.currentPage < lastPage?.data?.totalPages ||
@@ -236,7 +299,7 @@ export default function Search() {
   const searchDishes = ({ pageParam = null }) => {
     const endpoint = useSemanticSearch ? '/dishes/semantic-search' : '/dishes/search';
     const params = {
-      searchString: debouncedSearch || '', // Use debouncedSearch and allow empty string
+      searchString: debouncedSearch || '',
       searchType: useSemanticSearch ? 'hybrid' : 'text',
       limit: 10,
     };
@@ -255,10 +318,11 @@ export default function Search() {
     fetchNextPage: fetchNextPageDishes,
     isFetching: isFetchingDishes,
     isFetchingNextPage: isFetchingNextPageDishes,
+    refetch: refetchDishes,
     error: dishesError,
   } = useInfiniteQuery(['search_dishes', debouncedSearch, useSemanticSearch], searchDishes, {
     keepPreviousData: true,
-    enabled: isSelect === 4, // Allow dishes search without authentication
+    enabled: tabState.index === 4,
     getNextPageParam: (lastPage, allPages) => {
       if (useSemanticSearch) {
         return lastPage?.data?.data?.pagination?.hasMore
@@ -281,6 +345,33 @@ export default function Search() {
     },
   });
 
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      switch (tabState.index) {
+        case 0:
+          await refetchUsers();
+          break;
+        case 1:
+          await refetchChefs();
+          break;
+        case 2:
+          await refetchStories();
+          break;
+        case 3:
+          await refetchReviews();
+          break;
+        case 4:
+          await refetchDishes();
+          break;
+      }
+    } catch (error) {
+      console.log('Refresh error:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [tabState.index, refetchUsers, refetchChefs, refetchStories, refetchReviews, refetchDishes]);
+
   const SearchIcon = () => {
     return (
       <Feather name="search" size={moderateScale(20)} color={searchIconStyle} />
@@ -296,36 +387,127 @@ export default function Search() {
     setSearchIconStyle(BlurredIconStyle);
   };
 
-  // eslint-disable-next-line react/no-unstable-nested-components
-  const HeaderCategory = memo(({ item, index }) => {
-    return (
-      <TouchableOpacity
-        key={index}
-        onPress={() => {
-          setIsSelect(index);
-        }}
-        style={[
-          localStyles.root,
-          {
-            height: '100%',
-            borderBottomColor:
-              isSelect === index ? colors.primary : colors.dark3,
-          },
-        ]}>
-        <ZText
-          type={'s18'}
-          align={'center'}
-          style={styles.pb20}
-          color={isSelect === index ? colors.primary : colors.grayScale7}>
-          {item.title}
-        </ZText>
-      </TouchableOpacity>
-    );
-  });
+  const handleIndexChange = useCallback((index) => {
+    setTabState(prev => ({ ...prev, index }));
+  }, []);
+
+  const renderTabBar = useCallback((props) => (
+    <SearchTabBar
+      navigationState={tabState}
+      index={tabState.index}
+      onIndexChange={handleIndexChange}
+      colors={colors}
+    />
+  ), [tabState, handleIndexChange, colors]);
+
+  const renderScene = useCallback(({ route }) => {
+    // Apply RTL transform to flip content back when in RTL mode
+    const rtlStyle = I18nManager.isRTL ? { transform: [{ scaleX: -1 }] } : {};
+
+    switch (route.key) {
+      case 'users':
+        return (
+          <View style={[{ flex: 1 }, rtlStyle]}>
+            <SearchUser
+              users={users || []}
+              currentUserId={user?._id}
+              onEndReachedThreshold={0.5}
+              isFetching={isFetchingUser}
+              onEndReached={fetchNextPageUsers}
+              isFetchingNextPage={isFetchingNextPageUsers}
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+            />
+            {isFetchingUser && !isFetchingNextPageUsers && (
+              <ZLoader height={100} top={260} />
+            )}
+          </View>
+        );
+      case 'chefs':
+        return (
+          <View style={[{ flex: 1 }, rtlStyle]}>
+            <SearchUser
+              users={chefs || []}
+              currentUserId={user?._id}
+              onEndReachedThreshold={0.5}
+              isFetching={isFetchingChefs}
+              onEndReached={fetchNextPageChefs}
+              isFetchingNextPage={isFetchingNextPageChefs}
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+            />
+            {isFetchingChefs && !isFetchingNextPageChefs && (
+              <ZLoader height={100} top={260} />
+            )}
+          </View>
+        );
+      case 'kitchenPosts':
+        return (
+          <View style={[{ flex: 1 }, rtlStyle]}>
+            <SearchVideo
+              stories={stories || []}
+              onEndReachedThreshold={0.9}
+              isFetching={isFetchingsStories}
+              isFetchingNextPage={isFetchingNextPage}
+              onEndReached={fetchNextPage}
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+            />
+            {isFetchingsStories && !isFetchingNextPage && (
+              <ZLoader height={100} top={120} />
+            )}
+          </View>
+        );
+      case 'reviews':
+        return (
+          <View style={[{ flex: 1 }, rtlStyle]}>
+            <SearchVideo
+              stories={reviews || []}
+              onEndReachedThreshold={0.9}
+              isFetching={isFetchingReviews}
+              isFetchingNextPage={isFetchingNextPageReviews}
+              onEndReached={fetchNextPageReviews}
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+            />
+            {isFetchingReviews && !isFetchingNextPageReviews && (
+              <ZLoader height={100} top={120} />
+            )}
+          </View>
+        );
+      case 'dishes':
+        return (
+          <View style={[{ flex: 1 }, rtlStyle]}>
+            <SearchDishes
+              dishes={dishes || []}
+              onEndReachedThreshold={0.9}
+              isFetching={isFetchingDishes}
+              isFetchingNextPage={isFetchingNextPageDishes}
+              onEndReached={fetchNextPageDishes}
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+            />
+            {isFetchingDishes && !isFetchingNextPageDishes && (
+              <ZLoader height={100} top={120} />
+            )}
+          </View>
+        );
+      default:
+        return null;
+    }
+  }, [
+    users, chefs, stories, reviews, dishes,
+    user, refreshing, handleRefresh,
+    isFetchingUser, isFetchingNextPageUsers, fetchNextPageUsers,
+    isFetchingChefs, isFetchingNextPageChefs, fetchNextPageChefs,
+    isFetchingsStories, isFetchingNextPage, fetchNextPage,
+    isFetchingReviews, isFetchingNextPageReviews, fetchNextPageReviews,
+    isFetchingDishes, isFetchingNextPageDishes, fetchNextPageDishes,
+  ]);
 
   return (
     <ZSafeAreaView>
-      <View style={{ flex: 1, margin: 10 }}>
+      <View style={localStyles.container}>
         <ZInput
           placeHolder={strings.search}
           _value={search}
@@ -369,100 +551,29 @@ export default function Search() {
           </ZText>
         </View>
 
-        <View style={{ height: moderateScale(70), alignSelf: 'flex-start' }}>
-          <FlatList
-            data={searchCategoryData}
-            keyboardShouldPersistTaps={'always'}
-            renderItem={({ item, index }) => (
-              <HeaderCategory item={item} index={index} />
-            )}
-            keyExtractor={(item, index) => index.toString()}
-            contentContainerStyle={localStyles.mainContainer}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-          />
-        </View>
-
-        {isSelect === 0 && (
-          <>
-            <SearchUser
-              users={users || []}
-              currentUserId={user?._id}
-              onEndReachedThreshold={0.5}
-              isFetching={isFetchingUser}
-              onEndReached={fetchNextPageUsers}
-              isFetchingNextPage={isFetchingNextPageUsers}
-            />
-            {isFetchingUser && !isFetchingNextPageUsers && (
-              <ZLoader height={100} top={260} />
-            )}
-          </>
-        )}
-        {isSelect === 1 && (
-          <>
-            <SearchUser
-              users={chefs || []}
-              currentUserId={user?._id}
-              onEndReachedThreshold={0.5}
-              isFetching={isFetchingChefs}
-              onEndReached={fetchNextPageChefs}
-              isFetchingNextPage={isFetchingNextPageChefs}
-            />
-            {isFetchingChefs && !isFetchingNextPageChefs && (
-              <ZLoader height={100} top={260} />
-            )}
-          </>
-        )}
-        {isSelect === 2 && (
-          <View style={{ flex: 1 }}>
-            <SearchVideo
-              stories={stories || []}
-              onEndReachedThreshold={0.9}
-              isFetching={isFetchingsStories}
-              isFetchingNextPage={isFetchingNextPage}
-              onEndReached={fetchNextPage}
-            />
-            {isFetchingsStories && !isFetchingNextPage && (
-              <ZLoader height={100} top={120} />
-            )}
-          </View>
-        )}
-        {isSelect === 3 && (
-          <View style={{ flex: 1 }}>
-            <SearchVideo
-              stories={reviews || []}
-              onEndReachedThreshold={0.9}
-              isFetching={isFetchingReviews}
-              isFetchingNextPage={isFetchingNextPageReviews}
-              onEndReached={fetchNextPageReviews}
-            />
-            {isFetchingReviews && !isFetchingNextPageReviews && (
-              <ZLoader height={100} top={120} />
-            )}
-          </View>
-        )}
-        {isSelect === 4 && (
-          <View style={{ flex: 1 }}>
-            <SearchDishes
-              dishes={dishes || []}
-              onEndReachedThreshold={0.9}
-              isFetching={isFetchingDishes}
-              isFetchingNextPage={isFetchingNextPageDishes}
-              onEndReached={fetchNextPageDishes}
-            />
-            {isFetchingDishes && !isFetchingNextPageDishes && (
-              <ZLoader height={100} top={120} />
-            )}
-          </View>
-        )}
+        <TabView
+          navigationState={tabState}
+          renderScene={renderScene}
+          renderTabBar={renderTabBar}
+          onIndexChange={handleIndexChange}
+          initialLayout={{ width: SCREEN_WIDTH }}
+          lazy={true}
+          lazyPreloadDistance={1}
+          renderLazyPlaceholder={() => <ZLoader height={100} />}
+          swipeEnabled={true}
+          animationEnabled={true}
+          // RTL support: flip the pager direction
+          pagerStyle={I18nManager.isRTL ? { transform: [{ scaleX: -1 }] } : {}}
+        />
       </View>
     </ZSafeAreaView>
   );
 }
 
 const localStyles = StyleSheet.create({
-  rootContainer: {
-    ...styles.ph20,
+  container: {
+    flex: 1,
+    margin: 10,
   },
   inputContainerStyle: {
     borderRadius: moderateScale(15),
@@ -471,22 +582,15 @@ const localStyles = StyleSheet.create({
   inputBoxStyle: {
     ...styles.ph15,
   },
-  mainContainer: {
-    ...styles.flexGrow,
-    ...styles.mt15,
+  tabBarContainer: {
     height: moderateScale(50),
   },
-  root: {
-    borderBottomWidth: moderateScale(2),
-    ...styles.ph25,
+  tabBarContent: {
+    paddingHorizontal: moderateScale(10),
   },
-  loading: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: 0,
-    bottom: 0,
-    alignItems: 'center',
+  tabItem: {
+    borderBottomWidth: moderateScale(2),
+    paddingHorizontal: moderateScale(15),
     justifyContent: 'center',
   },
   semanticToggleContainer: {
@@ -509,5 +613,4 @@ const localStyles = StyleSheet.create({
     fontSize: moderateScale(10),
     fontStyle: 'italic',
   },
-
 });

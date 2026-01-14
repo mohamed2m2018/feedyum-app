@@ -19,6 +19,17 @@ import strings from '../../../i18n/strings';
 import { styles } from '../../../themes';
 import { moderateScale } from '../../../common/constants';
 
+// Format currency with K/M suffix for large numbers
+const formatCurrency = (value) => {
+  if (!value || isNaN(value)) return '0.00';
+  if (value >= 1000000) {
+    return `${(value / 1000000).toFixed(1)}M`;
+  } else if (value >= 1000) {
+    return `${(value / 1000).toFixed(1)}K`;
+  }
+  return value.toFixed(2);
+};
+
 export default function DashboardHome() {
   const colors = useSelector(state => state.theme.theme);
   const navigation = useNavigation();
@@ -135,7 +146,7 @@ export default function DashboardHome() {
               <View style={localStyles.statsGrid}>
                 <DashboardCard
                   title={strings.todaysRevenue}
-                  value={`${strings.currency} ${dashboardStats?.todayRevenue?.toFixed(2) || '0.00'}`}
+                  value={`${strings.currency} ${formatCurrency(dashboardStats?.todayRevenue)}`}
                   icon="cash-outline"
                   color={colors.primary}
                   containerStyle={localStyles.statCard}
@@ -256,36 +267,36 @@ const localStyles = StyleSheet.create({
     paddingHorizontal: moderateScale(20),
   },
   welcomeSection: {
-    paddingVertical: moderateScale(20),
+    paddingVertical: moderateScale(24),
   },
   welcomeText: {
-    marginBottom: moderateScale(8),
+    marginBottom: moderateScale(10),
   },
   statsSection: {
-    marginBottom: moderateScale(24),
+    marginBottom: moderateScale(32),
   },
   sectionTitle: {
-    marginBottom: moderateScale(16),
+    marginBottom: moderateScale(20),
   },
   statsGrid: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: moderateScale(12),
+    marginBottom: moderateScale(16),
     gap: moderateScale(12),
   },
   statCard: {
     flex: 1,
   },
   loadingContainer: {
-    paddingVertical: moderateScale(40),
+    paddingVertical: moderateScale(44),
     alignItems: 'center',
   },
   errorContainer: {
-    paddingVertical: moderateScale(40),
+    paddingVertical: moderateScale(44),
     alignItems: 'center',
   },
   quickActionsSection: {
-    marginBottom: moderateScale(24),
+    marginBottom: moderateScale(32),
   },
   quickActionsGrid: {
     flexDirection: 'row',
@@ -295,49 +306,49 @@ const localStyles = StyleSheet.create({
   quickActionButton: {
     flex: 1,
     alignItems: 'center',
-    paddingVertical: moderateScale(16),
+    paddingVertical: moderateScale(18),
     borderRadius: moderateScale(12),
     borderWidth: 1,
   },
   quickActionText: {
-    marginTop: moderateScale(8),
+    marginTop: moderateScale(10),
     textAlign: 'center',
   },
   activitySection: {
-    marginBottom: moderateScale(24),
+    marginBottom: moderateScale(32),
   },
   activityContainer: {
     borderRadius: moderateScale(12),
-    padding: moderateScale(16),
+    padding: moderateScale(18),
   },
   activityItem: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginBottom: moderateScale(16),
+    marginBottom: moderateScale(18),
   },
   activityIcon: {
-    width: moderateScale(40),
-    height: moderateScale(40),
-    borderRadius: moderateScale(20),
+    width: moderateScale(44),
+    height: moderateScale(44),
+    borderRadius: moderateScale(22),
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: moderateScale(12),
+    marginRight: moderateScale(14),
   },
   activityContent: {
     flex: 1,
   },
   activityTime: {
-    marginTop: moderateScale(4),
+    marginTop: moderateScale(6),
   },
   emptyActivity: {
     alignItems: 'center',
-    paddingVertical: moderateScale(32),
+    paddingVertical: moderateScale(36),
   },
   emptyText: {
-    marginTop: moderateScale(12),
+    marginTop: moderateScale(14),
     textAlign: 'center',
   },
   bottomSpacing: {
-    height: moderateScale(20),
+    height: moderateScale(24),
   },
 });

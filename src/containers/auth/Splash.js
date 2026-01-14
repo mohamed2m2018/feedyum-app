@@ -81,6 +81,8 @@ const Splash = ({ navigation }) => {
           setIsNavigating(true);
           await SplashScreen.hideAsync();
 
+          // We reset to TabBar to ensure the base is loaded, but we don't need to force 'initialTab'
+          // if we are going to navigate immediately away.
           navigation.reset({
             index: 0,
             routes: [{
@@ -89,12 +91,14 @@ const Splash = ({ navigation }) => {
             }],
           });
 
-          // Execute deferred navigation after TabBar loads
-          setTimeout(notifResult.navigateAfterTabBar, 500);
+          // Execute deferred navigation IMMEDIATELY (no timeout) or with microtask
+          // to minimize visible jump.
+          notifResult.navigateAfterTabBar();
           return;
         }
       }
 
+      // ONLY if NOT handled, do we perform default navigation
       setIsNavigating(true);
       await SplashScreen.hideAsync();
 
