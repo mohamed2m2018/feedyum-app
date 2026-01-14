@@ -5,10 +5,11 @@ import {
   TouchableOpacity,
   Image,
   TextInput,
-  Alert,
   ActivityIndicator,
   Dimensions,
 } from 'react-native';
+import { showErrorToast, showActionDialog } from '../../../../utils/toast';
+import { ALERT_TYPE } from 'react-native-alert-notification';
 import { useSelector } from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import ImageCropPicker from 'react-native-image-crop-picker';
@@ -29,15 +30,15 @@ const ImageMessageComposer = ({ onSend, onCancel }) => {
 
   const showImagePicker = () => {
     setIsVisible(true);
-    Alert.alert(
-      'Select Image',
-      strings.chooseImageSelectionMethod,
-      [
-        { text: strings.camera, onPress: openCamera },
-        { text: strings.gallery, onPress: openGallery },
-        { text: strings.cancel, style: 'cancel', onPress: () => setIsVisible(false) },
-      ]
-    );
+    showActionDialog({
+      type: ALERT_TYPE.INFO,
+      title: 'Select Image',
+      message: strings.chooseImageSelectionMethod,
+      confirmText: strings.camera,
+      cancelText: strings.gallery,
+      onConfirm: openCamera,
+      onCancel: openGallery,
+    });
   };
 
   const processImage = async (image) => {
@@ -45,17 +46,23 @@ const ImageMessageComposer = ({ onSend, onCancel }) => {
     try {
       // Validate image file
       if (!validateImageFile(image.path)) {
-        Alert.alert(strings.invalidFile, strings.selectValidImageFile);
+        showErrorToast(strings.invalidFile, strings.selectValidImageFile);
         return;
       }
 
-      // Get file size
-      const fileSize = await getFileSize(image.path);
-
       // Compress image if it's too large (> 2MB)
       let processedPath = image.path;
-      if (fileSize > 2 * 1024 * 1024) {
-        processedPath = await compressImage(image.path, 0.7);
+      let fileSize = 0;
+      let processedSize = 0;
+
+      try {
+        fileSize = await getFileSize(image.path);
+        if (fileSize > 2 * 1024 * 1024) {
+          processedPath = await compressImage(image.path, 0.7);
+        }
+        processedSize = await getFileSize(processedPath);
+      } catch (e) {
+        console.warn("Compression/Size check failed", e);
       }
 
       const processedImage = {
@@ -66,11 +73,11 @@ const ImageMessageComposer = ({ onSend, onCancel }) => {
       setSelectedImage(processedImage);
       setFileInfo({
         originalSize: fileSize,
-        processedSize: await getFileSize(processedPath),
+        processedSize: processedSize,
       });
       setIsVisible(false);
     } catch (error) {
-      Alert.alert(strings.processingError, strings.failedToProcessImage);
+      showErrorToast(strings.processingError, strings.failedToProcessImage);
     } finally {
       setIsProcessing(false);
     }
@@ -127,7 +134,7 @@ const ImageMessageComposer = ({ onSend, onCancel }) => {
       resetComposer();
     } catch (error) {
       console.error('Image upload error:', error);
-      Alert.alert(strings.error, strings.failedToUploadImage);
+      showErrorToast(strings.error, strings.failedToUploadImage);
     } finally {
       setIsProcessing(false);
     }

@@ -51,7 +51,7 @@ const ReelsList = ({
       }
       disableIntervalMomentum
       ListEmptyComponent={
-        (isLoading || isRefetching || !user || isFetching) && !isFetchingStory ? (
+        (isLoading || (isRefetching && filteredData.length === 0) || !user) && !isFetchingStory ? (
           <ZLoader height={150} top={300} />
         ) : (
           <ZText

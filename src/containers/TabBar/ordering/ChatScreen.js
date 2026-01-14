@@ -9,6 +9,9 @@ import {
   Keyboard,
   ActivityIndicator,
   Alert,
+  Modal,
+  Dimensions,
+  StatusBar,
 } from 'react-native';
 import {
   GiftedChat,
@@ -38,6 +41,7 @@ import OrderReviewModal from '../chef/components/OrderReviewModal';
 import { updateOrderStatusAsync } from '../../../redux/reducer/orderSlice';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 import { StackNav, TabNav } from '../../../navigation/NavigationKeys';
+import { formatTime, formatDate } from '../../../utils/helpers';
 
 // Move component definitions outside of render
 const toUriString = (value) => {
@@ -77,7 +81,7 @@ const ChefProfile = ({ chef, orderId, colors, onPress }) => {
       />
       <View style={profileInfoStyles}>
         <ZText type="B16" color={colors.textColor} numberOfLines={1}>
-          {chef?.fullName || chef?.username || 'Chef'}
+          {chef?.fullName || chef?.username || strings.defaultChefName}
         </ZText>
         {orderId && (
           <ZText type="M12" color={colors.grayScale7} numberOfLines={1}>
@@ -107,12 +111,16 @@ export default function ChatScreen({ route }) {
   const { chefId, orderId } = route.params;
   const navigation = useNavigation();
   const colors = useSelector(state => state.theme.theme);
+  const language = useSelector(state => state.profile?.language);
+  // Check if Arabic is selected
+  const isRTL = language === 'ar' || language === 'Arabic' || (typeof language === 'string' && language.toLowerCase().includes('arabic'));
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [editingMessage, setEditingMessage] = useState(null);
   const [text, setText] = useState('');
 
   const [hideOrderSummary, setHideOrderSummary] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
   const socketRef = useRef(null);
   const textInputRef = useRef(null);
   const messageContainerRef = useRef(null);
@@ -224,7 +232,7 @@ export default function ChatScreen({ route }) {
           createdAt: new Date(message.timestamp || Date.now()),
           user: {
             _id: senderId,
-            name: message.sender.username || 'User',
+            name: message.sender.username || strings.user,
             avatar: toUriString(message.sender.avatar),
           },
           image: image,
@@ -314,7 +322,7 @@ export default function ChatScreen({ route }) {
             createdAt: new Date(msg.timestamp),
             user: {
               _id: msg.sender._id || msg.sender,
-              name: msg.sender.username || 'User',
+              name: msg.sender.username || strings.user,
               avatar: toUriString(msg.sender.avatar),
             },
           };
@@ -389,7 +397,7 @@ export default function ChatScreen({ route }) {
       tax: orderData.tax,
       promocode: orderData.promocode,
       address: orderData.deliveryAddress?.nameLine,
-      formattedDate: `${new Date(orderData.created_at).toLocaleDateString()} · ${new Date(orderData.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+      formattedDate: `${formatDate(orderData.created_at, language)} · ${formatTime(orderData.created_at, language)}`,
       items: (orderData.items || []).map(({ dish, quantity }) => {
         const imageSource = toUriString(dish?.image);
         return {
@@ -403,7 +411,7 @@ export default function ChatScreen({ route }) {
 
     return {
       _id: `order-summary-${orderData._id}`,
-      text: 'Order summary',
+      text: strings.orderSummaryLabel,
       createdAt: new Date(orderData.created_at),
       user: {
         _id: 'system',
@@ -418,7 +426,7 @@ export default function ChatScreen({ route }) {
 
   const chatUser = useMemo(() => ({
     _id: currentUser?._id || 'unknown',
-    name: currentUser?.fullName || 'User',
+    name: currentUser?.fullName || strings.user,
     avatar: toUriString(currentUser?.avatar),
   }), [currentUser]);
 
@@ -511,7 +519,7 @@ export default function ChatScreen({ route }) {
             createdAt: new Date(savedMsg.timestamp || Date.now()),
             user: {
               _id: currentUser?._id || 'unknown',
-              name: currentUser?.fullName || 'User',
+              name: currentUser?.fullName || strings.user,
               avatar: toUriString(currentUser?.avatar),
             },
             image: displayImage,
@@ -561,7 +569,8 @@ export default function ChatScreen({ route }) {
       }, 500);
 
     } catch (error) {
-      alert(strings.error, strings.failedToDeleteMessage);
+      const { showErrorToast } = require('../../../utils/toast');
+      showErrorToast(strings.error, strings.failedToDeleteMessage);
     }
   }, [refetchMessages]);
 
@@ -613,10 +622,10 @@ export default function ChatScreen({ route }) {
       }, 500);
 
     } else {
-      Alert.alert(
+      const { showInfoToast } = require('../../../utils/toast');
+      showInfoToast(
         strings.messageNotFound,
-        strings.messageNotVisible,
-        [{ text: 'OK' }]
+        strings.messageNotVisible
       );
     }
   }, [messages]);
@@ -671,8 +680,12 @@ export default function ChatScreen({ route }) {
       currentUser={currentUser}
       onDeleteMessage={handleDeleteMessage}
       onEditMessage={handleEditMessage}
+      isRTL={isRTL}
+      onImagePress={(imageUrl) => setSelectedImage(imageUrl)}
+      language={language}
     />
-  ), [colors, currentUser, handleDeleteMessage, handleEditMessage]);
+  ), [colors, currentUser, handleDeleteMessage, handleEditMessage, isRTL, language]);
+
 
   const renderInputToolbar = useCallback((props) => (
     <InputToolbar
@@ -682,6 +695,9 @@ export default function ChatScreen({ route }) {
         {
           backgroundColor: colors.inputBg,
           borderTopColor: colors.bColor,
+          paddingTop: moderateScale(4),
+          paddingBottom: moderateScale(4),
+          marginBottom: moderateScale(8),
         }
       ]}
     />
@@ -712,10 +728,15 @@ export default function ChatScreen({ route }) {
   ), [handleImageMessage]);
 
   const renderMessageImage = useCallback((props) => (
-    <MessageImage
-      {...props}
-      imageStyle={localStyles.messageImage}
-    />
+    <TouchableOpacity
+      activeOpacity={0.9}
+      onPress={() => setSelectedImage(props.currentMessage.image)}
+    >
+      <MessageImage
+        {...props}
+        imageStyle={localStyles.messageImage}
+      />
+    </TouchableOpacity>
   ), []);
 
   const renderSystem = useCallback((props) => {
@@ -739,7 +760,7 @@ export default function ChatScreen({ route }) {
     return (
       <View style={localStyles.dayContainer}>
         <ZText type="r12" color={colors.grayScale7} align="center">
-          {new Date(props.currentMessage.createdAt).toLocaleDateString(undefined, {
+          {formatDate(props.currentMessage.createdAt, language, {
             weekday: 'long',
             year: 'numeric',
             month: 'short',
@@ -790,7 +811,7 @@ export default function ChatScreen({ route }) {
         <View style={localStyles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
           <ZText type="M14" color={colors.grayScale7} style={localStyles.loadingText}>
-            Loading chat...
+            {strings.loadingChat}
           </ZText>
         </View>
       </ZSafeAreaView>
@@ -804,10 +825,10 @@ export default function ChatScreen({ route }) {
         <ZHeader title={strings.chat} showBack />
         <View style={localStyles.loadingContainer}>
           <ZText type="M16" color={colors.red}>
-            Failed to load chat
+            {strings.failedToLoadChat}
           </ZText>
           <ZText type="M14" color={colors.grayScale7} style={localStyles.loadingText}>
-            Please check your connection and try again
+            {strings.checkConnectionTryAgain}
           </ZText>
         </View>
       </ZSafeAreaView>
@@ -815,7 +836,7 @@ export default function ChatScreen({ route }) {
   }
 
   return (
-    <ZSafeAreaView>
+    <ZSafeAreaView edges={['top', 'left', 'right', 'bottom']}>
       <ZHeader
         title=""
         isLeftIcon={<ChefProfile chef={chef} orderId={orderId} colors={colors} onPress={onPressProfile} />}
@@ -852,7 +873,8 @@ export default function ChatScreen({ route }) {
             refetchMessages(); // Refetch to update status
           } catch (e) {
             console.error('Reject order failed', e);
-            Alert.alert(strings.error, strings.failedToRejectOrder);
+            const { showErrorToast } = require('../../../utils/toast');
+            showErrorToast(strings.error, strings.failedToRejectOrder);
           }
         }}
       />
@@ -869,8 +891,8 @@ export default function ChatScreen({ route }) {
 
       <KeyboardAvoidingView
         style={localStyles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={10}
+        behavior="padding"
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
         <GiftedChat
           ref={messageContainerRef}
@@ -898,9 +920,42 @@ export default function ChatScreen({ route }) {
           showUserAvatar
           renderAvatarOnTop
           onLongPress={() => { }}
-          onPressAvatar={onPressProfile}
+          bottomOffset={0}
         />
       </KeyboardAvoidingView>
+
+      {/* Image Zoom Modal */}
+      <Modal
+        visible={!!selectedImage}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setSelectedImage(null)}
+      >
+        <StatusBar backgroundColor="rgba(0,0,0,0.95)" barStyle="light-content" />
+        <TouchableOpacity
+          style={localStyles.imageModalOverlay}
+          activeOpacity={1}
+          onPress={() => setSelectedImage(null)}
+        >
+          <TouchableOpacity
+            activeOpacity={1}
+            onPress={(e) => e.stopPropagation()}
+            style={localStyles.imageModalContent}
+          >
+            <Image
+              source={{ uri: selectedImage }}
+              style={localStyles.fullScreenImage}
+              resizeMode="contain"
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={localStyles.closeImageButton}
+            onPress={() => setSelectedImage(null)}
+          >
+            <Ionicons name="close-circle" size={moderateScale(36)} color="#FFFFFF" />
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
     </ZSafeAreaView>
   );
 }
@@ -979,5 +1034,27 @@ const localStyles = StyleSheet.create({
     borderRadius: moderateScale(13),
     margin: moderateScale(3),
     resizeMode: 'cover',
+  },
+  imageModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.95)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  imageModalContent: {
+    width: Dimensions.get('window').width,
+    height: Dimensions.get('window').height * 0.8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fullScreenImage: {
+    width: Dimensions.get('window').width - 20,
+    height: Dimensions.get('window').height * 0.75,
+  },
+  closeImageButton: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 50 : 20,
+    right: 20,
+    zIndex: 10,
   },
 });

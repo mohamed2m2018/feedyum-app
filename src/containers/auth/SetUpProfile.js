@@ -9,20 +9,20 @@ import {
   I18nManager,
 } from 'react-native';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import React, {createRef, useEffect, useState} from 'react';
-import {useSelector} from 'react-redux';
+import React, { createRef, useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Ionicons from 'react-native-vector-icons/Entypo';
-import {Dropdown} from 'react-native-element-dropdown';
+import { Dropdown } from 'react-native-element-dropdown';
 import ImagePicker from 'react-native-image-crop-picker';
-import {Image as ImageCompressor} from 'react-native-compressor';
+import { Image as ImageCompressor } from 'react-native-compressor';
 
 // Local import
 import ZSafeAreaView from '../../components/common/ZSafeAreaView';
 import ZHeader from '../../components/common/ZHeader';
 import strings from '../../i18n/strings';
 import images from '../../assets/images';
-import {styles} from '../../themes';
+import { styles } from '../../themes';
 import {
   ACCESS_TOKEN,
   GenderData,
@@ -31,21 +31,21 @@ import {
 } from '../../common/constants';
 import ZInput from '../../components/common/ZInput';
 import ZKeyBoardAvoidWrapper from '../../components/common/ZKeyBoardAvoidWrapper';
-import {StackNav, TabNav} from '../../navigation/NavigationKeys';
+import { StackNav, TabNav } from '../../navigation/NavigationKeys';
 import ProfilePicture from '../../components/models/ProfilePicture';
 import ZButton from '../../components/common/ZButton';
 import request from '../../api/request';
-import {ALERT_TYPE, Toast} from 'react-native-alert-notification';
-import {useQuery, useQueryClient} from 'react-query';
+import { showErrorToast } from '../../utils/toast';
+import { useQuery, useQueryClient } from 'react-query';
 import OneSignal from 'react-native-onesignal';
-import {RNS3} from 'react-native-aws3';
+import { RNS3 } from 'react-native-aws3';
 import ZText from '../../components/common/ZText';
-import {useStorage} from '../../utils/useStorage';
+import { useStorage } from '../../utils/useStorage';
 
 const SetUpProfile = props => {
-  const {navigation} = props;
+  const { navigation } = props;
   const headerTitle = props.route.params.title;
-  const {email, password, type} = props.route.params;
+  const { email, password, type } = props.route.params;
   const [isUpdating, setisUpdating] = useState(false);
 
   const colors = useSelector(state => state.theme.theme);
@@ -64,20 +64,16 @@ const SetUpProfile = props => {
 
   const isEdit = headerTitle === strings.editProfile;
 
-  const {data: editUser} = useQuery('user', () => request.get('/user'), {
+  const { data: editUser } = useQuery('user', () => request.get('/user'), {
     retry: 0,
     refetchOnMount: true,
     enabled: isEdit,
     onError: err => {
-      Toast.show({
-        type: ALERT_TYPE.DANGER,
-        title: strings.error,
-        textBody: err[Object.keys(err)?.[0]] || strings.errorOccured,
-      });
+      showErrorToast(strings.error, err[Object.keys(err)?.[0]] || strings.errorOccured);
     },
   });
 
-  const {data: locationsData} = useQuery(
+  const { data: locationsData } = useQuery(
     'location' + editUser?.data?.user?._id,
     () =>
       request.get('/user/location', {
@@ -90,7 +86,7 @@ const SetUpProfile = props => {
       enabled: !!editUser?.data?.user?._id,
       refetchOnMount: true,
       onSuccess: res => setLocations(res?.data?.locations),
-      onError: () => {},
+      onError: () => { },
     },
   );
 
@@ -147,11 +143,7 @@ const SetUpProfile = props => {
   };
   const handleSubmit = () => {
     if (!validatePhoneNumber(phoneNo)) {
-      Toast.show({
-        type: ALERT_TYPE.DANGER,
-        title: strings.error,
-        textBody: strings.pleaseProvideCorrectNo,
-      });
+      showErrorToast(strings.error, strings.pleaseProvideCorrectNo);
       return;
     }
     request
@@ -173,15 +165,11 @@ const SetUpProfile = props => {
         await queryClient.clear();
         navigation.reset({
           index: 0,
-          routes: [{name: StackNav.TabBar}],
+          routes: [{ name: StackNav.TabBar }],
         });
       })
       .catch(err =>
-        Toast.show({
-          type: ALERT_TYPE.DANGER,
-          title: strings.error,
-          textBody: err[Object.keys(err)?.[0]],
-        }),
+        showErrorToast(strings.error, err[Object.keys(err)?.[0]])
       );
   };
 
@@ -213,11 +201,12 @@ const SetUpProfile = props => {
       };
       const options = {
         keyPrefix: 'uploads/', // optional (default: "uploads/")
-        bucket: 'foodtokforever', // required
-        region: 'eu-central-1', // required
-        accessKey: '***REMOVED***', // required
-        secretKey: '***REMOVED***', // required
+        bucket: 'feedyum', // Cloudflare R2 bucket
+        region: 'auto', // R2 uses 'auto' for region
+        accessKey: '***REMOVED***',
+        secretKey: '***REMOVED***',
         successActionStatus: 201,
+        awsUrl: '3d5afc8657af28d0d91ec385fc42fb6b.r2.cloudflarestorage.com', // Cloudflare R2 endpoint
       };
       RNS3.put(file, options)
         .then(res => {
@@ -266,23 +255,19 @@ const SetUpProfile = props => {
         ...data,
       })
       .then(async () => {
-        await queryClient.invalidateQueries({queryKey: 'user'});
+        await queryClient.invalidateQueries({ queryKey: 'user' });
         await queryClient.invalidateQueries({
           queryKey: 'location' + editUser?.data?.user?._id,
         });
-        queryClient.invalidateQueries({queryKey: 'stories_following'});
-        queryClient.invalidateQueries({queryKey: 'stories'});
+        queryClient.invalidateQueries({ queryKey: 'stories_following' });
+        queryClient.invalidateQueries({ queryKey: 'stories' });
 
         navigation.navigate(TabNav.Profile);
         setisUpdating(false);
       })
       .catch(err => {
         setisUpdating(false);
-        Toast.show({
-          type: ALERT_TYPE.DANGER,
-          title: strings.error,
-          textBody: err[Object.keys(err)?.[0]],
-        });
+        showErrorToast(strings.error, err[Object.keys(err)?.[0]]);
       });
   };
 
@@ -322,7 +307,7 @@ const SetUpProfile = props => {
           onPress={onPressProfilePic}
           style={[styles.selfCenter, styles.mb20]}>
           {selectImage ? (
-            <Image source={{uri: selectImage}} style={localStyles.userImage} />
+            <Image source={{ uri: selectImage }} style={localStyles.userImage} />
           ) : (
             <>
               {isPhotoUploading ? (
@@ -359,7 +344,7 @@ const SetUpProfile = props => {
           autoCapitalize={'none'}
           toGetTextFieldValue={onChangedFullName}
           inputContainerStyle={[
-            {backgroundColor: colors.inputBg},
+            { backgroundColor: colors.inputBg },
             localStyles.inputContainerStyle,
             fullNameInputStyle,
           ]}
@@ -375,7 +360,7 @@ const SetUpProfile = props => {
           toGetTextFieldValue={onChangedPhoneNo}
           insideLeftIcon={() => <PhoneIcon />}
           inputContainerStyle={[
-            {backgroundColor: colors.inputBg},
+            { backgroundColor: colors.inputBg },
             localStyles.inputContainerStyle,
             phoneNoInputStyle,
           ]}
@@ -403,7 +388,7 @@ const SetUpProfile = props => {
             />
           )}
           inputContainerStyle={[
-            {backgroundColor: colors.inputBg},
+            { backgroundColor: colors.inputBg },
             localStyles.inputContainerStyle2,
             bioStyle,
           ]}
@@ -412,12 +397,12 @@ const SetUpProfile = props => {
         />
         {type !== 'user' && (
           <>
-            <ZText style={{marginVertical: 5}} type={'B20'}>
+            <ZText style={{ marginVertical: 5 }} type={'B20'}>
               {strings.branches}
             </ZText>
             {(locations?.length === 0 || !locations) && (
-              <View style={{flexDirection: 'row'}}>
-                <ZText style={{marginVertical: 5, width: '70%'}}>
+              <View style={{ flexDirection: 'row' }}>
+                <ZText style={{ marginVertical: 5, width: '70%' }}>
                   {strings.dontHaveBranches}
                 </ZText>
                 <MaterialIcon
@@ -429,11 +414,11 @@ const SetUpProfile = props => {
               </View>
             )}
             {locations?.map?.((item, index) => (
-              <View key={index} style={{flexDirection: 'row'}}>
-                <ZText style={{marginVertical: 5}}>
+              <View key={index} style={{ flexDirection: 'row' }}>
+                <ZText style={{ marginVertical: 5 }}>
                   {!I18nManager.isRTL ? '* ' : ' *'}
                 </ZText>
-                <ZText style={{marginVertical: 5, width: '65%'}}>
+                <ZText style={{ marginVertical: 5, width: '65%' }}>
                   {item.description}
                 </ZText>
                 <MaterialIcon
@@ -470,11 +455,11 @@ const SetUpProfile = props => {
                 color: colors.textColor,
               },
             ]}
-            placeholderStyle={{color: colors.iconColor}}
+            placeholderStyle={{ color: colors.iconColor }}
             data={GenderData}
             renderRightIcon={() => (
               <FontAwesome
-                style={{paddingRight: 10}}
+                style={{ paddingRight: 10 }}
                 name="chevron-down"
                 size={12}
                 color={colors.textColor}

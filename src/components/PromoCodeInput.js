@@ -5,9 +5,10 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
+
   ActivityIndicator,
 } from 'react-native';
+import { showErrorToast, showSuccessToast, showWarningToast } from '../utils/toast';
 import strings from '../i18n/strings';
 
 const PromoCodeInput = ({
@@ -22,7 +23,7 @@ const PromoCodeInput = ({
 
   const validatePromoCode = async () => {
     if (!promoCode.trim()) {
-      Alert.alert(strings.error, strings.enterPromoCode);
+      showWarningToast(strings.error, strings.enterPromoCode);
       return;
     }
 
@@ -50,13 +51,14 @@ const PromoCodeInput = ({
           discountAmount: data.discountAmount,
           discountType: data.discountType,
         });
-        Alert.alert(strings.successExclamation, data.message);
+
+        showSuccessToast(strings.successExclamation, data.message);
         setPromoCode('');
       } else {
-        Alert.alert(strings.invalidPromoCode, data.message || strings.promoCodeInvalidMsg);
+        showErrorToast(strings.invalidPromoCode, data.message || strings.promoCodeInvalidMsg);
       }
     } catch (error) {
-      Alert.alert(strings.error, strings.failedToValidatePromoCode);
+      showErrorToast(strings.error, strings.failedToValidatePromoCode);
     } finally {
       setIsValidating(false);
     }

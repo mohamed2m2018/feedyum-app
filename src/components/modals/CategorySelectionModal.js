@@ -1,4 +1,4 @@
-import React, {useState, useMemo} from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -8,15 +8,17 @@ import {
   TextInput,
   Animated,
   Dimensions,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
-import {useSelector} from 'react-redux';
+import { useSelector } from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {moderateScale, getHeight} from '../../common/constants';
+import { moderateScale, getHeight } from '../../common/constants';
 import ZText from '../common/ZText';
 import ZButton from '../common/ZButton';
 import strings from '../../i18n/strings';
 
-const {height: screenHeight} = Dimensions.get('window');
+const { height: screenHeight } = Dimensions.get('window');
 
 const CategorySelectionModal = ({
   visible,
@@ -70,11 +72,11 @@ const CategorySelectionModal = ({
     }
   };
 
-  const renderCategoryItem = ({item, index}) => {
+  const renderCategoryItem = ({ item, index }) => {
     const isSelected = multiSelect
       ? (selectedCategories || []).includes(item.name)
       : selectedCategory === item.name;
-    
+
     return (
       <TouchableOpacity
         style={[
@@ -95,38 +97,38 @@ const CategorySelectionModal = ({
                   backgroundColor: isSelected ? colors.white : colors.primary + '20',
                 }
               ]}>
-              <ZText 
-                type="B16" 
+              <ZText
+                type="B16"
                 color={isSelected ? colors.primary : colors.primary}
                 style={styles.categoryEmoji}>
                 {getCategoryIcon(item.name)}
               </ZText>
             </View>
           </View>
-          
+
           <View style={styles.categoryTextContainer}>
-            <ZText 
-              type="B16" 
+            <ZText
+              type="B16"
               color={isSelected ? colors.white : colors.textColor}
               style={styles.categoryName}>
               {item.name}
             </ZText>
             {item.description && (
-              <ZText 
-                type="R12" 
+              <ZText
+                type="R12"
                 color={isSelected ? colors.white + '80' : colors.grayScale7}
                 style={styles.categoryDescription}>
                 {item.description}
               </ZText>
             )}
           </View>
-          
+
           {isSelected && (
             <View style={styles.selectedIndicator}>
-              <Ionicons 
-                name="checkmark-circle" 
-                size={moderateScale(20)} 
-                color={colors.white} 
+              <Ionicons
+                name="checkmark-circle"
+                size={moderateScale(20)}
+                color={colors.white}
               />
             </View>
           )}
@@ -162,111 +164,116 @@ const CategorySelectionModal = ({
       transparent
       animationType="none"
       onRequestClose={onClose}>
-      <View style={[styles.overlay, {backgroundColor: colors.black + '50'}]}>
-        <Animated.View
-          style={[
-            styles.modalContainer,
-            {
-              backgroundColor: colors.backgroundColor,
-              transform: [{translateY: slideAnim}],
-            }
-          ]}>
-          {/* Header */}
-          <View style={[styles.header, {borderBottomColor: colors.bColor}]}>
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={onClose}
-              hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
-              <Ionicons 
-                name="close" 
-                size={moderateScale(24)} 
-                color={colors.grayScale7} 
-              />
-            </TouchableOpacity>
-            
-            <View style={styles.headerTextContainer}>
-              <ZText type="B20" color={colors.textColor} style={styles.title}>
-                {title}
-              </ZText>
-              <ZText type="R14" color={colors.grayScale7} style={styles.subtitle}>
-                {subtitle}
-              </ZText>
-            </View>
-          </View>
-
-          {/* Search Bar */}
-          <View style={[styles.searchContainer, {backgroundColor: colors.inputBg}]}>
-            <Ionicons 
-              name="search-outline" 
-              size={moderateScale(20)} 
-              color={colors.grayScale7}
-              style={styles.searchIcon}
-            />
-            <TextInput
-              style={[
-                styles.searchInput,
-                {
-                  color: colors.textColor,
-                  backgroundColor: 'transparent',
-                }
-              ]}
-              placeholder={strings.searchCategories || "Search categories..."}
-              placeholderTextColor={colors.grayScale7}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              returnKeyType="search"
-            />
-            {searchQuery.length > 0 && (
+      <View style={[styles.overlay, { backgroundColor: colors.black + '50' }]}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1, justifyContent: 'flex-end' }}
+        >
+          <Animated.View
+            style={[
+              styles.modalContainer,
+              {
+                backgroundColor: colors.backgroundColor,
+                transform: [{ translateY: slideAnim }],
+              }
+            ]}>
+            {/* Header */}
+            <View style={[styles.header, { borderBottomColor: colors.bColor }]}>
               <TouchableOpacity
-                onPress={() => setSearchQuery('')}
-                style={styles.clearButton}>
-                <Ionicons 
-                  name="close-circle" 
-                  size={moderateScale(18)} 
-                  color={colors.grayScale7} 
+                style={styles.closeButton}
+                onPress={onClose}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                <Ionicons
+                  name="close"
+                  size={moderateScale(24)}
+                  color={colors.grayScale7}
                 />
               </TouchableOpacity>
-            )}
-          </View>
 
-          {/* Categories List */}
-          <View style={styles.listContainer}>
-            {filteredCategories.length > 0 ? (
-              <FlatList
-                data={filteredCategories}
-                renderItem={renderCategoryItem}
-                keyExtractor={(item, index) => `${item.name}-${index}`}
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={styles.listContent}
-                ItemSeparatorComponent={() => <View style={styles.separator} />}
-              />
-            ) : (
-              <View style={styles.emptyStateContainer}>
-                <Ionicons 
-                  name="search-outline" 
-                  size={moderateScale(48)} 
-                  color={colors.grayScale5} 
-                />
-                <ZText type="B18" color={colors.grayScale7} style={styles.emptyTitle}>
-                  {strings.noCategoriesFound || "No categories found"}
+              <View style={styles.headerTextContainer}>
+                <ZText type="B20" color={colors.textColor} style={styles.title}>
+                  {title}
                 </ZText>
-                <ZText type="R14" color={colors.grayScale5} style={styles.emptySubtitle}>
-                  {strings.tryDifferentSearch || "Try a different search term"}
+                <ZText type="R14" color={colors.grayScale7} style={styles.subtitle}>
+                  {subtitle}
                 </ZText>
               </View>
-            )}
-          </View>
-
-          {multiSelect && (
-            <View style={[styles.footer, {borderTopColor: colors.bColor}]}> 
-              <ZButton 
-                title={strings.done || 'Done'}
-                onPress={() => { onDone ? onDone() : onClose(); }}
-                color={colors.white}
-              />
             </View>
-          )}
-        </Animated.View>
+
+            {/* Search Bar */}
+            <View style={[styles.searchContainer, { backgroundColor: colors.inputBg }]}>
+              <Ionicons
+                name="search-outline"
+                size={moderateScale(20)}
+                color={colors.grayScale7}
+                style={styles.searchIcon}
+              />
+              <TextInput
+                style={[
+                  styles.searchInput,
+                  {
+                    color: colors.textColor,
+                    backgroundColor: 'transparent',
+                  }
+                ]}
+                placeholder={strings.searchCategories || "Search categories..."}
+                placeholderTextColor={colors.grayScale7}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                returnKeyType="search"
+              />
+              {searchQuery.length > 0 && (
+                <TouchableOpacity
+                  onPress={() => setSearchQuery('')}
+                  style={styles.clearButton}>
+                  <Ionicons
+                    name="close-circle"
+                    size={moderateScale(18)}
+                    color={colors.grayScale7}
+                  />
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {/* Categories List */}
+            <View style={styles.listContainer}>
+              {filteredCategories.length > 0 ? (
+                <FlatList
+                  data={filteredCategories}
+                  renderItem={renderCategoryItem}
+                  keyExtractor={(item, index) => `${item.name}-${index}`}
+                  showsVerticalScrollIndicator={false}
+                  contentContainerStyle={styles.listContent}
+                  ItemSeparatorComponent={() => <View style={styles.separator} />}
+                />
+              ) : (
+                <View style={styles.emptyStateContainer}>
+                  <Ionicons
+                    name="search-outline"
+                    size={moderateScale(48)}
+                    color={colors.grayScale5}
+                  />
+                  <ZText type="B18" color={colors.grayScale7} style={styles.emptyTitle}>
+                    {strings.noCategoriesFound || "No categories found"}
+                  </ZText>
+                  <ZText type="R14" color={colors.grayScale5} style={styles.emptySubtitle}>
+                    {strings.tryDifferentSearch || "Try a different search term"}
+                  </ZText>
+                </View>
+              )}
+            </View>
+
+            {multiSelect && (
+              <View style={[styles.footer, { borderTopColor: colors.bColor }]}>
+                <ZButton
+                  title={strings.done || 'Done'}
+                  onPress={() => { onDone ? onDone() : onClose(); }}
+                  color={colors.white}
+                />
+              </View>
+            )}
+          </Animated.View>
+        </KeyboardAvoidingView>
       </View>
     </Modal>
   );

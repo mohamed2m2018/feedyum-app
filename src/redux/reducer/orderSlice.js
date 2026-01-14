@@ -52,7 +52,7 @@ export default function orderReducer(state = initialState, action) {
       };
 
     case UPDATE_ORDER_STATUS: {
-      const {orderId, status, deliveryFee, totalAmount} = action.payload;
+      const { orderId, status, deliveryFee, totalAmount } = action.payload;
       let updatedCurrentOrder = state.currentOrder;
       let updatedOrderHistory = state.orderHistory;
 
@@ -61,8 +61,8 @@ export default function orderReducer(state = initialState, action) {
         updatedCurrentOrder = {
           ...state.currentOrder,
           status,
-          ...(deliveryFee !== undefined && {deliveryFee}),
-          ...(totalAmount !== undefined && {totalAmount}),
+          ...(deliveryFee !== undefined && { deliveryFee }),
+          ...(totalAmount !== undefined && { totalAmount }),
         };
       }
 
@@ -72,11 +72,11 @@ export default function orderReducer(state = initialState, action) {
         updatedOrderHistory = state.orderHistory.map((order, index) =>
           index === orderIndex
             ? {
-                ...order,
-                status,
-                ...(deliveryFee !== undefined && {deliveryFee}),
-                ...(totalAmount !== undefined && {totalAmount}),
-              }
+              ...order,
+              status,
+              ...(deliveryFee !== undefined && { deliveryFee }),
+              ...(totalAmount !== undefined && { totalAmount }),
+            }
             : order
         );
       }
@@ -158,21 +158,21 @@ export const clearCurrentOrder = () => ({
 // Async thunks for order operations
 export const placeOrder = (orderData) => async (dispatch) => {
   try {
-dispatch(setPlacing(true));
+    dispatch(setPlacing(true));
     dispatch(clearError());
 
     const response = await request.post('/orders', orderData);
-const newOrder = response.data.order || response.data; // Handle different response formats
-if (newOrder) {
+    const newOrder = response.data.order || response.data; // Handle different response formats
+    if (newOrder) {
       dispatch(setCurrentOrder(newOrder));
       dispatch(addOrderToHistory(newOrder));
     }
 
     return newOrder;
   } catch (error) {
-const errorMessage = error?.message || error?.response?.data?.message || 'Failed to place order';
+    const errorMessage = error?.message || error?.response?.data?.message || 'Failed to place order';
     dispatch(setError(errorMessage));
-    throw new Error(errorMessage);
+    throw error;
   } finally {
     dispatch(setPlacing(false));
   }
@@ -195,15 +195,15 @@ export const fetchOrderHistory = () => async (dispatch) => {
 
 export const fetchOrderById = (orderId) => async (dispatch) => {
   try {
-dispatch(setLoading(true));
+    dispatch(setLoading(true));
     dispatch(clearError());
 
     const response = await request.get(`/orders/${orderId}`);
-dispatch(setCurrentOrder(response.data));
-    
+    dispatch(setCurrentOrder(response.data));
+
     return response.data;
   } catch (error) {
-const errorMessage = error.response?.data?.message || error.message || 'Failed to fetch order details';
+    const errorMessage = error.response?.data?.message || error.message || 'Failed to fetch order details';
     dispatch(setError(errorMessage));
     throw error;
   } finally {

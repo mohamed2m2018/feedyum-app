@@ -74,6 +74,17 @@ class NotificationService {
     }
   }
 
+  // Set user language for localization
+  async setLanguage(language) {
+    try {
+      if (language) {
+        OneSignal.User.setLanguage(language);
+      }
+    } catch (error) {
+      console.error('Error setting OneSignal language:', error);
+    }
+  }
+
   // Remove user ID (logout)
   async removeUserId() {
     try {

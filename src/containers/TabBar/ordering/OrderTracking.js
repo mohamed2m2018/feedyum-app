@@ -4,10 +4,10 @@ import {
   StyleSheet,
   ScrollView,
   RefreshControl,
-  Alert,
   AppState,
   Text,
 } from 'react-native';
+import { showErrorToast } from '../../../utils/toast';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -19,6 +19,7 @@ import ZLoader from '../../../components/common/ZLoader';
 import { moderateScale } from '../../../common/constants';
 import { styles } from '../../../themes';
 import strings from '../../../i18n/strings';
+import { formatTime, formatDate, formatDateTime } from '../../../utils/helpers';
 import {
   fetchOrderById,
   selectCurrentOrder,
@@ -32,6 +33,7 @@ import { StackNav } from '../../../navigation/NavigationKeys';
 
 const OrderTracking = () => {
   const colors = useSelector(state => state.theme.theme);
+  const language = useSelector(state => state.profile?.language);
   const dispatch = useDispatch();
   const navigation = useNavigation();
   const route = useRoute();
@@ -81,9 +83,8 @@ const OrderTracking = () => {
 
   useEffect(() => {
     if (error) {
-      Alert.alert(strings.error, error, [
-        { text: strings.ok, onPress: () => dispatch(clearError()) },
-      ]);
+      showErrorToast(strings.error, error);
+      dispatch(clearError());
     }
   }, [error, dispatch]);
 
@@ -285,7 +286,7 @@ const OrderTracking = () => {
           </Text>
           {lastUpdated && (
             <Text style={{ fontSize: 12, color: '#666666' }}>
-              Last updated: {lastUpdated.toLocaleTimeString()}
+              {strings.lastUpdated} {formatTime(lastUpdated, language)}
             </Text>
           )}
         </View>
@@ -363,7 +364,7 @@ const OrderTracking = () => {
                         color: '#666666',
                         marginTop: 2,
                       }}>
-                      {new Date(timestamp).toLocaleString()}
+                      {formatDateTime(timestamp, language)}
                     </Text>
                   )}
 
@@ -375,7 +376,7 @@ const OrderTracking = () => {
                         marginTop: 2,
                         fontWeight: 'bold',
                       }}>
-                      Current Status
+                      {strings.currentStatus}
                     </Text>
                   )}
                 </View>
@@ -425,7 +426,7 @@ const OrderTracking = () => {
             color: '#000000',
             marginBottom: 16,
           }}>
-          Order Details
+          {strings.orderProgress}
         </Text>
 
         <View style={localStyles.orderInfo}>
@@ -487,7 +488,7 @@ const OrderTracking = () => {
                 fontWeight: 'bold',
               }}>
               {currentOrder.created_at
-                ? new Date(currentOrder.created_at).toLocaleDateString()
+                ? formatDate(currentOrder.created_at, language)
                 : 'N/A'}
             </Text>
           </View>
@@ -501,7 +502,7 @@ const OrderTracking = () => {
                 fontWeight: 'bold',
               }}>
               {currentOrder.created_at
-                ? new Date(currentOrder.created_at).toLocaleTimeString()
+                ? formatTime(currentOrder.created_at, language)
                 : 'N/A'}
             </Text>
           </View>
@@ -528,7 +529,7 @@ const OrderTracking = () => {
               color: '#000000',
               marginBottom: 16,
             }}>
-            Order Items
+            {strings.orderItems}
           </Text>
           <View style={localStyles.loadingContainer}>
             <Text style={{ fontSize: 14, color: '#666666', textAlign: 'center' }}>
@@ -548,7 +549,7 @@ const OrderTracking = () => {
             color: '#000000',
             marginBottom: 16,
           }}>
-          Order Items ({currentOrder.items?.length || 0})
+          {strings.formatString(strings.orderItemsCount, currentOrder.items?.length || 0)}
         </Text>
 
         {currentOrder.items?.length > 0 ? (
@@ -568,17 +569,17 @@ const OrderTracking = () => {
                 )}
                 <View style={localStyles.itemQuantityPrice}>
                   <Text style={{ fontSize: 12, color: '#666666' }}>
-                    Qty: {item.quantity || 1}
+                    {strings.qty} {item.quantity || 1}
                   </Text>
                   <Text style={{ fontSize: 12, color: '#666666' }}>
-                    {(item.dish?.price || 0).toFixed(2)} each
+                    {(item.dish?.price || 0).toFixed(2)} {strings.currency} {strings.each}
                   </Text>
                 </View>
               </View>
               <View style={localStyles.itemPriceContainer}>
                 <Text
                   style={{ fontSize: 14, fontWeight: 'bold', color: '#FF4D67' }}>
-                  {((item.dish?.price || 0) * (item.quantity || 1)).toFixed(2)}
+                  {((item.dish?.price || 0) * (item.quantity || 1)).toFixed(2)} {strings.currency}
                 </Text>
               </View>
             </View>
@@ -605,7 +606,7 @@ const OrderTracking = () => {
               color: '#FF0000',
               marginBottom: 16,
             }}>
-            Pricing Summary
+            {strings.pricingSummary}
           </Text>
           <View style={localStyles.loadingContainer}>
             <Text style={{ fontSize: 14, color: '#666666', textAlign: 'center' }}>
@@ -625,13 +626,13 @@ const OrderTracking = () => {
             color: '#FF0000',
             marginBottom: 16,
           }}>
-          Pricing Summary
+          {strings.pricingSummary}
         </Text>
 
         <View style={localStyles.pricingRow}>
           <Text style={{ fontSize: 14, color: '#000000' }}>{strings.subtotal}</Text>
           <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#000000' }}>
-            {currentOrder.subtotal?.toFixed(2) || '0.00'}
+            {currentOrder.subtotal?.toFixed(2) || '0.00'} {strings.currency}
           </Text>
         </View>
 
@@ -640,7 +641,7 @@ const OrderTracking = () => {
           <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#000000' }}>
             {currentOrder.deliveryFee
               ? currentOrder.deliveryFee.toFixed(2)
-              : '0.00'}
+              : '0.00'} {strings.currency}
           </Text>
         </View>
 
@@ -649,7 +650,7 @@ const OrderTracking = () => {
           <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#000000' }}>
             {currentOrder.serviceFee
               ? currentOrder.serviceFee.toFixed(2)
-              : '0.00'}
+              : '0.00'} {strings.currency}
           </Text>
         </View>
 
@@ -658,7 +659,7 @@ const OrderTracking = () => {
             {strings.total}
           </Text>
           <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#FF4D67' }}>
-            {currentOrder.totalPrice?.toFixed(2) || '0.00'}
+            {currentOrder.totalPrice?.toFixed(2) || '0.00'} {strings.currency}
           </Text>
         </View>
       </View>
@@ -674,7 +675,7 @@ const OrderTracking = () => {
           color: '#000000',
           marginBottom: 16,
         }}>
-        Delivery Information
+        {strings.deliveryInformation}
       </Text>
 
       {currentOrder?.deliveryAddress && (
@@ -714,7 +715,7 @@ const OrderTracking = () => {
             color={'#666666'}
           />
           <Text style={{ fontSize: 14, color: '#666666', marginLeft: 12 }}>
-            No delivery address provided
+            {strings.noDeliveryAddress}
           </Text>
         </View>
       )}
@@ -735,7 +736,7 @@ const OrderTracking = () => {
         (!currentOrder?.notes || currentOrder.notes.trim() === '')) && (
           <View style={localStyles.noInstructionsContainer}>
             <Text style={{ fontSize: 14, color: '#666666' }}>
-              No special instructions provided
+              {strings.noSpecialInstructions}
             </Text>
           </View>
         )}
@@ -804,6 +805,7 @@ const OrderTracking = () => {
           ]}
           onPress={handleChatWithChef}
         />
+        <View style={{ height: moderateScale(50) }} />
       </ScrollView>
     </ZSafeAreaView>
   );
@@ -890,6 +892,7 @@ const localStyles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    gap: moderateScale(12),
     paddingVertical: moderateScale(8),
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(0,0,0,0.1)',

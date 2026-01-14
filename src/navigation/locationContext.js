@@ -6,7 +6,7 @@ import {
   request,
   requestNotifications,
 } from 'react-native-permissions'; // Import react-native-permissions
-import { Toast } from 'react-native-alert-notification';
+import { showInfoToast } from '../utils/toast';
 import GoogleMapsService from '../services/GoogleMapsService';
 
 const LocationContext = createContext();
@@ -25,11 +25,7 @@ export const LocationProvider = ({ children }) => {
       requestNotifications(['alert', 'sound']).then(({ status }) => {
         if (status === 'blocked' || status === 'denied') {
           setTimeout(() => {
-            Toast.show({
-              textBody:
-                "You didn't grant notifications permission, You will be directed to settings",
-              onPress: () => Linking.openSettings(),
-            });
+            showInfoToast('', "You didn't grant notifications permission, You will be directed to settings");
             setTimeout(() => {
               Linking.openSettings();
             }, 2000);
@@ -41,52 +37,104 @@ export const LocationProvider = ({ children }) => {
 
   useEffect(() => {
     const requestLocationPermission = async () => {
+      console.log('[LocationContext] Starting location permission request...');
       try {
         let permission;
         if (Platform.OS === 'ios') {
           // Request location permission specifically for iOS
           permission = PERMISSIONS.IOS.LOCATION_WHEN_IN_USE;
+          console.log('[LocationContext] Platform: iOS, requesting LOCATION_WHEN_IN_USE');
         } else {
           // Request location permission for Android
           permission = PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION;
+          console.log('[LocationContext] Platform: Android, requesting ACCESS_FINE_LOCATION');
         }
 
+        console.log('[LocationContext] Calling request() for permission...');
         const result = await request(permission);
-        if (result === 'granted') {
-          Geolocation.getCurrentPosition(
-            async position => {
-              const { latitude, longitude } = position.coords;
+        console.log('[LocationContext] Permission result:', result);
 
-              let addressDetails = null;
+        if (result === 'granted') {
+          console.log('[LocationContext] Permission granted, calling getCurrentPosition...');
+          // Helper function to get location with retries and fallback
+          const getLocation = async () => {
+            console.log('[LocationContext] Attempting to get location...');
+
+            const getCurrentPositionPromise = (options) => {
+              return new Promise((resolve, reject) => {
+                Geolocation.getCurrentPosition(resolve, reject, options);
+              });
+            };
+
+            try {
+              // Attempt 1: High Accuracy with shorter timeout
+              console.log('[LocationContext] Attempt 1: High Accuracy');
+              let position = await getCurrentPositionPromise({ enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 });
+              processPosition(position);
+            } catch (error) {
+              console.warn('[LocationContext] High accuracy failed:', error.message);
+
               try {
-                // Reverse geocode
+                // Attempt 2: Low Accuracy (Network/Wifi)
+                console.log('[LocationContext] Attempt 2: Low Accuracy (Fallback)');
+                let position = await getCurrentPositionPromise({ enableHighAccuracy: false, timeout: 15000, maximumAge: 10000 });
+                processPosition(position);
+              } catch (secondError) {
+                console.error('[LocationContext] All location attempts failed:', secondError.message);
+                handleRequestPermission(); // Treat as permission/location failure
+              }
+            }
+          };
+
+          const processPosition = async (position) => {
+            const { latitude, longitude } = position.coords;
+            console.log('Got GPS coordinates:', latitude, longitude);
+
+            let addressDetails = null;
+
+            // Retry mechanism for reverse geocoding
+            const maxRetries = 3;
+            for (let attempt = 1; attempt <= maxRetries; attempt++) {
+              try {
+                console.log(`Reverse geocoding attempt ${attempt}/${maxRetries}...`);
                 const geocodeResult = await GoogleMapsService.reverseGeocode(latitude, longitude);
-                if (geocodeResult.address) {
+                console.log('Geocode result:', geocodeResult);
+
+                if (geocodeResult && geocodeResult.address) {
                   addressDetails = geocodeResult.address;
+                  console.log('Address resolved:', addressDetails);
+                  break; // Success, exit retry loop
+                } else {
+                  console.warn('Geocode response missing address:', geocodeResult);
                 }
               } catch (e) {
-                console.log('Reverse geocoding failed', e);
+                console.error(`Reverse geocoding attempt ${attempt} failed:`, e.message || e);
+                if (attempt < maxRetries) {
+                  // Wait a bit before retrying
+                  await new Promise(resolve => setTimeout(resolve, 1000));
+                }
               }
+            }
 
-              setLocation({
-                latitude,
-                longitude,
-                address: addressDetails
-              });
-              handleRequestPermission();
-            },
-            error => {
-              handleRequestPermission();
-            },
-            { enableHighAccuracy: true, timeout: 60000 },
-          );
+            setLocation({
+              latitude,
+              longitude,
+              address: addressDetails
+            });
+            handleRequestPermission();
+          };
+
+          getLocation();
         } else {
+          console.log('[LocationContext] Permission NOT granted, result was:', result);
           handleRequestPermission();
         }
       } catch (err) {
+        console.error('[LocationContext] Error in requestLocationPermission:', err);
       }
     };
 
+    console.log('[LocationContext] useEffect triggered, calling requestLocationPermission...');
     requestLocationPermission();
   }, []);
 

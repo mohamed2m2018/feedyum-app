@@ -1,6 +1,7 @@
 // Library imports
 import React, { useState } from 'react';
-import { StyleSheet, TouchableOpacity, View, Alert, ActivityIndicator } from 'react-native';
+import { StyleSheet, TouchableOpacity, View, ActivityIndicator } from 'react-native';
+import { showErrorToast } from '../../utils/toast';
 import { useSelector } from 'react-redux';
 import ActionSheet from 'react-native-actions-sheet';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -78,7 +79,7 @@ const ShareOptionsSheet = props => {
                 SheetRef.current?.hide();
             }
         } catch (error) {
-            Alert.alert(strings.sharingError, strings.failedToShareContent);
+            showErrorToast(strings.sharingError, strings.failedToShareContent);
         } finally {
             setIsLoading(false);
             setLoadingOption(null);

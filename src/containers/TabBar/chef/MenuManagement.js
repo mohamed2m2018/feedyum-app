@@ -15,7 +15,8 @@ import { useNavigation, useNavigationState, useRoute } from '@react-navigation/n
 import { StackNav } from '../../../navigation/NavigationKeys';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useQuery, useQueryClient, useMutation } from 'react-query';
-import { Toast, ALERT_TYPE } from 'react-native-alert-notification';
+import { showSuccessToast, showErrorToast, showActionDialog } from '../../../utils/toast';
+import { ALERT_TYPE } from 'react-native-alert-notification';
 
 // Local imports
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
@@ -25,9 +26,11 @@ import ZLoader from '../../../components/common/ZLoader';
 import ZButton from '../../../components/common/ZButton';
 import DishCard from './components/DishCard';
 import AddEditDishModal from './components/AddEditDishModal';
+import { useChefSocket } from './hooks/useChefSocket';
 import request from '../../../api/request';
 import { moderateScale } from '../../../common/constants';
 import strings from '../../../i18n/strings';
+import { uploadImageToS3 } from '../../../utils/UploadUtils';
 
 // Components moved outside to avoid React warnings
 const SectionTab = ({ section, isSelected, onPress, colors }) => (
@@ -170,6 +173,21 @@ export default function MenuManagement() {
         throw new Error('User ID is required but not found');
       }
 
+      // Upload image to S3 if it's a local file path
+      let imageUrl = dishData.image || '';
+      if (imageUrl && (imageUrl.startsWith('file://') || imageUrl.startsWith('/'))) {
+        try {
+          const uploadResult = await uploadImageToS3(imageUrl);
+          if (uploadResult.success && uploadResult.url) {
+            imageUrl = uploadResult.url;
+          }
+        } catch (uploadError) {
+          console.error('Failed to upload dish image:', uploadError);
+          // Continue without image if upload fails
+          imageUrl = '';
+        }
+      }
+
       // Send fields the controller expects (now with multi-categories)
       const requestData = {
         name: dishData.name.trim(),
@@ -179,7 +197,7 @@ export default function MenuManagement() {
         categories: Array.isArray(dishData.categories) ? dishData.categories : ((dishData.category && dishData.category.trim()) ? [dishData.category.trim()] : []),
         sectionName: dishData.section.trim(),
         menuId: menuId,
-        image: dishData.image || '',
+        image: imageUrl,
       };
 
 
@@ -215,27 +233,34 @@ export default function MenuManagement() {
         queryClient.invalidateQueries('menuSections');
         setModalVisible(false);
         setEditingDish(null);
-        Toast.show({
-          type: ALERT_TYPE.SUCCESS,
-          title: 'Success',
-          textBody: 'Dish added successfully!',
-        });
+        showSuccessToast(strings.success, strings.dishAddedSuccess);
       },
       onError: error => {
-        Toast.show({
-          type: ALERT_TYPE.DANGER,
-          title: 'Error',
-          textBody:
-            error?.response?.data?.message ||
-            error?.message ||
-            'Failed to add dish',
-        });
+        showErrorToast(
+          strings.error,
+          error?.response?.data?.message || error?.message || strings.failedToAddDish,
+        );
       },
     },
   );
 
   const updateDishMutation = useMutation(
     async ({ dishId, dishData }) => {
+      // Upload image to S3 if it's a local file path
+      let imageUrl = dishData.image || '';
+      if (imageUrl && (imageUrl.startsWith('file://') || imageUrl.startsWith('/'))) {
+        try {
+          const uploadResult = await uploadImageToS3(imageUrl);
+          if (uploadResult.success && uploadResult.url) {
+            imageUrl = uploadResult.url;
+          }
+        } catch (uploadError) {
+          console.error('Failed to upload dish image:', uploadError);
+          // Keep existing image URL if upload fails
+          imageUrl = dishData.image || '';
+        }
+      }
+
       // Explicitly clean and format data for update
       const requestData = {
         name: dishData.name?.trim(),
@@ -244,7 +269,7 @@ export default function MenuManagement() {
         category: (dishData.category || '').trim(),
         categories: Array.isArray(dishData.categories) ? dishData.categories : ((dishData.category && dishData.category.trim()) ? [dishData.category.trim()] : []),
         sectionName: dishData.section?.trim(), // Send section name to backend
-        image: dishData.image || '',
+        image: imageUrl,
         cookingTime: dishData.cookingTime,
         ingredients: dishData.ingredients,
         visible: dishData.visible
@@ -262,21 +287,13 @@ export default function MenuManagement() {
         queryClient.invalidateQueries('menuSections');
         setModalVisible(false);
         setEditingDish(null);
-        Toast.show({
-          type: ALERT_TYPE.SUCCESS,
-          title: 'Success',
-          textBody: 'Dish updated successfully!',
-        });
+        showSuccessToast(strings.success, strings.dishUpdatedSuccess);
       },
       onError: error => {
-        Toast.show({
-          type: ALERT_TYPE.DANGER,
-          title: 'Error',
-          textBody:
-            error?.response?.data?.message ||
-            error?.message ||
-            'Failed to update dish',
-        });
+        showErrorToast(
+          strings.error,
+          error?.response?.data?.message || error?.message || strings.failedToUpdateDish,
+        );
       },
     },
   );
@@ -291,21 +308,13 @@ export default function MenuManagement() {
       onSuccess: () => {
         // Invalidate broadly to ensure list refresh
         queryClient.invalidateQueries('menuDishes');
-        Toast.show({
-          type: ALERT_TYPE.SUCCESS,
-          title: 'Success',
-          textBody: 'Dish deleted successfully!',
-        });
+        showSuccessToast(strings.success, strings.dishDeletedSuccess);
       },
       onError: error => {
-        Toast.show({
-          type: ALERT_TYPE.DANGER,
-          title: 'Error',
-          textBody:
-            error?.response?.data?.message ||
-            error?.message ||
-            'Failed to delete dish',
-        });
+        showErrorToast(
+          strings.error,
+          error?.response?.data?.message || error?.message || strings.failedToDeleteDish,
+        );
       },
     },
   );
@@ -314,7 +323,8 @@ export default function MenuManagement() {
   const { data: userData } = useQuery('user', () => request.get('/user'));
   const userId = userData?.data?.user?._id;
 
-
+  // Connect to socket for real-time updates
+  useChefSocket(userId);
 
   // Fetch menu sections - using real API call
   const { data: sectionsData, isLoading: sectionsLoading } = useQuery(
@@ -414,21 +424,14 @@ export default function MenuManagement() {
   };
 
   const handleDeleteDish = dish => {
-    Alert.alert(
-      'Delete Dish',
-      `Are you sure you want to delete "${dish.name}"? This action cannot be undone.`,
-      [
-        {
-          text: strings.cancel,
-          style: 'cancel',
-        },
-        {
-          text: strings.delete,
-          style: 'destructive',
-          onPress: () => deleteDishMutation.mutate(dish._id),
-        },
-      ],
-    );
+    showActionDialog({
+      type: ALERT_TYPE.WARNING,
+      title: strings.deleteDishTitle,
+      message: strings.formatString(strings.deleteDishConfirm, dish.name),
+      confirmText: strings.delete,
+      cancelText: strings.cancel,
+      onConfirm: () => deleteDishMutation.mutate(dish._id),
+    });
   };
 
   const handleSaveDish = dishData => {
@@ -463,20 +466,12 @@ export default function MenuManagement() {
       });
 
       queryClient.invalidateQueries(['menuDishes', userId]);
-      Toast.show({
-        type: ALERT_TYPE.SUCCESS,
-        title: 'Success',
-        textBody: newVisibility ? strings.dishMadeVisible : strings.dishHidden,
-      });
+      showSuccessToast(strings.success, newVisibility ? strings.dishMadeVisible : strings.dishHidden);
     } catch (error) {
-      Toast.show({
-        type: ALERT_TYPE.DANGER,
-        title: 'Error',
-        textBody:
-          error?.response?.data?.message ||
-          error?.message ||
-          'Failed to update dish visibility',
-      });
+      showErrorToast(
+        strings.error,
+        error?.response?.data?.message || error?.message || strings.failedToUpdateVisibility,
+      );
     }
   };
 
@@ -492,7 +487,7 @@ export default function MenuManagement() {
   );
 
   const sections = [
-    { name: 'All', value: 'all' },
+    { name: strings.all, value: 'all' },
     ...(finalSections?.map(section => ({
       name: section.name,
       value: section.name,

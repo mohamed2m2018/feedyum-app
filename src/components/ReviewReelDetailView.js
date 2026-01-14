@@ -96,7 +96,7 @@ const ReviewReelDetailView = ({ reviewReel, onClose }) => {
         />
         <View style={localStyles.reviewerDetails}>
           <ZText type="B16" color="#1A1A1A">
-            {reviewDetails?.author?.fullName || 'Anonymous'}
+            {reviewDetails?.author?.fullName || strings.anonymous}
           </ZText>
           <ZText type="M12" color="#666666">
             Reviewer

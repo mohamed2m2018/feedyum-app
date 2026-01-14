@@ -1,5 +1,10 @@
 import 'react-native-gesture-handler';
+import { LogBox } from 'react-native';
 import { registerRootComponent } from 'expo';
+
+// Suppress console.warn
+console.warn = () => { };
+LogBox.ignoreAllLogs(true);
 import { Provider } from 'react-redux';
 import { QueryClientProvider } from 'react-query';
 import App from './src';

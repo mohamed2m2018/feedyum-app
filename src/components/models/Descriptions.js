@@ -1,23 +1,20 @@
-import {StyleSheet, View, Clipboard, TouchableOpacity} from 'react-native';
+import { StyleSheet, View, Clipboard, TouchableOpacity } from 'react-native';
 import React from 'react';
 import ActionSheet from 'react-native-actions-sheet';
-import {useSelector} from 'react-redux';
+import { useSelector } from 'react-redux';
 
-import {styles} from '../../themes';
+import { styles } from '../../themes';
 import ZText from '../common/ZText';
-import {ScrollView} from 'react-native';
-import {ALERT_TYPE, Toast} from 'react-native-alert-notification';
+import { ScrollView } from 'react-native';
+import { showSuccessToast } from '../../utils/toast';
+import strings from '../../i18n/strings';
 
-export default function Description({SheetRef, description}) {
+export default function Description({ SheetRef, description }) {
   const colors = useSelector(state => state.theme.theme);
 
   const copyToClipboard = () => {
     Clipboard.setString(description);
-    Toast.show({
-      type: ALERT_TYPE.SUCCESS,
-      title: 'Copied',
-      textBody: 'Text is Copied successfully',
-    });
+    showSuccessToast(strings.copied || 'Copied', strings.textCopiedSuccess);
   };
 
   return (
@@ -26,7 +23,7 @@ export default function Description({SheetRef, description}) {
       ref={SheetRef}
       containerStyle={[
         localStyles.actionSheetContainer,
-        {backgroundColor: colors.backgroundColor},
+        { backgroundColor: colors.backgroundColor },
       ]}
       overlayColor="transparent">
       <View style={localStyles.contentContainer}>

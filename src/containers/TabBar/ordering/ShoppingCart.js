@@ -5,13 +5,16 @@ import {
   FlatList,
   Image,
   TouchableOpacity,
-  Alert,
   TextInput,
+  Platform,
+  KeyboardAvoidingView
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 import { useQueryClient } from 'react-query';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { showActionDialog, showErrorToast, showInfoToast } from '../../../utils/toast';
+import { ALERT_TYPE } from 'react-native-alert-notification';
 import ZText from '../../../components/common/ZText';
 import ZHeader from '../../../components/common/ZHeader';
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
@@ -37,7 +40,7 @@ import {
   setCurrentOrder,
 } from '../../../redux/reducer/orderSlice';
 import { getAddresses, setSelectedAddress } from '../../../redux/actions/addressActions';
-import { StackNav } from '../../../navigation/NavigationKeys';
+import { StackNav, TabNav } from '../../../navigation/NavigationKeys';
 
 const ShoppingCart = () => {
 
@@ -51,17 +54,24 @@ const ShoppingCart = () => {
   const chef = useSelector(selectCartChef);
   const isPlacingOrder = useSelector(selectOrderPlacing);
   const orderError = useSelector(selectOrderError);
-  const { selectedAddress } = useSelector(state => state.address);
+  const { selectedAddress, addressList } = useSelector(state => state.address);
 
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [specialInstructions, setSpecialInstructions] = useState('');
 
-  // Load addresses when component mounts
+  // Load addresses when component mounts and set default if needed
   useEffect(() => {
     dispatch(getAddresses());
   }, [dispatch]);
 
-
+  // Set default address if none selected but addresses exist
+  useEffect(() => {
+    if (!selectedAddress && addressList && addressList.length > 0) {
+      // Find primary address or default to first
+      const primary = addressList.find(addr => addr.isPrimary);
+      dispatch(setSelectedAddress(primary || addressList[0]));
+    }
+  }, [addressList, selectedAddress, dispatch]);
 
   // Memoize expensive calculations
   const cartSummary = useMemo(() => ({
@@ -70,202 +80,191 @@ const ShoppingCart = () => {
     formattedSubtotal: subtotal.toFixed(0)
   }), [cartItems, subtotal]);
 
-
-
   const handleQuantityChange = useCallback((dishId, newQuantity) => {
     if (newQuantity <= 0) {
-      Alert.alert(
-        strings.removeItem,
-        strings.areYouSureRemoveItem,
-        [
-          { text: strings.cancel, style: 'cancel' },
-          {
-            text: strings.removeFromCart,
-            style: 'destructive',
-            onPress: () => dispatch(removeFromCart({ dishId })),
-          },
-        ]
-      );
+      showActionDialog({
+        type: ALERT_TYPE.WARNING,
+        title: strings.removeItem,
+        message: strings.areYouSureRemoveItem,
+        confirmText: strings.removeFromCart,
+        cancelText: strings.cancel,
+        onConfirm: () => dispatch(removeFromCart({ dishId })),
+      });
     } else {
       dispatch(updateQuantity({ dishId, quantity: newQuantity }));
     }
   }, [dispatch]);
 
   const handleRemoveItem = useCallback((dishId, dishName) => {
-    Alert.alert(
-      'Remove Item',
-      strings.formatString(strings.removeDishConfirm, dishName),
-      [
-        { text: strings.cancel, style: 'cancel' },
-        {
-          text: strings.removeFromCart,
-          style: 'destructive',
-          onPress: () => dispatch(removeFromCart({ dishId })),
-        },
-      ]
-    );
+    showActionDialog({
+      type: ALERT_TYPE.WARNING,
+      title: strings.removeItem,
+      message: strings.formatString(strings.removeItemFromCart, { dishName }),
+      confirmText: strings.removeFromCart,
+      cancelText: strings.cancel,
+      onConfirm: () => dispatch(removeFromCart({ dishId })),
+    });
   }, []);
 
   const handleClearCart = useCallback(() => {
-    Alert.alert(
-      strings.clearCart,
-      strings.areYouSureClearCart,
-      [
-        { text: strings.cancel, style: 'cancel' },
-        {
-          text: strings.clearAll,
-          style: 'destructive',
-          onPress: () => dispatch(clearCart()),
-        },
-      ]
-    );
+    showActionDialog({
+      type: ALERT_TYPE.WARNING,
+      title: strings.clearCart,
+      message: strings.areYouSureClearCart,
+      confirmText: strings.clearAll,
+      cancelText: strings.cancel,
+      onConfirm: () => dispatch(clearCart()),
+    });
   }, []);
 
   const handleCheckout = async () => {
-    Alert.alert(
-      strings.placeOrderConfirm,
-      strings.deliveryFeeMessage,
-      [
-        {
-          text: strings.cancel,
-          style: 'cancel',
-        },
-        {
-          text: strings.placeOrder,
-          onPress: async () => {
-            try {
-              setIsCheckingOut(true);
+    showActionDialog({
+      type: ALERT_TYPE.INFO,
+      title: strings.placeOrderConfirm,
+      message: strings.deliveryFeeMessage,
+      confirmText: strings.placeOrder,
+      cancelText: strings.cancel,
+      onConfirm: async () => {
+        try {
+          setIsCheckingOut(true);
 
-              // Check if user has selected a delivery address
-              if (!selectedAddress) {
-                Alert.alert(
-                  strings.noDeliveryAddress,
-                  strings.selectDeliveryAddress,
-                  [{ text: strings.ok }]
-                );
-                setIsCheckingOut(false);
-                return;
-              }
+          // Check if user has selected a delivery address
+          if (!selectedAddress) {
+            showInfoToast(
+              strings.noDeliveryAddress || 'No Address',
+              strings.selectDeliveryAddress || 'Please select a delivery address'
+            );
+            setIsCheckingOut(false);
+            return;
+          }
 
-              // Debug logging
-
-
-
-
-              // Validate chef ID
-              if (!chef?.id) {
-                Alert.alert(
-                  'Order Error',
-                  'Chef information is missing. Clear cart and try again?',
-                  [
-                    { text: strings.cancel, style: 'cancel' },
-                    {
-                      text: strings.clearCart,
-                      onPress: () => {
-                        dispatch(clearCart());
-                        navigation.goBack();
-                      }
-                    }
-                  ]
-                );
-                setIsCheckingOut(false);
-                return;
-              }
-
-              // Validate cart items
-              if (!cartItems || cartItems.length === 0) {
-                Alert.alert(
-                  strings.orderError,
-                  strings.cartEmpty,
-                  [{ text: strings.ok }]
-                );
-                setIsCheckingOut(false);
-                return;
-              }
-
-              // Prepare order data to match backend API expectations
-              const orderData = {
-                chefId: chef.id,
-                items: cartItems.map(item => ({
-                  dish: item.dishId,
-                  quantity: item.quantity,
-                })),
-                deliveryAddress: (() => {
-                  // Extract city from formatted address if area is not available
-                  let city = selectedAddress.streetDetails?.area || selectedAddress.city || '';
-
-                  if (!city && selectedAddress.formattedAddress) {
-                    // Try to extract city from formatted address (usually contains "Cairo" or other city names)
-                    const addressParts = selectedAddress.formattedAddress.split(',');
-                    const cityMatch = addressParts.find(part =>
-                      part.trim().toLowerCase().includes('cairo') ||
-                      part.trim().toLowerCase().includes('giza') ||
-                      part.trim().toLowerCase().includes('alexandria')
-                    );
-                    if (cityMatch) {
-                      city = cityMatch.trim();
-                    } else if (addressParts.length > 1) {
-                      // Fallback: use the second-to-last part as city
-                      city = addressParts[addressParts.length - 2]?.trim() || 'Cairo';
-                    } else {
-                      city = 'Cairo'; // Default fallback
-                    }
-                  }
-
-                  return {
-                    street: selectedAddress.streetDetails?.streetName || selectedAddress.formattedAddress || selectedAddress.nameLine || 'Address not specified',
-                    city: city || 'Cairo',
-                    state: selectedAddress.streetDetails?.state || '',
-                    zipCode: selectedAddress.streetDetails?.postalCode || '',
-                    nameLine: selectedAddress.formattedAddress || selectedAddress.nameLine || '',
-                    streetDetails: selectedAddress.streetDetails,
-                    buildingDetails: selectedAddress.buildingDetails,
-                    coordinates: selectedAddress.coordinates
-                  };
-                })(),
-                notes: specialInstructions || '', // Backend expects 'notes' not 'specialInstructions'
-              };
-              // Place real order using Redux thunk
-              const newOrder = await dispatch(placeOrder(orderData));
-              if (newOrder && newOrder._id) {
-                // Clear the cart after successful order
+          // Validate chef ID
+          if (!chef?.id) {
+            showActionDialog({
+              type: ALERT_TYPE.DANGER,
+              title: strings.orderError,
+              message: strings.chefMissingError,
+              confirmText: strings.clearCart,
+              cancelText: strings.cancel,
+              onConfirm: () => {
                 dispatch(clearCart());
+                navigation.goBack();
+              },
+            });
+            setIsCheckingOut(false);
+            return;
+          }
 
-                // Invalidate chat list queries to refresh the chat list
-                queryClient.invalidateQueries(['orderChats']);
-                queryClient.invalidateQueries(['chatList']);
+          // Validate cart items
+          if (!cartItems || cartItems.length === 0) {
+            showInfoToast(strings.orderError, strings.cartEmpty);
+            setIsCheckingOut(false);
+            return;
+          }
 
-                // Navigate to order tracking with the real order ID
-                navigation.navigate(StackNav.OrderTracking, {
-                  orderId: newOrder._id,
-                });
-              } else {
-                throw new Error(strings.orderNotCreatedProperly);
+          // Prepare order data to match backend API expectations
+          const orderData = {
+            chefId: chef.id,
+            items: cartItems.map(item => ({
+              dish: item.dishId,
+              quantity: item.quantity,
+            })),
+            deliveryAddress: (() => {
+              // Extract city from formatted address if area is not available
+              let city = selectedAddress.streetDetails?.area || selectedAddress.city || '';
+
+              if (!city && selectedAddress.formattedAddress) {
+                // Try to extract city from formatted address (usually contains "Cairo" or other city names)
+                const addressParts = selectedAddress.formattedAddress.split(',');
+                const cityMatch = addressParts.find(part =>
+                  part.trim().toLowerCase().includes('cairo') ||
+                  part.trim().toLowerCase().includes('giza') ||
+                  part.trim().toLowerCase().includes('alexandria')
+                );
+                if (cityMatch) {
+                  city = cityMatch.trim();
+                } else if (addressParts.length > 1) {
+                  // Fallback: use the second-to-last part as city
+                  city = addressParts[addressParts.length - 2]?.trim() || 'Cairo';
+                } else {
+                  city = 'Cairo'; // Default fallback
+                }
               }
 
-            } catch (error) {
-              let errorMessage = 'Failed to place order. Please try again.';
+              return {
+                street: selectedAddress.streetDetails?.streetName || selectedAddress.formattedAddress || selectedAddress.nameLine || 'Address not specified',
+                city: city || 'Cairo',
+                state: selectedAddress.streetDetails?.state || '',
+                zipCode: selectedAddress.streetDetails?.postalCode || '',
+                nameLine: selectedAddress.formattedAddress || selectedAddress.nameLine || '',
+                streetDetails: selectedAddress.streetDetails,
+                buildingDetails: selectedAddress.buildingDetails,
+                coordinates: selectedAddress.coordinates
+              };
+            })(),
+            notes: specialInstructions || '', // Backend expects 'notes' not 'specialInstructions'
+          };
+          // Place real order using Redux thunk
+          const newOrder = await dispatch(placeOrder(orderData));
+          if (newOrder && newOrder._id) {
+            // Clear the cart after successful order
+            dispatch(clearCart());
 
-              if (error?.message) {
-                errorMessage = error.message;
-              } else if (error?.response?.data?.message) {
-                errorMessage = error.response.data.message;
-              } else if (typeof error === 'string') {
-                errorMessage = error;
-              }
+            // Invalidate chat list queries to refresh the chat list
+            queryClient.invalidateQueries(['orderChats']);
+            queryClient.invalidateQueries(['chatList']);
 
-              Alert.alert(
-                strings.orderFailed,
-                errorMessage,
-                [{ text: 'OK' }]
-              );
-            } finally {
-              setIsCheckingOut(false);
+            // Navigate to Orders tab to show history
+            navigation.navigate(StackNav.TabBar, {
+              screen: TabNav.Orders
+            });
+          } else {
+            throw new Error(strings.orderNotCreatedProperly || 'Order creation failed');
+          }
+
+        } catch (error) {
+          console.log('Order Error Full:', JSON.stringify(error, null, 2));
+
+          let errorMessage = strings.failedToPlaceOrder;
+          let errorData = error?.response?.data || error;
+
+          if (errorData?.error === 'delivery_area_not_supported') {
+            // Try to get data from errorData
+            const { deliveryCity, supportedCities } = errorData;
+            const validCitiesList = supportedCities && supportedCities.length > 0
+              ? supportedCities.join(', ')
+              : '';
+
+            // Ensure we have expected data before showing custom message
+            if (supportedCities) { // Removed `loading` as it's not defined here and likely a typo
+              errorMessage = `${strings.chefDoesNotDeliverTo} ${deliveryCity || ''}. ${strings.theyDeliverTo}: ${validCitiesList}`;
+            } else {
+              // Fallback if supportedCities is missing (backend old code case)
+              errorMessage = errorData.message || strings.failedToPlaceOrder;
             }
-          },
-        },
-      ]
-    );
+
+            // If we have the specific error code, try to construct the message
+            // Even if supportedCities is missing, we might want to try parsing the old message or just showing it
+            if (validCitiesList) {
+              errorMessage = `${strings.chefDoesNotDeliverTo} ${deliveryCity || ''}. ${strings.theyDeliverTo}: ${validCitiesList}`;
+            } else {
+              // Use the message from backend if we can't construct ours
+              errorMessage = errorData.message;
+            }
+          } else if (errorData?.message) {
+            errorMessage = errorData.message;
+          } else if (error?.message) {
+            errorMessage = error.message;
+          } else if (typeof error === 'string') {
+            errorMessage = error;
+          }
+
+          showErrorToast(strings.orderFailed, errorMessage);
+        } finally {
+          setIsCheckingOut(false);
+        }
+      },
+    });
   };
 
   const renderCartItem = useCallback(({ item }) => {
@@ -288,7 +287,7 @@ const ShoppingCart = () => {
               {item.dish?.name || item.name || strings.testDishName}
             </ZText>
             <ZText type="M14" color={colors.primary} style={localStyles.dishPrice}>
-              {item.dish?.price || item.price || 0} EGP
+              {item.dish?.price || item.price || 0} {strings.EGP}
             </ZText>
           </View>
 
@@ -316,7 +315,7 @@ const ShoppingCart = () => {
 
             <View style={localStyles.itemActions}>
               <ZText type="B14" color={colors.textColor} style={localStyles.itemTotal}>
-                {((item.dish?.price || item.price || 0) * item.quantity).toFixed(0)} EGP
+                {((item.dish?.price || item.price || 0) * item.quantity).toFixed(0)} {strings.EGP}
               </ZText>
               <TouchableOpacity
                 onPress={() => handleRemoveItem(item.dishId, item.dish?.name || item.name || 'Item')}
@@ -336,15 +335,15 @@ const ShoppingCart = () => {
         <Ionicons name="restaurant" size={moderateScale(24)} color={colors.primary} />
         <View style={localStyles.chefDetails}>
           <ZText type="B16" color={colors.textColor}>
-            Order from {chef.name}
+            {strings.formatString(strings.orderFrom, chef.name)}
           </ZText>
           <ZText type="M14" color={colors.grayScale7}>
-            {cartSummary.itemCount} {cartSummary.itemCount === 1 ? 'item' : 'items'}
+            {cartSummary.itemCount === 1 ? strings.oneItem : strings.formatString(strings.itemsCount, cartSummary.itemCount)}
           </ZText>
         </View>
         <TouchableOpacity onPress={handleClearCart}>
           <ZText type="M14" color={colors.error}>
-            Clear All
+            {strings.clearAll}
           </ZText>
         </TouchableOpacity>
       </View>
@@ -356,28 +355,34 @@ const ShoppingCart = () => {
       {/* Delivery Address Section */}
       <View style={localStyles.addressSection}>
         <ZText type="B16" color={colors.textColor} style={localStyles.sectionTitle}>
-          Delivery Address
+          {strings.deliveryAddress || 'Delivery Address'}
         </ZText>
-        <View style={[
-          localStyles.addressDisplay,
-          {
-            backgroundColor: colors.inputBg,
-            borderColor: colors.borderColor || colors.grayScale3
-          }
-        ]}>
-          <ZText type="M14" color={colors.textColor}>
-            {selectedAddress ?
-              (selectedAddress.formattedAddress || selectedAddress.nameLine || 'Selected Address') :
-              'No address selected'
+        <TouchableOpacity
+          style={[
+            localStyles.addressDisplay,
+            {
+              backgroundColor: colors.inputBg,
+              borderColor: colors.borderColor || colors.grayScale3
             }
-          </ZText>
-        </View>
+          ]}
+          onPress={() => navigation.navigate(StackNav.SavedAddresses)}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <ZText type="M14" color={colors.textColor} style={{ flex: 1 }}>
+              {selectedAddress ?
+                (selectedAddress.formattedAddress || selectedAddress.nameLine || strings.selectedLocation) :
+                strings.noAddressSelected
+              }
+            </ZText>
+            <Ionicons name="chevron-forward" size={16} color={colors.grayScale7} />
+          </View>
+        </TouchableOpacity>
       </View>
 
       {/* Special Instructions Section */}
       <View style={localStyles.instructionsSection}>
         <ZText type="B16" color={colors.textColor} style={localStyles.sectionTitle}>
-          Special Instructions
+          {strings.specialInstructions}
         </ZText>
         <TextInput
           style={[
@@ -398,35 +403,35 @@ const ShoppingCart = () => {
           textAlignVertical="top"
         />
         <ZText type="M12" color={colors.grayScale7} style={localStyles.characterCount}>
-          {specialInstructions.length}/500 characters
+          {strings.formatString('{0}/500', specialInstructions.length)}
         </ZText>
       </View>
 
       <View style={localStyles.summaryContainer}>
         <View style={localStyles.summaryRow}>
           <ZText type="M16" color={colors.textColor}>
-            Subtotal
+            {strings.subtotal}
           </ZText>
           <ZText type="B16" color={colors.textColor}>
-            {cartSummary.formattedSubtotal} EGP
+            {cartSummary.formattedSubtotal} {strings.EGP}
           </ZText>
         </View>
 
         <View style={localStyles.summaryRow}>
           <ZText type="M14" color={colors.grayScale7}>
-            Delivery Fee
+            {strings.deliveryFee}
           </ZText>
           <ZText type="M14" color={colors.grayScale7}>
-            To be determined by chef
+            {strings.deliveryFeeTbd}
           </ZText>
         </View>
 
         <View style={[localStyles.summaryRow, localStyles.totalRow]}>
           <ZText type="B18" color={colors.textColor}>
-            Total
+            {strings.total}
           </ZText>
           <ZText type="B18" color={colors.primary}>
-            {cartSummary.formattedSubtotal} EGP + delivery
+            {cartSummary.formattedSubtotal} {strings.EGP} {strings.plusDelivery}
           </ZText>
         </View>
       </View>
@@ -460,10 +465,10 @@ const ShoppingCart = () => {
         <View style={localStyles.emptyContainer}>
           <Ionicons name="basket-outline" size={moderateScale(80)} color={colors.grayScale7} />
           <ZText type="B18" color={colors.textColor} style={localStyles.emptyTitle}>
-            Your cart is empty
+            {strings.cartEmpty}
           </ZText>
           <ZText type="M14" color={colors.grayScale7} align="center" style={localStyles.emptySubtitle}>
-            Add some delicious dishes from chef menus to get started
+            {strings.addSomeDishes}
           </ZText>
           <ZButton
             title={strings.browseMenus}
@@ -479,20 +484,25 @@ const ShoppingCart = () => {
     <ZSafeAreaView>
       <ZHeader title={strings.shoppingCart} showBack />
 
-      <FlatList
-        data={cartItems}
-        renderItem={renderCartItem}
-        keyExtractor={keyExtractor}
-        ListHeaderComponent={renderHeader}
-        ListFooterComponent={renderFooter}
-        contentContainerStyle={localStyles.listContainer}
-        showsVerticalScrollIndicator={false}
-        removeClippedSubviews={true}
-        maxToRenderPerBatch={10}
-        windowSize={10}
-        initialNumToRender={5}
-        getItemLayout={getItemLayout}
-      />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+      >
+        <FlatList
+          data={cartItems}
+          renderItem={renderCartItem}
+          keyExtractor={keyExtractor}
+          ListHeaderComponent={renderHeader}
+          ListFooterComponent={renderFooter()}
+          contentContainerStyle={localStyles.listContainer}
+          showsVerticalScrollIndicator={false}
+          removeClippedSubviews={true}
+          maxToRenderPerBatch={10}
+          windowSize={10}
+          initialNumToRender={5}
+          getItemLayout={getItemLayout}
+        />
+      </KeyboardAvoidingView>
     </ZSafeAreaView>
   );
 };

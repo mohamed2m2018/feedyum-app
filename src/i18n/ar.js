@@ -120,6 +120,7 @@ export default {
     'عذرًا، لم يتم العثور على الكلمة المفتاحية التي أدخلتها. حاول التحقق مرة أخرى أو البحث باستخدام كلمات مفتاحية أخرى.',
   selectDate: 'اختر التاريخ',
   post: 'المنشورات',
+  kitchenPosts: 'منشورات المطابخ',
   doPost: 'انشر',
   followers: 'متابعين',
   following: 'اتابعه',
@@ -154,6 +155,11 @@ export default {
   imageMessage: '📷 صورة',
   mediaMessage: '📎 رسالة وسائط',
   orderSummaryFormat: 'طلب #{0} - {1}',
+  debugInfoBody: '• الرابط: {0}\n• المنصة: {1}\n• {2}',
+  loading: 'جار التحميل...',
+  failedToLoad: '❌ فشل التحميل',
+  statusLabel: 'الحالة: {0}',
+  tryOpeningUrl: 'جرب فتح هذا الرابط في المتصفح للتحقق من إمكانية الوصول إليه.',
   ads: 'الإعلانات',
   reportProblem: 'الإبلاغ عن مشكلة',
   safetyCenter: 'مركز السلامة',
@@ -332,6 +338,29 @@ export default {
   other: 'أخرى',
   reported: 'تم التبليغ',
   willReviewPost: 'شكراً لك، سنقوم بمراجعة هذا المنشور',
+
+  // Order Tracking
+  pricingSummary: 'ملخص السعر',
+  deliveryInformation: 'معلومات التوصيل',
+  noSpecialInstructions: 'لا توجد تعليمات خاصة',
+  noDeliveryAddress: 'لا يوجد عنوان توصيل',
+  loadingOrderDetails: 'جاري تحميل تفاصيل الطلب...',
+  loadingOrderItems: 'جاري تحميل عناصر الطلب...',
+  loadingPricingInformation: 'جاري تحميل معلومات السعر...',
+  unknownDish: 'طبق غير معروف',
+  noItemsFound: 'لم يتم العثور على عناصر',
+  orderProgress: 'تتبع الطلب',
+  lastUpdated: 'آخر تحديث:',
+  orderId: 'رقم الطلب:',
+  chef: 'الطاهي:',
+  customer: 'العميل:',
+  orderDate: 'تاريخ الطلب:',
+  orderItems: 'عناصر الطلب',
+  orderItemsCount: 'عناصر الطلب ({0})',
+  qty: 'الكمية:',
+  each: 'لكل قطعة',
+  currency: 'ج.م',
+  currentStatus: 'الحالة الحالية',
   uploadingFile: 'نحن نقوم بتحميل ملفك',
   editingPost: 'تعديل المنشور...',
   addingPost: 'إضافة منشور...',
@@ -416,6 +445,16 @@ export default {
   orderChats: 'محادثات الطلبات',
   addCaption: 'أضف تعليقاً...',
   shoppingCart: 'عربة التسوق',
+  orderFrom: 'الطلب من {0}',
+  oneItem: 'عنصر واحد',
+  itemsCount: '{0} عناصر',
+  deliveryFeeTbd: 'سيتم تحديدها من قبل المطبخ',
+  plusDelivery: '+ التوصيل',
+  chefMissingError: 'معلومات المطبخ مفقودة. امسح العربة وحاول مرة أخرى؟',
+  cartEmpty: 'عربة التسوق فارغة',
+  addSomeDishes: 'أضف بعض الأطباق اللذيذة من قوائم المطابخ للبدء',
+  noAddressSelected: 'لم يتم اختيار عنوان',
+  address: 'العنوان',
   browseMenus: 'تصفح القوائم',
   orderId: 'رقم الطلب:',
   chef: 'المطبخ:',
@@ -429,6 +468,30 @@ export default {
   orderTracking: 'تتبع الطلب',
   goBack: 'العودة',
   chatWithChef: 'محادثة مع المطبخ',
+
+  // Dish Details
+  shareYourExperience: '⭐ شارك تجربتك',
+  createReviewReelDesc: 'قم بإنشاء ريل مراجعة وساعد الآخرين على اكتشاف هذا الطبق',
+  nutritionalInfo: 'المعلومات الغذائية',
+  preparationTime: 'وقت التحضير: {0} دقيقة',
+  dietaryInfo: 'معلومات غذائية',
+  reviewsCount: 'المراجعات ({0})',
+  ingredients: 'المكونات',
+  reviewPostsCount: 'منشورات المراجعة ({0})',
+  noReviewPosts: 'لا توجد منشورات مراجعة بعد',
+  beTheFirstToReview: 'كن أول من يشارك تجربته!',
+  seeMoreReviews: 'شاهد المزيد ({0} مراجعات أخرى)',
+  quantity: 'الكمية',
+  addToCartPrice: 'أضف للعربة - {0} {1}',
+  failedToLoadDish: 'فشل تحميل الطبق',
+  dishLoadErrorMsg: 'قد لا يكون هذا الطبق متاحاً أو هناك مشكلة في الاتصال.',
+  favoritesAddedTitle: 'تمت الإضافة للمفضلة',
+  favoritesAddedMsg: 'تم إضافة {0} إلى مفضلتك',
+  favoritesRemovedTitle: 'تمت الإزالة من المفضلة',
+  favoritesRemovedMsg: 'تم إزالة {0} من مفضلتك',
+  addedToCartTitle: 'تمت الإضافة للعربة',
+  addedToCartMsg: 'تم إضافة {0} x {1} إلى عربتك',
+  great: 'ممتاذ',
 
   // Chat & Messages
   chat: 'محادثة',
@@ -562,6 +625,8 @@ export default {
   placeOrder: 'تأكيد الطلب',
   accept: 'قبول',
   reject: 'رفض',
+  chefDoesNotDeliverTo: 'هذا المطبخ لا يوصل إلى',
+  theyDeliverTo: 'هم يوصلون إلى',
 
   // Error Messages
   failedToLoadSavedCart: 'فشل في تحميل العربة المحفوظة',
@@ -1085,7 +1150,7 @@ export default {
   failedToPrepareAudio: 'فشل تحضير الصوت للمعالجة',
   failedToPlayAudio: 'فشل تشغيل المعاينة الصوتية',
   listMainIngredients: 'اذكر المكونات الرئيسية',
-  chefs: 'الطهاة',
+  chefs: 'مطابخ',
   chefProfile: 'ملف الطاهي',
   chefsMenu: "قائمة {name}",
   uploadFailed: 'فشل الرفع',
@@ -1157,6 +1222,7 @@ export default {
   noChefsFoundSearch: 'لم يتم العثور على مطابخ تطابق بحثك',
   noChefsAvailable: 'لا توجد مطابخ متاحة',
   chefsTitle: 'المطابخ',
+  dishDetailsTitle: 'تفاصيل الطبق',
   removeDishConfirm: 'هل تريد إزالة {0} من عربة التسوق؟',
   dishMadeVisible: 'تم جعل الطبق مرئياً',
   dishHidden: 'تم إخفاء الطبق',
@@ -1231,5 +1297,92 @@ export default {
   failedToProcessAudio: 'فشل معالجة الصوت',
   failedToPrepareAudio: 'فشل تحضير الصوت للمعاينة',
   failedToPlayAudio: 'فشل تشغيل معاينة الصوت',
+
+  // Additional Localization Keys
+  // Voice Recorder UI
+  recording: 'جاري التسجيل...',
+  voiceMessageTitle: 'رسالة صوتية',
+  recordingNotAvailableIOS: 'التسجيل غير متاح في محاكي iOS. يرجى الاختبار على جهاز حقيقي للحصول على وظائف الصوت الكاملة.',
+  failedToStartRecordingMsg: 'فشل بدء التسجيل. يرجى المحاولة مرة أخرى.',
+  recordingErrorTitle: 'خطأ في التسجيل',
+
+  // Permission Dialogs
+  microphonePermissionTitle: 'إذن الميكروفون',
+  askMeLaterButton: 'اسألني لاحقاً',
+  cancelButtonLabel: 'إلغاء',
+  okButton: 'حسناً',
+
+  // Add Post Flow
+  createMenuFirst: 'أنشئ قائمتك أولاً',
+  createMenuMessage: 'لبدء النشر، يرجى إنشاء قائمتك وإضافة أطباقك حتى يتمكن العملاء من الطلب بسهولة.',
+  noDishesFoundTitle: 'لم يتم العثور على أطباق',
+  noDishesFoundMessage: 'لم نجد أي أطباق في قائمتك. يرجى إضافة طبق واحد على الأقل قبل النشر.',
+  openMenuManagement: 'فتح إدارة القائمة',
+  notNow: 'ليس الآن',
+
+  // Order Card Status
+  accepted: 'مقبول',
+  orderNumber: 'طلب #{0}',
+  itemsCountLabel: '{0} عناصر',
+  oneItemLabel: 'عنصر واحد',
+
+  // Order Summary
+  orderSummaryLabel: 'ملخص الطلب',
+
+  // Chat Screen
+  loadingChat: 'جاري تحميل المحادثة...',
+  failedToLoadChat: 'فشل تحميل المحادثة',
+  checkConnectionTryAgain: 'يرجى التحقق من اتصالك والمحاولة مرة أخرى',
+  defaultChefName: 'الطاهي',
+
+  // Menu Management
+  dishAddedSuccess: 'تمت إضافة الطبق بنجاح!',
+  dishUpdatedSuccess: 'تم تحديث الطبق بنجاح!',
+  dishDeletedSuccess: 'تم حذف الطبق بنجاح!',
+  failedToAddDish: 'فشل في إضافة الطبق',
+  failedToUpdateDish: 'فشل في تحديث الطبق',
+  failedToDeleteDish: 'فشل في حذف الطبق',
+  deleteDishTitle: 'حذف الطبق',
+  deleteDishConfirm: 'هل أنت متأكد من حذف "{0}"؟ لا يمكن التراجع عن هذا الإجراء.',
+  dishMadeVisible: 'الطبق مرئي الآن',
+  dishHidden: 'الطبق مخفي الآن',
+  failedToUpdateVisibility: 'فشل في تحديث رؤية الطبق',
+  tryAdjustingSearch: 'جرب تعديل البحث',
+  startAddingDish: 'ابدأ بإضافة طبقك الأول',
+  addFirstDish: 'أضف أول طبق',
+  searchDishes: 'البحث في الأطباق...',
+  loadingDishes: 'جاري تحميل الأطباق...',
+  failedToLoadDishes: 'فشل في تحميل الأطباق',
+
+  // Order Management
+  orderUpdatedSuccess: 'تم تحديث حالة الطلب بنجاح!',
+  failedToUpdateOrder: 'فشل في تحديث حالة الطلب',
+
+  // Anonymous
+  anonymous: 'مجهول',
+
+  // Order Management Screen
+  noOrdersFound: 'لا توجد طلبات',
+  ordersWillAppear: 'ستظهر الطلبات هنا عندما يقوم العملاء بتقديمها',
+  noOrdersStatus: 'لا توجد طلبات {0}',
+  loadingOrders: 'جاري تحميل الطلبات...',
+  failedToLoadOrders: 'فشل في تحميل الطلبات',
+  totalOrders: 'إجمالي الطلبات',
+  liveUpdatesActive: 'التحديثات المباشرة نشطة',
+  all: 'الكل',
+
+  // Common Errors & Messages
+  somethingWentWrong: 'حدث خطأ ما',
+  unknownError: 'حدث خطأ غير معروف',
+  postDeletedSuccess: 'تم حذف المنشور بنجاح',
+  errorHappened: 'عذراً، حدث خطأ',
+  textCopiedSuccess: 'تم نسخ النص بنجاح',
+  playServicesNotAvailable: 'خدمات جوجل بلاي غير متاحة',
+  googleSignInFailed: 'فشل تسجيل الدخول بجوجل',
+  validationError: 'خطأ في التحقق: {0}',
+  user: 'مستخدم',
+
+  // Comments
+  replyingTo: 'الرد على',
 
 };

@@ -1,8 +1,8 @@
 import React, { createContext, useEffect, useState } from 'react';
 import { convertVideoToMP4, generateThumbnail } from '../utils/UploadUtils';
 import BackgroundUpload from 'react-native-background-upload';
-import { S3Policy } from 'react-native-aws3/src/S3Policy';
 import { ALERT_TYPE, Dialog, Toast } from 'react-native-alert-notification';
+import { showSuccessToast, showErrorToast, showWarningToast } from '../utils/toast';
 import { useMutation, useQueryClient } from 'react-query';
 import request from '../api/request';
 import { Platform } from 'react-native';
@@ -80,12 +80,10 @@ export function BackgroundUploadProvider({ children }) {
 
   useEffect(() => {
     if (isFormFilled) {
-      Toast.show({
-        title: dataToBeSent?.isEdit ? strings.editingPost : strings.addingPost,
-        textBody: toastTitle,
-        autoClose: false,
-        type: ALERT_TYPE.SUCCESS,
-      });
+      showSuccessToast(
+        dataToBeSent?.isEdit ? strings.editingPost : strings.addingPost,
+        toastTitle
+      );
     }
   }, [isFormFilled, toastTitle]);
 
@@ -109,6 +107,9 @@ export function BackgroundUploadProvider({ children }) {
   }, [isFormFilled, dataToBeSent, editedData]);
 
   const handleCreatePost = data => {
+    console.log('--- DEBUG: handleCreatePost called ---');
+    console.log('Data to be sent:', JSON.stringify(data, null, 2));
+
     if (isFormFilled) {
       settoastTitle(strings.processingThumbnail);
 
@@ -140,23 +141,11 @@ export function BackgroundUploadProvider({ children }) {
           // Handle validation errors specifically
           if (err.details && typeof err.details === 'object') {
             const errorMessages = Object.values(err.details).join(', ');
-            Toast.show({
-              type: ALERT_TYPE.DANGER,
-              title: strings.uploadError,
-              textBody: `Validation error: ${errorMessages}`,
-            });
+            showErrorToast(strings.uploadError, `Validation error: ${errorMessages}`);
           } else if (err.message) {
-            Toast.show({
-              type: ALERT_TYPE.DANGER,
-              title: strings.uploadError,
-              textBody: err.message,
-            });
+            showErrorToast(strings.uploadError, err.message);
           } else {
-            Toast.show({
-              type: ALERT_TYPE.DANGER,
-              title: strings.uploadError,
-              textBody: err[Object.keys(err)?.[0]] || 'Unknown error occurred',
-            });
+            showErrorToast(strings.uploadError, err[Object.keys(err)?.[0]] || 'Unknown error occurred');
           }
         },
       });
@@ -186,11 +175,7 @@ export function BackgroundUploadProvider({ children }) {
         await queryClient.invalidateQueries({ queryKey: 'user' });
       })
       .catch(err =>
-        Toast.show({
-          type: ALERT_TYPE.DANGER,
-          title: strings.error,
-          textBody: err[Object.keys(err)?.[0]],
-        }),
+        showErrorToast(strings.error, err[Object.keys(err)?.[0]])
       );
   };
 
@@ -201,16 +186,10 @@ export function BackgroundUploadProvider({ children }) {
     isImage,
   ) => {
     if (isFormFilled) {
-      Toast.show({
-        textBody: strings.pleaseWait,
-        type: ALERT_TYPE.WARNING,
-      });
+      showWarningToast(strings.pleaseWait, '');
       setlocalUri('');
       setTimeout(() => {
-        Toast.show({
-          textBody: toastTitle,
-          type: ALERT_TYPE.SUCCESS,
-        });
+        showSuccessToast(strings.success, toastTitle);
       }, 4000);
 
       return;
@@ -252,141 +231,126 @@ export function BackgroundUploadProvider({ children }) {
         fileInfoVideo = await BackgroundUpload.getFileInfo(mp4Path);
       }
       const fileInfoImage = await BackgroundUpload.getFileInfo(poster);
-      let secureUrlImage = '';
-      const optionsImage = {
-        type: 'multipart',
-        method: 'POST',
-        headers: {
-          'content-type': fileInfoImage.mimeType || 'image/jpg', // server requires a content-type header
-          // 'content-length': `${fileInfoImage.size}`,
-        },
-        url: 'https://foodtokforever.s3.amazonaws.com',
-        field: 'file',
-        path: poster,
-        maxRetries: 2,
-        parameters: {
-          ...S3Policy.generate({
-            bucket: 'foodtokforever',
-            region: 'eu-central-1',
-            accessKey: '***REMOVED***',
-            secretKey: '***REMOVED***',
-            successActionStatus: 201,
-            key: `${fileInfoImage.name}`,
-            date: new Date(),
-            contentType: fileInfoImage.mimeType || 'image/jpg',
-          }),
-        },
+
+      // Helper function to upload using presigned URL with BackgroundUpload
+      const uploadWithPresignedUrl = (filePath, fileType, mimeType) => {
+        return new Promise(async (resolve, reject) => {
+          try {
+            // Step 1: Get presigned URL from backend (secrets stay on backend!)
+            console.log(`Getting presigned URL for ${fileType}...`);
+            const urlResponse = await request.get('/story/get-upload-url', {
+              params: { type: fileType, extension: mimeType.split('/')[1] || 'jpg' }
+            });
+
+            if (!urlResponse.data?.success || !urlResponse.data?.presignedUrl) {
+              reject(new Error('Failed to get presigned URL'));
+              return;
+            }
+
+            const { presignedUrl, publicUrl, contentType } = urlResponse.data;
+            console.log(`Got presigned URL, uploading ${fileType} directly to R2...`);
+
+            // Step 2: Upload directly to R2 using BackgroundUpload with PUT method
+            const uploadOptions = {
+              url: presignedUrl,
+              path: filePath,
+              method: 'PUT',
+              type: 'raw', // Raw body, not multipart
+              headers: {
+                'Content-Type': contentType,
+              },
+              maxRetries: 2,
+            };
+
+            BackgroundUpload.startUpload(uploadOptions)
+              .then(uploadId => {
+                BackgroundUpload.addListener('progress', uploadId, data => {
+                  settoastTitle(`${strings.uploadingMedia} ${Number(data.progress)?.toFixed()}%..`);
+                });
+
+                BackgroundUpload.addListener('error', uploadId, data => {
+                  console.log('R2 upload error:', data);
+                  reject(new Error(data.error || 'Upload failed'));
+                });
+
+                BackgroundUpload.addListener('completed', uploadId, data => {
+                  console.log(`${fileType} uploaded successfully:`, publicUrl);
+                  console.log('R2 response status:', data.responseCode);
+                  if (data.responseCode >= 200 && data.responseCode < 300) {
+                    resolve(publicUrl);
+                  } else {
+                    reject(new Error(`Upload failed with status ${data.responseCode}`));
+                  }
+                });
+              })
+              .catch(err => {
+                console.log('BackgroundUpload start error:', err);
+                reject(err);
+              });
+          } catch (err) {
+            reject(err);
+          }
+        });
       };
 
-      BackgroundUpload.startUpload(optionsImage)
-        .then(uploadId => {
-          setImageId(uploadId);
-          BackgroundUpload.addListener('progress', uploadId, data => {
-            settoastTitle(
-              `${strings.uploadingMedia} ${Number(
-                data.progress,
-              )?.toFixed()}%..`,
-            );
-          });
-          BackgroundUpload.addListener('error', uploadId, data => {
-          });
-          BackgroundUpload.addListener('cancelled', uploadId, data => {
-          });
-          BackgroundUpload.addListener('completed', uploadId, data => {
-            // data includes responseCode: number and responseBody: Object
-            const startTag = '<Location>';
-            const endTag = '</Location>';
-            const startIndex =
-              data.responseBody.indexOf(startTag) + startTag.length;
-            const endIndex = data.responseBody.indexOf(endTag);
-            const link = data.responseBody.substring(startIndex, endIndex);
-            secureUrlImage = link;
-            setDataToBeSent(prevData => ({
-              ...prevData,
-              ...(isImage
-                ? {
-                  avatarUri: secureUrlImage,
-                  isImage: true,
-                }
-                : {
-                  poster: secureUrlImage,
-                }),
-            }));
-          });
-        })
-        .catch(err => {
-        });
-      if (!isImage) {
-        const optionsVideo = {
-          type: 'multipart',
-          method: 'POST',
-          headers: {
-            'content-type': fileInfoVideo.mimeType, // server requires a content-type header
-            'content-length': `${fileInfoVideo.size}`,
-          },
-          url: 'https://foodtokforever.s3.amazonaws.com',
-          field: 'file',
-          path: mp4Path,
-          maxRetries: 2,
-          parameters: {
-            ...S3Policy.generate({
-              bucket: 'foodtokforever',
-              region: 'eu-central-1',
-              accessKey: '***REMOVED***',
-              secretKey: '***REMOVED***',
-              successActionStatus: 201,
-              key: generateUniqueFileName(),
-              date: new Date(),
-              contentType: fileInfoVideo.mimeType,
+      // Upload poster/image using presigned URL (single direct R2 upload!)
+      settoastTitle(strings.uploadingMedia);
+      try {
+        console.log('Uploading image via presigned URL:', poster);
+        const secureUrlImage = await uploadWithPresignedUrl(
+          poster,
+          'image',
+          fileInfoImage.mimeType || 'image/jpeg'
+        );
+
+        setDataToBeSent(prevData => ({
+          ...prevData,
+          ...(isImage
+            ? {
+              avatarUri: secureUrlImage,
+              poster: secureUrlImage,
+              uri: secureUrlImage, // Set uri as well for consistency
+              isImage: true,
+            }
+            : {
+              poster: secureUrlImage,
             }),
-          },
-        };
-        BackgroundUpload.startUpload(optionsVideo)
-          .then(async uploadId => {
-            setVideoId(uploadId);
-            BackgroundUpload.addListener('progress', uploadId, data => {
-              settoastTitle(
-                `${strings.uploadingMedia} ${Number(
-                  data.progress,
-                )?.toFixed()}%..`,
-              );
-            });
-            BackgroundUpload.addListener('error', uploadId, data => {
-            });
-            BackgroundUpload.addListener('cancelled', uploadId, data => {
-            });
-            BackgroundUpload.addListener('completed', uploadId, data => {
-              // data includes responseCode: number and responseBody: Object
-              const startTag = '<Location>';
-              const endTag = '</Location>';
-              const startIndex =
-                data.responseBody.indexOf(startTag) + startTag.length;
-              const endIndex = data.responseBody.indexOf(endTag);
-              const link = data.responseBody.substring(startIndex, endIndex);
-              let imagePoster = {
-                avatarUri: link,
-              };
-              setDataToBeSent(prevData => ({
-                ...prevData,
-                isImage,
-                uri: link,
-                ...(isImage && imagePoster),
-              }));
-            });
-          })
-          .catch(err => {
-          });
+        }));
+      } catch (imageErr) {
+        console.error('Image upload error:', imageErr);
+        showErrorToast(strings.error, strings.uploadFailed);
+        setIsMediaUploading(false);
+        return;
+      }
+
+      // Upload video if not just an image
+      if (!isImage) {
+        try {
+          settoastTitle(`${strings.uploadingMedia}...`);
+          console.log('Uploading video via presigned URL:', mp4Path);
+          const secureUrlVideo = await uploadWithPresignedUrl(
+            mp4Path,
+            'video',
+            fileInfoVideo.mimeType || 'video/mp4'
+          );
+
+          setDataToBeSent(prevData => ({
+            ...prevData,
+            isImage,
+            uri: secureUrlVideo,
+          }));
+        } catch (videoErr) {
+          console.error('Video upload error:', videoErr);
+          showErrorToast(strings.error, strings.uploadFailed);
+          setIsMediaUploading(false);
+          return;
+        }
       }
 
       setIsMediaUploading(false);
     } catch (err) {
       // Show error message
-      Toast.show({
-        message: strings.uploadFailed,
-        type: 'danger',
-        duration: 3000,
-        hideOnPress: true,
-      });
+      showErrorToast(strings.error, strings.uploadFailed);
     }
   };
 

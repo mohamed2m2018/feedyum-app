@@ -4,11 +4,12 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Alert,
   ActivityIndicator,
   Modal,
   TextInput,
 } from 'react-native';
+import { showErrorToast, showActionDialog } from '../utils/toast';
+import { ALERT_TYPE } from 'react-native-alert-notification';
 import chefWalletService from '../api/chefWalletService';
 import strings from '../i18n/strings';
 
@@ -41,7 +42,7 @@ const ChefPaymentScreen = ({ navigation, userToken, route }) => {
         setShowPaymentModal(true);
       }
     } catch (error) {
-      Alert.alert(strings.error, strings.failedToLoadWallet);
+      showErrorToast(strings.error, strings.failedToLoadWallet);
     } finally {
       setIsLoading(false);
     }
@@ -49,23 +50,23 @@ const ChefPaymentScreen = ({ navigation, userToken, route }) => {
 
   const processPayment = async () => {
     if (!paymentAmount || parseFloat(paymentAmount) <= 0) {
-      Alert.alert(strings.error, strings.enterValidPayment);
+      showErrorToast(strings.error, strings.enterValidPayment);
       return;
     }
 
     // Basic card validation (in a real app, use a proper payment processor)
     if (!cardNumber || cardNumber.length < 16) {
-      Alert.alert(strings.error, strings.enterValidCard);
+      showErrorToast(strings.error, strings.enterValidCard);
       return;
     }
 
     if (!expiryDate || !expiryDate.match(/^\d{2}\/\d{2}$/)) {
-      Alert.alert(strings.error, strings.enterValidExpiry);
+      showErrorToast(strings.error, strings.enterValidExpiry);
       return;
     }
 
     if (!cvv || cvv.length < 3) {
-      Alert.alert(strings.error, strings.enterValidCVV);
+      showErrorToast(strings.error, strings.enterValidCVV);
       return;
     }
 
@@ -84,36 +85,33 @@ const ChefPaymentScreen = ({ navigation, userToken, route }) => {
       );
 
       if (result.success) {
-        Alert.alert(
-          strings.paymentSuccessfulTitle,
-          strings.paymentSuccessfulMessage,
-          [
-            {
-              text: 'OK',
-              onPress: () => {
-                setShowPaymentModal(false);
-                if (paymentRequired) {
-                  // If payment was required, navigate back to previous screen
-                  navigation.goBack();
-                } else {
-                  // Refresh wallet info
-                  fetchWalletInfo();
-                }
-              }
+        showActionDialog({
+          type: ALERT_TYPE.SUCCESS,
+          title: strings.paymentSuccessfulTitle,
+          message: strings.paymentSuccessfulMessage,
+          confirmText: 'OK',
+          onConfirm: () => {
+            setShowPaymentModal(false);
+            if (paymentRequired) {
+              // If payment was required, navigate back to previous screen
+              navigation.goBack();
+            } else {
+              // Refresh wallet info
+              fetchWalletInfo();
             }
-          ]
-        );
+          }
+        });
       } else {
-        Alert.alert(strings.paymentFailed, result.message || strings.paymentNotProcessed);
+        showErrorToast(strings.paymentFailed, result.message || strings.paymentNotProcessed);
       }
     } catch (error) {
-      Alert.alert(strings.error, strings.failedToProcessPayment);
+      showErrorToast(strings.error, strings.failedToProcessPayment);
     } finally {
       setIsProcessingPayment(false);
     }
   };
 
-  const formatCurrency = (amount) => `£${Math.abs(amount).toFixed(2)}`;
+  const formatCurrency = (amount) => `${strings.currency || 'EGP'} ${Math.abs(amount).toFixed(2)}`;
 
   if (isLoading) {
     return (

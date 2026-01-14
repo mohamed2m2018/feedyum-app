@@ -30,7 +30,7 @@ import request from '../../../api/request';
 import ReelsList from './ReelsList';
 import strings from '../../../i18n/strings';
 import { OneSignal } from 'react-native-onesignal';
-import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
+import { showSuccessToast } from '../../../utils/toast';
 import ZLoader from '../../../components/common/ZLoader';
 import { useLocation } from '../../../navigation/locationContext';
 import ZButton from '../../../components/common/ZButton';
@@ -99,31 +99,28 @@ export default function ReelsComponent({ amIFocused }) {
       // Build behavior preserved from legacy code:
       navigation.navigate(TabNav.FollowingTab);
 
-      Toast.show({
-        type: ALERT_TYPE.SUCCESS,
-        title: strings.notification,
-        textBody: notification.body
+      showSuccessToast(
+        strings.notification,
+        notification.body
           ?.replace('got a comment', strings.gotAcomment)
-          ?.replace('got a like', strings.gotALike),
-        onPress: () => {
-          navigation.navigate(TabNav.ForYou);
+          ?.replace('got a like', strings.gotALike)
+      );
 
-          setStoryId(notification.additionalData?._id);
-
-          setTimeout(() => {
-            refetchStory();
-          }, 500);
-          queryClient.invalidateQueries({ queryKey: 'user' });
-          queryClient.invalidateQueries({ queryKey: 'profile-stories' });
-          if (notification?.body?.includes('comment')) {
-            setSelectedPostId(notification.additionalData?._id);
-            setTimeout(() => {
-              commentSheetRef.current?.show();
-            }, 300);
-          }
-          setnotificationReceived(true);
-        },
-      });
+      // Handle navigation after toast
+      navigation.navigate(TabNav.ForYou);
+      setStoryId(notification.additionalData?._id);
+      setTimeout(() => {
+        refetchStory();
+      }, 500);
+      queryClient.invalidateQueries({ queryKey: 'user' });
+      queryClient.invalidateQueries({ queryKey: 'profile-stories' });
+      if (notification?.body?.includes('comment')) {
+        setSelectedPostId(notification.additionalData?._id);
+        setTimeout(() => {
+          commentSheetRef.current?.show();
+        }, 300);
+      }
+      setnotificationReceived(true);
 
       // v5: Notification displays by default unless event.preventDefault() is called.
     };

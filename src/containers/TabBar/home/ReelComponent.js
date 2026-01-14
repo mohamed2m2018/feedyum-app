@@ -44,6 +44,32 @@ import ImageZoomModal from '../../../components/common/ImageZoomModal';
 import ShareOptionsSheet from '../../../components/models/ShareOptionsSheet';
 import strings from '../../../i18n/strings';
 
+// Helper function to check if a URI is a video URL
+// S3 uploads from our app are videos, so we trust them unless they're obviously images
+const isVideoUri = (uri) => {
+  if (!uri || typeof uri !== 'string' || uri.trim() === '') return false;
+
+  const lowerUri = uri.toLowerCase();
+
+  // Check for image hosting patterns that should NEVER be treated as video
+  const imageHostPatterns = [
+    'loremflickr.com',
+    'unsplash.com',
+    'images.unsplash',
+    'placeholder.com',
+    'picsum.photos',
+  ];
+  if (imageHostPatterns.some(pattern => lowerUri.includes(pattern))) return false;
+
+  // Check for image file extensions
+  const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.svg'];
+  if (imageExtensions.some(ext => lowerUri.includes(ext))) return false;
+
+  // If we get here and the URI is non-empty, treat it as video
+  // This covers: S3 uploads, mixkit, cloudfront, and any video extensions
+  return true;
+};
+
 const ReelComponent = ({
   item,
   layoutHeight,
@@ -303,20 +329,8 @@ const ReelComponent = ({
     [colors.backgroundColor],
   );
 
-  const uri = item?.uri?.replace(
-    'https://foodtokforever.s3.amazonaws.com',
-    'https://d1wfcrbbkg3bzd.cloudfront.net',
-  );
-
-  const poster =
-    item?.avatarUri?.replace(
-      'https://foodtokforever.s3.amazonaws.com',
-      'https://d1wfcrbbkg3bzd.cloudfront.net',
-    ) ||
-    item?.poster?.replace(
-      'https://foodtokforever.s3.amazonaws.com',
-      'https://d1wfcrbbkg3bzd.cloudfront.net',
-    );
+  const uri = item?.uri;
+  const poster = item?.avatarUri || item?.poster;
 
   const handleOnLoad = useCallback(
     ({ duration: durationToBeSet }) => {
@@ -409,7 +423,7 @@ const ReelComponent = ({
               </View>
             )}
 
-            {!!item?.uri &&
+            {!!item?.uri && isVideoUri(item?.uri) &&
               (activeVideoIndex === index ||
                 activeVideoIndex === index + 1 ||
                 activeVideoIndex === index - 1) &&
@@ -502,7 +516,12 @@ const ReelComponent = ({
                 attachedDishes={
                   item?.dishes && item.dishes.length > 0
                     ? item.dishes
-                    : [{ name: item.dishName, price: item.price, type: 'manual' }]
+                    : [{
+                      name: item.dishName,
+                      price: item.price,
+                      type: 'manual',
+                      image: item.poster || item.avatarUri // Use post's image for manual dish entries
+                    }]
                 }
                 showPrices={true}
                 compact={true}
@@ -720,8 +739,35 @@ const ReelComponent = ({
                       </TouchableOpacity>
                     )}
 
-                    {/* Debug logging for author type */}
-
+                    {/* Video Seeker - positioned between description and button */}
+                    {!!item?.uri && isVideoUri(item?.uri) && (
+                      <View
+                        style={{
+                          width: '100%',
+                          marginTop: moderateScale(8),
+                          marginBottom: moderateScale(8),
+                          direction: 'ltr',
+                          ...(I18nManager.isRTL &&
+                            Platform.OS === 'ios' && { transform: [{ scaleX: -1 }] }),
+                        }}>
+                        <Slider
+                          style={localStyles.seekBar}
+                          minimumValue={0}
+                          tapToSeek
+                          maximumValue={durationInSeconds}
+                          value={seekValueClick}
+                          minimumTrackTintColor={colors.primary}
+                          maximumTrackTintColor={colors.grey}
+                          thumbTintColor={colors.primary}
+                          onSlidingComplete={value => {
+                            if (activeVideoIndex === index) {
+                              videoRef?.current?.seek?.(value);
+                              setSeekValueClick(value);
+                            }
+                          }}
+                        />
+                      </View>
+                    )}
 
                     {/* Show Visit Menu button for chefs or users with menus */}
                     {(item?.author?.type === 'chef' || item?.author?.hasMenu === true) && (
@@ -791,39 +837,6 @@ const ReelComponent = ({
               )}
             </View>
           </DoubleClick>
-
-          {/* Seeker - Outside DoubleClick to receive touch events */}
-          {isOverlayVisible && item?.uri && (
-            <View
-              style={{
-                position: 'absolute',
-                bottom: moderateScale(40),
-                left: 5,
-                right: 5,
-                zIndex: 100,
-                width: moderateScale(360),
-                direction: 'ltr',
-                ...(I18nManager.isRTL &&
-                  Platform.OS === 'ios' && { transform: [{ scaleX: -1 }] }),
-              }}>
-              <Slider
-                style={localStyles.seekBar}
-                minimumValue={0}
-                tapToSeek
-                maximumValue={durationInSeconds}
-                value={seekValueClick}
-                minimumTrackTintColor={colors.primary}
-                maximumTrackTintColor={colors.grey}
-                thumbTintColor={colors.primary}
-                onSlidingComplete={value => {
-                  if (activeVideoIndex === index) {
-                    videoRef?.current?.seek?.(value);
-                    setSeekValueClick(value);
-                  }
-                }}
-              />
-            </View>
-          )}
         </View>
       ) : (
         <>
@@ -925,7 +938,7 @@ const localStyles = StyleSheet.create({
   },
   headerContainer: {
     position: 'absolute',
-    bottom: moderateScale(50),
+    bottom: moderateScale(20),
     left: 16,
     right: 16,
   },

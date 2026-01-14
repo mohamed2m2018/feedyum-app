@@ -47,7 +47,9 @@ const App = () => {
   // LogBox.ignoreAllLogs(true);
   useEffect(() => {
     const handleLanguage = async () => {
-      strings.setLanguage(language || 'en');
+      const currentLang = language || 'en';
+      strings.setLanguage(currentLang);
+      notificationService.setLanguage(currentLang);
     };
     handleLanguage();
 
@@ -64,7 +66,7 @@ const App = () => {
         <StatusBar
           barStyle={colors.dark === 'dark' ? 'light-content' : 'dark-content'}
         />
-        <AlertNotificationRoot>
+        <AlertNotificationRoot theme={colors.dark === 'dark' ? 'dark' : 'light'}>
           <SheetProvider>
             <ScreenProvider>
               <AppNavigator />

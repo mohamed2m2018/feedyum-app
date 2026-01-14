@@ -7,11 +7,13 @@ import {
   TouchableOpacity,
   Image,
   ActivityIndicator,
-  Alert,
   FlatList,
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { addToCart, clearCart } from '../redux/reducer/cartSlice';
+import { showErrorToast, showInfoToast, showSuccessToast, showActionDialog } from '../utils/toast';
+import { ALERT_TYPE } from 'react-native-alert-notification';
+import strings from '../i18n/strings';
 
 const ChefMenuScreen = ({ route, navigation }) => {
   const { chefId, chefName } = route.params;
@@ -40,10 +42,10 @@ const ChefMenuScreen = ({ route, navigation }) => {
           setSelectedSection(data.sections[0]._id);
         }
       } else {
-        Alert.alert(strings.noMenu, strings.chefNoMenu);
+        showInfoToast(strings.noMenu, strings.chefNoMenu);
       }
     } catch (error) {
-      Alert.alert(strings.error, strings.failedToLoadMenu);
+      showErrorToast(strings.error, strings.failedToLoadMenu);
     } finally {
       setIsLoading(false);
     }
@@ -52,26 +54,23 @@ const ChefMenuScreen = ({ route, navigation }) => {
   const addDishToCart = (dish) => {
     // Check if cart has items from different chef
     if (cartChefId && cartChefId !== chefId) {
-      Alert.alert(
-        strings.differentChefTitle,
-        strings.differentChefMessage,
-        [
-          { text: strings.cancel, style: 'cancel' },
-          {
-            text: strings.clearCart,
-            onPress: () => {
-              dispatch(clearCart());
-              dispatch(addToCart({
-                dish: dish,
-                quantity: 1,
-                chefId: chefId,
-                chefName: chefName
-              }));
-              Alert.alert(strings.dishAddedTitle, strings.formatString(strings.dishAddedMessage, dish.name));
-            }
-          }
-        ]
-      );
+      showActionDialog({
+        type: ALERT_TYPE.WARNING,
+        title: strings.differentChefTitle,
+        message: strings.differentChefMessage,
+        confirmText: strings.clearCart,
+        cancelText: strings.cancel,
+        onConfirm: () => {
+          dispatch(clearCart());
+          dispatch(addToCart({
+            dish: dish,
+            quantity: 1,
+            chefId: chefId,
+            chefName: chefName
+          }));
+          showSuccessToast(strings.dishAddedTitle, strings.formatString(strings.dishAddedMessage, dish.name));
+        }
+      });
     } else {
       dispatch(addToCart({
         dish: dish,
@@ -79,7 +78,7 @@ const ChefMenuScreen = ({ route, navigation }) => {
         chefId: chefId,
         chefName: chefName
       }));
-      Alert.alert(strings.dishAddedTitle, strings.formatString(strings.dishAddedMessage, dish.name));
+      showSuccessToast(strings.dishAddedTitle, strings.formatString(strings.dishAddedMessage, dish.name));
     }
   };
 
@@ -106,7 +105,7 @@ const ChefMenuScreen = ({ route, navigation }) => {
             {dish.description}
           </Text>
           <View style={styles.dishFooter}>
-            <Text style={styles.dishPrice}>£{dish.price?.toFixed(2)}</Text>
+            <Text style={styles.dishPrice}>{strings.currency || 'EGP'} {dish.price?.toFixed(2)}</Text>
             <View style={styles.dishActions}>
               <Text style={[
                 styles.availabilityText,

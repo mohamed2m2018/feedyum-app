@@ -443,20 +443,7 @@ export default function ProfileDetail({ navigation, route }) {
               profileId={user}
               data={item?.views}
               item={item}
-              reelUrl={
-                item?.avatarUri?.replace(
-                  'https://foodtokforever.s3.amazonaws.com',
-                  'https://d1wfcrbbkg3bzd.cloudfront.net',
-                ) ||
-                item?.poster?.replace(
-                  'https://foodtokforever.s3.amazonaws.com',
-                  'https://d1wfcrbbkg3bzd.cloudfront.net',
-                ) ||
-                item?.media?.[0]?.image?.replace(
-                  'https://foodtokforever.s3.amazonaws.com',
-                  'https://d1wfcrbbkg3bzd.cloudfront.net',
-                )
-              }
+              reelUrl={item?.avatarUri || item?.poster || item?.media?.[0]?.image}
               isPlay={!item?.avatarUri}
               id={item?._id}
             />

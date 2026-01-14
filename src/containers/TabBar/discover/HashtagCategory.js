@@ -7,11 +7,13 @@ import {
   TouchableOpacity,
   View,
   ScrollView,
+  Dimensions,
+  InteractionManager
 } from 'react-native';
 import React, { useCallback, useState } from 'react';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useSelector } from 'react-redux';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useIsFocused } from '@react-navigation/native';
 
 // Local import
 import { moderateScale } from '../../../common/constants';
@@ -214,7 +216,6 @@ export default function HashtagCategory({ selectedTag, isLocationChanging }) {
       }
     });
 
-    // 3. Combine reelDishes and categoryDishes into final dishes array
     const result = Array.from(kitchenMap.values()).map(kitchen => ({
       ...kitchen,
       dishes: [...kitchen.reelDishes, ...kitchen.categoryDishes]
@@ -497,25 +498,18 @@ export default function HashtagCategory({ selectedTag, isLocationChanging }) {
                 // Reels Tab
                 <FlatList
                   data={item.stories.slice(0, 3)} // Display the first 3 stories
-                  renderItem={({ item: story, index }) => (
-                    <ReelComponent
-                      data={story?.views}
-                      reelUrl={
-                        story?.poster?.replace(
-                          'https://foodtokforever.s3.amazonaws.com',
-                          'https://d1wfcrbbkg3bzd.cloudfront.net',
-                        ) ||
-                        story?.avatarUri?.replace(
-                          'https://foodtokforever.s3.amazonaws.com',
-                          'https://d1wfcrbbkg3bzd.cloudfront.net',
-                        )
-                      }
-                      id={story?._id}
-                      profileId={item}
-                      item={story}
-                      isPlay={!story?.poster && !story?.avatarUri}
-                    />
-                  )}
+                  renderItem={({ item: story, index }) => {
+                    return (
+                      <ReelComponent
+                        data={story?.views}
+                        reelUrl={story?.poster || story?.avatarUri}
+                        id={story?._id}
+                        profileId={item}
+                        item={story}
+                        isPlay={!story?.poster && !story?.avatarUri}
+                      />
+                    );
+                  }}
                   numColumns={3}
                   keyExtractor={(story, index) => index.toString()}
                   contentContainerStyle={localStyles.reelsGrid}

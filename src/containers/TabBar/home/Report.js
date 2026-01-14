@@ -1,22 +1,22 @@
 // Library import
-import {FlatList, StyleSheet, TouchableOpacity, View} from 'react-native';
-import React, {useState} from 'react';
+import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
+import React, { useState } from 'react';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {useSelector} from 'react-redux';
+import { useSelector } from 'react-redux';
 
 // Local import
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
 import ZHeader from '../../../components/common/ZHeader';
 import strings from '../../../i18n/strings';
 import ZText from '../../../components/common/ZText';
-import {styles} from '../../../themes';
-import {moderateScale} from '../../../common/constants';
+import { styles } from '../../../themes';
+import { moderateScale } from '../../../common/constants';
 import ZButton from '../../../components/common/ZButton';
-import {useMutation} from 'react-query';
+import { useMutation } from 'react-query';
 import request from '../../../api/request';
-import {ALERT_TYPE, Toast} from 'react-native-alert-notification';
+import { showSuccessToast, showErrorToast } from '../../../utils/toast';
 
-export default function Report({navigation, route}) {
+export default function Report({ navigation, route }) {
   const reportData = [
     {
       lnName: strings.dangerousOrganizationsIndividuals,
@@ -66,35 +66,27 @@ export default function Report({navigation, route}) {
   };
 
   const onPressSkip = () => navigation.goBack();
-  const {storyId} = route.params;
+  const { storyId } = route.params;
 
-  const reportPost = async ({reportReason}) =>
-    request.post('/story/report_story', {storyId, reportReason});
+  const reportPost = async ({ reportReason }) =>
+    request.post('/story/report_story', { storyId, reportReason });
 
   const reportPostMutation = useMutation(reportPost, {
     onSuccess: () => {
-      Toast.show({
-        type: ALERT_TYPE.SUCCESS,
-        title: strings.reported,
-        textBody: strings.willReviewPost,
-      });
+      showSuccessToast(strings.reported, strings.willReviewPost);
       onPressSkip();
     },
     onError: () => {
-      Toast.show({
-        type: ALERT_TYPE.DANGER,
-        title: 'Sorry',
-        textBody: 'Sorry, an error has happened',
-      });
+      showErrorToast(strings.error, strings.errorHappened);
       onPressSkip();
     },
   });
 
   const handleReportPost = () => {
-    reportPostMutation.mutate({reportReason: isSelected});
+    reportPostMutation.mutate({ reportReason: isSelected });
   };
 
-  const RenderData = ({item}) => {
+  const RenderData = ({ item }) => {
     return (
       <TouchableOpacity
         onPress={() => onPressItem(item.lnName)}
@@ -119,7 +111,7 @@ export default function Report({navigation, route}) {
         <FlatList
           data={reportData}
           keyExtractor={(item, index) => index.toString()}
-          renderItem={({item}) => <RenderData item={item} />}
+          renderItem={({ item }) => <RenderData item={item} />}
           bounces={false}
           showsVerticalScrollIndicator={false}
         />

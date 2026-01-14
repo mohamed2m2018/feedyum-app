@@ -1,8 +1,24 @@
 diff --git a/node_modules/react-native-alert-notification/src/containers/Dialog.tsx b/node_modules/react-native-alert-notification/src/containers/Dialog.tsx
-index a6afe15..80b6dd1 100644
+index a6afe15..6459d25 100644
 --- a/node_modules/react-native-alert-notification/src/containers/Dialog.tsx
 +++ b/node_modules/react-native-alert-notification/src/containers/Dialog.tsx
-@@ -7,10 +7,12 @@ export type IConfigDialog = {
+@@ -1,75 +1,58 @@
+ import * as React from 'react';
+-import { Animated, Image, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+-import { ACTION, ALERT_TYPE, ENV } from '../config';
+-import { Color, getImage } from '../service';
++import { StyleSheet, Text, View, Animated, Dimensions, TouchableOpacity, Modal } from 'react-native';
++import { ALERT_TYPE, ACTION } from '../config/ENV';
++
++const ENV = {
++  WINDOWS: {
++    HEIGHT: Dimensions.get('window').height,
++    WIDTH: Dimensions.get('window').width,
++  },
++  AUTO_CLOSE: 5000,
++};
+ 
+ export type IConfigDialog = {
    type: ALERT_TYPE;
    title?: string;
    textBody?: string;
@@ -14,55 +30,416 @@ index a6afe15..80b6dd1 100644
 -  onPressButton?: () => void;
 +  onPressButtonOne?: () => void;
 +  onPressButtonTwo?: () => void;
++  buttonOneColor?: string;
++  buttonTwoColor?: string;
    onShow?: () => void;
    onHide?: () => void;
  };
-@@ -178,13 +180,22 @@ export class Dialog extends React.Component<IProps, IState> {
-    */
+ 
+-type IProps = {
++export type IProps = {
+   isDark: boolean;
+-  config?: Pick<IConfigDialog, 'closeOnOverlayTap' | 'autoClose'>;
++  config?: IConfigDialog;
+ };
+ 
+ type IState = {
+-  styles: ReturnType<typeof __styles>;
+-  overlayClose?: boolean;
+   visible: boolean;
+   config?: IConfigDialog;
++  styles: any;
+ };
+ 
+ export class Dialog extends React.Component<IProps, IState> {
+-  /**
+-   * @type {React.RefObject<Dialog>}
+-   */
+   public static instance: React.RefObject<Dialog> = React.createRef();
+ 
+-  /**
+-   * @param {IConfig} args
+-   */
+   public static show = (args: IConfigDialog): void => {
+     Dialog.instance.current?._open(args);
+   };
+ 
+-  /**
+-   *
+-   */
+   public static hide = (): void => {
+     Dialog.instance.current?._close();
+   };
+ 
+   private _timeout?: NodeJS.Timeout;
+-
+-  /**
+-   * @type {Animated.Value}
+-   * @private
+-   */
+-  private readonly _opacity: Animated.Value;
+-
+-  /**
+-   * @type {Animated.Value}
+-   * @private
+-   */
+-  private readonly _positionDialog: Animated.Value;
+-
+-  /**
+-   * @type {number}
+-   * @private
+-   */
++  private _opacity: Animated.Value;
++  private _positionDialog: Animated.Value;
+   private _popupHeight: number;
+ 
+-  /**
+-   * @param {IProps} props
+-   */
+   constructor(props: IProps) {
+     super(props);
+     this._opacity = new Animated.Value(0);
+@@ -82,19 +65,12 @@ export class Dialog extends React.Component<IProps, IState> {
+     };
+   }
+ 
+-  /**
+-   * @param {Readonly<IProps>} prevProps
+-   */
+   public componentDidUpdate = (prevProps: Readonly<IProps>): void => {
+     if (prevProps.isDark !== this.props.isDark) {
+-      // eslint-disable-next-line react/no-did-update-set-state
+       this.setState((prevState) => ({ ...prevState, styles: __styles(this.props.isDark) }));
+     }
+   };
+ 
+-  /**
+-   * @param {IConfig} config
+-   */
+   private _open = async (config: IConfigDialog): Promise<void> => {
+     if (this.state.visible) {
+       if (this._timeout) {
+@@ -109,9 +85,6 @@ export class Dialog extends React.Component<IProps, IState> {
+     this.setState((prevState) => ({ ...prevState, visible: true, config }));
+   };
+ 
+-  /**
+-   * @return {Promise<void>}
+-   */
+   private _close = async (): Promise<void> => {
+     if (!this.state.visible) {
+       return;
+@@ -126,9 +99,6 @@ export class Dialog extends React.Component<IProps, IState> {
+     onHide?.();
+   };
+ 
+-  /**
+-   * @return {Promise<void>}
+-   */
+   private _showModalHandler = async (): Promise<void> => {
+     await this._startAnimation(ACTION.OPEN);
+     const autoClose = this.state.config?.autoClose !== undefined ? this.state.config?.autoClose : this.props.config?.autoClose;
+@@ -141,11 +111,6 @@ export class Dialog extends React.Component<IProps, IState> {
+     this.state.config!.onShow?.();
+   };
+ 
+-  /**
+-   * @param {ACTION} action
+-   * @param opacity
+-   * @return {Promise<void>}
+-   */
+   private _startAnimation = (action: ACTION, opacity: boolean = true): Promise<void> => {
+     const open = action === ACTION.OPEN;
+ 
+@@ -173,36 +138,71 @@ export class Dialog extends React.Component<IProps, IState> {
+     });
+   };
+ 
+-  /**
+-   * @return {JSX.Element}
+-   */
    private _buttonRender = (): JSX.Element => {
      const { styles } = this.state;
 -    const { type, onPressButton, button } = this.state.config!;
 -    if (button) {
-+    const { type, onPressButtonOne, buttonOne, onPressButtonTwo, buttonTwo } = this.state.config!;
++    const { onPressButtonOne, buttonOne, onPressButtonTwo, buttonTwo, buttonOneColor, buttonTwoColor } = this.state.config!;
++    
++    // Two Buttons Case
 +    if (buttonOne && buttonTwo) {
++      return (
++        <View style={styles.row}>
++          {/* Button Two (Secondary option) - Rendered LEFT */}
++          <TouchableOpacity 
++            style={[
++              styles.button, 
++              styles.actionButton, 
++              styles.secondaryButton,
++              buttonTwoColor ? { backgroundColor: buttonTwoColor } : {}
++            ]} 
++            onPress={onPressButtonTwo ?? this._close}
++          >
++            <Text style={styles.secondaryButtonLabel}>{buttonTwo}</Text>
++          </TouchableOpacity>
++
++          <View style={{width: 12}} /> 
++
++          {/* Button One (Primary option) - Rendered RIGHT */}
++          <TouchableOpacity 
++            style={[
++              styles.button, 
++              styles.actionButton, 
++              styles.primaryButton,
++              buttonOneColor ? { backgroundColor: buttonOneColor } : {}
++            ]} 
++            onPress={onPressButtonOne ?? this._close}
++          >
++            <Text style={styles.buttonLabel}>{buttonOne}</Text>
++          </TouchableOpacity>
++        </View>
++      );
++    } 
++    
++    // Single Button Case
++    else if (buttonOne) {
        return (
 -        <TouchableOpacity style={StyleSheet.flatten([styles.button, styles[type]])} onPress={onPressButton ?? this._close}>
 -          <Text style={styles.buttonLabel}>{button}</Text>
-+        <View style={styles.row}>
-+        <TouchableOpacity style={StyleSheet.flatten([styles.button, styles[type]])} onPress={onPressButtonOne ?? this._close}>
++        <TouchableOpacity 
++          style={[
++            styles.button, 
++            styles.singleButton, 
++            styles.primaryButton,
++            buttonOneColor ? { backgroundColor: buttonOneColor } : {}
++          ]} 
++          onPress={onPressButtonOne ?? this._close}
++        >
 +          <Text style={styles.buttonLabel}>{buttonOne}</Text>
          </TouchableOpacity>
-+         <TouchableOpacity style={StyleSheet.flatten([styles.button, styles[type]])} onPress={onPressButtonTwo ?? this._close}>
-+         <Text style={styles.buttonLabel}>{buttonTwo}</Text>
-+       </TouchableOpacity>
-+       </View>
        );
-+    }else if(buttonOne) {
-+      return    <TouchableOpacity style={StyleSheet.flatten([styles.button, styles[type]])} onPress={onPressButtonOne ?? this._close}>
-+          <Text style={styles.buttonLabel}>{buttonOne}</Text>
-+        </TouchableOpacity>
      }
      return <></>;
    };
-@@ -310,8 +321,11 @@ const __styles = (isDark: boolean) =>
-     [ALERT_TYPE.WARNING]: {
-       backgroundColor: Color.get('warning', isDark),
+ 
+-  /**
+-   * @return {JSX.Element}
+-   */
+   private _OverlayCloseRender = (): JSX.Element => {
+     if (this.state.config?.closeOnOverlayTap === false ? false : this.props.config?.closeOnOverlayTap !== false) {
+-      // eslint-disable-next-line react-native/no-inline-styles
+       return <TouchableOpacity onPressIn={this._close} style={{ flex: 1 }} />;
+     }
+     return <></>;
+   };
+ 
+-  /**
+-   * @return {JSX.Element}
+-   */
+   private _CardRender = (): JSX.Element => {
+     if (!this.state.config) {
+       return <></>;
+@@ -210,7 +210,7 @@ export class Dialog extends React.Component<IProps, IState> {
+ 
+     const {
+       styles,
+-      config: { title, type, textBody },
++      config: { title, textBody },
+     } = this.state;
+     const { _buttonRender } = this;
+     return (
+@@ -220,10 +220,14 @@ export class Dialog extends React.Component<IProps, IState> {
+             layout: { height },
+           },
+         }) => (this._popupHeight = height)}
+-        style={StyleSheet.flatten([styles.cardContainer, { transform: [{ translateY: this._positionDialog }] }])}
++        style={[styles.cardContainer, { transform: [{ translateY: this._positionDialog }] }]}
+       >
+-        <View style={styles.backendImage} />
+-        <Image source={getImage(type)} resizeMode="contain" style={StyleSheet.flatten([styles.image, styles[`${type}Image`]])} />
++        {/* X Close Button */}
++        <TouchableOpacity style={styles.closeButton} onPress={this._close}>
++          <Text style={styles.closeButtonText}>✕</Text>
++        </TouchableOpacity>
++
++        {/* Content */}
+         <View style={styles.cardBody}>
+           {title && <Text style={styles.titleLabel}>{title}</Text>}
+           {textBody && <Text style={styles.descLabel}>{textBody}</Text>}
+@@ -235,15 +239,18 @@ export class Dialog extends React.Component<IProps, IState> {
+     );
+   };
+ 
+-  /**
+-   * @return {JSX.Element}
+-   */
+   public render = (): JSX.Element => {
+     const { visible, styles } = this.state;
+     const { _OverlayCloseRender, _CardRender } = this;
+     return (
+-      <Modal transparent={true} visible={visible} animated={false} onShow={this._showModalHandler}>
+-        <Animated.View style={StyleSheet.flatten([styles.backgroundContainer, { opacity: this._opacity }])} />
++      <Modal 
++        transparent={true} 
++        visible={visible} 
++        animated={false} 
++        onShow={this._showModalHandler}
++        onRequestClose={this._close}
++      >
++        <Animated.View style={[styles.backgroundContainer, { opacity: this._opacity }]} />
+         <_OverlayCloseRender />
+         <_CardRender />
+       </Modal>
+@@ -260,87 +267,94 @@ const __styles = (isDark: boolean) =>
+     cardContainer: {
+       alignSelf: 'center',
+       maxWidth: 400,
+-      width: '80%',
+-      minHeight: 250,
+-      borderRadius: 24,
+-      paddingHorizontal: 12,
+-      paddingTop: 50,
++      width: '85%',
++      borderRadius: 20,
++      paddingHorizontal: 24,
++      paddingTop: 40,
+       paddingBottom: 24,
+       position: 'absolute',
+-      backgroundColor: Color.get('card', isDark),
++      backgroundColor: isDark ? '#1F222A' : '#FFFFFF',
++      shadowColor: "#000",
++      shadowOffset: {
++        width: 0,
++        height: 8,
++      },
++      shadowOpacity: 0.25,
++      shadowRadius: 16,
++      elevation: 12,
++    },
++    closeButton: {
++      position: 'absolute',
++      top: 12,
++      right: 12,
++      width: 32,
++      height: 32,
++      borderRadius: 16,
++      backgroundColor: isDark ? '#35383F' : '#F5F5F5',
++      justifyContent: 'center',
++      alignItems: 'center',
++      zIndex: 10,
++    },
++    closeButtonText: {
++      fontSize: 16,
++      color: isDark ? '#9E9E9E' : '#757575',
++      fontWeight: '500',
      },
+-
+     cardBody: {
+-      flex: 1,
+-      justifyContent: 'space-evenly',
+       alignItems: 'center',
+-      overflow: 'hidden',
++      marginBottom: 24,
++    },
++    cardFooter: {
++      width: '100%',
+     },
+-    cardFooter: {},
+ 
+     titleLabel: {
+-      fontWeight: 'bold',
+-      fontSize: 20,
+-      color: Color.get('label', isDark),
++      fontWeight: '700',
++      fontSize: 18,
++      color: isDark ? '#FFFFFF' : '#212121',
++      marginBottom: 12,
++      textAlign: 'center',
+     },
+     descLabel: {
+       textAlign: 'center',
+-      color: Color.get('label', isDark),
++      color: isDark ? '#9E9E9E' : '#757575',
++      fontSize: 14,
++      lineHeight: 20,
+     },
+     button: {
+-      borderRadius: 50,
+-      height: 40,
+-      width: 130,
++      borderRadius: 14,
++      height: 50,
+       justifyContent: 'center',
+       alignItems: 'center',
+-      alignSelf: 'center',
+-      marginTop: 12,
+     },
+-    buttonLabel: {
+-      color: '#fff',
+-      fontWeight: 'bold',
+-      fontSize: 16,
+-    },
+-    [ALERT_TYPE.SUCCESS]: {
+-      backgroundColor: Color.get('success', isDark),
+-    },
+-    [ALERT_TYPE.DANGER]: {
+-      backgroundColor: Color.get('danger', isDark),
+-    },
+-    [ALERT_TYPE.WARNING]: {
+-      backgroundColor: Color.get('warning', isDark),
+-    },
 -    [ALERT_TYPE.INFO]: {
 -      backgroundColor: Color.get('info', isDark),
-+    row: {
-+      flexDirection: 'row',
-+      justifyContent: 'space-between',
-+      width: '95%',
-+      alignSelf: 'center',
++    actionButton: {
++      flex: 1,
      },
-     backendImage: {
-       position: 'absolute',
-@@ -340,7 +354,4 @@ const __styles = (isDark: boolean) =>
-     [`${ALERT_TYPE.WARNING}Image`]: {
-       tintColor: Color.get('warning', isDark),
+-    backendImage: {
+-      position: 'absolute',
+-      alignSelf: 'center',
+-      justifyContent: 'center',
+-      height: 50,
+-      width: 50,
+-      backgroundColor: '#FBFBFB',
+-      borderRadius: 100,
+-      marginTop: -10,
++    singleButton: {
++      width: '100%',
+     },
+-    image: {
+-      alignSelf: 'center',
+-      width: 80,
+-      aspectRatio: 1,
+-      position: 'absolute',
+-      top: -30,
++    primaryButton: {
++      backgroundColor: '#FF4D67',
+     },
+-
+-    [`${ALERT_TYPE.SUCCESS}Image`]: {
+-      tintColor: Color.get('success', isDark),
++    secondaryButton: {
++      backgroundColor: 'transparent',
++      borderWidth: 1.5,
++      borderColor: '#FF4D67',
+     },
+-    [`${ALERT_TYPE.DANGER}Image`]: {
+-      tintColor: Color.get('danger', isDark),
++    buttonLabel: {
++      color: '#FFFFFF',
++      fontWeight: '600',
++      fontSize: 16,
+     },
+-    [`${ALERT_TYPE.WARNING}Image`]: {
+-      tintColor: Color.get('warning', isDark),
++    secondaryButtonLabel: {
++      color: '#FF4D67',
++      fontWeight: '600',
++      fontSize: 16,
      },
 -    [`${ALERT_TYPE.INFO}Image`]: {
 -      tintColor: Color.get('info', isDark),
--    },
++    row: {
++      flexDirection: 'row',
++      justifyContent: 'space-between',
++      width: '100%',
++      alignItems: 'center',
+     },
    });

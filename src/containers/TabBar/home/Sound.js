@@ -9,20 +9,20 @@ import {
 } from 'react-native';
 import React from 'react';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {useSelector} from 'react-redux';
+import { useSelector } from 'react-redux';
 
 // Local import
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
 import ZHeader from '../../../components/common/ZHeader';
-import {SoundIcon} from '../../../assets/svgs';
-import {getHeight, moderateScale} from '../../../common/constants';
-import {styles} from '../../../themes';
+import { SoundIcon } from '../../../assets/svgs';
+import { getHeight, moderateScale } from '../../../common/constants';
+import { styles } from '../../../themes';
 import ZText from '../../../components/common/ZText';
 import ZButton from '../../../components/common/ZButton';
 import images from '../../../assets/images';
 import ReelComponent from '../../../components/ReelComponent';
-import {useNavigation} from '@react-navigation/native';
-import {StackNav} from '../../../navigation/NavigationKeys';
+import { useNavigation } from '@react-navigation/native';
+import { StackNav } from '../../../navigation/NavigationKeys';
 
 export default function Sound() {
   const colors = useSelector(state => state.theme.theme);
@@ -43,10 +43,10 @@ export default function Sound() {
     );
   };
 
-  const RenderButton = ({title, icon}) => {
+  const RenderButton = ({ title, icon }) => {
     return (
       <ZButton
-        onPress={() => {}}
+        onPress={() => { }}
         title={title}
         type={'s16'}
         color={colors.primary}
@@ -61,7 +61,7 @@ export default function Sound() {
         bgColor={colors.tranparent}
         containerStyle={[
           localStyles.containerStyle,
-          {borderColor: colors.primary},
+          { borderColor: colors.primary },
         ]}
       />
     );
@@ -87,13 +87,13 @@ export default function Sound() {
           </View>
         </View>
         <View style={localStyles.btnContainer}>
-          <RenderButton title={'Play'} icon={'play-circle-outline'} />
-          <RenderButton title={'Add to Favorites'} icon={'bookmark'} />
+          <RenderButton title={strings.play} icon={'play-circle-outline'} />
+          <RenderButton title={strings.addToFavorites} icon={'bookmark'} />
         </View>
         <TouchableOpacity
           style={[
             localStyles.renderItemCoontainer,
-            {borderBottomColor: colors.bColor},
+            { borderBottomColor: colors.bColor },
           ]}
           onPress={onPressSingerProfile}>
           <View>
@@ -111,16 +111,16 @@ export default function Sound() {
             </ZText>
           </View>
           <TouchableOpacity
-            style={[localStyles.followBtn, {backgroundColor: colors.primary}]}>
+            style={[localStyles.followBtn, { backgroundColor: colors.primary }]}>
             <ZText color={colors.textRevertColor} type="b14">
-              {'Follow'}
+              {strings.follow}
             </ZText>
           </TouchableOpacity>
         </TouchableOpacity>
 
         <FlatList
           data={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]}
-          renderItem={({item, index}) => (
+          renderItem={({ item, index }) => (
             <ReelComponent isPlay={!item?.avatarUri} />
           )}
           numColumns={3}

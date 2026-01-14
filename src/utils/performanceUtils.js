@@ -1,4 +1,4 @@
-import {InteractionManager} from 'react-native';
+import { InteractionManager } from 'react-native';
 
 // Debounce function to prevent excessive API calls
 export const debounce = (func, wait) => {
@@ -58,24 +58,9 @@ export const createSafeTimer = (callback, delay) => {
   };
 };
 
-// Optimize image loading
+// Optimize image loading - URLs are served directly via R2 CDN
 export const optimizeImageUri = (uri, width = 200, height = 200) => {
-  if (!uri) return null;
-  
-  // If it's already a CDN URL, return as is
-  if (uri.includes('cloudfront.net')) {
-    return uri;
-  }
-  
-  // Replace S3 URLs with CloudFront for better performance
-  if (uri.includes('foodtokforever.s3.amazonaws.com')) {
-    return uri.replace(
-      'https://foodtokforever.s3.amazonaws.com',
-      'https://d1wfcrbbkg3bzd.cloudfront.net'
-    );
-  }
-  
-  return uri;
+  return uri || null;
 };
 
 // React Query optimization helpers
@@ -100,7 +85,7 @@ export const getOptimizedQueryConfig = (type = 'default') => {
       refetchOnMount: false,
     },
   };
-  
+
   return configs[type] || configs.default;
 };
 

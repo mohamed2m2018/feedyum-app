@@ -1,8 +1,8 @@
 // Library imports
-import React, {useState} from 'react';
-import {View, StyleSheet, ScrollView, TouchableOpacity, RefreshControl} from 'react-native';
-import {useSelector} from 'react-redux';
-import {useNavigation} from '@react-navigation/native';
+import React, { useState } from 'react';
+import { View, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
+import { useSelector } from 'react-redux';
+import { useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 // Local imports
@@ -11,10 +11,10 @@ import ZHeader from '../../../components/common/ZHeader';
 import ZText from '../../../components/common/ZText';
 import ZButton from '../../../components/common/ZButton';
 import DashboardCard from './components/DashboardCard';
-import {useDashboardStats} from './hooks/useDashboardData';
-import {styles} from '../../../themes';
-import {moderateScale} from '../../../common/constants';
-import {StackNav} from '../../../navigation/NavigationKeys';
+import { useDashboardStats } from './hooks/useDashboardData';
+import { styles } from '../../../themes';
+import { moderateScale } from '../../../common/constants';
+import { StackNav } from '../../../navigation/NavigationKeys';
 import strings from '../../../i18n/strings';
 
 export default function ChefDashboard() {
@@ -33,7 +33,7 @@ export default function ChefDashboard() {
     // Navigate to specific management screens
     switch (sectionName) {
       case 'Menu':
-        navigation.navigate(StackNav.MenuManagement, {fromTabs: true});
+        navigation.navigate(StackNav.MenuManagement, { fromTabs: true });
         break;
       case 'Orders':
         navigation.navigate(StackNav.OrderManagement);
@@ -55,7 +55,7 @@ export default function ChefDashboard() {
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }>
-        
+
         {/* Welcome Section */}
         <View style={localStyles.welcomeSection}>
           <ZText type="B24" style={localStyles.welcomeText}>
@@ -74,7 +74,7 @@ export default function ChefDashboard() {
           <View style={localStyles.statsGrid}>
             <DashboardCard
               title={strings.todaysRevenue}
-              value={`$${stats?.todayRevenue?.toFixed(2) || '0.00'}`}
+              value={`${strings.currency} ${stats?.todayRevenue?.toFixed(2) || '0.00'}`}
               icon="cash-outline"
               color={colors.primary}
               containerStyle={localStyles.statCard}
@@ -116,9 +116,9 @@ export default function ChefDashboard() {
           </ZText>
           <View style={localStyles.actionsGrid}>
             <TouchableOpacity
-              style={[localStyles.actionCard, {backgroundColor: colors.inputBg}]}
+              style={[localStyles.actionCard, { backgroundColor: colors.inputBg }]}
               onPress={() => navigateToSection('Menu')}>
-              <View style={[localStyles.actionIcon, {backgroundColor: colors.primary}]}>
+              <View style={[localStyles.actionIcon, { backgroundColor: colors.primary }]}>
                 <Ionicons name="add-outline" size={moderateScale(24)} color={colors.white} />
               </View>
               <ZText type="S16" style={localStyles.actionTitle}>
@@ -130,9 +130,9 @@ export default function ChefDashboard() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[localStyles.actionCard, {backgroundColor: colors.inputBg}]}
+              style={[localStyles.actionCard, { backgroundColor: colors.inputBg }]}
               onPress={() => navigateToSection('Orders')}>
-              <View style={[localStyles.actionIcon, {backgroundColor: colors.orange}]}>
+              <View style={[localStyles.actionIcon, { backgroundColor: colors.orange }]}>
                 <Ionicons name="receipt-outline" size={moderateScale(24)} color={colors.white} />
               </View>
               <ZText type="S16" style={localStyles.actionTitle}>
@@ -143,12 +143,12 @@ export default function ChefDashboard() {
               </ZText>
             </TouchableOpacity>
           </View>
-          
+
           <View style={localStyles.actionsGrid}>
             <TouchableOpacity
-              style={[localStyles.actionCard, {backgroundColor: colors.inputBg}]}
+              style={[localStyles.actionCard, { backgroundColor: colors.inputBg }]}
               onPress={() => navigation.navigate(StackNav.ChatList)}>
-              <View style={[localStyles.actionIcon, {backgroundColor: colors.blue}]}>
+              <View style={[localStyles.actionIcon, { backgroundColor: colors.blue }]}>
                 <Ionicons name="chatbubbles-outline" size={moderateScale(24)} color={colors.white} />
               </View>
               <ZText type="S16" style={localStyles.actionTitle}>
@@ -160,9 +160,9 @@ export default function ChefDashboard() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[localStyles.actionCard, {backgroundColor: colors.inputBg}]}
+              style={[localStyles.actionCard, { backgroundColor: colors.inputBg }]}
               onPress={() => navigateToSection('Analytics')}>
-              <View style={[localStyles.actionIcon, {backgroundColor: colors.green}]}>
+              <View style={[localStyles.actionIcon, { backgroundColor: colors.green }]}>
                 <Ionicons name="analytics-outline" size={moderateScale(24)} color={colors.white} />
               </View>
               <ZText type="S16" style={localStyles.actionTitle}>
@@ -188,7 +188,7 @@ export default function ChefDashboard() {
             </TouchableOpacity>
           </View>
           <TouchableOpacity
-            style={[localStyles.sectionCard, {backgroundColor: colors.inputBg}]}
+            style={[localStyles.sectionCard, { backgroundColor: colors.inputBg }]}
             onPress={() => navigateToSection('Menu')}>
             <View style={localStyles.sectionContent}>
               <Ionicons name="restaurant" size={moderateScale(32)} color={colors.primary} />
@@ -216,7 +216,7 @@ export default function ChefDashboard() {
             </TouchableOpacity>
           </View>
           <TouchableOpacity
-            style={[localStyles.sectionCard, {backgroundColor: colors.inputBg}]}
+            style={[localStyles.sectionCard, { backgroundColor: colors.inputBg }]}
             onPress={() => navigateToSection('Orders')}>
             <View style={localStyles.sectionContent}>
               <Ionicons name="receipt" size={moderateScale(32)} color={colors.orange} />
@@ -244,7 +244,7 @@ export default function ChefDashboard() {
             </TouchableOpacity>
           </View>
           <TouchableOpacity
-            style={[localStyles.sectionCard, {backgroundColor: colors.inputBg}]}
+            style={[localStyles.sectionCard, { backgroundColor: colors.inputBg }]}
             onPress={() => navigateToSection('Analytics')}>
             <View style={localStyles.sectionContent}>
               <Ionicons name="analytics" size={moderateScale(32)} color={colors.blue} />
@@ -264,7 +264,7 @@ export default function ChefDashboard() {
           <ZText type="S18" style={localStyles.sectionTitle}>
             {strings.recentActivity}
           </ZText>
-          <View style={[localStyles.activityCard, {backgroundColor: colors.inputBg}]}>
+          <View style={[localStyles.activityCard, { backgroundColor: colors.inputBg }]}>
             <Ionicons name="time-outline" size={moderateScale(32)} color={colors.grayScale7} />
             <ZText type="M16" align="center" color={colors.grayScale7} style={localStyles.activityText}>
               {strings.noRecentActivity}

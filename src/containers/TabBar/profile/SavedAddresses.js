@@ -4,8 +4,9 @@ import {
   FlatList,
   TouchableOpacity,
   StyleSheet,
-  Alert
 } from 'react-native';
+import { showSuccessToast, showErrorToast, showActionDialog } from '../../../utils/toast';
+import { ALERT_TYPE } from 'react-native-alert-notification';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import Feather from 'react-native-vector-icons/Feather';
@@ -47,31 +48,23 @@ const SavedAddresses = () => {
   };
 
   const handleDeleteAddress = (addressId, label) => {
-    Alert.alert(
-      strings.deleteAddress,
-      strings.deleteAddressConfirmation.replace('{label}', label),
-      [
-        {
-          text: strings.cancel,
-          style: 'cancel',
-        },
-        {
-          text: strings.delete,
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const result = await dispatch(deleteAddress(addressId));
-              // The deleteAddress action already calls getAddresses(), but let's be explicit
-              dispatch(getAddresses());
-
-              Alert.alert(strings.success, strings.addressDeletedSuccessfully);
-            } catch (error) {
-              Alert.alert(strings.error, error.message || strings.failedToDeleteAddress || 'Failed to delete address');
-            }
-          },
-        },
-      ]
-    );
+    showActionDialog({
+      type: ALERT_TYPE.WARNING,
+      title: strings.deleteAddress,
+      message: strings.deleteAddressConfirmation.replace('{label}', label),
+      confirmText: strings.delete,
+      cancelText: strings.cancel,
+      onConfirm: async () => {
+        try {
+          const result = await dispatch(deleteAddress(addressId));
+          // The deleteAddress action already calls getAddresses(), but let's be explicit
+          dispatch(getAddresses());
+          showSuccessToast(strings.success, strings.addressDeletedSuccessfully);
+        } catch (error) {
+          showErrorToast(strings.error, error.message || strings.failedToDeleteAddress || 'Failed to delete address');
+        }
+      },
+    });
   };
 
   const handleAddNewAddress = () => {

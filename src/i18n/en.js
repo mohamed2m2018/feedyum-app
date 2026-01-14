@@ -124,6 +124,7 @@ export default {
     'Sorry, the keyword you entered could not be found. Try to check again or search with other keywords.',
   selectDate: 'Select Date',
   post: 'Posts',
+  kitchenPosts: 'Kitchen Posts',
   followers: 'Followers',
   following: 'Following',
   hefollowing: 'Following',
@@ -163,6 +164,11 @@ export default {
   imageMessage: '📷 Image',
   mediaMessage: '📎 Media message',
   orderSummaryFormat: 'Order #{0} - {1}',
+  debugInfoBody: '• URL: {0}\n• Platform: {1}\n• {2}',
+  loading: 'Loading...',
+  failedToLoad: '❌ Failed to load',
+  statusLabel: 'Status: {0}',
+  tryOpeningUrl: 'Try opening this URL in your browser to verify it\'s accessible.',
   privateAccount: 'Private Account',
   suggestAccOthers: 'Suggest Account to Others',
   sync: 'Sync Contacts & Friends',
@@ -425,6 +431,16 @@ export default {
   orderChats: 'Order Chats',
   addCaption: 'Add a caption...',
   shoppingCart: 'Shopping Cart',
+  orderFrom: 'Order from {0}',
+  oneItem: '1 item',
+  itemsCount: '{0} items',
+  deliveryFeeTbd: 'To be determined by kitchen',
+  plusDelivery: '+ delivery',
+  chefMissingError: 'Kitchen information is missing. Clear cart and try again?',
+  cartEmpty: 'Your cart is empty',
+  addSomeDishes: 'Add some delicious dishes from kitchen menus to get started',
+  noAddressSelected: 'No address selected',
+  address: 'Address',
   browseMenus: 'Browse Menus',
   orderId: 'Order ID:',
   chef: 'Kitchen:',
@@ -438,6 +454,51 @@ export default {
   orderTracking: 'Order Tracking',
   goBack: 'Go Back',
   chatWithChef: 'Chat with Kitchen',
+
+  // Dish Details
+  pricingSummary: 'Pricing Summary',
+  deliveryInformation: 'Delivery Information',
+  noSpecialInstructions: 'No special instructions provided',
+  noDeliveryAddress: 'No delivery address provided',
+  loadingOrderDetails: 'Loading Order Details...',
+  loadingOrderItems: 'Loading Order Items...',
+  loadingPricingInformation: 'Loading Pricing Information...',
+  unknownDish: 'Unknown Dish',
+  noItemsFound: 'No items found',
+  orderProgress: 'Order Progress',
+  lastUpdated: 'Last updated:',
+  orderId: 'Order ID:',
+  chef: 'Chef:',
+  customer: 'Customer:',
+  orderDate: 'Order Date:',
+  orderItems: 'Order Items',
+  orderItemsCount: 'Order Items ({0})',
+  qty: 'Qty:',
+  each: 'each',
+  currency: 'EGP',
+  currentStatus: 'Current Status',
+  shareYourExperience: '⭐ Share Your Experience',
+  createReviewReelDesc: 'Create a review reel and help others discover this dish',
+  nutritionalInfo: 'Nutritional Information',
+  preparationTime: 'Preparation time: {0} minutes',
+  dietaryInfo: 'Dietary Information',
+  reviewsCount: 'Reviews ({0})',
+  ingredients: 'Ingredients',
+  reviewPostsCount: 'Review Posts ({0})',
+  noReviewPosts: 'No review posts yet',
+  beTheFirstToReview: 'Be the first to share your experience!',
+  seeMoreReviews: 'See More ({0} more reviews)',
+  quantity: 'Quantity',
+  addToCartPrice: 'Add to Cart - {0} {1}',
+  failedToLoadDish: 'Failed to load dish',
+  dishLoadErrorMsg: 'This dish might not be available or there was a connection issue.',
+  favoritesAddedTitle: 'Added to Favorites',
+  favoritesAddedMsg: '{0} has been added to your favorites',
+  favoritesRemovedTitle: 'Removed from Favorites',
+  favoritesRemovedMsg: '{0} has been removed from your favorites',
+  addedToCartTitle: 'Added to Cart',
+  addedToCartMsg: '{0} x {1} added to your cart',
+  great: 'Great',
 
   // Chat & Messages
   chat: 'Chat',
@@ -573,6 +634,8 @@ export default {
   placeOrder: 'Place Order',
   accept: 'Accept',
   reject: 'Reject',
+  chefDoesNotDeliverTo: 'This kitchen does not deliver to',
+  theyDeliverTo: 'They deliver to',
 
   // Error Messages
   failedToLoadSavedCart: 'Failed to load saved cart',
@@ -1102,7 +1165,7 @@ export default {
   failedToPrepareAudio: 'Failed to prepare audio for preview',
   failedToPlayAudio: 'Failed to play audio preview',
   listMainIngredients: 'List main ingredients',
-  chefs: 'Chefs',
+  chefs: 'Kitchens',
   chefProfile: 'Chef Profile',
   chefsMenu: "{name}'s Menu",
   uploadFailed: 'Upload failed',
@@ -1251,5 +1314,92 @@ export default {
   failedToProcessAudio: 'Failed to process audio',
   failedToPrepareAudio: 'Failed to prepare audio for preview',
   failedToPlayAudio: 'Failed to play audio preview',
+
+  // Additional Localization Keys
+  // Voice Recorder UI
+  recording: 'Recording...',
+  voiceMessageTitle: 'Voice Message',
+  recordingNotAvailableIOS: 'Recording is not available in the iOS Simulator. Please test on a real device for full audio functionality.',
+  failedToStartRecordingMsg: 'Failed to start recording. Please try again.',
+  recordingErrorTitle: 'Recording Error',
+
+  // Permission Dialogs
+  microphonePermissionTitle: 'Microphone Permission',
+  askMeLaterButton: 'Ask Me Later',
+  cancelButtonLabel: 'Cancel',
+  okButton: 'OK',
+
+  // Add Post Flow
+  createMenuFirst: 'Create your menu first',
+  createMenuMessage: 'To start posting, please create your menu and add your dishes so customers can order easily.',
+  noDishesFoundTitle: 'No dishes found',
+  noDishesFoundMessage: 'We didn\'t find any dishes in your menu. Please add at least one dish before posting.',
+  openMenuManagement: 'Open Menu Management',
+  notNow: 'Not now',
+
+  // Order Card Status
+  accepted: 'Accepted',
+  orderNumber: 'Order #{0}',
+  itemsCountLabel: '{0} items',
+  oneItemLabel: '1 item',
+
+  // Order Summary
+  orderSummaryLabel: 'Order summary',
+
+  // Chat Screen
+  loadingChat: 'Loading chat...',
+  failedToLoadChat: 'Failed to load chat',
+  checkConnectionTryAgain: 'Please check your connection and try again',
+  defaultChefName: 'Chef',
+
+  // Menu Management
+  dishAddedSuccess: 'Dish added successfully!',
+  dishUpdatedSuccess: 'Dish updated successfully!',
+  dishDeletedSuccess: 'Dish deleted successfully!',
+  failedToAddDish: 'Failed to add dish',
+  failedToUpdateDish: 'Failed to update dish',
+  failedToDeleteDish: 'Failed to delete dish',
+  deleteDishTitle: 'Delete Dish',
+  deleteDishConfirm: 'Are you sure you want to delete "{0}"? This action cannot be undone.',
+  dishMadeVisible: 'Dish is now visible',
+  dishHidden: 'Dish is now hidden',
+  failedToUpdateVisibility: 'Failed to update dish visibility',
+  tryAdjustingSearch: 'Try adjusting your search',
+  startAddingDish: 'Start by adding your first dish',
+  addFirstDish: 'Add First Dish',
+  searchDishes: 'Search dishes...',
+  loadingDishes: 'Loading dishes...',
+  failedToLoadDishes: 'Failed to load dishes',
+
+  // Order Management
+  orderUpdatedSuccess: 'Order status updated successfully!',
+  failedToUpdateOrder: 'Failed to update order status',
+
+  // Anonymous
+  anonymous: 'Anonymous',
+
+  // Order Management Screen
+  noOrdersFound: 'No orders found',
+  ordersWillAppear: 'Orders will appear here when customers place them',
+  noOrdersStatus: 'No {0} orders',
+  loadingOrders: 'Loading orders...',
+  failedToLoadOrders: 'Failed to load orders',
+  totalOrders: 'Total Orders',
+  liveUpdatesActive: 'Live updates active',
+  all: 'All',
+
+  // Common Errors & Messages
+  somethingWentWrong: 'Something went wrong',
+  unknownError: 'Unknown error occurred',
+  postDeletedSuccess: 'Post deleted successfully',
+  errorHappened: 'Sorry, an error has happened',
+  textCopiedSuccess: 'Text is copied successfully',
+  playServicesNotAvailable: 'Play Services not available',
+  googleSignInFailed: 'Google Sign In Failed',
+  validationError: 'Validation error: {0}',
+  user: 'User',
+
+  // Comments
+  replyingTo: 'Replying to',
 
 };

@@ -134,7 +134,7 @@ const MenuDetailScreen = () => {
         )}
 
         <ZText type="B16" color={colors.primary} style={localStyles.dishPrice}>
-          {dish.price} EGP
+          {dish.price} {strings.currency}
         </ZText>
       </View>
 

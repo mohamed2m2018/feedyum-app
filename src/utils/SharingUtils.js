@@ -1,6 +1,8 @@
-import { Share, Alert, Linking, Platform } from 'react-native';
+import { Share, Linking, Platform } from 'react-native';
+import { showErrorToast, showInfoToast } from './toast';
 import DeepLinkingService from '../services/DeepLinkingService';
 import request from '../api/request';
+import strings from '../i18n/strings';
 
 class SharingUtils {
   // Generate and share links for different content types
@@ -23,18 +25,15 @@ class SharingUtils {
       });
 
       if (result.action === Share.sharedAction) {
-
-
         // Track sharing analytics
         this.trackSharing(type, contentId, result.activityType);
-
         return { success: true, action: result.action, activityType: result.activityType };
       } else if (result.action === Share.dismissedAction) {
         return { success: false, action: 'dismissed' };
       }
     } catch (error) {
       console.error('Sharing error:', error);
-      Alert.alert(strings.sharingError, strings.failedToShare);
+      showErrorToast(strings.sharingError, strings.failedToShare);
       return { success: false, error: error.message };
     }
   }
@@ -167,12 +166,12 @@ class SharingUtils {
       const { Clipboard } = require('react-native');
 
       Clipboard.setString(shareData.shareLinks.universalLink);
-      Alert.alert(strings.linkCopied, strings.linkCopiedMessage);
+      showInfoToast(strings.linkCopied, strings.linkCopiedMessage);
 
       return { success: true };
     } catch (error) {
       console.error('Copy link error:', error);
-      Alert.alert(strings.error, strings.failedToCopyLink);
+      showErrorToast(strings.error, strings.failedToCopyLink);
       return { success: false, error: error.message };
     }
   }
@@ -183,7 +182,7 @@ class SharingUtils {
       const canOpen = await Linking.canOpenURL('instagram://app');
 
       if (!canOpen) {
-        Alert.alert(strings.instagramNotFound, strings.installInstagram);
+        showErrorToast(strings.instagramNotFound, strings.installInstagram);
         return { success: false, error: 'Instagram not installed' };
       }
 
@@ -215,7 +214,7 @@ class SharingUtils {
         await Linking.openURL(whatsappUrl);
         return { success: true };
       } else {
-        Alert.alert(strings.whatsappNotFound, strings.installWhatsApp);
+        showErrorToast(strings.whatsappNotFound, strings.installWhatsApp);
         return { success: false, error: 'WhatsApp not installed' };
       }
     } catch (error) {
@@ -252,8 +251,6 @@ class SharingUtils {
   // Track sharing analytics
   static trackSharing(type, contentId, platform = 'native') {
     // Implement your analytics tracking here
-
-
     // You can integrate with your analytics service here
     // Analytics.track('content_shared', {
     //   content_type: type,
@@ -304,4 +301,4 @@ class SharingUtils {
   }
 }
 
-export default SharingUtils; 
+export default SharingUtils;

@@ -5,10 +5,11 @@ import {
   ScrollView,
   Image,
   TouchableOpacity,
-  Alert,
   Animated,
   Dimensions,
 } from 'react-native';
+import { showSuccessToast, showErrorToast, showSuccessDialog, showActionDialog } from '../../../utils/toast';
+import { ALERT_TYPE } from 'react-native-alert-notification';
 import { useSelector, useDispatch } from 'react-redux';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { useNavigation, useRoute, CommonActions } from '@react-navigation/native';
@@ -143,20 +144,14 @@ const DishDetailScreen = () => {
     },
     {
       onSuccess: () => {
-        Alert.alert(
+        showSuccessToast(
           strings.favoritesAddedTitle,
-          strings.formatString(strings.favoritesAddedMsg, dishData?.name),
-          [
-            {
-              text: strings.great,
-              style: 'default',
-            },
-          ],
+          strings.formatString(strings.favoritesAddedMsg, dishData?.name)
         );
         queryClient.invalidateQueries(['dishDetail', dishId]);
       },
       onError: error => {
-        Alert.alert(strings.error, error.message || strings.failedToAddToFavorites);
+        showErrorToast(strings.error, error.message || strings.failedToAddToFavorites);
       },
     },
   );
@@ -169,20 +164,14 @@ const DishDetailScreen = () => {
     },
     {
       onSuccess: () => {
-        Alert.alert(
+        showSuccessToast(
           strings.favoritesRemovedTitle,
-          strings.formatString(strings.favoritesRemovedMsg, dishData?.name),
-          [
-            {
-              text: strings.ok,
-              style: 'default',
-            },
-          ],
+          strings.formatString(strings.favoritesRemovedMsg, dishData?.name)
         );
         queryClient.invalidateQueries(['dishDetail', dishId]);
       },
       onError: error => {
-        Alert.alert(
+        showErrorToast(
           strings.error,
           error.message || strings.failedToRemoveFromFavorites,
         );
@@ -205,44 +194,38 @@ const DishDetailScreen = () => {
       }),
     );
 
-    Alert.alert(
-      strings.addedToCartTitle,
-      strings.formatString(strings.addedToCartMsg, quantity, dishData.name),
-      [
-        {
-          text: strings.continueShoppingButton,
-          style: 'cancel',
-          onPress: () => {
-            if (route?.params?.fromDiscover && chefId) {
-              navigation.dispatch(
-                CommonActions.reset({
-                  index: 1,
-                  routes: [
-                    { name: 'TabBar', params: { screen: 'Discover' } },
-                    {
-                      name: StackNav.ChefMenu,
-                      params: {
-                        chefId: chefId,
-                        chefName: computedChefName,
-                      },
-                    },
-                  ],
-                }),
-              );
-            } else {
-              navigation.navigate(StackNav.ChefMenu, {
-                chefId: chefId,
-                chefName: computedChefName,
-              });
-            }
-          },
-        },
-        {
-          text: strings.viewCart,
-          onPress: () => navigation.navigate(StackNav.ShoppingCart),
-        },
-      ],
-    );
+    showActionDialog({
+      type: ALERT_TYPE.SUCCESS,
+      title: strings.addedToCartTitle,
+      message: strings.formatString(strings.addedToCartMsg, quantity, dishData.name),
+      confirmText: strings.viewCart,
+      cancelText: strings.continueShoppingButton,
+      onConfirm: () => navigation.navigate(StackNav.ShoppingCart),
+      onCancel: () => {
+        if (route?.params?.fromDiscover && chefId) {
+          navigation.dispatch(
+            CommonActions.reset({
+              index: 1,
+              routes: [
+                { name: 'TabBar', params: { screen: 'Discover' } },
+                {
+                  name: StackNav.ChefMenu,
+                  params: {
+                    chefId: chefId,
+                    chefName: computedChefName,
+                  },
+                },
+              ],
+            }),
+          );
+        } else {
+          navigation.navigate(StackNav.ChefMenu, {
+            chefId: chefId,
+            chefName: computedChefName,
+          });
+        }
+      },
+    });
   };
 
   const handleQuantityChange = change => {
@@ -287,12 +270,8 @@ const DishDetailScreen = () => {
   // Handle cart errors
   useEffect(() => {
     if (cartError) {
-      Alert.alert(strings.cartError, cartError, [
-        {
-          text: 'OK',
-          onPress: () => dispatch(clearError()),
-        },
-      ]);
+      showErrorToast(strings.cartError, cartError);
+      dispatch(clearError());
     }
   }, [cartError, dispatch]);
 
@@ -403,7 +382,7 @@ const DishDetailScreen = () => {
             {dishData?.name}
           </ZText>
           <ZText type="B20" color="#FF4D67" style={localStyles.dishPrice}>
-            {dishData?.price} EGP
+            {dishData?.price} {strings.currency}
           </ZText>
         </View>
 
@@ -423,7 +402,7 @@ const DishDetailScreen = () => {
           />
           <View>
             <ZText type="M12" color="#888888">
-              Chef
+              {strings.chef ? strings.chef.replace(':', '') : 'Kitchen'}
             </ZText>
             <ZText type="B14" color="#1A1A1A">
               {finalChefData?.fullName || strings.unknownChef}
@@ -482,7 +461,7 @@ const DishDetailScreen = () => {
         <ZText
           type="B14"
           color={selectedTab === 'reviews' ? colors.white : colors.textColor}>
-          Reviews ({reviewsData?.reviews?.length || 0})
+          {strings.formatString(strings.reviewsCount, reviewsData?.reviews?.length || 0)}
         </ZText>
       </TouchableOpacity>
 
@@ -496,7 +475,7 @@ const DishDetailScreen = () => {
           <ZText
             type="B14"
             color={selectedTab === 'ingredients' ? colors.white : colors.textColor}>
-            Ingredients
+            {strings.ingredients}
           </ZText>
         </TouchableOpacity>
       )}
@@ -520,7 +499,7 @@ const DishDetailScreen = () => {
       {dishData?.nutritionalInfo && (
         <View style={localStyles.nutritionSection}>
           <ZText type="B18" color="#1A1A1A" style={styles.mb15}>
-            Nutritional Information
+            {strings.nutritionalInfo}
           </ZText>
           <View style={localStyles.nutritionGrid}>
             {Object.entries(dishData.nutritionalInfo).map(([key, value]) => (
@@ -546,7 +525,7 @@ const DishDetailScreen = () => {
             color={colors.primary}
           />
           <ZText type="M16" color="#1A1A1A" style={styles.ml10}>
-            Preparation time: {dishData.preparationTime} minutes
+            {strings.formatString(strings.preparationTime, dishData.preparationTime)}
           </ZText>
         </View>
       )}
@@ -555,7 +534,7 @@ const DishDetailScreen = () => {
       {dishData?.dietaryInfo && dishData.dietaryInfo.length > 0 && (
         <View style={localStyles.dietarySection}>
           <ZText type="B16" color="#1A1A1A" style={styles.mb10}>
-            Dietary Information
+            {strings.dietaryInfo}
           </ZText>
           {dishData.dietaryInfo.map((info, index) => (
             <View key={index} style={localStyles.dietaryItem}>
@@ -593,7 +572,7 @@ const DishDetailScreen = () => {
         <View style={localStyles.reviewPostsContainer}>
           <View style={localStyles.reviewPostsHeader}>
             <ZText type="B18" color={colors.textColor}>
-              Review Posts ({reviewStories.length})
+              {strings.formatString(strings.reviewPostsCount, reviewStories.length)}
             </ZText>
             <TouchableOpacity onPress={refetchReviewStories}>
               <Ionicons name="refresh" size={moderateScale(20)} color={colors.primary} />
@@ -651,7 +630,7 @@ const DishDetailScreen = () => {
                     />
                     <View style={localStyles.reviewAuthorInfo}>
                       <ZText type="B14" color={colors.textColor} numberOfLines={1}>
-                        {story.author?.fullName || 'Anonymous'}
+                        {story.author?.fullName || strings.anonymous}
                       </ZText>
                       <View style={localStyles.starsContainer}>
                         {[1, 2, 3, 4, 5].map((star) => (
@@ -681,10 +660,10 @@ const DishDetailScreen = () => {
             <View style={localStyles.emptyReviewsContainer}>
               <Ionicons name="star-outline" size={moderateScale(64)} color={colors.grayScale4} />
               <ZText type="B16" color={colors.grayScale5} style={styles.mt16}>
-                No review posts yet
+                {strings.noReviewPosts}
               </ZText>
               <ZText type="M14" color={colors.grayScale5} style={styles.mt8}>
-                Be the first to share your experience!
+                {strings.beTheFirstToReview}
               </ZText>
             </View>
           )}
@@ -698,7 +677,7 @@ const DishDetailScreen = () => {
               })}
             >
               <ZText type="B16" color={colors.white}>
-                See More ({reviewStories.length - 4} more reviews)
+                {strings.formatString(strings.seeMoreReviews, reviewStories.length - 4)}
               </ZText>
             </TouchableOpacity>
           )}
@@ -712,7 +691,7 @@ const DishDetailScreen = () => {
       {dishData?.ingredients && dishData.ingredients.length > 0 ? (
         <View style={localStyles.ingredientsSection}>
           <ZText type="B18" color="#1A1A1A" style={styles.mb15}>
-            Ingredients
+            {strings.ingredients}
           </ZText>
           {dishData.ingredients.map((ingredient, index) => (
             <View key={index} style={localStyles.ingredientItem}>
@@ -759,7 +738,7 @@ const DishDetailScreen = () => {
         {/* Quantity Selector */}
         <View style={localStyles.quantitySection}>
           <ZText type="B16" color="#1A1A1A" style={styles.mb10}>
-            Quantity
+            {strings.quantity}
           </ZText>
           <View style={localStyles.quantityControls}>
             <TouchableOpacity
@@ -797,7 +776,7 @@ const DishDetailScreen = () => {
         </View>
 
         <ZButton
-          title={`Add to Cart - ${(dishData?.price * quantity).toFixed(0)} EGP`}
+          title={strings.formatString(strings.addToCartPrice, (dishData?.price * quantity).toFixed(0), strings.currency)}
           onPress={handleAddToCart}
           containerStyle={localStyles.addToCartButton}
           disabled={!dishData?.visible}
@@ -830,14 +809,14 @@ const DishDetailScreen = () => {
             align="center"
             color={colors.error}
             style={localStyles.errorTitle}>
-            Failed to load dish
+            {strings.failedToLoadDish}
           </ZText>
           <ZText
             type="M14"
             align="center"
             color={colors.grayScale7}
             style={localStyles.errorSubtitle}>
-            This dish might not be available or there was a connection issue.
+            {strings.dishLoadErrorMsg}
           </ZText>
           <ZButton
             title={strings.retry}
@@ -898,10 +877,10 @@ const DishDetailScreen = () => {
                     </View>
                     <View style={localStyles.reviewTextContainer}>
                       <ZText type="B16" color={colors.white} numberOfLines={1}>
-                        ⭐ Share Your Experience
+                        {strings.shareYourExperience}
                       </ZText>
                       <ZText type="M12" color={colors.white} style={styles.opacity90} numberOfLines={2}>
-                        Create a review reel and help others discover this dish
+                        {strings.createReviewReelDesc}
                       </ZText>
                     </View>
                     <View style={localStyles.arrowContainer}>

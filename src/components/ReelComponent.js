@@ -4,10 +4,11 @@ import {
   StyleSheet,
   TouchableOpacity,
   View,
-  Alert,
 } from 'react-native';
 import React from 'react';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { showSuccessToast, showErrorToast, showActionDialog } from '../utils/toast';
+import { ALERT_TYPE } from 'react-native-alert-notification';
 import { useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 import millify from 'millify';
@@ -55,29 +56,26 @@ const ReelComponent = ({
       setisLoadingSomething(false);
 
       // Show success feedback
-      Alert.alert(strings.success,
+      showSuccessToast(strings.success,
         item?.reviewMode ? strings.reviewDeleted : strings.postDeleted
       );
     } catch (error) {
       setisLoadingSomething(false);
-      Alert.alert(strings.error,
+      showErrorToast(strings.error,
         item?.reviewMode ? 'Failed to delete review. Please try again.' : 'Failed to delete post. Please try again.'
       );
     }
   };
 
   const confirmDeleteStory = () => {
-    Alert.alert(strings.deletePost, strings.areYouSure, [
-      {
-        text: strings.cancel,
-        style: 'cancel',
-      },
-      {
-        text: strings.delete,
-        style: 'destructive',
-        onPress: onDeleteStory,
-      },
-    ]);
+    showActionDialog({
+      type: ALERT_TYPE.WARNING,
+      title: strings.deletePost,
+      message: strings.areYouSure,
+      confirmText: strings.delete,
+      cancelText: strings.cancel,
+      onConfirm: onDeleteStory,
+    });
   };
 
   const onPressReel = () => {

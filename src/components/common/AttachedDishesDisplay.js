@@ -15,6 +15,7 @@ import ZText from './ZText';
 import { moderateScale } from '../../common/constants';
 import images from '../../assets/images';
 import { StackNav } from '../../navigation/NavigationKeys';
+import strings from '../../i18n/strings';
 
 const AttachedDishesDisplay = ({
   attachedDishes = [],
@@ -75,7 +76,9 @@ const AttachedDishesDisplay = ({
       onPress={() => handleDishPress(dish)}
       activeOpacity={0.8}>
       <Image
-        source={dish.image ? { uri: dish.image } : images.dishPlaceholder}
+        source={(dish.image || dish.dishImage || dish.imageUrl)
+          ? { uri: dish.image || dish.dishImage || dish.imageUrl }
+          : images.dishPlaceholder}
         style={compact ? localStyles.compactDishImage : localStyles.dishImage}
         resizeMode="cover"
       />
@@ -114,7 +117,7 @@ const AttachedDishesDisplay = ({
                 type={compact ? "B10" : "B12"}
                 color={colors.white}
                 style={localStyles.priceText}>
-                ${dish.price}
+                {strings.currency} {dish.price}
               </ZText>
             </View>
           )}

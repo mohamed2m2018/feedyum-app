@@ -3,15 +3,17 @@ import {
   View,
   StyleSheet,
   TouchableOpacity,
-  Alert,
   Dimensions,
   Platform,
   ScrollView
 } from 'react-native';
+import { showErrorToast } from '../utils/toast';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useQuery } from 'react-query';
 import FreeAddressSearch from './FreeAddressSearch';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+
 import ZInput from './common/ZInput';
 import Feather from 'react-native-vector-icons/Feather';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -87,29 +89,29 @@ const MapLocationPicker = () => {
 
   const handleConfirmLocation = async () => {
     if (!selectedLocation) {
-      Alert.alert(strings.error, strings.pleaseSelectLocation);
+      showErrorToast(strings.error, strings.pleaseSelectLocation);
       return;
     }
 
     // Validate required fields
     if (!addressDetails.label.trim()) {
-      Alert.alert(strings.error, strings.addressLabelRequired);
+      showErrorToast(strings.error, strings.addressLabelRequired);
       return;
     }
     if (!addressDetails.apartmentNumber.trim()) {
-      Alert.alert(strings.error, strings.apartmentRequired);
+      showErrorToast(strings.error, strings.apartmentRequired);
       return;
     }
     if (!addressDetails.floorNumber.trim()) {
-      Alert.alert(strings.error, strings.floorRequired);
+      showErrorToast(strings.error, strings.floorRequired);
       return;
     }
     if (!addressDetails.area.trim()) {
-      Alert.alert(strings.error, strings.areaRequired);
+      showErrorToast(strings.error, strings.areaRequired);
       return;
     }
     if (!addressDetails.phoneNumber.trim()) {
-      Alert.alert(strings.error, strings.phoneNumberRequired);
+      showErrorToast(strings.error, strings.phoneNumberRequired);
       return;
     }
 
@@ -146,13 +148,13 @@ const MapLocationPicker = () => {
         if (response && response.payload) {
           onLocationSelect(response.payload);
         } else {
-          Alert.alert(strings.error, 'Address was saved but response is invalid');
+          showErrorToast(strings.error, 'Address was saved but response is invalid');
         }
       }
 
       navigation.goBack();
     } catch (error) {
-      Alert.alert(strings.error, error.message || strings.failedToSaveLocation);
+      showErrorToast(strings.error, error.message || strings.failedToSaveLocation);
     } finally {
       setLoading(false);
     }
@@ -227,12 +229,16 @@ const MapLocationPicker = () => {
           </View>
         )}
 
+
+
         {/* Address Details Form */}
         {showAddressForm && (
-          <ScrollView
+          <KeyboardAwareScrollView
             style={localStyles.formContainer}
             contentContainerStyle={localStyles.formContent}
             showsVerticalScrollIndicator={false}
+            enableOnAndroid={true}
+            extraScrollHeight={20}
           >
             {/* Address Label */}
             <View style={localStyles.section}>
@@ -316,7 +322,7 @@ const MapLocationPicker = () => {
                 </View>
               </View>
             </View>
-          </ScrollView>
+          </KeyboardAwareScrollView>
         )}
 
         {/* Confirm Button */}

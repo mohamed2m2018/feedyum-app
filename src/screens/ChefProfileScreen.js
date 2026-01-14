@@ -7,9 +7,9 @@ import {
   TouchableOpacity,
   Image,
   ActivityIndicator,
-  Alert,
   FlatList,
 } from 'react-native';
+import { showErrorToast } from '../utils/toast';
 import strings from '../i18n/strings';
 import StarRating from '../components/StarRating';
 
@@ -32,10 +32,10 @@ const ChefProfileScreen = ({ route, navigation }) => {
       if (data.success) {
         setChefProfile(data.chef);
       } else {
-        Alert.alert(strings.error, data.message || strings.failedToLoadChefProfile);
+        showErrorToast(strings.error, data.message || strings.failedToLoadChefProfile);
       }
     } catch (error) {
-      Alert.alert(strings.error, strings.failedToLoadChefProfile);
+      showErrorToast(strings.error, strings.failedToLoadChefProfile);
     } finally {
       setIsLoading(false);
     }

@@ -97,6 +97,10 @@ const AddressDropdown = ({ onAddressSelect, style, compact = false }) => {
           ? `${location.address.substring(0, maxLength)}...`
           : location.address;
       }
+      // Fallback: Show coordinates if address failed to resolve but we have location
+      if (location?.latitude && location?.longitude) {
+        return `${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`;
+      }
       return strings.currentLocation || "Current Location";
     }
 

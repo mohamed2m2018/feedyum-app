@@ -4,11 +4,12 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Alert,
+  TouchableOpacity,
   ActivityIndicator,
   ScrollView,
   Modal,
 } from 'react-native';
+import { showErrorToast, showSuccessToast } from '../utils/toast';
 import strings from '../i18n/strings';
 
 const ChefWallet = ({ chefId, userToken }) => {
@@ -77,21 +78,21 @@ const ChefWallet = ({ chefId, userToken }) => {
 
       const data = await response.json();
       if (data.success) {
-        Alert.alert(strings.paymentSuccessful, strings.paymentProcessedSuccess);
+        showSuccessToast(strings.paymentSuccessful, strings.paymentProcessedSuccess);
         setShowPaymentModal(false);
         fetchWalletInfo(); // Refresh wallet data
       } else {
-        Alert.alert(strings.paymentFailed, data.message || strings.paymentNotProcessed);
+        showErrorToast(strings.paymentFailed, data.message || strings.paymentNotProcessed);
       }
     } catch (error) {
-      Alert.alert(strings.error, strings.failedToProcessPayment);
+      showErrorToast(strings.error, strings.failedToProcessPayment);
     } finally {
       setIsProcessingPayment(false);
     }
   };
 
   const formatCurrency = (amount) => {
-    return `£${Math.abs(amount).toFixed(2)}`;
+    return `${strings.currency || 'EGP'} ${Math.abs(amount).toFixed(2)}`;
   };
 
   const formatTransactionType = (type) => {

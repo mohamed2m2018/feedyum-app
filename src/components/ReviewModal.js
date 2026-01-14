@@ -10,8 +10,10 @@ import {
   Image,
   Animated,
   Dimensions,
-  Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
+import { showWarningToast } from '../utils/toast';
 import { useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import LinearGradient from 'react-native-linear-gradient';
@@ -131,7 +133,7 @@ const ReviewModal = ({
     const reviewsArray = Object.values(reviews).filter(review => review.rating);
 
     if (reviewsArray.length === 0) {
-      Alert.alert(
+      showWarningToast(
         'No Reviews',
         'Please provide at least one rating before submitting.',
       );
@@ -270,157 +272,162 @@ const ReviewModal = ({
       transparent
       animationType="none"
       onRequestClose={onClose}>
-      <View style={styles.overlay}>
-        <Animated.View
-          style={[
-            styles.modalContainer,
-            {
-              backgroundColor: colors.backgroundColor,
-              transform: [
-                {
-                  translateY: slideAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [height, 0],
-                  }),
-                },
-                { scale: scaleAnim },
-              ],
-            },
-          ]}>
-          {/* Header */}
-          <View style={styles.header}>
-            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <Icon
-                name="close"
-                size={moderateScale(24)}
-                color={colors.textColor}
-              />
-            </TouchableOpacity>
-            <Text style={[styles.headerTitle, { color: colors.textColor }]}>
-              {strings.leaveReview}
-            </Text>
-            <View style={styles.placeholder} />
-          </View>
-
-          {renderProgressBar()}
-
-          <ScrollView
-            style={styles.content}
-            showsVerticalScrollIndicator={false}>
-            {/* Current Item */}
-            <View style={styles.itemContainer}>
-              {currentReview.image && (
-                <Image
-                  source={{ uri: currentReview.image }}
-                  style={styles.dishImage}
-                />
-              )}
-              {!currentReview.image && currentReview.type === 'chef' && (
-                <View
-                  style={[
-                    styles.chefAvatar,
-                    { backgroundColor: colors.primary },
-                  ]}>
-                  <Icon
-                    name="person"
-                    size={moderateScale(40)}
-                    color="#FFFFFF"
-                  />
-                </View>
-              )}
-
-              <Text style={[styles.itemTitle, { color: colors.textColor }]}>
-                {currentReview.title}
-              </Text>
-              <Text style={[styles.itemSubtitle, { color: colors.grayScale5 }]}>
-                {currentReview.subtitle}
-              </Text>
-            </View>
-
-            {/* Rating Stars */}
-            {renderStars()}
-
-            {/* Rating Text */}
-            {currentReviewData.rating > 0 && (
-              <Text style={[styles.ratingText, { color: colors.primary }]}>
-                {currentReviewData.rating === 1 && strings.poor}
-                {currentReviewData.rating === 2 && strings.fair}
-                {currentReviewData.rating === 3 && strings.good}
-                {currentReviewData.rating === 4 && strings.veryGood}
-                {currentReviewData.rating === 5 && strings.excellent}
-              </Text>
-            )}
-
-            {/* Tags */}
-            {renderTags()}
-
-            {/* Comment Input */}
-            <View style={styles.commentContainer}>
-              <Text style={[styles.commentTitle, { color: colors.textColor }]}>
-                {strings.shareExperienceOptional}
-              </Text>
-              <TextInput
-                style={[
-                  styles.commentInput,
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+      >
+        <View style={styles.overlay}>
+          <Animated.View
+            style={[
+              styles.modalContainer,
+              {
+                backgroundColor: colors.backgroundColor,
+                transform: [
                   {
-                    backgroundColor: colors.inputBackground,
-                    borderColor: colors.borderColor,
-                    color: colors.textColor,
+                    translateY: slideAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [height, 0],
+                    }),
                   },
-                ]}
-                placeholder={strings.reviewPlaceholder}
-                placeholderTextColor={colors.grayScale5}
-                multiline
-                numberOfLines={4}
-                value={currentReviewData.comment || ''}
-                onChangeText={handleCommentChange}
-                maxLength={500}
-              />
-            </View>
-          </ScrollView>
-
-          {/* Footer */}
-          <View style={styles.footer}>
-            {currentStep > 0 && (
-              <TouchableOpacity
-                onPress={handlePrevious}
-                style={[styles.footerButton, styles.previousButton]}>
-                <Text style={styles.previousButtonText}>{strings.previous}</Text>
+                  { scale: scaleAnim },
+                ],
+              },
+            ]}>
+            {/* Header */}
+            <View style={styles.header}>
+              <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                <Icon
+                  name="close"
+                  size={moderateScale(24)}
+                  color={colors.textColor}
+                />
               </TouchableOpacity>
-            )}
+              <Text style={[styles.headerTitle, { color: colors.textColor }]}>
+                {strings.leaveReview}
+              </Text>
+              <View style={styles.placeholder} />
+            </View>
 
-            <TouchableOpacity
-              onPress={handleNext}
-              disabled={loading || !currentReviewData.rating}
-              style={[
-                styles.footerButton,
-                styles.nextButton,
-                {
-                  backgroundColor: currentReviewData.rating
-                    ? '#FF6B6B'
-                    : colors.grayScale3,
-                  flex: currentStep === 0 ? 1 : 0.6,
-                },
-              ]}>
-              <LinearGradient
-                colors={
-                  currentReviewData.rating
-                    ? ['#FF6B6B', '#FF8E8E']
-                    : [colors.grayScale3, colors.grayScale3]
-                }
-                style={styles.gradientButton}>
-                <Text style={styles.nextButtonText}>
-                  {loading
-                    ? strings.submitting
-                    : currentStep === reviewSteps.length - 1
-                      ? strings.submitReviews
-                      : strings.next}
+            {renderProgressBar()}
+
+            <ScrollView
+              style={styles.content}
+              showsVerticalScrollIndicator={false}>
+              {/* Current Item */}
+              <View style={styles.itemContainer}>
+                {currentReview.image && (
+                  <Image
+                    source={{ uri: currentReview.image }}
+                    style={styles.dishImage}
+                  />
+                )}
+                {!currentReview.image && currentReview.type === 'chef' && (
+                  <View
+                    style={[
+                      styles.chefAvatar,
+                      { backgroundColor: colors.primary },
+                    ]}>
+                    <Icon
+                      name="person"
+                      size={moderateScale(40)}
+                      color="#FFFFFF"
+                    />
+                  </View>
+                )}
+
+                <Text style={[styles.itemTitle, { color: colors.textColor }]}>
+                  {currentReview.title}
                 </Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          </View>
-        </Animated.View>
-      </View>
+                <Text style={[styles.itemSubtitle, { color: colors.grayScale5 }]}>
+                  {currentReview.subtitle}
+                </Text>
+              </View>
+
+              {/* Rating Stars */}
+              {renderStars()}
+
+              {/* Rating Text */}
+              {currentReviewData.rating > 0 && (
+                <Text style={[styles.ratingText, { color: colors.primary }]}>
+                  {currentReviewData.rating === 1 && strings.poor}
+                  {currentReviewData.rating === 2 && strings.fair}
+                  {currentReviewData.rating === 3 && strings.good}
+                  {currentReviewData.rating === 4 && strings.veryGood}
+                  {currentReviewData.rating === 5 && strings.excellent}
+                </Text>
+              )}
+
+              {/* Tags */}
+              {renderTags()}
+
+              {/* Comment Input */}
+              <View style={styles.commentContainer}>
+                <Text style={[styles.commentTitle, { color: colors.textColor }]}>
+                  {strings.shareExperienceOptional}
+                </Text>
+                <TextInput
+                  style={[
+                    styles.commentInput,
+                    {
+                      backgroundColor: colors.inputBackground,
+                      borderColor: colors.borderColor,
+                      color: colors.textColor,
+                    },
+                  ]}
+                  placeholder={strings.reviewPlaceholder}
+                  placeholderTextColor={colors.grayScale5}
+                  multiline
+                  numberOfLines={4}
+                  value={currentReviewData.comment || ''}
+                  onChangeText={handleCommentChange}
+                  maxLength={500}
+                />
+              </View>
+            </ScrollView>
+
+            {/* Footer */}
+            <View style={styles.footer}>
+              {currentStep > 0 && (
+                <TouchableOpacity
+                  onPress={handlePrevious}
+                  style={[styles.footerButton, styles.previousButton]}>
+                  <Text style={styles.previousButtonText}>{strings.previous}</Text>
+                </TouchableOpacity>
+              )}
+
+              <TouchableOpacity
+                onPress={handleNext}
+                disabled={loading || !currentReviewData.rating}
+                style={[
+                  styles.footerButton,
+                  styles.nextButton,
+                  {
+                    backgroundColor: currentReviewData.rating
+                      ? '#FF6B6B'
+                      : colors.grayScale3,
+                    flex: currentStep === 0 ? 1 : 0.6,
+                  },
+                ]}>
+                <LinearGradient
+                  colors={
+                    currentReviewData.rating
+                      ? ['#FF6B6B', '#FF8E8E']
+                      : [colors.grayScale3, colors.grayScale3]
+                  }
+                  style={styles.gradientButton}>
+                  <Text style={styles.nextButtonText}>
+                    {loading
+                      ? strings.submitting
+                      : currentStep === reviewSteps.length - 1
+                        ? strings.submitReviews
+                        : strings.next}
+                  </Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
+        </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 };

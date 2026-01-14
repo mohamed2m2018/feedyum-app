@@ -1,6 +1,6 @@
 // Library import
-import {StyleSheet, TouchableOpacity, View, ScrollView, I18nManager, FlatList} from 'react-native';
-import React, {useState, useRef, useEffect} from 'react';
+import {StyleSheet, TouchableOpacity, View, ScrollView, I18nManager, FlatList, Dimensions} from 'react-native';
+import React, {useState, useRef, useEffect, useCallback} from 'react';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useSelector} from 'react-redux';
 import {TabView} from 'react-native-tab-view';
@@ -12,18 +12,97 @@ import {moderateScale} from '../../../common/constants';
 import ZText from '../../../components/common/ZText';
 import {styles} from '../../../themes';
 import HashtagCategory from './HashtagCategory';
+import ZLoader from '../../../components/common/ZLoader';
 import {StackNav} from '../../../navigation/NavigationKeys';
 import {routes} from './utils/routes';
 import strings from '../../../i18n/strings';
 import AddressDropdown from '../../../components/AddressDropdown';
 import { useLocation } from '../../../navigation/locationContext';
 
+const HeaderCetegoryItem = React.memo(({ title, index, isSelected, onPress, colors }) => {
+  return (
+    <TouchableOpacity
+      onPress={() => onPress(index)}
+      style={[
+        localStyles.root,
+        {
+          borderBottomColor:
+            isSelected ? colors.primary : colors.dark3,
+        },
+      ]}
+      key={index}>
+      <ZText
+        type={'s18'}
+        align={'center'}
+        style={styles.pb20}
+        color={isSelected ? colors.primary : colors.grayScale7}>
+        {title}
+      </ZText>
+    </TouchableOpacity>
+  );
+});
+
+const RenderTabBar = React.memo(({ navigationState, index, onIndexChange, colors }) => {
+  const flatListRef = useRef(null);
+
+  // Scroll to selected index when it changes
+  useEffect(() => {
+    if (flatListRef.current) {
+      flatListRef.current.scrollToIndex({
+        index: index,
+        animated: true,
+        viewPosition: 0.5,
+      });
+    }
+  }, [index]);
+
+  const renderItem = useCallback(({ item, index: itemIndex }) => (
+    <HeaderCetegoryItem 
+      title={item.title} 
+      index={itemIndex} 
+      isSelected={index === itemIndex}
+      onPress={onIndexChange}
+      colors={colors}
+    />
+  ), [index, onIndexChange, colors]);
+
+  return (
+    <View>
+      <FlatList
+        ref={flatListRef}
+        data={navigationState.routes}
+        renderItem={renderItem}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={localStyles.scrollContainer}
+        keyExtractor={(item, index) => index.toString()}
+        onScrollToIndexFailed={info => {
+          const wait = new Promise(resolve => setTimeout(resolve, 500));
+          wait.then(() => {
+            flatListRef.current?.scrollToIndex({ index: info.index, animated: true });
+          });
+        }}
+      />
+    </View>
+  );
+});
+
+const RenderScene = React.memo(({ route, isLocationChanging }) => {
+   const selectedTag = route.key;
+
+   return (
+     <View style={I18nManager.isRTL ? { transform: [{ scaleX: -1 }] } : {}}>
+       <HashtagCategory 
+         selectedTag={selectedTag}
+         isLocationChanging={isLocationChanging}
+       />
+     </View>
+   );
+});
+
 export default function Discover({navigation}) {
   const colors = useSelector(state => state.theme.theme);
   const location = useLocation();
-  const [isContentOverflowing, setIsContentOverflowing] = useState(false);
-  const [scrollViewWidth, setScrollViewWidth] = useState(0);
-  const [currentScrollPosition, setCurrentScrollPosition] = useState(0);
   const [isLocationChanging, setIsLocationChanging] = useState(false);
 
   const [isSelect, setIsSelect] = useState({
@@ -36,7 +115,6 @@ export default function Discover({navigation}) {
     if (location?.latitude && location?.longitude) {
       setIsLocationChanging(true);
 
-      
       // Reset loading state after a brief moment to let React Query handle the refetch
       const timer = setTimeout(() => {
         setIsLocationChanging(false);
@@ -46,84 +124,22 @@ export default function Discover({navigation}) {
     }
   }, [location?.latitude, location?.longitude, location?.selectedAddress]);
 
-  const scrollViewRef = useRef(null);
+  const _handleIndexChange = useCallback(index => {
+    setIsSelect(prev => ({...prev, index: index}));
+  }, []);
 
-  const _handleIndexChange = index => {
-    setIsSelect({...isSelect, index: index});
-  };
+  const _renderTabBar = useCallback(props => (
+    <RenderTabBar 
+      navigationState={isSelect}
+      index={isSelect.index}
+      onIndexChange={_handleIndexChange}
+      colors={colors}
+    />
+  ), [isSelect, _handleIndexChange, colors]);
 
-  // eslint-disable-next-line react/no-unstable-nested-components
-  const HeaderCetegoryItem = ({title, index}) => {
-    return (
-      <TouchableOpacity
-        onPress={() => _handleIndexChange(index)}
-        style={[
-          localStyles.root,
-          {
-            borderBottomColor:
-              isSelect.index === index ? colors.primary : colors.dark3,
-          },
-        ]}
-        key={index}>
-        <ZText
-          type={'s18'}
-          align={'center'}
-          style={styles.pb20}
-          color={isSelect.index === index ? colors.primary : colors.grayScale7}>
-          {title}
-        </ZText>
-      </TouchableOpacity>
-    );
-  };
-  const _renderTabBar = props => {
-    const flatListRef = useRef(null);
-
-    // Scroll to selected index when it changes
-    useEffect(() => {
-      if (flatListRef.current) {
-        flatListRef.current.scrollToIndex({
-          index: isSelect.index,
-          animated: true,
-          viewPosition: 0.5,
-        });
-      }
-    }, [isSelect.index]);
-
-    const renderItem = ({ item, index }) => (
-      <HeaderCetegoryItem title={item.title} index={index} />
-    );
-
-    return (
-      <View>
-        <FlatList
-          ref={flatListRef}
-          data={props.navigationState.routes}
-          renderItem={renderItem}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={localStyles.scrollContainer}
-          keyExtractor={(item, index) => index.toString()}
-          onScrollToIndexFailed={info => {
-            const wait = new Promise(resolve => setTimeout(resolve, 500));
-            wait.then(() => {
-              flatListRef.current?.scrollToIndex({ index: info.index, animated: true });
-            });
-          }}
-        />
-      </View>
-    );
-  };
-
-  const _renderScene = ({route}) => {
-    const selectedTag = route.key;
-
-    return (
-      <HashtagCategory 
-        selectedTag={selectedTag}
-        isLocationChanging={isLocationChanging}
-      />
-    );
-    };
+  const _renderScene = useCallback(({route}) => (
+    <RenderScene route={route} isLocationChanging={isLocationChanging} />
+  ), [isLocationChanging]);
 
   const onPressSearch = () => {
     navigation.navigate(StackNav.Search);
@@ -165,6 +181,12 @@ export default function Discover({navigation}) {
         onIndexChange={_handleIndexChange}
         activeColor={{color: colors.primary}}
         navigation={navigation}
+        lazy={true}
+        lazyPreloadDistance={1}
+        renderLazyPlaceholder={() => <ZLoader height={100} />}
+        initialLayout={{ width: Dimensions.get('window').width }}
+        animationEnabled={true}
+        pagerStyle={I18nManager.isRTL ? { transform: [{ scaleX: -1 }] } : {}}
       />
     </ZSafeAreaView>
   );

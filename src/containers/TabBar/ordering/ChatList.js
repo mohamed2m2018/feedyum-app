@@ -19,9 +19,11 @@ import { moderateScale } from '../../../common/constants';
 import { StackNav } from '../../../navigation/NavigationKeys';
 import request from '../../../api/request';
 import strings from '../../../i18n/strings';
+import { formatTime as formatTimeHelper, formatDate } from '../../../utils/helpers';
 
 export default function ChatList({ navigation }) {
   const colors = useSelector(state => state.theme.theme);
+  const language = useSelector(state => state.profile?.language);
   const [refreshing, setRefreshing] = useState(false);
 
   // Get current user
@@ -85,16 +87,16 @@ export default function ChatList({ navigation }) {
     });
   };
 
-  const formatTime = timestamp => {
+  const formatTimestamp = timestamp => {
     if (!timestamp) return '';
     const date = new Date(timestamp);
     const now = new Date();
     const diffInHours = (now - date) / (1000 * 60 * 60);
 
     if (diffInHours < 24) {
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      return formatTimeHelper(date, language);
     } else {
-      return date.toLocaleDateString();
+      return formatDate(date, language);
     }
   };
 
@@ -229,7 +231,7 @@ export default function ChatList({ navigation }) {
               </ZText>
             </View>
             <ZText type="M12" color={colors.grayScale7}>
-              {formatTime(item.latestMessage?.timestamp || item.order.created_at)}
+              {formatTimestamp(item.latestMessage?.timestamp || item.order.created_at)}
             </ZText>
           </View>
         </View>

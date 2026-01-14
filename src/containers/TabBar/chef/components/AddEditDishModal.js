@@ -7,8 +7,10 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
-  Alert,
+
 } from 'react-native';
+import { showActionDialog } from '../../../../utils/toast';
+import { ALERT_TYPE } from 'react-native-alert-notification';
 import { useSelector } from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import ImageCropPicker from 'react-native-image-crop-picker';
@@ -249,11 +251,15 @@ const AddEditDishModal = ({
   };
 
   const handleImagePicker = () => {
-    Alert.alert(strings.selectImage, strings.chooseImageSelection, [
-      { text: strings.camera, onPress: openCamera },
-      { text: strings.gallery, onPress: openGallery },
-      { text: strings.cancel, style: 'cancel' },
-    ]);
+    showActionDialog({
+      type: ALERT_TYPE.INFO,
+      title: strings.selectImage,
+      message: strings.chooseImageSelection,
+      confirmText: strings.camera,
+      cancelText: strings.gallery,
+      onConfirm: openCamera,
+      onCancel: openGallery,
+    });
   };
 
   const openCamera = () => {

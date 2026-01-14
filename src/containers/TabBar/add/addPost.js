@@ -1,6 +1,6 @@
-import React, {useEffect} from 'react';
+import React, { useEffect } from 'react';
 import strings from '../../../i18n/strings';
-import {useQuery} from 'react-query';
+import { useQuery } from 'react-query';
 import request from '../../../api/request';
 import ProfilePicture from '../../../components/models/ProfilePicture';
 import {
@@ -8,27 +8,27 @@ import {
   useIsFocused,
   useNavigation,
 } from '@react-navigation/native';
-import {StackNav} from '../../../navigation/NavigationKeys';
-import {useHandleAuth} from '../../../utils/useHandleAuth';
-import {ActivityIndicator, StyleSheet} from 'react-native';
+import { StackNav } from '../../../navigation/NavigationKeys';
+import { useHandleAuth } from '../../../utils/useHandleAuth';
+import { ActivityIndicator, StyleSheet } from 'react-native';
 import BottomActionSheet from '../../../components/models/BottomActionSheet';
-import {useSelector} from 'react-redux';
+import { useSelector } from 'react-redux';
 
 export default function AddPost() {
   const navigation = useNavigation();
   const isFocused = useIsFocused();
   const color = useSelector(state => state.theme.theme);
   const ProfilePictureSheetRef = React.createRef();
-  const {data} = useQuery('user', () => request.get('/user'));
+  const { data } = useQuery('user', () => request.get('/user'));
   const user = data?.data?.user;
   const [canShowSheet, setCanShowSheet] = React.useState(false);
-  const [modalState, setModalState] = React.useState({visible: false, title: '', message: ''});
+  const [modalState, setModalState] = React.useState({ visible: false, title: '', message: '' });
   const onPressPost = isImage => {
     ProfilePictureSheetRef?.current?.hide();
-    navigation.navigate(StackNav.PostDetail, {isImage});
+    navigation.navigate(StackNav.PostDetail, { isImage });
   };
 
-  const {handleAuthToast, isGuest} = useHandleAuth();
+  const { handleAuthToast, isGuest } = useHandleAuth();
 
   useEffect(() => {
     let cancelled = false;
@@ -49,8 +49,8 @@ export default function AddPost() {
           if (!cancelled) setCanShowSheet(false);
           setModalState({
             visible: true,
-            title: 'Create your menu first',
-            message: 'To start posting, please create your menu and add your dishes so customers can order easily.',
+            title: strings.createMenuFirst,
+            message: strings.createMenuMessage,
           });
           return;
         }
@@ -61,8 +61,8 @@ export default function AddPost() {
           if (!cancelled) setCanShowSheet(false);
           setModalState({
             visible: true,
-            title: 'No dishes found',
-            message: 'We didn’t find any dishes in your menu. Please add at least one dish before posting.',
+            title: strings.noDishesFoundTitle,
+            message: strings.noDishesFoundMessage,
           });
           return;
         }
@@ -72,8 +72,8 @@ export default function AddPost() {
         if (!cancelled) setCanShowSheet(false);
         setModalState({
           visible: true,
-          title: 'No dishes found',
-          message: 'We didn’t find any dishes in your menu. Please add at least one dish before posting.',
+          title: strings.noDishesFoundTitle,
+          message: strings.noDishesFoundMessage,
         });
       }
     }
@@ -122,13 +122,13 @@ export default function AddPost() {
           visible={modalState.visible}
           title={modalState.title}
           message={modalState.message}
-          primaryLabel={'Open Menu Management'}
-          secondaryLabel={'Not now'}
+          primaryLabel={strings.openMenuManagement}
+          secondaryLabel={strings.notNow}
           onPrimary={() => {
-            setModalState({visible: false, title: '', message: ''});
-            navigation.navigate(StackNav.MenuManagement, {fromTabs: true});
+            setModalState({ visible: false, title: '', message: '' });
+            navigation.navigate(StackNav.MenuManagement, { fromTabs: true });
           }}
-          onClose={() => setModalState({visible: false, title: '', message: ''})}
+          onClose={() => setModalState({ visible: false, title: '', message: '' })}
         />
       )}
     </>

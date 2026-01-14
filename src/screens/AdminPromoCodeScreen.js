@@ -6,10 +6,11 @@ import {
   ScrollView,
   TextInput,
   TouchableOpacity,
-  Alert,
+
   ActivityIndicator,
   Switch,
 } from 'react-native';
+import { showSuccessToast, showErrorToast } from '../utils/toast';
 import ZText from '../components/common/ZText';
 import ZHeader from '../components/common/ZHeader';
 import { moderateScale } from '../common/constants';
@@ -41,22 +42,22 @@ const AdminPromoCodeScreen = ({ userToken }) => {
 
   const validateForm = () => {
     if (!formData.code.trim()) {
-      Alert.alert(strings.error, strings.promoCodeRequired);
+      showErrorToast(strings.error, strings.promoCodeRequired);
       return false;
     }
 
     if (!formData.discountValue || parseFloat(formData.discountValue) <= 0) {
-      Alert.alert(strings.error, strings.validDiscountRequired);
+      showErrorToast(strings.error, strings.validDiscountRequired);
       return false;
     }
 
     if (formData.discountType === 'percentage' && parseFloat(formData.discountValue) > 100) {
-      Alert.alert(strings.error, strings.percentageLimit);
+      showErrorToast(strings.error, strings.percentageLimit);
       return false;
     }
 
     if (!formData.validUntil) {
-      Alert.alert(strings.error, strings.validUntilRequired);
+      showErrorToast(strings.error, strings.validUntilRequired);
       return false;
     }
 
@@ -92,7 +93,7 @@ const AdminPromoCodeScreen = ({ userToken }) => {
       const data = await response.json();
 
       if (data.success) {
-        Alert.alert(strings.success, strings.promoCodeCreatedSuccess);
+        showSuccessToast(strings.success, strings.promoCodeCreatedSuccess);
         // Reset form
         setFormData({
           code: '',
@@ -107,10 +108,10 @@ const AdminPromoCodeScreen = ({ userToken }) => {
         setHasUsageLimit(false);
         setHasMaxDiscount(false);
       } else {
-        Alert.alert(strings.error, data.message || strings.failedToCreatePromoCode);
+        showErrorToast(strings.error, data.message || strings.failedToCreatePromoCode);
       }
     } catch (error) {
-      Alert.alert(strings.error, strings.failedToCreatePromoCode);
+      showErrorToast(strings.error, strings.failedToCreatePromoCode);
     } finally {
       setIsCreating(false);
     }

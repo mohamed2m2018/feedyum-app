@@ -4,10 +4,11 @@ import {
   StyleSheet,
   TouchableOpacity,
   Animated,
-  Alert,
   Platform,
   PermissionsAndroid,
 } from 'react-native';
+import { showErrorToast, showWarningToast, showActionDialog } from '../../../../utils/toast';
+import { ALERT_TYPE } from 'react-native-alert-notification';
 import { useSelector } from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AudioRecord from 'react-native-audio-record';
@@ -87,9 +88,9 @@ const VoiceRecorder = ({ onSend, onCancel }) => {
     } catch (error) {
       console.error('Audio recorder initialization error:', error);
       setIsInitialized(false);
-      Alert.alert(
+      showErrorToast(
         'Initialization Error',
-        'Failed to initialize audio recorder. Please restart the app and try again.',
+        'Failed to initialize audio recorder. Please restart the app and try again.'
       );
     }
   };
@@ -173,23 +174,21 @@ const VoiceRecorder = ({ onSend, onCancel }) => {
     try {
       // Check if we have permission and are initialized
       if (!hasPermission) {
-        Alert.alert(
-          'Permission Required',
-          'Microphone access is required to record voice messages. Please enable it in your device settings.',
-          [
-            { text: strings.cancel, style: 'cancel' },
-            { text: strings.retry, onPress: () => initializeRecorder() },
-          ],
-        );
+        showActionDialog({
+          type: ALERT_TYPE.WARNING,
+          title: 'Permission Required',
+          message: 'Microphone access is required to record voice messages.',
+          confirmText: strings.retry,
+          cancelText: strings.cancel,
+          onConfirm: () => initializeRecorder()
+        });
         return;
       }
 
       if (!isInitialized) {
-        Alert.alert(
-          'Not Ready',
-          'Audio recorder is not ready. Please wait a moment and try again.',
-          [{ text: 'OK', onPress: () => initializeRecorder() }],
-        );
+        showWarningToast('Not Ready', 'Audio recorder is not ready. Please wait a moment and try again.');
+        // Retry init if user taps ok logic handled by just letting them try again
+        initializeRecorder();
         return;
       }
 
@@ -206,14 +205,14 @@ const VoiceRecorder = ({ onSend, onCancel }) => {
     } catch (error) {
       console.error('Recording error:', error);
       setIsRecording(false);
-      Alert.alert(
-        'Recording Error',
-        'Failed to start recording. Please check microphone permissions and try again.',
-        [
-          { text: strings.cancel, style: 'cancel' },
-          { text: strings.retry, onPress: () => initializeRecorder() },
-        ],
-      );
+      showActionDialog({
+        type: ALERT_TYPE.DANGER,
+        title: 'Recording Error',
+        message: 'Failed to start recording. Please check microphone permissions and try again.',
+        confirmText: strings.retry,
+        cancelText: strings.cancel,
+        onConfirm: () => initializeRecorder()
+      });
     }
   };
 
@@ -242,23 +241,24 @@ const VoiceRecorder = ({ onSend, onCancel }) => {
         }
       } else {
         console.error('No audio file received from recording');
-        Alert.alert(
+        showErrorToast(
           strings.recordingError,
-          strings.noAudioRecorded,
-          [{ text: strings.ok, onPress: () => cancelRecording() }],
+          strings.noAudioRecorded
         );
+        cancelRecording();
       }
     } catch (error) {
       console.error('Stop recording error:', error);
       setIsRecording(false);
-      Alert.alert(
-        'Recording Error',
-        'Failed to stop recording. Please try again.',
-        [
-          { text: strings.cancel, style: 'cancel', onPress: () => cancelRecording() },
-          { text: strings.retry, onPress: () => startRecording() },
-        ],
-      );
+      showActionDialog({
+        type: ALERT_TYPE.DANGER,
+        title: 'Recording Error',
+        message: 'Failed to stop recording. Please try again.',
+        confirmText: strings.retry,
+        cancelText: strings.cancel,
+        onConfirm: () => startRecording(),
+        onCancel: () => cancelRecording()
+      });
     }
   };
 
@@ -279,15 +279,15 @@ const VoiceRecorder = ({ onSend, onCancel }) => {
 
     if (!audioPath) {
 
-      Alert.alert(strings.noAudio, strings.noAudioMessage);
+      showWarningToast(strings.noAudio, strings.noAudioMessage);
       return;
     }
 
     if (recordingTime < 1) {
 
-      Alert.alert(
+      showWarningToast(
         strings.recordingTooShort,
-        strings.recordAtLeastOneSecond,
+        strings.recordAtLeastOneSecond
       );
       return;
     }
@@ -344,43 +344,40 @@ const VoiceRecorder = ({ onSend, onCancel }) => {
       setIsUploading(false);
       setUploadProgress(0);
 
-      Alert.alert(
-        'Upload Failed',
-        `Failed to upload audio: ${error.message}. Would you like to send it locally instead?`,
-        [
-          { text: strings.cancel, style: 'cancel' },
-          {
-            text: strings.sendLocally,
-            onPress: async () => {
-              try {
-                // Convert M4A for compatibility and send locally
-                const compatiblePath =
-                  await convertWavToMp3(audioPath);
-                const audioMessage = {
-                  _id: Math.round(Math.random() * 1000000),
-                  text: '',
-                  createdAt: new Date(),
-                  audio: compatiblePath,
-                  duration: recordingTime,
-                  isLocal: true,
-                };
+      showActionDialog({
+        type: ALERT_TYPE.WARNING,
+        title: 'Upload Failed',
+        message: `Failed to upload audio: ${error.message}. Would you like to send it locally instead?`,
+        confirmText: strings.sendLocally,
+        cancelText: strings.cancel,
+        onConfirm: async () => {
+          try {
+            // Convert M4A for compatibility and send locally
+            const compatiblePath =
+              await convertWavToMp3(audioPath);
+            const audioMessage = {
+              _id: Math.round(Math.random() * 1000000),
+              text: '',
+              createdAt: new Date(),
+              audio: compatiblePath,
+              duration: recordingTime,
+              isLocal: true,
+            };
 
 
-                onSend(audioMessage);
+            onSend(audioMessage);
 
-                // Reset state
-                setAudioPath(null);
-                setCompatibleAudioPath(null);
-                setRecordingTime(0);
-                setIsPlaying(false);
-              } catch (conversionError) {
-                console.error('WAV conversion error:', conversionError);
-                Alert.alert(strings.error, strings.failedToProcessAudio);
-              }
-            },
-          },
-        ],
-      );
+            // Reset state
+            setAudioPath(null);
+            setCompatibleAudioPath(null);
+            setRecordingTime(0);
+            setIsPlaying(false);
+          } catch (conversionError) {
+            console.error('WAV conversion error:', conversionError);
+            showErrorToast(strings.error, strings.failedToProcessAudio);
+          }
+        }
+      });
     }
   };
 
@@ -406,7 +403,7 @@ const VoiceRecorder = ({ onSend, onCancel }) => {
         setIsPlaying(true);
       } catch (error) {
         console.error('Preview conversion error:', error);
-        Alert.alert(strings.previewError, strings.failedToPrepareAudio);
+        showErrorToast(strings.previewError, strings.failedToPrepareAudio);
       }
     }
   };
@@ -424,7 +421,7 @@ const VoiceRecorder = ({ onSend, onCancel }) => {
   const onPreviewError = error => {
 
     setIsPlaying(false);
-    Alert.alert(strings.previewError, strings.failedToPlayAudio);
+    showErrorToast(strings.previewError, strings.failedToPlayAudio);
   };
 
   if (isRecording) {

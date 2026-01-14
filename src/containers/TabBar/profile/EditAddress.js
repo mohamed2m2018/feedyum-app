@@ -7,6 +7,7 @@ import {
   Alert,
   Dimensions
 } from 'react-native';
+import { showErrorToast, showSuccessToast } from '../../../utils/toast';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Feather from 'react-native-vector-icons/Feather';
@@ -106,11 +107,11 @@ const EditAddress = () => {
 
   const validateForm = () => {
     if (!formData.label.trim()) {
-      Alert.alert(strings.error, strings.labelRequired);
+      showErrorToast(strings.error, strings.labelRequired);
       return false;
     }
     if (!formData.streetName.trim() && !formData.formattedAddress.trim()) {
-      Alert.alert(strings.error, strings.addressRequired);
+      showErrorToast(strings.error, strings.addressRequired);
       return false;
     }
     return true;
@@ -153,33 +154,26 @@ const EditAddress = () => {
       }
       navigation.goBack();
     } catch (error) {
-      Alert.alert(strings.error, strings.failedToSaveAddress);
+      showErrorToast(strings.error, strings.failedToSaveAddress);
     }
   };
 
   const handleDelete = () => {
-    Alert.alert(
-      strings.deleteAddress,
-      strings.deleteAddressConfirmation.replace('{label}', formData.label),
-      [
-        {
-          text: strings.cancel,
-          style: 'cancel',
-        },
-        {
-          text: strings.delete,
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await dispatch(deleteAddress(initialAddress._id));
-              navigation.goBack();
-            } catch (error) {
-              Alert.alert(strings.error, strings.failedToDeleteAddress);
-            }
-          },
-        },
-      ]
-    );
+    showActionDialog({
+      type: ALERT_TYPE.WARNING,
+      title: strings.deleteAddress,
+      message: strings.deleteAddressConfirmation.replace('{label}', formData.label),
+      confirmText: strings.delete,
+      cancelText: strings.cancel,
+      onConfirm: async () => {
+        try {
+          await dispatch(deleteAddress(initialAddress._id));
+          navigation.goBack();
+        } catch (error) {
+          showErrorToast(strings.error, strings.failedToDeleteAddress);
+        }
+      },
+    });
   };
 
   const addressTypes = [

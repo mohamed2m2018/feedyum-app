@@ -3,26 +3,32 @@ import {
   View,
   TouchableOpacity,
   StyleSheet,
-  Alert,
-  Modal,
   TouchableWithoutFeedback,
   Text,
   Image,
 } from 'react-native';
+import { showActionDialog } from '../../../../utils/toast';
+import { ALERT_TYPE } from 'react-native-alert-notification';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import ZText from '../../../../components/common/ZText';
 import { moderateScale } from '../../../../common/constants';
 import strings from '../../../../i18n/strings';
+import { formatTime } from '../../../../utils/helpers';
 
 const CustomMessageBubble = ({
   props,
   colors,
   currentUser,
   onDeleteMessage,
-  onEditMessage // New prop for editing
+  onEditMessage, // New prop for editing
+  isRTL = false, // RTL support for Arabic
+  onImagePress, // Callback when image is pressed
+  language, // For locale-aware date formatting
 }) => {
   const [showOptions, setShowOptions] = useState(false);
   const isCurrentUser = String(props.currentMessage.user._id) === String(currentUser._id);
+  // Keep own messages on right, others on left (standard chat layout)
+  const showOnRight = isCurrentUser;
   const isDeleted = props.currentMessage.isDeleted;
   const hasImage = !!props.currentMessage.image;
   const hasText = !!props.currentMessage.text;
@@ -35,18 +41,14 @@ const CustomMessageBubble = ({
 
   const handleDelete = () => {
     setShowOptions(false);
-    Alert.alert(
-      'Delete Message',
-      strings.areYouSureDeleteMessage,
-      [
-        { text: strings.cancel, style: 'cancel' },
-        {
-          text: strings.delete,
-          style: 'destructive',
-          onPress: () => onDeleteMessage(props.currentMessage._id)
-        }
-      ]
-    );
+    showActionDialog({
+      type: ALERT_TYPE.WARNING,
+      title: 'Delete Message',
+      message: strings.areYouSureDeleteMessage,
+      confirmText: strings.delete,
+      cancelText: strings.cancel,
+      onConfirm: () => onDeleteMessage(props.currentMessage._id),
+    });
   };
 
   const handleEdit = () => {
@@ -82,8 +84,16 @@ const CustomMessageBubble = ({
     ];
 
     return (
-      <View style={[styles.bubbleWrapper, isCurrentUser ? styles.wrapperRight : styles.wrapperLeft, { width: '100%' }]}>
-        {isCurrentUser && !isDeleted && (
+      <View style={[styles.bubbleWrapper, showOnRight ? styles.wrapperRight : styles.wrapperLeft, { width: '100%' }]}>
+        {/* Options button on left side (for RTL when own message is on left) */}
+        {isCurrentUser && !isDeleted && !showOnRight && (
+          <TouchableOpacity onPress={handleOptionsPress} style={[styles.optionsButtonTrigger, { marginLeft: moderateScale(4), marginRight: 0 }]}>
+            <Ionicons name="ellipsis-vertical" size={moderateScale(16)} color={colors.grayScale5 || '#808080'} />
+          </TouchableOpacity>
+        )}
+
+        {/* Options button on right side (default LTR) */}
+        {isCurrentUser && !isDeleted && showOnRight && (
           <TouchableOpacity onPress={handleOptionsPress} style={styles.optionsButtonTrigger}>
             <Ionicons name="ellipsis-vertical" size={moderateScale(16)} color={colors.grayScale5 || '#808080'} />
           </TouchableOpacity>
@@ -95,20 +105,26 @@ const CustomMessageBubble = ({
           disabled={true} // Disable touch on bubble itself as we have the menu button
         >
           {message.image && (
-            <View style={[styles.imageContainer, { borderRadius: moderateScale(8), overflow: 'hidden' }]}>
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => onImagePress && onImagePress(message.image)}
+              style={[styles.imageContainer, { borderRadius: moderateScale(8), overflow: 'hidden' }]}
+            >
               <Image
                 source={{ uri: message.image }}
                 style={styles.messageImage}
                 resizeMode="cover"
               />
-            </View>
+            </TouchableOpacity>
           )}
           {message.text ? (
             <Text style={[
               styles.messageText,
               {
                 color: isCurrentUser ? (isHighlighted ? colors.textColor : colors.white) : colors.textColor,
-                marginTop: message.image ? moderateScale(8) : 0
+                marginTop: message.image ? moderateScale(8) : 0,
+                textAlign: isRTL ? 'right' : 'left',
+                writingDirection: isRTL ? 'rtl' : 'ltr',
               }
             ]}>
               {message.text}
@@ -131,7 +147,7 @@ const CustomMessageBubble = ({
               color: isCurrentUser ? (isHighlighted ? colors.textColor : 'rgba(255, 255, 255, 0.7)') : colors.grayScale5
             }
           ]}>
-            {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            {formatTime(message.createdAt, language)}
           </Text>
         </TouchableOpacity>
       </View >

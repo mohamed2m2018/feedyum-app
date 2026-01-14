@@ -1,22 +1,22 @@
-import React, {useState, useEffect, useRef} from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   Platform,
   PermissionsAndroid,
   Animated,
 } from 'react-native';
-import {useSelector} from 'react-redux';
+import { showErrorToast, showInfoToast } from '../utils/toast';
+import { useSelector } from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AudioRecord from 'react-native-audio-record';
 import ZText from './common/ZText';
-import {moderateScale} from '../common/constants';
+import { moderateScale } from '../common/constants';
 import strings from '../i18n/strings';
-import {styles} from '../themes';
+import { styles } from '../themes';
 
-const VoiceRecorder = ({onSendAudio, onCancel}) => {
+const VoiceRecorder = ({ onSendAudio, onCancel }) => {
   const colors = useSelector(state => state.theme.theme);
   const [isRecording, setIsRecording] = useState(false);
   const [recordTime, setRecordTime] = useState(0);
@@ -70,8 +70,8 @@ const VoiceRecorder = ({onSendAudio, onCancel}) => {
       };
 
       AudioRecord.init(options);
-} catch (error) {
-}
+    } catch (error) {
+    }
   };
 
   const requestMicrophonePermission = async () => {
@@ -80,11 +80,11 @@ const VoiceRecorder = ({onSendAudio, onCancel}) => {
         const granted = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
           {
-            title: 'Microphone Permission',
-            message: 'This app needs access to your microphone to record voice messages.',
-            buttonNeutral: 'Ask Me Later',
-            buttonNegative: 'Cancel',
-            buttonPositive: 'OK',
+            title: strings.microphonePermissionTitle,
+            message: strings.microphonePermissionMessage,
+            buttonNeutral: strings.askMeLaterButton,
+            buttonNegative: strings.cancelButtonLabel,
+            buttonPositive: strings.okButton,
           },
         );
         setHasPermission(granted === PermissionsAndroid.RESULTS.GRANTED);
@@ -92,7 +92,7 @@ const VoiceRecorder = ({onSendAudio, onCancel}) => {
         setHasPermission(true);
       }
     } catch (err) {
-setHasPermission(true);
+      setHasPermission(true);
     }
   };
 
@@ -102,7 +102,7 @@ setHasPermission(true);
       setRecordTime(0);
 
       AudioRecord.start();
-// Start pulse animation
+      // Start pulse animation
       Animated.loop(
         Animated.sequence([
           Animated.timing(scaleAnimation, {
@@ -119,48 +119,48 @@ setHasPermission(true);
       ).start();
 
     } catch (error) {
-setIsRecording(false);
-      
-      Alert.alert(
-        'Recording Error', 
-        Platform.OS === 'ios' 
-          ? 'Recording is not available in the iOS Simulator. Please test on a real device for full audio functionality.' 
-          : 'Failed to start recording. Please try again.'
+      setIsRecording(false);
+
+      showErrorToast(
+        strings.recordingErrorTitle,
+        Platform.OS === 'ios'
+          ? strings.recordingNotAvailableIOS
+          : strings.failedToStartRecordingMsg
       );
     }
   };
 
   const stopRecording = async () => {
     try {
-const audioFile = await AudioRecord.stop();
+      const audioFile = await AudioRecord.stop();
       setIsRecording(false);
 
       Animated.spring(scaleAnimation, {
         toValue: 1,
         useNativeDriver: true,
       }).start();
-return audioFile;
+      return audioFile;
     } catch (error) {
-setIsRecording(false);
+      setIsRecording(false);
       return null;
     }
   };
 
   const handleSendRecording = async () => {
     if (recordTime < 1) {
-      Alert.alert(strings.recordingTooShort, strings.recordAtLeastOneSecond);
+      showInfoToast(strings.recordingTooShort, strings.recordAtLeastOneSecond);
       return;
     }
 
     const audioFile = await stopRecording();
     if (!audioFile) {
-      Alert.alert(strings.recordingError, strings.failedToSaveRecording);
+      showErrorToast(strings.recordingError, strings.failedToSaveRecording);
       return;
     }
 
     if (onSendAudio) {
       // For now, just send the local file path - this would need to be uploaded to server in production
-onSendAudio(audioFile, recordTime);
+      onSendAudio(audioFile, recordTime);
     }
   };
 
@@ -178,10 +178,10 @@ onSendAudio(audioFile, recordTime);
   };
 
   return (
-    <View style={[localStyles.container, {backgroundColor: colors.backgroundColor}]}>
+    <View style={[localStyles.container, { backgroundColor: colors.backgroundColor }]}>
       <View style={localStyles.header}>
         <ZText type="b18" color={colors.textColor}>
-          {isRecording ? 'Recording...' : 'Voice Message'}
+          {isRecording ? strings.recording : strings.voiceMessageTitle}
         </ZText>
         {isRecording && (
           <ZText type="s16" color={colors.primary}>
@@ -192,12 +192,12 @@ onSendAudio(audioFile, recordTime);
 
       <View style={localStyles.controls}>
         <TouchableOpacity
-          style={[localStyles.cancelButton, {borderColor: colors.grayScale3}]}
+          style={[localStyles.cancelButton, { borderColor: colors.grayScale3 }]}
           onPress={handleCancelRecording}>
           <Ionicons name="close" size={moderateScale(24)} color={colors.textColor} />
         </TouchableOpacity>
 
-        <Animated.View style={[{transform: [{scale: scaleAnimation}]}]}>
+        <Animated.View style={[{ transform: [{ scale: scaleAnimation }] }]}>
           <TouchableOpacity
             style={[
               localStyles.recordButton,
@@ -223,10 +223,10 @@ onSendAudio(audioFile, recordTime);
           ]}
           onPress={handleSendRecording}
           disabled={recordTime === 0 || isRecording}>
-          <Ionicons 
-            name="send" 
-            size={moderateScale(24)} 
-            color={recordTime > 0 ? colors.white : colors.grayScale5} 
+          <Ionicons
+            name="send"
+            size={moderateScale(24)}
+            color={recordTime > 0 ? colors.white : colors.grayScale5}
           />
         </TouchableOpacity>
       </View>
@@ -270,7 +270,7 @@ const localStyles = StyleSheet.create({
     alignItems: 'center',
     elevation: 5,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 4,
   },

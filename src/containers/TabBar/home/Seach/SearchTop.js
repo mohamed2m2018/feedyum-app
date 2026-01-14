@@ -1,18 +1,18 @@
 // Library import
-import {FlatList, StyleSheet, View} from 'react-native';
+import { FlatList, StyleSheet, View } from 'react-native';
 import React from 'react';
 
 // Local import
 import UserDetailComponent from '../../../../components/UserDetailComponent';
 import ReelComponent from '../../../../components/ReelComponent';
-import {searchMusicData, userDetail, videoData} from '../../../../api/constant';
+import { searchMusicData, userDetail, videoData } from '../../../../api/constant';
 import SoundComponent from '../../../../components/SoundComponent';
 import ZText from '../../../../components/common/ZText';
-import {styles} from '../../../../themes';
+import { styles } from '../../../../themes';
 import strings from '../../../../i18n/strings';
 
 export default function SearchTop() {
-  const UserItemTitle = ({title}) => {
+  const UserItemTitle = ({ title }) => {
     return (
       <ZText type="b20" numberOfLines={1} style={localStyles.headerTitle}>
         {title}
@@ -24,7 +24,7 @@ export default function SearchTop() {
     <View>
       <FlatList
         data={userDetail.slice(0, 3)}
-        renderItem={({item, index}) => (
+        renderItem={({ item, index }) => (
           <UserDetailComponent
             userName={item.name}
             userImage={item.imgUrl}
@@ -34,13 +34,13 @@ export default function SearchTop() {
           />
         )}
         keyExtractor={(item, index) => index.toString()}
-        ListHeaderComponent={() => <UserItemTitle title={'User'} />}
+        ListHeaderComponent={() => <UserItemTitle title={strings.user} />}
         showsVerticalScrollIndicator={false}
       />
 
       <FlatList
         data={videoData.slice(0, 3)}
-        renderItem={({item, index}) => (
+        renderItem={({ item, index }) => (
           <ReelComponent
             key={item?._id}
             data={item?.viewsCount}
@@ -55,7 +55,7 @@ export default function SearchTop() {
       />
       <FlatList
         data={searchMusicData.slice(0, 3)}
-        renderItem={({item, index}) => (
+        renderItem={({ item, index }) => (
           <SoundComponent
             key={index}
             title={item?.title}
@@ -66,7 +66,7 @@ export default function SearchTop() {
           />
         )}
         keyExtractor={(item, index) => index.toString()}
-        ListHeaderComponent={() => <UserItemTitle title={'Sound'} />}
+        ListHeaderComponent={() => <UserItemTitle title={strings.sound} />}
       />
     </View>
   );

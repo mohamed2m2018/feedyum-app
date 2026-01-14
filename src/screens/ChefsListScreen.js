@@ -5,10 +5,10 @@ import {
   StyleSheet,
   FlatList,
   ActivityIndicator,
-  Alert,
   TextInput,
   TouchableOpacity,
 } from 'react-native';
+import { showErrorToast, showInfoToast } from '../utils/toast';
 import ChefProfileCard from '../components/ChefProfileCard';
 import userService from '../api/userService';
 import strings from '../i18n/strings';
@@ -49,10 +49,10 @@ const ChefsListScreen = ({ navigation, userToken }) => {
 
         setChefs(chefsWithProfiles);
       } else {
-        Alert.alert(strings.error, data.message || strings.failedToLoadChefs);
+        showErrorToast(strings.error, data.message || strings.failedToLoadChefs);
       }
     } catch (error) {
-      Alert.alert(strings.error, strings.failedToLoadChefs);
+      showErrorToast(strings.error, strings.failedToLoadChefs);
     } finally {
       setIsLoading(false);
     }
@@ -94,7 +94,7 @@ const ChefsListScreen = ({ navigation, userToken }) => {
         menu: chef.menu
       });
     } else {
-      Alert.alert(strings.noMenu, strings.chefHasNotCreatedMenu);
+      showInfoToast(strings.noMenu, strings.chefHasNotCreatedMenu);
     }
   };
 

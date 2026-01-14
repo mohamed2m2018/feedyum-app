@@ -5,8 +5,8 @@ import {
   TouchableOpacity,
   Animated,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
+import { showWarningToast } from '../../../../utils/toast';
 import { useSelector } from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Video from 'react-native-video';
@@ -42,7 +42,7 @@ class GlobalAudioManager {
         stopCallback();
       }
     }
-    
+
     this.currentlyPlaying = audioPath;
     this.currentComponent = componentId;
   }
@@ -68,7 +68,7 @@ const AudioMessage = ({ audioPath, duration = 0, isCurrentUser = false }) => {
   const [audioDuration, setAudioDuration] = useState(duration || 10);
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
-  
+
   const waveAnim = useRef(new Animated.Value(0)).current;
   const videoRef = useRef(null);
   const componentId = useRef(Math.random().toString(36)).current;
@@ -111,7 +111,7 @@ const AudioMessage = ({ audioPath, duration = 0, isCurrentUser = false }) => {
   // Register this component with the global audio manager
   useEffect(() => {
     globalAudioManager.register(componentId, stopPlayback);
-    
+
     return () => {
       globalAudioManager.unregister(componentId);
       stopWaveAnimation();
@@ -119,24 +119,24 @@ const AudioMessage = ({ audioPath, duration = 0, isCurrentUser = false }) => {
   }, [componentId]);
 
   const handlePlayPause = () => {
-if (isLoading || hasError) return;
-    
+    if (isLoading || hasError) return;
+
     if (!audioPath) {
-Alert.alert(strings.audioError, strings.noAudioFileAvailable);
+      showWarningToast(strings.audioError, strings.noAudioFileAvailable);
       return;
     }
-    
+
     if (isPlaying) {
       // Pause the current audio
-stopPlayback();
+      stopPlayback();
     } else {
       // Start playing this audio
-setIsLoading(true);
+      setIsLoading(true);
       setIsPlaying(true);
       setHasError(false);
       setCurrentTime(0);
       startWaveAnimation();
-      
+
       // Register with global manager
       globalAudioManager.play(audioPath, componentId);
     }
@@ -146,7 +146,7 @@ setIsLoading(true);
 
   // Video component callbacks
   const onLoad = (data) => {
-if (data.duration && data.duration > 0) {
+    if (data.duration && data.duration > 0) {
       setAudioDuration(data.duration);
     } else if (duration > 0) {
       setAudioDuration(duration);
@@ -162,18 +162,18 @@ if (data.duration && data.duration > 0) {
   };
 
   const onEnd = () => {
-stopPlayback();
+    stopPlayback();
   };
 
   const onError = (error) => {
-setIsLoading(false);
+    setIsLoading(false);
     setIsPlaying(false);
     setHasError(true);
     stopWaveAnimation();
     globalAudioManager.stop(componentId);
-    
+
     // Log error but don't show alert to avoid spam
-};
+  };
 
   return (
     <View style={[
@@ -204,13 +204,13 @@ setIsLoading(false);
           playInBackground={false}
         />
       )}
-      
+
       <TouchableOpacity
         style={[
           styles.playButton,
           {
-            backgroundColor: hasError 
-              ? colors.grayScale3 
+            backgroundColor: hasError
+              ? colors.grayScale3
               : (isCurrentUser ? colors.white : colors.primary),
           }
         ]}
@@ -218,9 +218,9 @@ setIsLoading(false);
         disabled={isLoading}
       >
         {isLoading ? (
-          <ActivityIndicator 
-            size="small" 
-            color={isCurrentUser ? colors.primary : colors.white} 
+          <ActivityIndicator
+            size="small"
+            color={isCurrentUser ? colors.primary : colors.white}
           />
         ) : hasError ? (
           <Ionicons
@@ -250,9 +250,9 @@ setIsLoading(false);
                     {
                       scaleY: isPlaying
                         ? waveAnim.interpolate({
-                            inputRange: [0, 1],
-                            outputRange: [0.3, 1 + Math.random() * 0.8],
-                          })
+                          inputRange: [0, 1],
+                          outputRange: [0.3, 1 + Math.random() * 0.8],
+                        })
                         : 0.3,
                     },
                   ],
@@ -267,8 +267,8 @@ setIsLoading(false);
             style={[
               styles.progressBar,
               {
-                backgroundColor: isCurrentUser 
-                  ? colors.white + '30' 
+                backgroundColor: isCurrentUser
+                  ? colors.white + '30'
                   : colors.primary + '30',
               }
             ]}

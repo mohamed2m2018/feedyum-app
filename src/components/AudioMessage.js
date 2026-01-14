@@ -5,8 +5,8 @@ import {
   StyleSheet,
   Slider,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
+import { showErrorToast } from '../utils/toast';
 import { useSelector } from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Video from 'react-native-video';
@@ -39,7 +39,7 @@ const AudioMessage = ({
     if (isLoading || hasError) return;
 
     if (!audioUrl) {
-      Alert.alert(strings.noAudio, strings.noAudioFileAvailable);
+      showErrorToast(strings.noAudio, strings.noAudioFileAvailable);
       return;
     }
     if (isPlaying) {
@@ -70,7 +70,7 @@ const AudioMessage = ({
     setIsLoading(false);
     setIsPlaying(false);
     setHasError(true);
-    Alert.alert(strings.audioError, strings.failedToPlayAudioFile);
+    showErrorToast(strings.audioError, strings.failedToPlayAudioFile);
   };
 
   const handleSeek = (value) => {

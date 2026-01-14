@@ -7,17 +7,17 @@ import {
   Image,
   Dimensions,
 } from 'react-native';
-import {useSelector} from 'react-redux';
-import {useNavigation} from '@react-navigation/native';
+import { useSelector } from 'react-redux';
+import { useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 import ZText from './common/ZText';
 import ZLoader from './common/ZLoader';
-import {moderateScale} from '../common/constants';
-import {styles} from '../themes';
-import {StackNav} from '../navigation/NavigationKeys';
+import { moderateScale } from '../common/constants';
+import { styles } from '../themes';
+import { StackNav } from '../navigation/NavigationKeys';
 
-const {width: screenWidth} = Dimensions.get('window');
+const { width: screenWidth } = Dimensions.get('window');
 
 const ReviewStoriesSection = ({
   reviewStories = [],
@@ -46,7 +46,7 @@ const ReviewStoriesSection = ({
 
   if (!reviewStories || reviewStories.length === 0) {
     return (
-      <View style={[localStyles.emptyContainer, {backgroundColor: colors.backgroundColor}]}>
+      <View style={[localStyles.emptyContainer, { backgroundColor: colors.backgroundColor }]}>
         <Ionicons name="star-outline" size={moderateScale(48)} color={colors.grayScale5} />
         <ZText type="M16" color={colors.grayScale5} style={localStyles.emptyText}>
           No review posts yet
@@ -59,7 +59,7 @@ const ReviewStoriesSection = ({
   }
 
   return (
-    <View style={[localStyles.container, {backgroundColor: colors.backgroundColor}]}>
+    <View style={[localStyles.container, { backgroundColor: colors.backgroundColor }]}>
       <View style={localStyles.header}>
         <ZText type="B16" color={colors.textColor}>
           Review Posts ({reviewStories.length})
@@ -71,19 +71,19 @@ const ReviewStoriesSection = ({
         )}
       </View>
 
-      <ScrollView 
-        horizontal 
+      <ScrollView
+        horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={localStyles.scrollContainer}
       >
         {reviewStories.map((story, index) => (
           <TouchableOpacity
             key={story._id}
-            style={[localStyles.reviewCard, {backgroundColor: colors.white}]}
+            style={[localStyles.reviewCard, { backgroundColor: colors.white }]}
             onPress={() => handleReviewStoryPress(story)}
           >
             {/* Review Badge */}
-            <View style={[localStyles.reviewBadge, {backgroundColor: colors.primary}]}>
+            <View style={[localStyles.reviewBadge, { backgroundColor: colors.primary }]}>
               <Ionicons name="star" size={moderateScale(10)} color={colors.white} />
               <ZText type="B10" color={colors.white} style={styles.ml2}>
                 {story.rating}/5
@@ -105,11 +105,11 @@ const ReviewStoriesSection = ({
                   resizeMode="cover"
                 />
               ) : (
-                <View style={[localStyles.placeholderMedia, {backgroundColor: colors.grayScale2}]}>
+                <View style={[localStyles.placeholderMedia, { backgroundColor: colors.grayScale2 }]}>
                   <Ionicons name="image" size={moderateScale(24)} color={colors.grayScale5} />
                 </View>
               )}
-              
+
               {/* Play icon for videos */}
               {story.uri && (
                 <View style={localStyles.playIconContainer}>
@@ -130,18 +130,18 @@ const ReviewStoriesSection = ({
               />
               <View style={localStyles.authorInfo}>
                 <ZText type="B12" color={colors.textColor} numberOfLines={1}>
-                  {story.author?.fullName || 'Anonymous'}
+                  {story.author?.fullName || strings.anonymous}
                 </ZText>
                 <View style={localStyles.ratingContainer}>
                   {[1, 2, 3, 4, 5].map((star) => (
                     <Ionicons
                       key={star}
-                      name={story.rating && story.rating > 0 
+                      name={story.rating && story.rating > 0
                         ? (star <= story.rating ? 'star' : 'star-outline')
                         : 'star'
                       }
                       size={moderateScale(10)}
-                      color={story.rating && story.rating > 0 
+                      color={story.rating && story.rating > 0
                         ? (star <= story.rating ? '#FFD700' : colors.grayScale5)
                         : (colors.grayScale4 || "#CCCCCC")
                       }
@@ -156,9 +156,9 @@ const ReviewStoriesSection = ({
 
             {/* Caption Preview */}
             {story.caption && (
-              <ZText 
-                type="M11" 
-                color={colors.grayScale6} 
+              <ZText
+                type="M11"
+                color={colors.grayScale6}
                 numberOfLines={2}
                 style={localStyles.caption}
               >
@@ -176,7 +176,7 @@ const localStyles = StyleSheet.create({
   container: {
     paddingVertical: moderateScale(16),
   },
-  
+
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',

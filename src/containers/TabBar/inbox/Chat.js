@@ -8,6 +8,9 @@ import {
   Platform,
   Keyboard,
   ActivityIndicator,
+  Modal,
+  Dimensions,
+  StatusBar,
 } from 'react-native';
 import { GiftedChat, Send, Bubble, InputToolbar, Composer } from 'react-native-gifted-chat';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -17,6 +20,7 @@ import io from 'socket.io-client';
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
 import { styles } from '../../../themes';
 import { moderateScale } from '../../../common/constants';
+import strings from '../../../i18n/strings';
 import { StackNav } from '../../../navigation/NavigationKeys';
 import { useStorage } from '../../../utils/useStorage';
 import ZHeader from '../../../components/common/ZHeader';
@@ -29,6 +33,9 @@ export default function Chat({ navigation, route }) {
   const orderId = route.params?.orderId || null; // Get orderId if provided
   const chatUserId = route.params?.chatUserId || "64f48d3b6b45e8f937a49bc0"; // Ensure you get chatUserId from route
   const colors = useSelector(state => state.theme.theme);
+  const language = useSelector(state => state.profile?.language);
+  // Check if Arabic is selected (can be 'ar', 'Arabic', or contain 'Arabic')
+  const isRTL = language === 'ar' || language === 'Arabic' || (typeof language === 'string' && language.toLowerCase().includes('arabic'));
   const [messages, setMessages] = useState([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -36,6 +43,7 @@ export default function Chat({ navigation, route }) {
   const [isTyping, setIsTyping] = useState(false);
   const [text, setText] = useState('');
   const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
   const textInputRef = useRef(null);
   const messageContainerRef = useRef(null);
   const socketRef = useRef(null); // Ref to store the socket instance
@@ -231,43 +239,103 @@ export default function Chat({ navigation, route }) {
     );
   };
 
-  const renderBubble = (props) => {
+  const renderMessage = (props) => {
+    const { currentMessage } = props;
+    const isOwnMessage = currentMessage.user._id === userId;
+    // Keep own messages on right, others on left (same as default)
+    // For Arabic: just use RTL text direction
+    const showOnRight = isOwnMessage;
+
     // If message has audio, render custom audio message
-    if (props.currentMessage.audio) {
+    if (currentMessage.audio) {
       return (
-        <View style={localStyles.audioBubbleContainer}>
-          <AudioMessage
-            audioUrl={props.currentMessage.audio}
-            duration={props.currentMessage.duration}
-            messageId={props.currentMessage._id}
-            isOwn={props.currentMessage.user._id === userId}
-          />
+        <View style={[
+          localStyles.messageRow,
+          { justifyContent: showOnRight ? 'flex-end' : 'flex-start' }
+        ]}>
+          <View style={localStyles.audioBubbleContainer}>
+            <AudioMessage
+              audioUrl={currentMessage.audio}
+              duration={currentMessage.duration}
+              messageId={currentMessage._id}
+              isOwn={isOwnMessage}
+            />
+          </View>
         </View>
       );
     }
 
+    const timeString = new Date(currentMessage.createdAt).toLocaleTimeString([], { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
+
     return (
-      <Bubble
-        {...props}
-        wrapperStyle={{
-          left: {
-            backgroundColor: colors.grayScale1,
-            borderRadius: 12,
-            padding: 10,
-            marginLeft: 0, // Adjust to reduce left space
-          },
-          right: {
-            backgroundColor: colors.primary,
-            borderRadius: 12,
-            padding: 10,
-            marginRight: 0, // Adjust to reduce right space if necessary
-          },
-        }}
-        textStyle={{
-          left: { color: colors.black },
-          right: { color: colors.white },
-        }}
-      />
+      <View style={[
+        localStyles.messageRow,
+        { justifyContent: showOnRight ? 'flex-end' : 'flex-start' }
+      ]}>
+        <View style={[
+          localStyles.bubbleContainer,
+          {
+            backgroundColor: isOwnMessage ? colors.primary : colors.grayScale1,
+          }
+        ]}>
+          {/* Render image if present */}
+          {currentMessage.image && (
+            <TouchableOpacity 
+              activeOpacity={0.9}
+              onPress={() => setSelectedImage(currentMessage.image)}
+              style={localStyles.messageImageContainer}
+            >
+              <Image
+                source={{ uri: currentMessage.image }}
+                style={localStyles.messageImage}
+                resizeMode="cover"
+              />
+            </TouchableOpacity>
+          )}
+          {/* Render text if present */}
+          {currentMessage.text ? (
+            <View style={localStyles.messageTextWrapper}>
+              <Bubble
+                {...props}
+                wrapperStyle={{
+                  left: { backgroundColor: 'transparent' },
+                  right: { backgroundColor: 'transparent' },
+                }}
+                textStyle={{
+                  left: { 
+                    color: isOwnMessage ? colors.white : colors.black, 
+                    textAlign: isRTL ? 'right' : 'left',
+                    writingDirection: isRTL ? 'rtl' : 'ltr',
+                  },
+                  right: { 
+                    color: isOwnMessage ? colors.white : colors.black, 
+                    textAlign: isRTL ? 'right' : 'left',
+                    writingDirection: isRTL ? 'rtl' : 'ltr',
+                  },
+                }}
+              />
+            </View>
+          ) : null}
+        </View>
+      </View>
+    );
+  };
+
+  const renderMessageImage = (props) => {
+    return (
+      <TouchableOpacity
+        activeOpacity={0.9}
+        onPress={() => setSelectedImage(props.currentMessage.image)}
+      >
+        <Image
+          source={{ uri: props.currentMessage.image }}
+          style={localStyles.messageImage}
+          resizeMode="cover"
+        />
+      </TouchableOpacity>
     );
   };
 
@@ -332,15 +400,15 @@ export default function Chat({ navigation, route }) {
   );
 
   return (
-    <ZSafeAreaView>
+    <ZSafeAreaView edges={['top', 'left', 'right', 'bottom']}>
       <ZHeader
         title={userName}
         isLeftIcon={<UserProfile />}
         rightIcon={<RightIcon />}
       />
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? moderateScale(15) : 0} // Adjust the offset as needed
+        behavior="padding"
+        keyboardVerticalOffset={Platform.OS === 'ios' ? moderateScale(15) : 0}
         style={styles.flex}
       >
         <GiftedChat
@@ -348,12 +416,14 @@ export default function Chat({ navigation, route }) {
           onSend={messages => onSend(messages)}
           user={{ _id: userId }}
           renderSend={renderSend}
-          renderBubble={renderBubble}
+          renderMessage={renderMessage}
+          renderMessageImage={renderMessageImage}
           renderInputToolbar={renderInputToolbar}
           renderComposer={renderComposer}
           renderLoading={renderLoading}
           messagesContainerStyle={{ marginLeft: -30 }}
           isKeyboardInternallyHandled={false}
+          keyboardShouldPersistTaps="handled"
           alwaysShowSend
           loadEarlier={page < totalPages}
           onLoadEarlier={handleLoadMore}
@@ -365,6 +435,39 @@ export default function Chat({ navigation, route }) {
           placeholder={strings.typeMessagePlaceholder}
         />
       </KeyboardAvoidingView>
+
+      {/* Image Zoom Modal */}
+      <Modal
+        visible={!!selectedImage}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setSelectedImage(null)}
+      >
+        <StatusBar backgroundColor="rgba(0,0,0,0.95)" barStyle="light-content" />
+        <TouchableOpacity
+          style={localStyles.imageModalOverlay}
+          activeOpacity={1}
+          onPress={() => setSelectedImage(null)}
+        >
+          <TouchableOpacity 
+            activeOpacity={1} 
+            onPress={(e) => e.stopPropagation()}
+            style={localStyles.imageModalContent}
+          >
+            <Image
+              source={{ uri: selectedImage }}
+              style={localStyles.fullScreenImage}
+              resizeMode="contain"
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={localStyles.closeImageButton}
+            onPress={() => setSelectedImage(null)}
+          >
+            <Ionicons name="close-circle" size={moderateScale(36)} color="#FFFFFF" />
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
     </ZSafeAreaView>
   );
 }
@@ -401,8 +504,8 @@ const localStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingRight: 10,
-    paddingBottom: Platform.OS === 'android' ? 10 : 0,
     paddingTop: 5,
+    marginBottom: moderateScale(6),
   },
   micButton: {
     width: 40,
@@ -411,5 +514,57 @@ const localStyles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 5,
+  },
+  bubbleContainer: {
+    borderRadius: 12,
+    padding: 10,
+    marginHorizontal: 10,
+    marginVertical: 2,
+    maxWidth: '80%',
+  },
+  messageRow: {
+    flexDirection: 'row',
+    width: '100%',
+    paddingHorizontal: 8,
+    marginVertical: 2,
+  },
+  messageText: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  messageTextWrapper: {
+    flex: 1,
+  },
+  messageImage: {
+    width: moderateScale(150),
+    height: moderateScale(100),
+    borderRadius: moderateScale(8),
+  },
+  messageImageContainer: {
+    borderRadius: moderateScale(8),
+    overflow: 'hidden',
+    marginBottom: moderateScale(4),
+  },
+  imageModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.95)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  imageModalContent: {
+    width: Dimensions.get('window').width,
+    height: Dimensions.get('window').height * 0.8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fullScreenImage: {
+    width: Dimensions.get('window').width - 20,
+    height: Dimensions.get('window').height * 0.75,
+  },
+  closeImageButton: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 50 : 20,
+    right: 20,
+    zIndex: 10,
   },
 });

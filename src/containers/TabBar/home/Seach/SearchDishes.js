@@ -22,21 +22,21 @@ const horizontalPadding = moderateScale(32); // 16 on each side
 const columnGap = moderateScale(12); // Gap between columns
 const itemWidth = (width - horizontalPadding - columnGap) / 2;
 
-const SearchDishes = ({ 
-  dishes, 
-  onEndReachedThreshold, 
-  isFetching, 
-  isFetchingNextPage, 
-  onMomentumScrollBegin 
+const SearchDishes = ({
+  dishes,
+  onEndReachedThreshold,
+  isFetching,
+  isFetchingNextPage,
+  onMomentumScrollBegin
 }) => {
   const colors = useSelector(state => state.theme.theme);
   const navigation = useNavigation();
 
   // Debug logging
-const handleDishPress = (dish) => {
-    navigation.navigate(StackNav.DishDetailScreen, { 
+  const handleDishPress = (dish) => {
+    navigation.navigate(StackNav.DishDetailScreen, {
       dishId: dish._id,
-      dish: dish 
+      dish: dish
     });
   };
 
@@ -55,16 +55,16 @@ const handleDishPress = (dish) => {
         resizeMode="cover"
       />
       <View style={localStyles.dishInfo}>
-        <ZText 
-          type="B14" 
+        <ZText
+          type="B14"
           color={colors.textColor}
           numberOfLines={2}
           style={localStyles.dishName}
         >
           {item.name}
         </ZText>
-        <ZText 
-          type="s12" 
+        <ZText
+          type="s12"
           color={colors.grayScale5}
           numberOfLines={1}
           style={localStyles.chefName}
@@ -73,7 +73,7 @@ const handleDishPress = (dish) => {
         </ZText>
         <View style={localStyles.priceContainer}>
           <ZText type="B16" color={colors.primary}>
-            £{item.price?.toFixed(2)}
+            {strings.currency || 'EGP'} {item.price?.toFixed(2)}
           </ZText>
           <StarRating
             rating={Number.isFinite(item?.average_rating)

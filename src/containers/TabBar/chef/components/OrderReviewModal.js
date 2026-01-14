@@ -6,9 +6,12 @@ import {
   ScrollView,
   Image,
   TouchableOpacity,
-  Alert,
   TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
+import { showErrorToast, showActionDialog } from '../../../../utils/toast';
+import { ALERT_TYPE } from 'react-native-alert-notification';
 import { useSelector, useDispatch } from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import ZText from '../../../../components/common/ZText';
@@ -40,93 +43,85 @@ const OrderReviewModal = ({ visible, order, onClose, onAccept, onReject }) => {
 
   const handleAcceptOrder = async () => {
     if (!deliveryFee || isNaN(parseFloat(deliveryFee))) {
-      Alert.alert(
+      showErrorToast(
         strings.invalidDeliveryFeeTitle,
         strings.pleaseEnterValidDeliveryFee,
       );
       return;
     }
 
+
     const fee = parseFloat(deliveryFee);
     if (fee < 0) {
-      Alert.alert(strings.invalidDeliveryFee, strings.deliveryFeeCannotBeNegative);
+      showErrorToast(strings.invalidDeliveryFee, strings.deliveryFeeCannotBeNegative);
       return;
     }
 
-    Alert.alert(
-      strings.acceptOrder,
-      strings.acceptOrderWithFee.replace('{fee}', fee.toFixed(2)),
-      [
-        { text: strings.cancel, style: 'cancel' },
-        {
-          text: strings.accept,
-          onPress: async () => {
-            try {
-              setIsProcessing(true);
+    showActionDialog({
+      type: ALERT_TYPE.SUCCESS,
+      title: strings.acceptOrder,
+      message: strings.acceptOrderWithFee.replace('{fee}', fee.toFixed(2)),
+      confirmText: strings.accept,
+      cancelText: strings.cancel,
+      onConfirm: async () => {
+        try {
+          setIsProcessing(true);
 
-              // Update order status to accepted with delivery fee
-              await dispatch(
-                updateOrderStatusAsync(order._id, 'confirmed', fee),
-              );
+          // Update order status to accepted with delivery fee
+          await dispatch(
+            updateOrderStatusAsync(order._id, 'confirmed', fee),
+          );
 
-              // Call parent callback
-              if (onAccept) {
-                onAccept(order, fee);
-              }
+          // Call parent callback
+          if (onAccept) {
+            onAccept(order, fee);
+          }
 
-              onClose();
-            } catch (error) {
-              Alert.alert(
-                strings.error,
-                error.message || strings.failedToAcceptOrder,
-                [{ text: strings.ok }],
-              );
-            } finally {
-              setIsProcessing(false);
-            }
-          },
-        },
-      ],
-    );
+          onClose();
+        } catch (error) {
+          showErrorToast(
+            strings.error,
+            error.message || strings.failedToAcceptOrder
+          );
+        } finally {
+          setIsProcessing(false);
+        }
+      },
+    });
   };
 
   const handleRejectOrder = () => {
-    Alert.alert(
-      strings.rejectOrder,
-      strings.rejectOrderConfirmation,
-      [
-        { text: strings.cancel, style: 'cancel' },
-        {
-          text: strings.reject,
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              setIsProcessing(true);
+    showActionDialog({
+      type: ALERT_TYPE.WARNING,
+      title: strings.rejectOrder,
+      message: strings.rejectOrderConfirmation,
+      confirmText: strings.reject,
+      cancelText: strings.cancel,
+      onConfirm: async () => {
+        try {
+          setIsProcessing(true);
 
-              // Update order status to cancelled
-              await dispatch(
-                updateOrderStatusAsync(order._id, 'cancelled'),
-              );
+          // Update order status to cancelled
+          await dispatch(
+            updateOrderStatusAsync(order._id, 'cancelled'),
+          );
 
-              // Call parent callback
-              if (onReject) {
-                onReject(order);
-              }
+          // Call parent callback
+          if (onReject) {
+            onReject(order);
+          }
 
-              onClose();
-            } catch (error) {
-              Alert.alert(
-                strings.error,
-                error.message || strings.failedToRejectOrder,
-                [{ text: strings.ok }],
-              );
-            } finally {
-              setIsProcessing(false);
-            }
-          },
-        },
-      ],
-    );
+          onClose();
+        } catch (error) {
+          showErrorToast(
+            strings.error,
+            error.message || strings.failedToRejectOrder
+          );
+        } finally {
+          setIsProcessing(false);
+        }
+      },
+    });
   };
 
   const calculateTotal = () => {

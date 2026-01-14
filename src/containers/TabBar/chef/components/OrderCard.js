@@ -18,21 +18,21 @@ const StatusBadge = ({ status, colors }) => {
         return {
           color: colors.orange,
           backgroundColor: colors.orange + '20',
-          text: 'Pending',
+          text: strings.pending,
           icon: 'time-outline',
         };
       case 'confirmed':
         return {
           color: colors.green, // Use green for Accepted
           backgroundColor: colors.green + '20',
-          text: 'Accepted', // Display explicitly as Accepted
+          text: strings.accepted,
           icon: 'checkmark-circle-outline',
         };
       case 'preparing':
         return {
           color: colors.blue,
           backgroundColor: colors.blue + '20',
-          text: 'Preparing',
+          text: strings.preparing,
           icon: 'restaurant-outline',
         };
       case 'ready':
@@ -60,7 +60,7 @@ const StatusBadge = ({ status, colors }) => {
         return {
           color: colors.grayScale7,
           backgroundColor: colors.grayScale3,
-          text: 'Unknown',
+          text: strings.unknown,
           icon: 'help-outline',
         };
     }
@@ -231,7 +231,7 @@ const OrderCard = ({
             style={localStyles.customerIcon}
           />
           <ZText type="M14" style={localStyles.customerName}>
-            {order.user?.fullName || 'Unknown Customer'}
+            {order.user?.fullName || strings.unknownCustomer}
           </ZText>
         </View>
         {order.status === 'ready' && order.user?.phone && (
@@ -270,7 +270,7 @@ const OrderCard = ({
       <View style={localStyles.orderSummary}>
         <View style={localStyles.summaryRow}>
           <ZText type="M14" color={colors.grayScale7}>
-            {getTotalItems()} items
+            {getTotalItems() === 1 ? strings.oneItemLabel : strings.itemsCountLabel.replace('{0}', getTotalItems())}
           </ZText>
           <ZText type="B16" color={colors.primary}>
             {order.totalPrice?.toFixed(2) || '0.00'}

@@ -1,5 +1,5 @@
 // Libraries import
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   Modal,
   StyleSheet,
@@ -7,12 +7,12 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
 } from 'react-native';
-import {useSelector} from 'react-redux';
+import { useSelector } from 'react-redux';
 
 // Local import
-import {moderateScale} from '../../common/constants';
+import { moderateScale } from '../../common/constants';
 import strings from '../../i18n/strings';
-import {commonColor, styles} from '../../themes';
+import { commonColor, styles } from '../../themes';
 import ZButton from '../common/ZButton';
 import ZText from '../common/ZText';
 
@@ -31,7 +31,7 @@ const SuccessModal = props => {
     <Modal animationType="fade" transparent={true} visible={visible}>
       <TouchableWithoutFeedback>
         <View style={localStyles.modalMainContainer}>
-          <View style={[localStyles.root, {backgroundColor: colors.inputBg}]}>
+          <View style={[localStyles.root, { backgroundColor: colors.inputBg }]}>
             <ZText
               type={'b24'}
               color={colors.primary}
@@ -45,14 +45,14 @@ const SuccessModal = props => {
             <View style={[styles.rowCenter]}>
               <TouchableOpacity
                 onPress={() => setnumberOfItems(numberOfItems + 1)}>
-                <ZText type={'s24'} style={{marginRight: 10}}>
+                <ZText type={'s24'} style={{ marginRight: 10 }}>
                   +
                 </ZText>
               </TouchableOpacity>
               <ZText
                 color={colors.primary}
                 type={'s24'}
-                style={{marginRight: 10}}>
+                style={{ marginRight: 10 }}>
                 {numberOfItems}
               </ZText>
               <ZText
@@ -76,7 +76,7 @@ const SuccessModal = props => {
               />
             )}
             <ZButton
-              title={'Checkout'}
+              title={strings.checkout}
               textType={'b18'}
               color={colors.textColor}
               containerStyle={localStyles.signBtnContainer}

@@ -7,8 +7,8 @@ import {
   ScrollView,
   I18nManager,
 } from 'react-native';
-import React, {createRef, useState} from 'react';
-import {useDispatch, useSelector} from 'react-redux';
+import React, { createRef, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ZLoader from '../../../components/common/ZLoader';
@@ -16,23 +16,23 @@ import ZLoader from '../../../components/common/ZLoader';
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
 import ZHeader from '../../../components/common/ZHeader';
 import strings from '../../../i18n/strings';
-import {colors, styles} from '../../../themes';
-import {ACCESS_TOKEN, moderateScale, THEME} from '../../../common/constants';
+import { colors, styles } from '../../../themes';
+import { ACCESS_TOKEN, moderateScale, THEME } from '../../../common/constants';
 import ZText from '../../../components/common/ZText';
-import {changeThemeAction} from '../../../redux/action/themeAction';
-import {StackNav, TabNav} from '../../../navigation/NavigationKeys';
+import { changeThemeAction } from '../../../redux/action/themeAction';
+import { StackNav, TabNav } from '../../../navigation/NavigationKeys';
 import LogOut from '../../../components/models/LogOut';
-import {useQuery, useQueryClient} from 'react-query';
+import { useQuery, useQueryClient } from 'react-query';
 import request from '../../../api/request';
-import {GoogleSignin} from '@react-native-google-signin/google-signin';
-import {useHandleAuth} from '../../../utils/useHandleAuth';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { useHandleAuth } from '../../../utils/useHandleAuth';
 import { OneSignal } from 'react-native-onesignal';
-import {ALERT_TYPE, Toast} from 'react-native-alert-notification';
-import {useStorage} from '../../../utils/useStorage';
+import { showErrorToast } from '../../../utils/toast';
+import { useStorage } from '../../../utils/useStorage';
 import AppInitializer from '../../../services/AppInitializer';
 
-export default Setting = ({navigation}) => {
-  const {data: user} = useQuery('user', () => request.get('/user'));
+export default Setting = ({ navigation }) => {
+  const { data: user } = useQuery('user', () => request.get('/user'));
 
   const [isloading, setisloading] = useState(false);
   const ProfileSetting = [
@@ -115,17 +115,13 @@ export default Setting = ({navigation}) => {
               type: user?.data?.user?.type === 'chef' ? 'user' : 'chef',
             })
             .then(async () => {
-              await queryClient.invalidateQueries({queryKey: 'user'});
+              await queryClient.invalidateQueries({ queryKey: 'user' });
               setisloading(false);
               navigation.navigate(TabNav.ForYou);
             })
             .catch(err => {
               setisloading(false);
-              Toast.show({
-                type: ALERT_TYPE.DANGER,
-                title: strings.error,
-                textBody: err[Object.keys(err)?.[0]],
-              });
+              showErrorToast(strings.error, err[Object.keys(err)?.[0]]);
             });
         }
       },
@@ -136,7 +132,7 @@ export default Setting = ({navigation}) => {
   const LogOutSheetRef = createRef();
   const dispatch = useDispatch();
   const queryClient = useQueryClient();
-  const {handleAuthToast} = useHandleAuth();
+  const { handleAuthToast } = useHandleAuth();
   const [_, setTheme] = useStorage(THEME);
   const [__, setToken] = useStorage(ACCESS_TOKEN);
   const [___, setUser] = useStorage('user');
@@ -176,8 +172,22 @@ export default Setting = ({navigation}) => {
   const onPressLogOutBtn = () => LogOutSheetRef?.current?.show();
 
   const googleSignOut = async () => {
-    await GoogleSignin.revokeAccess();
-    await GoogleSignin.signOut();
+    try {
+      // Check if user is signed in with Google
+      const isSignedIn = await GoogleSignin.isSignedIn();
+      if (isSignedIn) {
+        // Revoke access to disconnect the app from Google account
+        await GoogleSignin.revokeAccess();
+        // Sign out to clear session tokens
+        await GoogleSignin.signOut();
+      }
+      // Clear any cached user data from memory
+      // After signOut, getCurrentUser should return null, but calling it ensures cache is cleared
+      await GoogleSignin.getCurrentUser();
+    } catch (error) {
+      console.log('[Setting] Google sign-out error:', error);
+      // Continue with logout even if Google sign-out fails
+    }
   };
 
   const onPressYesLogOut = async () => {
@@ -197,7 +207,7 @@ export default Setting = ({navigation}) => {
       setTimeout(() => {
         navigation.reset({
           index: 0,
-          routes: [{name: StackNav.Auth}],
+          routes: [{ name: StackNav.Auth }],
         });
       }, 500);
       return true;
@@ -255,7 +265,7 @@ export default Setting = ({navigation}) => {
                   <Ionicons
                     name="chevron-forward-outline"
                     style={{
-                      ...(I18nManager.isRTL && {transform: [{scaleX: -1}]}),
+                      ...(I18nManager.isRTL && { transform: [{ scaleX: -1 }] }),
                     }}
                     size={moderateScale(16)}
                     color={color.textColor}
@@ -271,7 +281,7 @@ export default Setting = ({navigation}) => {
           style={localStyles.settingsContainer}>
           <Ionicons
             name={'log-out-outline'}
-            style={{...(I18nManager.isRTL && {transform: [{scaleX: -1}]})}}
+            style={{ ...(I18nManager.isRTL && { transform: [{ scaleX: -1 }] }) }}
             size={moderateScale(30)}
             color={color.dark ? color.white : color.darkColor}
           />

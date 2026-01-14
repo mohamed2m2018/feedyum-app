@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Alert } from 'react-native';
 import { reviewStorage } from '../utils/reviewStorage';
 import { reviewService } from '../api/reviewService';
 import strings from '../i18n/strings';
@@ -14,15 +13,15 @@ export const useReviewManager = () => {
   const checkForReviewPrompts = useCallback(async () => {
     try {
       const completedOrders = await reviewStorage.getOrdersNeedingReview();
-      
+
       for (const order of completedOrders) {
         const shouldShow = await reviewStorage.shouldShowReviewPrompt(order.orderId);
-        
+
         if (shouldShow) {
           // Check if order was completed recently (within last 7 days)
           const completedDate = new Date(order.completedAt);
           const daysSinceCompletion = (new Date() - completedDate) / (1000 * 60 * 60 * 24);
-          
+
           if (daysSinceCompletion <= 7) {
             setCurrentOrderForReview(order);
             setShowReviewPrompt(true);
@@ -31,31 +30,31 @@ export const useReviewManager = () => {
         }
       }
     } catch (error) {
-}
+    }
   }, []);
 
   // Handle when user completes an order
   const handleOrderCompleted = useCallback(async (orderData) => {
     try {
       await reviewStorage.addCompletedOrder(orderData);
-      
+
       // Show review prompt after a short delay
       setTimeout(() => {
         checkForReviewPrompts();
       }, 2000);
     } catch (error) {
-}
+    }
   }, [checkForReviewPrompts]);
 
   // Handle review prompt actions
   const handleReviewNow = useCallback(async () => {
     if (currentOrderForReview) {
       setShowReviewPrompt(false);
-      
+
       try {
         // Get order review status from backend
         const response = await reviewService.getOrderReviewStatus(currentOrderForReview.orderId);
-        
+
         if (response.success && response.data.canReview) {
           setCurrentOrderForReview({
             ...currentOrderForReview,
@@ -63,12 +62,14 @@ export const useReviewManager = () => {
           });
           setShowReviewModal(true);
         } else {
-          Alert.alert(strings.unableToReview, response.message || strings.cannotReviewAtThisTime);
+          const { showWarningToast } = require('../utils/toast');
+          showWarningToast(strings.unableToReview, response.message || strings.cannotReviewAtThisTime);
         }
       } catch (error) {
-Alert.alert(strings.error, strings.unableToLoadReviewInfo);
+        const { showErrorToast } = require('../utils/toast');
+        showErrorToast(strings.error, strings.unableToLoadReviewInfo);
       }
-      
+
       // Increment prompt count
       await reviewStorage.incrementReviewPromptCount(currentOrderForReview.orderId);
     }
@@ -77,10 +78,10 @@ Alert.alert(strings.error, strings.unableToLoadReviewInfo);
   const handleRemindLater = useCallback(async () => {
     if (currentOrderForReview) {
       setShowReviewPrompt(false);
-      
+
       // Increment prompt count
       await reviewStorage.incrementReviewPromptCount(currentOrderForReview.orderId);
-      
+
       // Schedule reminder for later (this could be enhanced with push notifications)
       setTimeout(() => {
         checkForReviewPrompts();
@@ -91,11 +92,11 @@ Alert.alert(strings.error, strings.unableToLoadReviewInfo);
   const handleSkipReview = useCallback(async () => {
     if (currentOrderForReview) {
       setShowReviewPrompt(false);
-      
+
       // Mark as reviewed to prevent further prompts
       await reviewStorage.markOrderAsReviewed(currentOrderForReview.orderId);
       await reviewStorage.removeCompletedOrder(currentOrderForReview.orderId);
-      
+
       setCurrentOrderForReview(null);
     }
   }, [currentOrderForReview]);
@@ -105,7 +106,7 @@ Alert.alert(strings.error, strings.unableToLoadReviewInfo);
     if (!currentOrderForReview) return;
 
     setReviewLoading(true);
-    
+
     try {
       // Add chef and order IDs to reviews
       const reviewsWithIds = reviews.map(review => ({
@@ -120,28 +121,27 @@ Alert.alert(strings.error, strings.unableToLoadReviewInfo);
       );
 
       if (result.success) {
-        Alert.alert(
+        const { showSuccessDialog } = require('../utils/toast');
+        showSuccessDialog(
           strings.thankYou,
           strings.reviewsSubmittedSuccessfully,
-          [
-            {
-              text: 'OK',
-              onPress: () => {
-                setShowReviewModal(false);
-                setCurrentOrderForReview(null);
-              },
-            },
-          ]
+          'OK',
+          () => {
+            setShowReviewModal(false);
+            setCurrentOrderForReview(null);
+          }
         );
 
         // Mark order as reviewed
         await reviewStorage.markOrderAsReviewed(currentOrderForReview.orderId);
         await reviewStorage.removeCompletedOrder(currentOrderForReview.orderId);
       } else {
-        Alert.alert(strings.submissionError, result.message || strings.someReviewsCouldNotBeSubmitted);
+        const { showWarningToast } = require('../utils/toast');
+        showWarningToast(strings.submissionError, result.message || strings.someReviewsCouldNotBeSubmitted);
       }
     } catch (error) {
-Alert.alert(strings.error, strings.failedToSubmitReviews);
+      const { showErrorToast } = require('../utils/toast');
+      showErrorToast(strings.error, strings.failedToSubmitReviews);
     } finally {
       setReviewLoading(false);
     }

@@ -1,10 +1,10 @@
 // Library imports
-import React, {useState} from 'react';
-import {View, StyleSheet, ScrollView, RefreshControl, TouchableOpacity} from 'react-native';
-import {useSelector} from 'react-redux';
+import React, { useState } from 'react';
+import { View, StyleSheet, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
+import { useSelector } from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {useNavigation} from '@react-navigation/native';
-import {useQueryClient} from 'react-query';
+import { useNavigation } from '@react-navigation/native';
+import { useQueryClient, useQuery } from 'react-query';
 
 // Local imports
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
@@ -12,10 +12,12 @@ import ZHeader from '../../../components/common/ZHeader';
 import ZText from '../../../components/common/ZText';
 import ZLoader from '../../../components/common/ZLoader';
 import DashboardCard from './components/DashboardCard';
-import {useDashboardStats, useRecentActivity} from './hooks/useDashboardData';
+import { useDashboardStats, useRecentActivity } from './hooks/useDashboardData';
+import { useChefSocket } from './hooks/useChefSocket';
+import request from '../../../api/request';
 import strings from '../../../i18n/strings';
-import {styles} from '../../../themes';
-import {moderateScale} from '../../../common/constants';
+import { styles } from '../../../themes';
+import { moderateScale } from '../../../common/constants';
 
 export default function DashboardHome() {
   const colors = useSelector(state => state.theme.theme);
@@ -23,17 +25,24 @@ export default function DashboardHome() {
   const queryClient = useQueryClient();
   const [refreshing, setRefreshing] = useState(false);
 
+  // Fetch current user ID for socket connection
+  const { data: userData } = useQuery('user', () => request.get('/user'));
+  const userId = userData?.data?.user?._id;
+
+  // Connect to socket for real-time updates
+  useChefSocket(userId);
+
   // API hooks
   const {
     data: dashboardStats,
     isLoading: statsLoading,
     error: statsError,
   } = useDashboardStats();
-  
-  console.log('DashboardHome Render:', { 
-    dashboardStats, 
-    statsLoading, 
-    statsError 
+
+  console.log('DashboardHome Render:', {
+    dashboardStats,
+    statsLoading,
+    statsError
   });
 
   const {
@@ -48,7 +57,7 @@ export default function DashboardHome() {
       await queryClient.invalidateQueries('dashboardStats');
       await queryClient.invalidateQueries('recentActivity');
     } catch (error) {
-} finally {
+    } finally {
       setRefreshing(false);
     }
   };
@@ -58,9 +67,9 @@ export default function DashboardHome() {
     navigation.navigate(tabName);
   };
 
-  const QuickActionButton = ({title, icon, onPress, color}) => (
+  const QuickActionButton = ({ title, icon, onPress, color }) => (
     <TouchableOpacity
-      style={[localStyles.quickActionButton, {borderColor: color}]}
+      style={[localStyles.quickActionButton, { borderColor: color }]}
       onPress={onPress}
       activeOpacity={0.8}>
       <Ionicons name={icon} size={moderateScale(24)} color={color} />
@@ -70,9 +79,9 @@ export default function DashboardHome() {
     </TouchableOpacity>
   );
 
-  const ActivityItem = ({item}) => (
+  const ActivityItem = ({ item }) => (
     <View style={localStyles.activityItem}>
-      <View style={[localStyles.activityIcon, {backgroundColor: item.color + '20'}]}>
+      <View style={[localStyles.activityIcon, { backgroundColor: item.color + '20' }]}>
         <Ionicons name={item.icon} size={moderateScale(20)} color={item.color} />
       </View>
       <View style={localStyles.activityContent}>
@@ -95,7 +104,7 @@ export default function DashboardHome() {
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }>
-        
+
         {/* Welcome Section */}
         <View style={localStyles.welcomeSection}>
           <ZText type="B24" style={localStyles.welcomeText}>
@@ -126,7 +135,7 @@ export default function DashboardHome() {
               <View style={localStyles.statsGrid}>
                 <DashboardCard
                   title={strings.todaysRevenue}
-                  value={`$${dashboardStats?.todayRevenue?.toFixed(2) || '0.00'}`}
+                  value={`${strings.currency} ${dashboardStats?.todayRevenue?.toFixed(2) || '0.00'}`}
                   icon="cash-outline"
                   color={colors.primary}
                   containerStyle={localStyles.statCard}
@@ -199,7 +208,7 @@ export default function DashboardHome() {
           <ZText type="S18" style={localStyles.sectionTitle}>
             Recent Activity
           </ZText>
-          <View style={[localStyles.activityContainer, {backgroundColor: colors.inputBg}]}>
+          <View style={[localStyles.activityContainer, { backgroundColor: colors.inputBg }]}>
             {activityLoading ? (
               <View style={localStyles.loadingContainer}>
                 <ZLoader />

@@ -31,7 +31,8 @@ import axios from 'axios';
 import request from '../../api/request';
 import { useQueryClient } from 'react-query';
 import { OneSignal } from 'react-native-onesignal';
-import { ALERT_TYPE, Dialog, Toast } from 'react-native-alert-notification';
+import { ALERT_TYPE, Dialog } from 'react-native-alert-notification';
+import { showErrorToast } from '../../utils/toast';
 import { useStorage } from '../../utils/useStorage';
 import AppInitializer from '../../services/AppInitializer';
 
@@ -162,7 +163,7 @@ const Register = ({ navigation, route }) => {
       .catch(err => {
         setisLoading(false);
         console.log('Registration Error:', err);
-        let message = 'Something went wrong';
+        let message = strings.somethingWentWrong;
         if (typeof err === 'string') {
           message = err;
         } else if (err && typeof err === 'object') {
@@ -175,11 +176,7 @@ const Register = ({ navigation, route }) => {
           }
         }
 
-        Toast.show({
-          type: ALERT_TYPE.DANGER,
-          title: strings.error,
-          textBody: message,
-        });
+        showErrorToast(strings.error, message);
       });
   };
 
@@ -211,18 +208,10 @@ const Register = ({ navigation, route }) => {
         // Sign-in is in progress
       } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
         // Play services not available or outdated
-        Toast.show({
-          type: ALERT_TYPE.DANGER,
-          title: strings.error,
-          textBody: 'Play Services not available',
-        });
+        showErrorToast(strings.error, strings.playServicesNotAvailable);
       } else {
         // Some other error occurred
-        Toast.show({
-          type: ALERT_TYPE.DANGER,
-          title: strings.error,
-          textBody: error.message || 'Google Sign In Failed',
-        });
+        showErrorToast(strings.error, error.message || strings.googleSignInFailed);
       }
     }
   };

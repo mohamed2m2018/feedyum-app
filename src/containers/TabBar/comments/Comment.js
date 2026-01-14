@@ -1,5 +1,5 @@
-import { View, Text, Image, TouchableOpacity, I18nManager, StyleSheet } from 'react-native';
-import React, { useState, useEffect } from 'react';
+import { View, Text, Image, TouchableOpacity, I18nManager, StyleSheet, Animated } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
 import commentStyling from './CommentStyling';
 import TimeAgo from 'javascript-time-ago';
 import Reply from './Reply';
@@ -27,10 +27,11 @@ const Comment = props => {
     likes = []
   } = commentData;
 
+  // Animation for like button
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
   const { data: userData } = useQuery('user', () => request.get('/user'), { retry: 1 });
   const currentUser = userData?.data?.user;
-
-  console.log('Comment Debug:', _id, 'likes:', likes, 'curUser:', currentUser?._id, 'isLiked:', likes.includes(currentUser?._id));
 
   // Robust check for ObjectId vs String
   const checkIsLiked = () => {
@@ -45,32 +46,43 @@ const Comment = props => {
     setIsLiked(checkIsLiked());
   }, [likes, currentUser]);
 
-  // Sync local count if prop updates (e.g. from refresh)
   useEffect(() => {
     setLikesCount(likesNo);
   }, [likesNo]);
 
+  const animateLike = () => {
+    Animated.sequence([
+      Animated.spring(scaleAnim, {
+        toValue: 1.3,
+        useNativeDriver: true,
+        friction: 3,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        useNativeDriver: true,
+        friction: 3,
+      }),
+    ]).start();
+  };
 
   const toggleLikeMutation = useMutation(
     () => request.post(`/comment/like/${_id}`),
     {
       onMutate: async () => {
-        // Optimistic update
         const previousLiked = isLiked;
         const previousCount = likesCount;
 
         setIsLiked(!previousLiked);
         setLikesCount(prev => (!previousLiked ? prev + 1 : Math.max(0, prev - 1)));
+        animateLike();
 
         return { previousLiked, previousCount };
       },
       onError: (err, newTodo, context) => {
-        // Revert on error
         setIsLiked(context.previousLiked);
         setLikesCount(context.previousCount);
       },
       onSuccess: () => {
-        // Force refetch to sync with server data
         queryClient.invalidateQueries(['comments', props.postId]);
       }
     }
@@ -84,21 +96,26 @@ const Comment = props => {
   const mutation = useMutation(() => deleteComment(_id), {
     onSuccess: () => {
       queryClient.invalidateQueries(['comments', props.postId]);
-      props.refetch?.(); // Refetch parent list if passed
+      props.refetch?.();
     },
   });
 
   const onPressReply = () => {
     props.inputRef.current.focus();
-    // Pass comment ID to parent to know we are replying to THIS comment
-    props.onAddComment?.(_id);
-    // Scroll to this comment
+    // Pass comment ID, user name, and content preview for "Replying to..." indicator
+    props.onAddComment?.(_id, fullName, content);
     props.scrollToComment?.(props.index);
   };
 
   const renderReplies = replies => {
     return replies.map((reply, index) => (
-      <View key={index} style={{ marginLeft: moderateScale(20), marginTop: moderateScale(5) }}>
+      <View
+        key={index}
+        style={[
+          commentStyling.replyContainer,
+          { borderLeftColor: props.theme.primary + '30' }
+        ]}
+      >
         <Reply
           commentId={props.commentData._id}
           postId={props.postId}
@@ -109,7 +126,6 @@ const Comment = props => {
       </View>
     ));
   };
-
 
   const fullName = user_id?.fullName || "Deleted User";
   const avatar = user_id?.avatar || "https://placehold.co/100x100/png";
@@ -134,89 +150,199 @@ const Comment = props => {
     }
   };
 
+  const cardBgColor = props.theme.dark
+    ? 'rgba(255, 255, 255, 0.05)'
+    : 'rgba(0, 0, 0, 0.02)';
+
   return (
     <View style={localStyles.container}>
-      <View style={commentStyling.mainWrapper}>
-        <TouchableOpacity onPress={navigateToProfile}>
-          <Image style={commentStyling.image} source={{ uri: avatar }} />
+      {/* Comment Card */}
+      <View
+        style={[
+          localStyles.commentCard,
+          {
+            backgroundColor: cardBgColor,
+            shadowColor: props.theme.dark ? '#000' : '#888',
+          }
+        ]}
+      >
+        {/* Avatar */}
+        <TouchableOpacity
+          onPress={navigateToProfile}
+          style={localStyles.avatarContainer}
+        >
+          <Image
+            style={[
+              localStyles.avatar,
+              { borderColor: props.theme.primary + '40' }
+            ]}
+            source={{ uri: avatar }}
+          />
         </TouchableOpacity>
 
-        <View style={{ flex: 1 }}>
-          <View style={commentStyling.wrapper}>
-            <Text
-              onPress={navigateToProfile}
-              style={[
-                commentStyling.commentOwner,
-                { color: props.theme.textColor }
-              ]}>
+        {/* Content Section */}
+        <View style={localStyles.contentWrapper}>
+          {/* Header with name */}
+          <TouchableOpacity onPress={navigateToProfile}>
+            <Text style={[localStyles.userName, { color: props.theme.textColor }]}>
               {fullName}
             </Text>
-            <Text
-              style={[
-                commentStyling.content,
-                { color: props.theme.textColor }
-              ]}>
-              {content}
-            </Text>
-          </View>
+          </TouchableOpacity>
 
-          <View style={commentStyling.commentFooter}>
-            <Text style={[commentStyling.footerElement, { color: props.theme.textColor }]}>
+          {/* Comment text */}
+          <Text style={[localStyles.contentText, { color: props.theme.textColor }]}>
+            {content}
+          </Text>
+
+          {/* Footer actions */}
+          <View style={localStyles.footerRow}>
+            <Text style={[localStyles.timeText, { color: props.theme.grayScale7 }]}>
               {time}
             </Text>
 
-            <TouchableOpacity onPress={onPressReply}>
-              <Text style={[commentStyling.footerElement, { color: props.theme.textColor }]}>
+            <TouchableOpacity
+              onPress={onPressReply}
+              style={localStyles.actionButton}
+            >
+              <Text style={[localStyles.actionText, { color: props.theme.primary }]}>
                 {strings.reply}
               </Text>
             </TouchableOpacity>
 
             {commentData?.user_id?._id === currentUser?._id && (
-              <TouchableOpacity onPress={() => mutation.mutate(commentData)}>
-                <Feather name="trash-2" size={moderateScale(16)} color={props.theme.primary} />
+              <TouchableOpacity
+                onPress={() => mutation.mutate(commentData)}
+                style={[localStyles.deleteButton, { backgroundColor: props.theme.redColor + '15' }]}
+              >
+                <Feather
+                  name="trash-2"
+                  size={moderateScale(14)}
+                  color={props.theme.redColor || '#FF3B30'}
+                />
               </TouchableOpacity>
             )}
           </View>
         </View>
 
         {/* Like Button Column */}
-        <TouchableOpacity
-          onPress={() => toggleLikeMutation.mutate()}
-          style={localStyles.likeContainer}
-        >
-          <Ionicons
-            name={isLiked ? 'heart' : 'heart-outline'}
-            size={moderateScale(18)}
-            color={isLiked ? '#FF2D55' : props.theme.textColor} // TikTo pink/red
-          />
-          <Text style={[localStyles.likeCount, { color: props.theme.textColor }]}>
+        <View style={localStyles.likeColumn}>
+          <TouchableOpacity
+            onPress={() => toggleLikeMutation.mutate()}
+            style={[
+              localStyles.likeButton,
+              isLiked && { backgroundColor: '#FF2D5510' }
+            ]}
+            activeOpacity={0.7}
+          >
+            <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+              <Ionicons
+                name={isLiked ? 'heart' : 'heart-outline'}
+                size={moderateScale(20)}
+                color={isLiked ? '#FF2D55' : props.theme.grayScale7}
+              />
+            </Animated.View>
+          </TouchableOpacity>
+          <Text style={[localStyles.likeCount, { color: props.theme.grayScale7 }]}>
             {millify(likesCount)}
           </Text>
-        </TouchableOpacity>
-
+        </View>
       </View>
 
       {/* Replies Section */}
-      {replies && replies.length > 0 && renderReplies(replies)}
+      {replies && replies.length > 0 && (
+        <View style={localStyles.repliesSection}>
+          {renderReplies(replies)}
+        </View>
+      )}
     </View>
   );
 };
 
 const localStyles = StyleSheet.create({
   container: {
-    marginBottom: moderateScale(15),
+    marginBottom: moderateScale(4),
   },
-  likeContainer: {
+  commentCard: {
+    flexDirection: 'row',
+    paddingVertical: moderateScale(14),
+    paddingHorizontal: moderateScale(14),
+    marginHorizontal: moderateScale(4),
+    marginBottom: moderateScale(6),
+    borderRadius: moderateScale(16),
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  avatarContainer: {
+    marginRight: moderateScale(12),
+  },
+  avatar: {
+    width: moderateScale(44),
+    height: moderateScale(44),
+    borderRadius: moderateScale(22),
+    borderWidth: 2,
+  },
+  contentWrapper: {
+    flex: 1,
+    paddingRight: moderateScale(4),
+  },
+  userName: {
+    fontSize: moderateScale(14),
+    fontWeight: '700',
+    letterSpacing: 0.2,
+    marginBottom: moderateScale(3),
+  },
+  contentText: {
+    fontSize: moderateScale(14),
+    lineHeight: moderateScale(20),
+    fontWeight: '400',
+    marginBottom: moderateScale(10),
+  },
+  footerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  timeText: {
+    fontSize: moderateScale(12),
+    fontWeight: '400',
+    marginRight: moderateScale(16),
+  },
+  actionButton: {
+    paddingVertical: moderateScale(4),
+    paddingHorizontal: moderateScale(8),
+    marginRight: moderateScale(8),
+  },
+  actionText: {
+    fontSize: moderateScale(12),
+    fontWeight: '600',
+  },
+  deleteButton: {
+    padding: moderateScale(6),
+    borderRadius: moderateScale(10),
+    marginLeft: moderateScale(4),
+  },
+  likeColumn: {
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    paddingTop: moderateScale(2),
+    minWidth: moderateScale(44),
+  },
+  likeButton: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: moderateScale(5),
-    padding: moderateScale(5),
+    padding: moderateScale(8),
+    borderRadius: moderateScale(18),
   },
   likeCount: {
-    fontSize: moderateScale(12),
+    fontSize: moderateScale(11),
+    fontWeight: '500',
     marginTop: moderateScale(2),
-    textAlign: 'center',
-  }
+  },
+  repliesSection: {
+    marginLeft: moderateScale(8),
+    marginTop: moderateScale(4),
+  },
 });
 
 export default Comment;

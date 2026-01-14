@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -7,16 +7,16 @@ import {
   ScrollView,
   Modal,
   FlatList,
-  Alert,
 } from 'react-native';
-import {useQuery} from 'react-query';
+import { showInfoToast } from '../../../../utils/toast';
+import { useQuery } from 'react-query';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import ZText from '../../../../components/common/ZText';
 import ZButton from '../../../../components/common/ZButton';
 import ZLoader from '../../../../components/common/ZLoader';
 import request from '../../../../api/request';
-import {moderateScale} from '../../../../common/constants';
+import { moderateScale } from '../../../../common/constants';
 import images from '../../../../assets/images';
 import strings from '../../../../i18n/strings';
 
@@ -49,7 +49,7 @@ const AttachedDishesComponent = ({
         const dishesResponse = await request.get(`/dishes/menu/${menuId}`);
         return dishesResponse.data || [];
       } catch (error) {
-return [];
+        return [];
       }
     },
     {
@@ -59,12 +59,12 @@ return [];
 
   const handleAddDish = dish => {
     if (attachedDishes.length >= 3) {
-      Alert.alert(strings.maximumReached, strings.canAttachUpTo3Dishes);
+      showInfoToast(strings.maximumReached, strings.canAttachUpTo3Dishes);
       return;
     }
 
     if (attachedDishes.find(d => d._id === dish._id)) {
-      Alert.alert(strings.alreadyAdded, strings.dishAlreadyAttached);
+      showInfoToast(strings.alreadyAdded, strings.dishAlreadyAttached);
       return;
     }
 
@@ -78,13 +78,13 @@ return [];
     onDishesChange(newDishes);
   };
 
-  const renderDishItem = ({item}) => (
+  const renderDishItem = ({ item }) => (
     <TouchableOpacity
-      style={[localStyles.dishSelectorItem, {backgroundColor: colors.inputBg}]}
+      style={[localStyles.dishSelectorItem, { backgroundColor: colors.inputBg }]}
       onPress={() => handleAddDish(item)}
       activeOpacity={0.8}>
       <Image
-        source={item.image ? {uri: item.image} : images.dishPlaceholder}
+        source={item.image ? { uri: item.image } : images.dishPlaceholder}
         style={localStyles.dishSelectorImage}
         resizeMode="cover"
       />
@@ -118,7 +118,7 @@ return [];
         },
       ]}>
       <Image
-        source={dish.image ? {uri: dish.image} : images.dishPlaceholder}
+        source={dish.image ? { uri: dish.image } : images.dishPlaceholder}
         style={localStyles.attachedDishImage}
         resizeMode="cover"
       />
@@ -126,7 +126,7 @@ return [];
         <TouchableOpacity
           style={[
             localStyles.removeDishButton,
-            {backgroundColor: colors.redColor},
+            { backgroundColor: colors.redColor },
           ]}
           onPress={() => handleRemoveDish(dish._id)}
           activeOpacity={0.8}>
@@ -187,9 +187,9 @@ return [];
         animationType="slide"
         presentationStyle="pageSheet"
         onRequestClose={() => setShowDishSelector(false)}>
-        <View style={[localStyles.modalContainer, {backgroundColor: colors.backgroundColor}]}>
+        <View style={[localStyles.modalContainer, { backgroundColor: colors.backgroundColor }]}>
           {/* Modal Header */}
-          <View style={[localStyles.modalHeader, {borderBottomColor: colors.bColor}]}>
+          <View style={[localStyles.modalHeader, { borderBottomColor: colors.bColor }]}>
             <TouchableOpacity
               onPress={() => setShowDishSelector(false)}
               style={localStyles.closeButton}>

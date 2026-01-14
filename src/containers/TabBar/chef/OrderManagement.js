@@ -12,7 +12,7 @@ import { useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useQuery, useQueryClient, useMutation } from 'react-query';
-import { Toast, ALERT_TYPE } from 'react-native-alert-notification';
+import { showSuccessToast, showErrorToast } from '../../../utils/toast';
 
 // Local imports
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
@@ -23,6 +23,7 @@ import OrderCard from './components/OrderCard';
 import OrderDetailsModal from './components/OrderDetailsModal';
 import OrderReviewModal from './components/OrderReviewModal';
 import RejectReasonModal from '../ordering/components/RejectReasonModal';
+import { useChefSocket } from './hooks/useChefSocket';
 import request from '../../../api/request';
 import strings from '../../../i18n/strings';
 import { moderateScale } from '../../../common/constants';
@@ -83,11 +84,11 @@ const EmptyState = ({ selectedStatus, colors }) => (
   <View style={localStyles.emptyContainer}>
     <Ionicons name="receipt-outline" size={moderateScale(64)} color={colors.grayScale4} />
     <ZText type="B18" color={colors.grayScale7} style={localStyles.emptyTitle}>
-      No orders found
+      {strings.noOrdersFound}
     </ZText>
     <ZText type="M14" color={colors.grayScale7} style={localStyles.emptySubtitle}>
       {selectedStatus === 'all'
-        ? 'Orders will appear here when customers place them'
+        ? strings.ordersWillAppear
         : strings.formatString(strings.noOrdersStatus, selectedStatus)}
     </ZText>
   </View>
@@ -100,7 +101,7 @@ const LoadingState = ({ colors }) => (
       type="M16"
       color={colors.grayScale7}
       style={localStyles.loadingText}>
-      Loading orders...
+      {strings.loadingOrders}
     </ZText>
   </View>
 );
@@ -113,13 +114,13 @@ const ErrorState = ({ onRetry, colors }) => (
       color={colors.redColor}
     />
     <ZText type="M16" color={colors.redColor} style={localStyles.errorText}>
-      Failed to load orders
+      {strings.failedToLoadOrders}
     </ZText>
     <TouchableOpacity
       style={[localStyles.retryButton, { borderColor: colors.redColor }]}
       onPress={onRetry}>
       <ZText type="M14" color={colors.redColor}>
-        Retry
+        {strings.retry}
       </ZText>
     </TouchableOpacity>
   </View>
@@ -141,9 +142,9 @@ export default function OrderManagement() {
 
   // Order status options
   const statusOptions = [
-    { label: 'All', value: 'all', color: colors.textColor, count: 0 },
+    { label: strings.all, value: 'all', color: colors.textColor, count: 0 },
     { label: strings.pending, value: 'pending', color: colors.orange, count: 0 },
-    { label: 'Accepted', value: 'confirmed', color: colors.green, count: 0 }, // Backend status is confirmed
+    { label: strings.accepted, value: 'confirmed', color: colors.green, count: 0 }, // Backend status is confirmed
     { label: strings.preparing, value: 'preparing', color: colors.blue, count: 0 },
     { label: strings.ready, value: 'ready', color: colors.yellow, count: 0 },
     { label: strings.completed, value: 'completed', color: colors.primary, count: 0 },
@@ -153,6 +154,9 @@ export default function OrderManagement() {
   // Fetch current user first
   const { data: userData } = useQuery('user', () => request.get('/user'));
   const userId = userData?.data?.user?._id;
+
+  // Connect to socket for real-time updates
+  useChefSocket(userId);
 
   // Fetch orders - using real API data
   const {
@@ -210,11 +214,7 @@ export default function OrderManagement() {
     {
       onSuccess: (data, variables) => {
         queryClient.invalidateQueries('chefOrders');
-        Toast.show({
-          type: ALERT_TYPE.SUCCESS,
-          title: 'Success',
-          textBody: `Order status updated to ${variables.status}`,
-        });
+        showSuccessToast(strings.success, strings.orderUpdatedSuccess);
 
         // Auto-switch tab and scroll
         if (variables.status !== 'cancelled') {
@@ -223,11 +223,7 @@ export default function OrderManagement() {
         }
       },
       onError: error => {
-        Toast.show({
-          type: ALERT_TYPE.DANGER,
-          title: 'Error',
-          textBody: error?.message || 'Failed to update order status',
-        });
+        showErrorToast(strings.error, error?.message || strings.failedToUpdateOrder);
       },
     },
   );
@@ -368,7 +364,7 @@ export default function OrderManagement() {
                   {ordersData.length}
                 </ZText>
                 <ZText type="M12" color={colors.grayScale7}>
-                  Total Orders
+                  {strings.totalOrders}
                 </ZText>
               </View>
               <View style={localStyles.summaryItem}>
@@ -376,7 +372,7 @@ export default function OrderManagement() {
                   {ordersData.filter(order => order.status === 'pending').length}
                 </ZText>
                 <ZText type="M12" color={colors.grayScale7}>
-                  Pending
+                  {strings.pending}
                 </ZText>
               </View>
               <View style={localStyles.summaryItem}>
@@ -384,7 +380,7 @@ export default function OrderManagement() {
                   {ordersData.filter(order => order.status === 'preparing').length}
                 </ZText>
                 <ZText type="M12" color={colors.grayScale7}>
-                  Preparing
+                  {strings.preparing}
                 </ZText>
               </View>
               <View style={localStyles.summaryItem}>
@@ -450,7 +446,7 @@ export default function OrderManagement() {
               style={[localStyles.indicator, { backgroundColor: colors.primary }]}
             />
             <ZText type="R12" color={colors.grayScale7}>
-              Live updates active
+              {strings.liveUpdatesActive}
             </ZText>
           </View>
         )}

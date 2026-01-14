@@ -20,7 +20,7 @@ import ZKeyBoardAvoidWrapper from '../../components/common/ZKeyBoardAvoidWrapper
 import ZButton from '../../components/common/ZButton';
 import { useMutation, useQueryClient } from 'react-query';
 import request from '../../api/request';
-import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
+import { showWarningToast, showErrorToast } from '../../utils/toast';
 import AppInitializer from '../../services/AppInitializer';
 import { OneSignal } from 'react-native-onesignal';
 import {
@@ -93,10 +93,7 @@ const Login = ({ navigation }) => {
           },
           onError: (err) => {
             console.log('[Login] mutate onError triggered', err);
-            Toast.show({
-              type: ALERT_TYPE.WARNING,
-              textBody: strings.notsignedInWithGoogle,
-            });
+            showWarningToast(strings.error, strings.notsignedInWithGoogle);
             setTimeout(() => {
               navigation.navigate(StackNav.Register, {
                 isGoogleSignInFailed: true,
@@ -197,11 +194,7 @@ const Login = ({ navigation }) => {
           }
         }
       }
-      Toast.show({
-        type: ALERT_TYPE.DANGER,
-        title: strings.error,
-        textBody: message,
-      });
+      showErrorToast(strings.error, message);
     },
     onSuccess: async data => {
       // OneSignal v5

@@ -5,9 +5,10 @@ import {
   TouchableOpacity,
   FlatList,
   StyleSheet,
-  Alert,
+
   Dimensions
 } from 'react-native';
+import { showErrorToast } from '../utils/toast';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import Feather from 'react-native-vector-icons/Feather';
@@ -65,7 +66,7 @@ const AddressSelectionModal = ({
       onClose();
     } catch (error) {
       setLoadingCurrentLocation(false);
-      Alert.alert(strings.error, strings.failedToGetLocation);
+      showErrorToast(strings.error, strings.failedToGetLocation);
     }
   };
 

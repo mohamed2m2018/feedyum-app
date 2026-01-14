@@ -28,7 +28,8 @@ import { Inbox_Dark } from '../../../assets/svgs';
 import ReelComponent from '../../../components/ReelComponent';
 import { useQuery } from 'react-query';
 import request from '../../../api/request';
-import { Toast, ALERT_TYPE } from 'react-native-alert-notification';
+import { showErrorToast, showSuccessToast, showActionDialog } from '../../../utils/toast';
+import { ALERT_TYPE } from 'react-native-alert-notification';
 import { useHandleAuth } from '../../../utils/useHandleAuth';
 import { useIsFocused } from '@react-navigation/native';
 import { useScreen } from '../../../navigation/screenContext';
@@ -144,11 +145,7 @@ export default function Profile({ navigation }) {
       }
     },
     onError: err => {
-      Toast.show({
-        type: ALERT_TYPE.DANGER,
-        title: strings.error,
-        textBody: err[Object.keys(err)?.[0]],
-      });
+      showErrorToast(strings.error, err[Object.keys(err)?.[0]]);
     },
   });
 
@@ -170,11 +167,7 @@ export default function Profile({ navigation }) {
       }
     },
     onError: err => {
-      Toast.show({
-        type: ALERT_TYPE.DANGER,
-        title: strings.error,
-        textBody: err[Object.keys(err)?.[0]],
-      });
+      showErrorToast(strings.error, err[Object.keys(err)?.[0]]);
     },
   });
 
@@ -194,42 +187,31 @@ export default function Profile({ navigation }) {
   }, [queryData, isLoading, hasCheckedEmptyPosts]);
 
   const onDeletePost = (id) => {
-    Alert.alert(strings.deletePost, strings.deletePostConfirm, [
-      {
-        text: strings.cancel,
-        style: 'cancel',
-      },
-      {
-        text: strings.delete,
-        onPress: async () => {
-          try {
-            setisLoadingSomething(true);
-            const { data } = await request.delete(`/story/${id}`);
-            if (data?.success) {
-              if (selectedTab === 'posts') {
-                refetchPosts();
-              } else {
-                refetchReviews();
-              }
-              Toast.show({
-                type: ALERT_TYPE.SUCCESS,
-                title: strings?.success || 'Success',
-                textBody: 'Post deleted successfully',
-              });
+    showActionDialog({
+      type: ALERT_TYPE.WARNING,
+      title: strings.deletePost,
+      message: strings.deletePostConfirm,
+      confirmText: strings.delete,
+      cancelText: strings.cancel,
+      onConfirm: async () => {
+        try {
+          setisLoadingSomething(true);
+          const { data } = await request.delete(`/story/${id}`);
+          if (data?.success) {
+            if (selectedTab === 'posts') {
+              refetchPosts();
+            } else {
+              refetchReviews();
             }
-          } catch (error) {
-            Toast.show({
-              type: ALERT_TYPE.DANGER,
-              title: strings?.error || 'Error',
-              textBody: error?.response?.data?.message || 'Something went wrong',
-            });
-          } finally {
-            setisLoadingSomething(false);
+            showSuccessToast(strings.success, strings.postDeletedSuccess);
           }
-        },
-        style: 'destructive',
+        } catch (error) {
+          showErrorToast(strings.error, error?.response?.data?.message || strings.somethingWentWrong);
+        } finally {
+          setisLoadingSomething(false);
+        }
       },
-    ]);
+    });
   };
 
   const onRefresh = async () => {
@@ -536,16 +518,7 @@ export default function Profile({ navigation }) {
         data={item?.views}
         profileId={user}
         setisLoadingSomething={setisLoadingSomething}
-        reelUrl={
-          item?.avatarUri?.replace(
-            'https://foodtokforever.s3.amazonaws.com',
-            'https://d1wfcrbbkg3bzd.cloudfront.net',
-          ) ||
-          item?.poster?.replace(
-            'https://foodtokforever.s3.amazonaws.com',
-            'https://d1wfcrbbkg3bzd.cloudfront.net',
-          )
-        }
+        reelUrl={item?.avatarUri || item?.poster}
         id={item?._id}
         item={item}
         isPlay={!item?.avatarUri}

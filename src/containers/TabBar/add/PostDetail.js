@@ -38,7 +38,7 @@ import {
 import { StackNav, TabNav } from '../../../navigation/NavigationKeys';
 import { useQuery } from 'react-query';
 import request from '../../../api/request';
-import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
+import { showErrorToast, showSuccessToast, showInfoToast } from '../../../utils/toast';
 import BottomActionSheet from '../../../components/models/BottomActionSheet';
 import images from '../../../assets/images';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
@@ -88,11 +88,7 @@ export default function PostDetail() {
   const { data: queryResult } = useQuery('user', () => request.get('/user'), {
     retry: 1,
     onError: err => {
-      Toast.show({
-        type: ALERT_TYPE.DANGER,
-        title: strings.error,
-        textBody: err[Object.keys(err)?.[0]] || strings.errorOccured,
-      });
+      showErrorToast(strings.error, err[Object.keys(err)?.[0]] || strings.errorOccured);
     },
   });
 
@@ -198,29 +194,18 @@ export default function PostDetail() {
       !selectedDish;
     const validation = user?.type === 'chef' ? validationChef : validationUser;
     if (validation) {
-      Toast.show({
-        type: ALERT_TYPE.DANGER,
-        title: strings.error,
-        textBody: user?.type === 'chef'
-          ? strings.pleaseFillAllInputs
-          : strings.selectRestaurantAndDish,
-      });
+      showErrorToast(
+        strings.error,
+        user?.type === 'chef' ? strings.pleaseFillAllInputs : strings.selectRestaurantAndDish
+      );
       return;
     }
     if (postedData.caption?.length < 5) {
-      Toast.show({
-        type: ALERT_TYPE.DANGER,
-        title: strings.error,
-        textBody: strings.descriptionTooShort,
-      });
+      showErrorToast(strings.error, strings.descriptionTooShort);
       return;
     }
     if (postedData.title?.length > 45) {
-      Toast.show({
-        type: ALERT_TYPE.DANGER,
-        title: strings.error,
-        textBody: strings.tooLargeTitle,
-      });
+      showErrorToast(strings.error, strings.tooLargeTitle);
       return;
     }
 
@@ -298,11 +283,7 @@ export default function PostDetail() {
   const handleMedia = value => {
     setmediaIsEdited(true);
     if (value.duration && value.duration > 60000) {
-      Toast.show({
-        type: ALERT_TYPE.DANGER,
-        title: strings.error,
-        textBody: strings.maxDuration,
-      });
+      showErrorToast(strings.error, strings.maxDuration);
       return;
     }
     setlocalUri(value.path);
@@ -386,14 +367,14 @@ export default function PostDetail() {
   };
 
   const showPermissionAlert = (type) => {
-    Alert.alert(
-      strings.permissionRequired,
-      strings.permissionMessage.replace('{type}', type),
-      [
-        { text: strings.cancel, style: 'cancel' },
-        { text: strings.settings, onPress: () => Linking.openSettings() }
-      ]
-    );
+    showActionDialog({
+      type: ALERT_TYPE.WARNING,
+      title: strings.permissionRequired,
+      message: strings.permissionMessage.replace('{type}', type),
+      confirmText: strings.settings,
+      cancelText: strings.cancel,
+      onConfirm: () => Linking.openSettings(),
+    });
   };
 
   const handleCaptureVideo = async () => {

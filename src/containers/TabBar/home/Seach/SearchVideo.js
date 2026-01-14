@@ -1,10 +1,10 @@
 import React from 'react';
-import {ActivityIndicator, View} from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
 import LiveComponent from '../../../../components/LiveComponent';
 import ZText from '../../../../components/common/ZText';
 import strings from '../../../../i18n/strings';
-import {FlatList} from 'react-native';
-import {useSelector} from 'react-redux';
+import { FlatList } from 'react-native';
+import { useSelector } from 'react-redux';
 
 export default function SearchVideo({
   stories = [],
@@ -12,13 +12,13 @@ export default function SearchVideo({
   ...props
 }) {
   const colors = useSelector(state => state.theme.theme);
-  
+
   return (
     <View>
       <FlatList
         data={stories}
         ListFooterComponent={
-          <View style={{height: 100}}>
+          <View style={{ height: 100 }}>
             {isFetchingNextPage && (
               <ActivityIndicator color={colors.primary} size={'small'} />
             )}
@@ -26,35 +26,20 @@ export default function SearchVideo({
         }
         ListEmptyComponent={
           !props.isFetching && (
-            <ZText style={{textAlign: 'center', marginTop: 250}} type={'B20'}>
+            <ZText style={{ textAlign: 'center', marginTop: 250 }} type={'B20'}>
               {strings.noResultFoundDesc}
             </ZText>
           )
         }
-        renderItem={({item}) => {
-          return (
-            <LiveComponent
-              id={item._id}
-              data={item?.title}
-              reelUrl={
-                item?.avatarUri?.includes('https://foodtokforever.s3.amazonaws.com')
-                  ? item?.avatarUri?.replace(
-                      'https://foodtokforever.s3.amazonaws.com',
-                      'https://d1wfcrbbkg3bzd.cloudfront.net',
-                    )
-                  : item?.avatarUri ||
-                item?.poster?.includes('https://foodtokforever.s3.amazonaws.com')
-                  ? item?.poster?.replace(
-                      'https://foodtokforever.s3.amazonaws.com',
-                      'https://d1wfcrbbkg3bzd.cloudfront.net',
-                    )
-                  : item?.poster
-              }
-              userName={item?.title}
-              userId={item?.author}
-            />
-          );
-        }}
+        renderItem={({ item }) => (
+          <LiveComponent
+            id={item._id}
+            data={item?.title}
+            reelUrl={item?.avatarUri || item?.poster}
+            userName={item?.title}
+            userId={item?.author}
+          />
+        )}
         {...props}
         keyExtractor={(item, index) => item?._id || `story-${index}`}
         numColumns={2}

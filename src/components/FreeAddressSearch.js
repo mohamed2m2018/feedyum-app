@@ -7,8 +7,8 @@ import {
   StyleSheet,
   Text,
   ActivityIndicator,
-  Alert
 } from 'react-native';
+import { showErrorToast } from '../utils/toast';
 import { useSelector } from 'react-redux';
 import { moderateScale } from '../common/constants';
 import ZText from './common/ZText';
@@ -52,7 +52,7 @@ const FreeAddressSearch = ({
   const searchAddresses = async (query, retryCount = 0) => {
     setLoading(true);
     try {
-      const predictions = await GoogleMapsService.searchPlaces(query);
+      const predictions = await GoogleMapsService.searchPlaces(query, { components: 'country:eg' });
 
       const formattedSuggestions = predictions.map(item => ({
         id: item.place_id,
@@ -100,7 +100,7 @@ const FreeAddressSearch = ({
         );
       }
     } catch (error) {
-      Alert.alert(strings.error, strings.failedToGetLocationDetails || "Failed to get location details");
+      showErrorToast(strings.error, strings.failedToGetLocationDetails || "Failed to get location details");
     } finally {
       setLoading(false);
     }

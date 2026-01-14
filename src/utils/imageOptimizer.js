@@ -3,7 +3,7 @@
 // CDN URL replacements for faster loading
 export const optimizeImageUrl = (url, options = {}) => {
   if (!url) return url;
-  
+
   const {
     width = null,
     height = null,
@@ -13,27 +13,24 @@ export const optimizeImageUrl = (url, options = {}) => {
     format = 'jpg',
     blur = false
   } = options;
-  
-  // Replace S3 URLs with CloudFront CDN
-  let optimizedUrl = url.replace(
-    'https://foodtokforever.s3.amazonaws.com',
-    'https://d1wfcrbbkg3bzd.cloudfront.net'
-  );
-  
+
+  // URLs are already served via Cloudflare R2 CDN (cdn.feedyum.com)
+  let optimizedUrl = url;
+
   // Add optimization parameters for CloudFront if supported
   const params = new URLSearchParams();
-  
+
   if (width) params.append('w', width.toString());
   if (height) params.append('h', height.toString());
   if (quality !== 80) params.append('q', quality.toString());
   if (format !== 'jpg') params.append('f', format);
   if (blur) params.append('blur', '10');
-  
+
   if (params.toString()) {
     const separator = optimizedUrl.includes('?') ? '&' : '?';
     optimizedUrl = `${optimizedUrl}${separator}${params.toString()}`;
   }
-  
+
   return optimizedUrl;
 };
 
@@ -51,14 +48,14 @@ export const ImagePresets = {
 // Smart image loader that adapts to connection speed
 export const getAdaptiveImageUrl = (url, preset = 'MEDIUM') => {
   if (!url) return url;
-  
+
   // Default to medium quality
   let selectedPreset = ImagePresets[preset] || ImagePresets.MEDIUM;
-  
+
   // Detect connection speed (if available)
   if (navigator?.connection) {
     const { effectiveType, downlink } = navigator.connection;
-    
+
     // Adjust quality based on connection
     if (effectiveType === 'slow-2g' || effectiveType === '2g' || downlink < 1) {
       selectedPreset = { ...selectedPreset, quality: 60, width: selectedPreset.width * 0.7 };
@@ -66,14 +63,14 @@ export const getAdaptiveImageUrl = (url, preset = 'MEDIUM') => {
       selectedPreset = { ...selectedPreset, quality: 70 };
     }
   }
-  
+
   return optimizeImageUrl(url, selectedPreset);
 };
 
 // Progressive loading with blur placeholder
 export const getProgressiveImageUrls = (url) => {
   if (!url) return { blur: null, full: null };
-  
+
   return {
     blur: optimizeImageUrl(url, { width: 50, height: 50, quality: 30, blur: true }),
     full: optimizeImageUrl(url, ImagePresets.MEDIUM),
@@ -88,7 +85,7 @@ export const optimizeVideoPoster = (url) => {
 // Image prefetching utility
 export const prefetchImage = (url) => {
   if (!url) return Promise.resolve();
-  
+
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = resolve;
@@ -100,15 +97,15 @@ export const prefetchImage = (url) => {
 // Batch image prefetching
 export const prefetchImages = async (urls, options = {}) => {
   const { concurrent = 3, timeout = 5000 } = options;
-  
+
   const chunks = [];
   for (let i = 0; i < urls.length; i += concurrent) {
     chunks.push(urls.slice(i, i + concurrent));
   }
-  
+
   for (const chunk of chunks) {
     await Promise.allSettled(
-      chunk.map(url => 
+      chunk.map(url =>
         Promise.race([
           prefetchImage(url),
           new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), timeout))

@@ -6,9 +6,11 @@ import {
   FlatList,
   TouchableOpacity,
   Image,
-  Alert,
+
   RefreshControl,
 } from 'react-native';
+import { showSuccessToast, showErrorToast, showActionDialog } from '../utils/toast';
+import { ALERT_TYPE } from 'react-native-alert-notification';
 import { useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useQuery } from 'react-query';
@@ -76,7 +78,7 @@ const ReviewsList = ({
         setPage(pageNum);
       }
     } catch (error) {
-      Alert.alert(strings.error, strings.failedToLoadReviews);
+      showErrorToast(strings.error, strings.failedToLoadReviews);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -103,60 +105,46 @@ const ReviewsList = ({
       // Refresh the specific review or reload all reviews
       handleRefresh();
     } catch (error) {
-      Alert.alert(strings.error, strings.failedToMarkHelpful);
+      showErrorToast(strings.error, strings.failedToMarkHelpful);
     }
   };
 
   const handleReport = reviewId => {
-    Alert.alert(strings.reportReview, strings.whyReportingReview, [
-      { text: strings.cancel, style: 'cancel' },
-      {
-        text: strings.inappropriateContent,
-        onPress: () => submitReport(reviewId, 'inappropriate'),
-      },
-      {
-        text: strings.spam,
-        onPress: () => submitReport(reviewId, 'spam'),
-      },
-      {
-        text: strings.fakeReview,
-        onPress: () => submitReport(reviewId, 'fake'),
-      },
-    ]);
+    showActionDialog({
+      type: ALERT_TYPE.WARNING,
+      title: strings.reportReview,
+      message: strings.whyReportingReview,
+      confirmText: strings.inappropriateContent,
+      cancelText: strings.cancel,
+      onConfirm: () => submitReport(reviewId, 'inappropriate'),
+    });
   };
 
   const handleDelete = reviewId => {
-    Alert.alert(
-      strings.deleteReviewTitle,
-      strings.deleteReviewConfirm,
-      [
-        { text: strings.cancel, style: 'cancel' },
-        {
-          text: strings.delete,
-          style: 'destructive',
-          onPress: () => confirmDelete(reviewId),
-        },
-      ]
-    );
+    showActionDialog({
+      type: ALERT_TYPE.WARNING,
+      title: strings.deleteReviewTitle,
+      message: strings.deleteReviewConfirm,
+      confirmText: strings.delete,
+      cancelText: strings.cancel,
+      onConfirm: () => confirmDelete(reviewId),
+    });
   };
 
   const confirmDelete = async reviewId => {
     try {
       await reviewService.deleteReview(reviewId);
-      Alert.alert(strings.success, strings.reviewDeleted);
-      // Refresh the reviews list
-      handleRefresh();
     } catch (error) {
-      Alert.alert(strings.error, strings.failedToDeleteReview);
+      showErrorToast(strings.error, strings.failedToDeleteReview);
     }
   };
 
   const submitReport = async (reviewId, reason) => {
     try {
       await reviewService.reportReview(reviewId, reason);
-      Alert.alert(strings.thankYou, strings.reportSubmitted);
+      showSuccessToast(strings.thankYou, strings.reportSubmitted);
     } catch (error) {
-      Alert.alert(strings.error, strings.failedToReportReview);
+      showErrorToast(strings.error, strings.failedToReportReview);
     }
   };
 

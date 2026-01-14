@@ -1,24 +1,24 @@
 // Libraries import
 import React from 'react';
-import {Modal, StyleSheet, View, TouchableWithoutFeedback} from 'react-native';
-import {useSelector} from 'react-redux';
+import { Modal, StyleSheet, View, TouchableWithoutFeedback } from 'react-native';
+import { useSelector } from 'react-redux';
 
 // Local import
-import {moderateScale} from '../../common/constants';
+import { moderateScale } from '../../common/constants';
 import strings from '../../i18n/strings';
-import {commonColor, styles} from '../../themes';
+import { commonColor, styles } from '../../themes';
 import ZButton from '../common/ZButton';
 import ZText from '../common/ZText';
 
 const ErrorModal = props => {
   const colors = useSelector(state => state.theme.theme);
 
-  const {visible, onPressModalClose, subTitle} = props;
+  const { visible, onPressModalClose, subTitle } = props;
   return (
     <Modal animationType="fade" transparent={true} visible={visible}>
       <TouchableWithoutFeedback>
         <View style={localStyles.modalMainContainer}>
-          <View style={[localStyles.root, {backgroundColor: colors.inputBg}]}>
+          <View style={[localStyles.root, { backgroundColor: colors.inputBg }]}>
             <ZText
               type={'b24'}
               color={colors.primary}
@@ -28,7 +28,7 @@ const ErrorModal = props => {
             </ZText>
 
             <ZButton
-              title={'Ok'}
+              title={strings.ok}
               textType={'b18'}
               color={colors.textColor}
               containerStyle={localStyles.signBtnContainer}

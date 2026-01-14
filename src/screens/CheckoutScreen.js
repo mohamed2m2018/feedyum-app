@@ -5,10 +5,11 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Alert,
-  ActivityIndicator,
   TextInput,
 } from 'react-native';
+import { showErrorToast, showActionDialog } from '../utils/toast';
+import { ALERT_TYPE } from 'react-native-alert-notification';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useSelector, useDispatch } from 'react-redux';
 import strings from '../i18n/strings';
 import {
@@ -63,12 +64,12 @@ const CheckoutScreen = ({ navigation, userToken }) => {
 
   const processCheckout = async () => {
     if (!deliveryAddress) {
-      Alert.alert(strings.error, strings.selectDeliveryAddress);
+      showErrorToast(strings.error, strings.selectDeliveryAddress);
       return;
     }
 
     if (cartItems.length === 0) {
-      Alert.alert(strings.error, strings.cartEmpty);
+      showErrorToast(strings.error, strings.cartEmpty);
       return;
     }
 
@@ -98,30 +99,31 @@ const CheckoutScreen = ({ navigation, userToken }) => {
 
       if (data.order) {
         dispatch(clearCart());
-        Alert.alert(
-          strings.orderPlacedExclamation,
-          strings.orderPlacedSuccessMessage,
-          [
-            {
-              text: 'OK',
-              onPress: () => navigation.navigate('OrderTracking', { orderId: data.order._id })
-            }
-          ]
-        );
+        showActionDialog({
+          type: ALERT_TYPE.SUCCESS,
+          title: strings.orderPlacedExclamation,
+          message: strings.orderPlacedSuccessMessage,
+          confirmText: 'OK',
+          onConfirm: () => navigation.navigate('OrderTracking', { orderId: data.order._id })
+        });
       } else {
-        Alert.alert(strings.error, data.message || strings.failedToPlaceOrder);
+        showErrorToast(strings.error, data.message || strings.failedToPlaceOrder);
       }
     } catch (error) {
-      Alert.alert(strings.error, strings.failedToProcessOrder);
+      showErrorToast(strings.error, strings.failedToProcessOrder);
     } finally {
       setIsProcessingOrder(false);
     }
   };
 
-  const formatCurrency = (amount) => `£${amount.toFixed(2)}`;
+  const formatCurrency = (amount) => `${strings.currency || 'EGP'} ${amount.toFixed(2)}`;
 
   return (
-    <ScrollView style={styles.container}>
+    <KeyboardAwareScrollView
+      style={styles.container}
+      enableOnAndroid={true}
+      extraScrollHeight={20}
+    >
       {/* Order Summary */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>{strings.orderSummary}</Text>
@@ -234,7 +236,7 @@ const CheckoutScreen = ({ navigation, userToken }) => {
       </TouchableOpacity>
 
       <View style={styles.bottomSpacing} />
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 };
 

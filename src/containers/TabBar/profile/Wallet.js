@@ -9,6 +9,7 @@ import {
   Switch,
   ActivityIndicator,
 } from 'react-native';
+import { showSuccessToast, showErrorToast, showInfoToast } from '../../../utils/toast';
 import { useSelector } from 'react-redux';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -97,7 +98,7 @@ export default function Wallet({ navigation }) {
     },
     {
       onSuccess: () => {
-        Alert.alert(strings.successExclamation, strings.promocodeCreatedSuccessfully);
+        showSuccessToast(strings.successExclamation, strings.promocodeCreatedSuccessfully);
         setPromocodeForm({
           code: '',
           discountType: 'percentage',
@@ -113,7 +114,7 @@ export default function Wallet({ navigation }) {
         refetchPromocodes();
       },
       onError: error => {
-        Alert.alert(strings.error, error.message || strings.failedToCreatePromocode);
+        showErrorToast(strings.error, error.message || strings.failedToCreatePromocode);
       },
     },
   );
@@ -126,11 +127,11 @@ export default function Wallet({ navigation }) {
     },
     {
       onSuccess: () => {
-        Alert.alert(strings.successExclamation, strings.promocodeDeletedSuccessfully);
+        showSuccessToast(strings.successExclamation, strings.promocodeDeletedSuccessfully);
         refetchPromocodes();
       },
       onError: error => {
-        Alert.alert(strings.error, error.message || strings.failedToDeletePromocode);
+        showErrorToast(strings.error, error.message || strings.failedToDeletePromocode);
       },
     },
   );
@@ -171,27 +172,21 @@ export default function Wallet({ navigation }) {
 
   const handlePayment = async () => {
     if (!walletData?.summary?.isPaymentRequired) {
-      Alert.alert(strings.noPaymentRequired, strings.accountInGoodStanding);
+      showInfoToast(strings.noPaymentRequired, strings.accountInGoodStanding);
       return;
     }
 
-    Alert.alert(
-      strings.paymentRequiredTitle,
-      strings.paymentRequiredMessage.replace('{amount}', walletData.summary.paymentDueAmount.toFixed(2)),
-      [
-        { text: strings.cancel, style: 'cancel' },
-        {
-          text: strings.payNow,
-          onPress: () => {
-            // Navigate to payment screen or handle payment
-            Alert.alert(
-              strings.paymentTitle,
-              strings.paymentFunctionalityNotImplemented,
-            );
-          },
-        },
-      ],
-    );
+    showActionDialog({
+      type: ALERT_TYPE.WARNING,
+      title: strings.paymentRequiredTitle,
+      message: strings.paymentRequiredMessage.replace('{amount}', walletData.summary.paymentDueAmount.toFixed(2)),
+      confirmText: strings.payNow,
+      cancelText: strings.cancel,
+      onConfirm: () => {
+        // Navigate to payment screen or handle payment
+        showInfoToast(strings.paymentTitle, strings.paymentFunctionalityNotImplemented);
+      },
+    });
   };
 
   const handlePromocodeInputChange = (field, value) => {
@@ -203,7 +198,7 @@ export default function Wallet({ navigation }) {
 
   const validatePromocodeForm = () => {
     if (!promocodeForm.code.trim()) {
-      Alert.alert(strings.error, strings.promocodeRequired);
+      showErrorToast(strings.error, strings.promocodeRequired);
       return false;
     }
 
@@ -211,7 +206,7 @@ export default function Wallet({ navigation }) {
       !promocodeForm.discountValue ||
       parseFloat(promocodeForm.discountValue) <= 0
     ) {
-      Alert.alert(strings.error, strings.validDiscountRequired);
+      showErrorToast(strings.error, strings.validDiscountRequired);
       return false;
     }
 
@@ -219,12 +214,12 @@ export default function Wallet({ navigation }) {
       promocodeForm.discountType === 'percentage' &&
       parseFloat(promocodeForm.discountValue) > 100
     ) {
-      Alert.alert(strings.error, strings.percentageCannotExceed);
+      showErrorToast(strings.error, strings.percentageCannotExceed);
       return false;
     }
 
     if (!promocodeForm.validUntil) {
-      Alert.alert(strings.error, strings.validUntilRequired);
+      showErrorToast(strings.error, strings.validUntilRequired);
       return false;
     }
 
@@ -257,21 +252,14 @@ export default function Wallet({ navigation }) {
   };
 
   const handleDeletePromocode = promocode => {
-    Alert.alert(
-      strings.deletePromocode,
-      strings.deletePromocodeConfirmation.replace('{code}', promocode.code),
-      [
-        {
-          text: strings.cancel,
-          style: 'cancel',
-        },
-        {
-          text: strings.delete,
-          style: 'destructive',
-          onPress: () => deletePromocodeMutation.mutate(promocode._id),
-        },
-      ],
-    );
+    showActionDialog({
+      type: ALERT_TYPE.WARNING,
+      title: strings.deletePromocode,
+      message: strings.deletePromocodeConfirmation.replace('{code}', promocode.code),
+      confirmText: strings.delete,
+      cancelText: strings.cancel,
+      onConfirm: () => deletePromocodeMutation.mutate(promocode._id),
+    });
   };
 
   const renderBalanceCard = () => {
@@ -343,7 +331,7 @@ export default function Wallet({ navigation }) {
                 { backgroundColor: 'rgba(255,255,255,0.2)' },
               ]}
               onPress={() =>
-                Alert.alert(strings.info, strings.noPaymentRequiredAtThisTime)
+                showInfoToast(strings.info, strings.noPaymentRequiredAtThisTime)
               }>
               <Ionicons
                 name="checkmark-circle"

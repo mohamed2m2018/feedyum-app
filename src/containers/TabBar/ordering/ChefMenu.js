@@ -6,10 +6,10 @@ import {
   Image,
   TouchableOpacity,
   RefreshControl,
-  Alert,
   InteractionManager,
   ActivityIndicator,
 } from 'react-native';
+import { showErrorToast } from '../../../utils/toast';
 import { useSelector, useDispatch } from 'react-redux';
 import { useQuery } from 'react-query';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -229,7 +229,7 @@ const ChefMenu = () => {
         }),
       );
     } catch (error) {
-      Alert.alert(strings.error, strings.failedToAddItemToCart);
+      showErrorToast(strings.error, strings.failedToAddItemToCart);
     }
   };
 
@@ -241,7 +241,7 @@ const ChefMenu = () => {
   // Handle cart errors
   useEffect(() => {
     if (cartError) {
-      Alert.alert(strings.cartError, cartError);
+      showErrorToast(strings.cartError, cartError);
       dispatch(clearError());
     }
   }, [cartError, dispatch]);
@@ -350,7 +350,7 @@ const ChefMenu = () => {
               <View style={localStyles.priceRow}>
                 <View style={localStyles.priceContainer}>
                   <ZText type="B18" color={colors.primary}>
-                    ${dish.price?.toFixed(2) || '0.00'}
+                    {strings.currency} {dish.price?.toFixed(2) || '0.00'}
                   </ZText>
                   {dish.category && (
                     <View

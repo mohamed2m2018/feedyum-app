@@ -5,10 +5,10 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  Alert,
   ActivityIndicator,
   Platform,
 } from 'react-native';
+import { showInfoToast } from '../utils/toast';
 import FastImage from 'react-native-fast-image';
 import strings from '../i18n/strings';
 
@@ -35,9 +35,9 @@ const TestImageComponent = () => {
   };
 
   const testDirectAccess = () => {
-    Alert.alert(
+    showInfoToast(
       strings.imageUrlTest,
-      `URL: ${unsplashUrl}\n\nTry opening this URL in your browser to verify it's accessible.`
+      `URL: ${unsplashUrl}\n\n${strings.tryOpeningUrl}`
     );
   };
 
@@ -59,16 +59,16 @@ const TestImageComponent = () => {
           {imageLoadState === 'loading' && (
             <View style={styles.loadingOverlay}>
               <ActivityIndicator size="small" color="#007AFF" />
-              <Text style={styles.statusText}>Loading...</Text>
+              <Text style={styles.statusText}>{strings.loading}</Text>
             </View>
           )}
           {imageLoadState === 'error' && (
             <View style={styles.errorOverlay}>
-              <Text style={styles.statusText}>❌ Failed to load</Text>
+              <Text style={styles.statusText}>{strings.failedToLoad}</Text>
             </View>
           )}
         </View>
-        <Text style={styles.status}>Status: {imageLoadState}</Text>
+        <Text style={styles.status}>{strings.formatString(strings.statusLabel, imageLoadState)}</Text>
       </View>
 
       {/* FastImage Component */}
@@ -88,16 +88,17 @@ const TestImageComponent = () => {
           {fastImageLoadState === 'loading' && (
             <View style={styles.loadingOverlay}>
               <ActivityIndicator size="small" color="#007AFF" />
-              <Text style={styles.statusText}>Loading...</Text>
+              <Text style={styles.statusText}>{strings.loading}</Text>
             </View>
           )}
           {fastImageLoadState === 'error' && (
             <View style={styles.errorOverlay}>
-              <Text style={styles.statusText}>❌ Failed to load</Text>
+              <Text style={styles.statusText}>{strings.failedToLoad}</Text>
             </View>
           )}
         </View>
-        <Text style={styles.status}>Status: {fastImageLoadState}</Text>
+
+        <Text style={styles.status}>{strings.formatString(strings.statusLabel, fastImageLoadState)}</Text>
       </View>
 
       <TouchableOpacity style={styles.button} onPress={testDirectAccess}>
@@ -106,11 +107,9 @@ const TestImageComponent = () => {
 
       <Text style={styles.debugInfo}>
         {strings.debugInfo}{'\n'}
-        • URL: {unsplashUrl}{'\n'}
-        • Platform: {Platform.OS}{'\n'}
-        • {strings.checkConsole}
+        {strings.formatString(strings.debugInfoBody, unsplashUrl, Platform.OS, strings.checkConsole)}
       </Text>
-    </View>
+    </View >
   );
 };
 

@@ -24,6 +24,9 @@ import ZLoader from '../../../../components/common/ZLoader';
 export default function Search() {
   const colors = useSelector(state => state.theme.theme);
 
+  const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
   const searchCategoryData = [
     {
       id: 0,
@@ -35,7 +38,8 @@ export default function Search() {
     },
     {
       id: 2,
-      title: strings.posts,
+      // Renamed to "Kitchen Posts"
+      title: strings.kitchenPosts,
     },
     {
       id: 3,
@@ -58,8 +62,6 @@ export default function Search() {
 
   const BlurredIconStyle = colors.grayScale4;
   const FocusedIconStyle = colors.primary;
-  const [search, setSearch] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
 
   const [searchInputStyle, setSearchInputStyle] = useState(BlurredStyle);
   const [searchIconStyle, setSearchIconStyle] = useState(BlurredIconStyle);
@@ -86,11 +88,12 @@ export default function Search() {
 
   const user = data?.data?.user;
 
+  // Search for Kitchen Posts (Chef Stories)
   const searchStory = ({ pageParam = null }) => {
     const endpoint = useSemanticSearch ? '/story/semantic-search' : '/story/search';
     const params = {
       searchString: debouncedSearch || '',
-      excludeReviews: 'true', // Only regular posts, exclude reviews
+      authorType: 'chef', // Filter specific for Kitchen Posts
       searchType: useSemanticSearch ? 'hybrid' : 'text',
       limit: 10,
       page: pageParam || 1,
@@ -122,12 +125,12 @@ export default function Search() {
     },
   });
 
-  // New search for review posts only
+  // Search for User Posts (Reviews)
   const searchReviews = ({ pageParam = null }) => {
     const endpoint = useSemanticSearch ? '/story/semantic-search' : '/story/search';
     const params = {
       searchString: debouncedSearch || '',
-      reviewsOnly: 'true', // Only review posts
+      authorType: 'user', // Filter specific for User Reviews/Posts
       searchType: useSemanticSearch ? 'hybrid' : 'text',
       limit: 10,
       page: pageParam || 1,
@@ -164,9 +167,9 @@ export default function Search() {
       searchType: useSemanticSearch ? 'hybrid' : 'text',
       limit: 10,
       page: pageParam || 1,
-      filters: {
+      filters: JSON.stringify({
         type: { $ne: 'chef' }
-      }
+      })
     };
 
     return request.get(endpoint, { params });
@@ -176,13 +179,13 @@ export default function Search() {
     const endpoint = useSemanticSearch ? '/user/semantic-search' : '/user/search';
     const params = {
       searchString: debouncedSearch || '',
-      currentUserId: user?._id,
+      // Don't pass currentUserId for kitchen search - we want to show all kitchens including the user's own
       searchType: useSemanticSearch ? 'hybrid' : 'text',
       limit: 10,
       page: pageParam || 1,
-      filters: {
+      filters: JSON.stringify({
         type: 'chef'
-      }
+      })
     };
 
     return request.get(endpoint, { params });
@@ -384,6 +387,7 @@ export default function Search() {
           <>
             <SearchUser
               users={users || []}
+              currentUserId={user?._id}
               onEndReachedThreshold={0.5}
               isFetching={isFetchingUser}
               onEndReached={fetchNextPageUsers}
@@ -398,6 +402,7 @@ export default function Search() {
           <>
             <SearchUser
               users={chefs || []}
+              currentUserId={user?._id}
               onEndReachedThreshold={0.5}
               isFetching={isFetchingChefs}
               onEndReached={fetchNextPageChefs}

@@ -3,11 +3,11 @@ import {
   View,
   StyleSheet,
   TouchableOpacity,
-  Alert,
   Dimensions,
   Platform,
   TextInput,
 } from 'react-native';
+import { showErrorToast, showWarningToast } from '../utils/toast';
 import { useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -91,7 +91,7 @@ const ReviewReelCreator = ({ route }) => {
     } catch (error) {
       setIsLoading(false);
       if (error.code !== 'E_PICKER_CANCELLED') {
-        Alert.alert(strings.error, strings.failedToRecordVideo);
+        showErrorToast(strings.error, strings.failedToRecordVideo);
       }
     }
   };
@@ -112,7 +112,7 @@ const ReviewReelCreator = ({ route }) => {
     } catch (error) {
       setIsLoading(false);
       if (error.code !== 'E_PICKER_CANCELLED') {
-        Alert.alert(strings.error, strings.failedToTakePhoto);
+        showErrorToast(strings.error, strings.failedToTakePhoto);
       }
     }
   };
@@ -134,7 +134,7 @@ const ReviewReelCreator = ({ route }) => {
     } catch (error) {
       setIsLoading(false);
       if (error.code !== 'E_PICKER_CANCELLED') {
-        Alert.alert(strings.error, strings.failedToSelectMedia);
+        showErrorToast(strings.error, strings.failedToSelectMedia);
       }
     }
   };
@@ -153,7 +153,7 @@ const ReviewReelCreator = ({ route }) => {
     } catch (error) {
       setIsLoading(false);
       console.error('Media upload error:', error);
-      Alert.alert(strings.error, strings.failedToUploadMedia);
+      showErrorToast(strings.error, strings.failedToUploadMedia);
     }
   };
 
@@ -161,33 +161,28 @@ const ReviewReelCreator = ({ route }) => {
 
 
     if (!selectedMedia) {
-
-      Alert.alert(strings.error, strings.pleaseSelectPhotoOrVideo);
+      showWarningToast(strings.error, strings.pleaseSelectPhotoOrVideo);
       return;
     }
 
     if (!caption.trim()) {
-
-      Alert.alert(strings.error, strings.pleaseAddCaption);
+      showWarningToast(strings.error, strings.pleaseAddCaption);
       return;
     }
 
     if (caption.trim().length < 10) {
-
-      Alert.alert(strings.error, strings.captionMustBe10Characters);
+      showWarningToast(strings.error, strings.captionMustBe10Characters);
       return;
     }
 
     // Additional validation
     if (reviewType === 'dish' && !dishData?._id) {
-
-      Alert.alert(strings.error, strings.dishDataMissing);
+      showErrorToast(strings.error, strings.dishDataMissing);
       return;
     }
 
     if (reviewType === 'menu' && !menuData?._id) {
-
-      Alert.alert(strings.error, strings.menuDataMissing);
+      showErrorToast(strings.error, strings.menuDataMissing);
       return;
     }
 

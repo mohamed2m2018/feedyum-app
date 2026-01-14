@@ -5,10 +5,12 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Alert,
+
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
+import { showErrorToast, showSuccessToast, showActionDialog } from '../utils/toast';
+import { ALERT_TYPE } from 'react-native-alert-notification';
 import { useSelector } from 'react-redux';
 import strings from '../i18n/strings';
 import branchService from '../api/branchService';
@@ -46,10 +48,10 @@ const ChefBranchManagement = ({ navigation, userToken }) => {
           setChefSettings(response.branches[0].chef.chefSettings);
         }
       } else {
-        Alert.alert(strings.error, response.message || 'Failed to load branches');
+        showErrorToast(strings.error, response.message || 'Failed to load branches');
       }
     } catch (error) {
-      Alert.alert(strings.error, strings.failedToLoadBranches);
+      showErrorToast(strings.error, strings.failedToLoadBranches);
     } finally {
       setIsLoading(false);
     }
@@ -96,14 +98,14 @@ const ChefBranchManagement = ({ navigation, userToken }) => {
   };
 
   const handleDeleteBranch = (branchId, branchName) => {
-    Alert.alert(
-      'Delete Branch',
-      `Are you sure you want to delete "${branchName}"? This action cannot be undone.`,
-      [
-        { text: strings.cancel, style: 'cancel' },
-        { text: strings.delete, style: 'destructive', onPress: () => confirmDeleteBranch(branchId) }
-      ]
-    );
+    showActionDialog({
+      type: ALERT_TYPE.WARNING,
+      title: 'Delete Branch',
+      message: `Are you sure you want to delete "${branchName}"? This action cannot be undone.`,
+      confirmText: strings.delete,
+      cancelText: strings.cancel,
+      onConfirm: () => confirmDeleteBranch(branchId)
+    });
   };
 
   const confirmDeleteBranch = async (branchId) => {
@@ -118,17 +120,17 @@ const ChefBranchManagement = ({ navigation, userToken }) => {
           active: prev.active - 1
         }));
 
-        Alert.alert(strings.success, response.message);
+        showSuccessToast(strings.success, response.message);
 
         // If no branches left, reset chef settings
         if (response.remainingBranches === 0) {
           setChefSettings(null);
         }
       } else {
-        Alert.alert(strings.error, response.message || 'Failed to delete branch');
+        showErrorToast(strings.error, response.message || 'Failed to delete branch');
       }
     } catch (error) {
-      Alert.alert(strings.error, strings.failedToDeleteBranch);
+      showErrorToast(strings.error, strings.failedToDeleteBranch);
     }
   };
 
