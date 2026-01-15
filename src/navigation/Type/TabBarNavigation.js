@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as SplashScreen from 'expo-splash-screen';
 
 // Local import
 import { TabRoute } from '../NavigationRoutes';
@@ -45,11 +46,16 @@ export default function TabBarNavigation({ route, navigation }) {
   const colors = useSelector(state => state.theme.theme);
   const insets = useSafeAreaInsets();
   const Tab = createMaterialTopTabNavigator();
-  const ProfilePictureSheetRef = React.createRef();
+  const ProfilePictureSheetRef = useRef();
   const { data, isLoading } = useQuery('user', () => request.get('/user'), { retry: 1 });
   const { handleAuthToast } = useHandleAuth();
   const { currentScreen: previousScreen } = useScreen();
-  const [modalState, setModalState] = React.useState({ visible: false, title: '', message: '' });
+  const [modalState, setModalState] = useState({ visible: false, title: '', message: '' });
+
+  // Hide splash screen when component mounts
+  useEffect(() => {
+    SplashScreen.hideAsync();
+  }, []);
 
   if (isLoading && !data) {
     return (
@@ -63,7 +69,7 @@ export default function TabBarNavigation({ route, navigation }) {
   const { initialTab = TabNav.Discover } = route.params || {};
 
   // Handle deep linking navigation
-  React.useEffect(() => {
+  useEffect(() => {
     if (route.params?.initialTab) {
       const targetTab = route.params.initialTab;
       const targetParams = route.params.params;

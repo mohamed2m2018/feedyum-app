@@ -1,28 +1,33 @@
 /* eslint-disable react/no-unstable-nested-components */
 // Library Imports
-import {StyleSheet, View} from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Image from 'react-native-fast-image';
 import React from 'react';
 import Swiper from 'react-native-swiper';
-import {useSelector} from 'react-redux';
+import { useSelector } from 'react-redux';
+import * as SplashScreen from 'expo-splash-screen';
 
 //Local Imports
 import ZText from '../components/common/ZText';
 import images from '../assets/images';
-import {styles} from '../themes';
+import { styles } from '../themes';
 import {
   APP_OPEN_FIRST_TIME,
   getHeight,
   moderateScale,
 } from '../common/constants';
-import {StackNav} from '../navigation/NavigationKeys';
+import { StackNav } from '../navigation/NavigationKeys';
 import ZButton from '../components/common/ZButton';
 import strings from '../i18n/strings';
-import {useStorage} from '../utils/useStorage';
+import { useStorage } from '../utils/useStorage';
 
-const OnBoarding = ({navigation}) => {
+const OnBoarding = ({ navigation }) => {
   const colors = useSelector(state => state.theme.theme);
   const [_, setAppOpen] = useStorage(APP_OPEN_FIRST_TIME);
+
+  React.useEffect(() => {
+    SplashScreen.hideAsync();
+  }, []);
 
   const OnBoardingData = {
     tutorialText1: {
@@ -51,12 +56,12 @@ const OnBoarding = ({navigation}) => {
     },
   };
 
-  const TutorialItem = ({bgImage, header, btnPress, btnTitle}) => {
+  const TutorialItem = ({ bgImage, header, btnPress, btnTitle }) => {
     return (
       <View
         style={[
           localStyles.tutorialContainer,
-          {backgroundColor: colors.backgroundColor},
+          { backgroundColor: colors.backgroundColor },
         ]}>
         <Image
           resizeMode="contain"
@@ -82,7 +87,7 @@ const OnBoarding = ({navigation}) => {
     setAppOpen('firstTimeOpen');
     navigation.reset({
       index: 0,
-      routes: [{name: StackNav.Auth}],
+      routes: [{ name: StackNav.Auth }],
     });
   };
 
@@ -97,9 +102,9 @@ const OnBoarding = ({navigation}) => {
       loop={false}
       activeDotStyle={[
         localStyles.activeDotStyle,
-        {backgroundColor: colors.primary},
+        { backgroundColor: colors.primary },
       ]}
-      dotStyle={[localStyles.dotStyle, {backgroundColor: colors.white}]}
+      dotStyle={[localStyles.dotStyle, { backgroundColor: colors.white }]}
       paginationStyle={localStyles.paginationStyle}>
       <TutorialItem
         bgImage={OnBoardingData.tutorialText1}

@@ -2,14 +2,20 @@ import { Dimensions, Platform, StatusBar } from 'react-native';
 import strings from '../i18n/strings';
 export const API_BASE_URL = 'http://192.168.1.104:4800/api';
 
-let iPhoneX = screenHeight === 812 ? true : false;
+// Initial Dimensions
+const windowDimensions = Dimensions.get('window');
+const windowHeight = windowDimensions.height;
+const windowWidth = windowDimensions.width;
+
+let iPhoneX = windowHeight === 812 ? true : false;
 
 // StatusBar Height
 export const STATUSBAR_HEIGHT =
   Platform.OS === 'ios' ? (iPhoneX ? 44 : 22) : StatusBar.currentHeight;
-export const screenHeight = Dimensions.get('window').height - STATUSBAR_HEIGHT;
-export const screenWidth = Dimensions.get('window').width;
-export const screenFullHeight = Dimensions.get('window').height;
+
+export const screenHeight = windowHeight - STATUSBAR_HEIGHT;
+export const screenWidth = windowWidth;
+export const screenFullHeight = windowHeight;
 export const isAndroid = Platform.OS === 'ios' ? false : true;
 
 let sampleHeight = 926;

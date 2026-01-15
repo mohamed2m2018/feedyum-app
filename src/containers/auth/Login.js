@@ -4,6 +4,7 @@ import React, { memo, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import RNRestart from 'react-native-restart';
+import * as SplashScreen from 'expo-splash-screen';
 
 // Local Imports
 import strings from '../../i18n/strings';
@@ -57,6 +58,11 @@ const Login = ({ navigation }) => {
   const [_, setAccessToken] = useStorage(ACCESS_TOKEN);
   const [__, setUser] = useStorage('user');
   const [___, setLanguage] = useStorage('language');
+
+  useEffect(() => {
+    // Hide native splash screen once Login component is mounted
+    SplashScreen.hideAsync();
+  }, []);
 
   const onPressSignInWithGoogle = async () => {
     try {
@@ -412,8 +418,8 @@ const Login = ({ navigation }) => {
               ]}
             />
           </View>
+            */}
 
- */}
           <View style={localStyles.socialBtnContainer}>
             {socialIcon.map((item, index) => (
               <RenderSocialBtn item={item} key={index.toString()} />

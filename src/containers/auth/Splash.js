@@ -79,7 +79,7 @@ const Splash = ({ navigation }) => {
         } else if (notifResult.navigateAfterTabBar) {
           // Navigate to TabBar first, then execute deferred navigation
           setIsNavigating(true);
-          await SplashScreen.hideAsync();
+          // await SplashScreen.hideAsync();
 
           // We reset to TabBar to ensure the base is loaded, but we don't need to force 'initialTab'
           // if we are going to navigate immediately away.
@@ -100,7 +100,7 @@ const Splash = ({ navigation }) => {
 
       // ONLY if NOT handled, do we perform default navigation
       setIsNavigating(true);
-      await SplashScreen.hideAsync();
+      // await SplashScreen.hideAsync();
 
       console.log('🐞 [Splash] Resetting navigation. Tab:', targetTab, 'Params:', targetParams);
 
@@ -116,14 +116,14 @@ const Splash = ({ navigation }) => {
       });
     } else {
       if (appOpenFirstTime) {
-        await SplashScreen.hideAsync();
+        // await SplashScreen.hideAsync();
         setIsNavigating(true);
         navigation.reset({
           index: 0,
           routes: [{ name: StackNav.Auth }],
         });
       } else {
-        await SplashScreen.hideAsync();
+        // await SplashScreen.hideAsync();
         setIsNavigating(true);
         navigation.reset({
           index: 0,
