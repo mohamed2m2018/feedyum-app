@@ -1,8 +1,7 @@
 import React from 'react';
-import { ActivityIndicator, RefreshControl, View } from 'react-native';
+import { ActivityIndicator, FlatList, RefreshControl, View } from 'react-native';
 import ZText from '../../../components/common/ZText';
 import ZLoader from '../../../components/common/ZLoader';
-import { FlashList } from '@shopify/flash-list';
 
 const ReelsList = ({
   filteredData,
@@ -26,8 +25,6 @@ const ReelsList = ({
   isFetchingStory,
   isCommentOpen,
 }) => {
-  // KEY FIX: Container uses EXACT same height as items
-  // This eliminates any mismatch between container and item heights
   const containerStyle = layoutHeight > 0
     ? { height: layoutHeight }
     : { flex: 1 };
@@ -35,7 +32,8 @@ const ReelsList = ({
   return (
     <View style={{ flex: 1 }} onLayout={onSetLayout}>
       <View style={containerStyle}>
-        <FlashList
+        {/* TESTING: Using FlatList instead of FlashList to isolate the issue */}
+        <FlatList
           data={filteredData}
           extraData={extraData}
           keyExtractor={keyExtractor}
@@ -73,10 +71,11 @@ const ReelsList = ({
             )
           }
           ref={flatListRef}
-          estimatedItemSize={layoutHeight || 800}
-          overrideItemLayout={(layout) => {
-            layout.size = layoutHeight;
-          }}
+          getItemLayout={(data, index) => ({
+            length: layoutHeight,
+            offset: layoutHeight * index,
+            index,
+          })}
           onEndReachedThreshold={0.5}
           onEndReached={
             hasNextPage && !isLoading && !isRefetching ? fetchNextPage : null
@@ -86,12 +85,11 @@ const ReelsList = ({
               <ActivityIndicator size={'large'} color={'#FF4D67'} />
             )
           }
-          removeClippedSubviews={true}
-          maxToRenderPerBatch={5}
+          removeClippedSubviews={false}
+          maxToRenderPerBatch={3}
           updateCellsBatchingPeriod={50}
-          initialNumToRender={3}
-          drawDistance={layoutHeight * 3} // Render 3 screens ahead to allow pre-loading
-          windowSize={5} // Keep more items in memory to reduce mounting churn
+          initialNumToRender={2}
+          windowSize={3}
         />
       </View>
     </View>

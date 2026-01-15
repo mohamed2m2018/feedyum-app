@@ -1,8 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  I18nManager,
   Linking,
-  Platform,
   StyleSheet,
   TouchableOpacity,
   View,
@@ -14,7 +12,6 @@ import {
   isAndroid,
   moderateScale,
   screenFullHeight,
-  screenHeight,
 } from '../../../common/constants';
 import ZButton from '../../../components/common/ZButton';
 import { useSelector } from 'react-redux';
@@ -28,14 +25,11 @@ import Entypo from 'react-native-vector-icons/Entypo';
 import request from '../../../api/request';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import millify from 'millify';
-import pluralize from 'pluralize';
 import Video from 'react-native-video';
-import Slider from '@react-native-community/slider';
-import Share from 'react-native-share';
+import VideoSeeker from '../../../components/common/VideoSeeker';
 import FastImage from 'react-native-fast-image';
 import { useNavigation } from '@react-navigation/native';
 import { StackNav, TabNav } from '../../../navigation/NavigationKeys';
-import { AdView } from './ads/AdView';
 import DoubleClick from 'react-native-double-tap';
 import { useAnalytics } from '@segment/analytics-react-native';
 import AttachedDishesDisplay from '../../../components/common/AttachedDishesDisplay';
@@ -70,6 +64,8 @@ const isVideoUri = (uri) => {
   return true;
 };
 
+
+
 const ReelComponent = ({
   item,
   layoutHeight,
@@ -82,7 +78,6 @@ const ReelComponent = ({
   isFromReelsOne,
   setSelectedPostId,
   commentSheetRef,
-  descriptionSheetRef,
   isFocused,
   isCommentOpen,
   isLocationOpen,
@@ -90,6 +85,9 @@ const ReelComponent = ({
   onPressAvailableLocation,
 }) => {
   const colors = useSelector(state => state.theme.theme);
+
+  // Ref for tracking video progress (used by handleOnLoad for seek position)
+  const seekProgressRef = useRef(0);
   const [indexState] = useState(index);
   const queryClient = useQueryClient();
   const [isMoreDescriptionSeen, setIsMoreDescriptionSeen] = useState(false);
@@ -101,7 +99,8 @@ const ReelComponent = ({
   };
   useEffect(() => {
     if (indexState !== index) {
-      setSeekValueClick(0);
+      // Don't reset seekValueClick to 0 - let onProgress handle position
+      // This prevents the flickering from 0 -> current position
       setIsLike(false);
       setIsMoreDescriptionSeen(false);
       setpaused({ slider: false, paused: false });
@@ -131,7 +130,6 @@ const ReelComponent = ({
     }
   }, [item?.reviewMode, activeVideoIndex, index, pulseAnim]);
 
-  const [seekValueClick, setSeekValueClick] = useState(0);
   const [isOverlayVisible, setIsOverlayVisible] = useState(true);
 
 
@@ -148,12 +146,12 @@ const ReelComponent = ({
       Animated.parallel([
         Animated.timing(headerSlideAnim, {
           toValue: 0,
-          duration: 400,
+          duration: 50,
           useNativeDriver: true,
         }),
         Animated.timing(headerOpacityAnim, {
           toValue: 1,
-          duration: 300,
+          duration: 30,
           useNativeDriver: true,
         }),
       ]).start();
@@ -301,11 +299,15 @@ const ReelComponent = ({
     if (index === activeVideoIndex && !!item.avatarUri && isFocused && !isCommentOpen && !isLocationOpen && !showImageZoom) {
       console.log('Auto-scroll EFFECT START. index:', index);
       timeout = setTimeout(() => {
-        flatListRef.current.scrollToIndex({
-          animated: true,
-          index: index + 1,
-        });
-        console.log('Auto-scroll SCROLL CALLED');
+        try {
+          flatListRef.current.scrollToIndex({
+            animated: true,
+            index: index + 1,
+          });
+          console.log('Auto-scroll SCROLL CALLED');
+        } catch (e) {
+          console.log('Reached last item, cannot auto-scroll');
+        }
       }, 10000);
       return () => {
         console.log('Auto-scroll EFFECT CLEANUP (Clear Timeout). index:', index);
@@ -352,16 +354,15 @@ const ReelComponent = ({
       setIsVideoReady(true);
 
       if (activeVideoIndex === index) {
-        videoRef?.current?.seek?.(seekValueClick);
+        videoRef?.current?.seek?.(seekProgressRef.current);
       }
     },
-    [activeVideoIndex, index, seekValueClick],
+    [activeVideoIndex, index],
   );
 
   const onProgress = ({ currentTime }) => {
-    if ((!paused.slider || !paused.pause) && activeVideoIndex === index) {
-      setSeekValueClick(currentTime);
-    }
+    // Update the ref for accurate tracking (used by handleOnLoad)
+    seekProgressRef.current = currentTime;
   };
 
 
@@ -482,7 +483,7 @@ const ReelComponent = ({
                         uri,
                       }}
                       onSeek={({ currentTime }) => {
-                        setSeekValueClick(currentTime);
+                        seekProgressRef.current = currentTime;
                       }}
                       ref={videoRef}
                       onProgress={onProgress}
@@ -492,13 +493,19 @@ const ReelComponent = ({
                         if (activeVideoIndex === index && isFocused && !isCommentOpen) {
                           console.log('Auto-scroll TIMEOUT EXECUTED. index:', index, 'isCommentOpen (in closure):', isCommentOpen);
                           if (flatListRef.current) {
-                            flatListRef.current.scrollToIndex({
-                              animated: true,
-                              index: index + 1,
-                            });
-                            setTimeout(() => {
-                              videoRef?.current?.seek?.(0);
-                            }, 100);
+                            // Use try-catch to handle scrollToIndex out of range gracefully
+                            try {
+                              flatListRef.current.scrollToIndex({
+                                animated: true,
+                                index: index + 1,
+                              });
+                              setTimeout(() => {
+                                videoRef?.current?.seek?.(0);
+                              }, 100);
+                            } catch (e) {
+                              // Reached the last item, can't scroll further
+                              console.log('Reached last item, cannot auto-scroll');
+                            }
                           }
                         }
                       }}
@@ -774,33 +781,7 @@ const ReelComponent = ({
                       </TouchableOpacity>
                     )}
 
-                    {/* Video Seeker - positioned between description and button */}
-                    {!!item?.uri && isVideoUri(item?.uri) && (
-                      <View
-                        style={{
-                          width: '100%',
-                          marginTop: moderateScale(8),
-                          marginBottom: moderateScale(8),
-                        }}>
-                        <Slider
-                          inverted={I18nManager.isRTL}
-                          style={localStyles.seekBar}
-                          minimumValue={0}
-                          tapToSeek
-                          maximumValue={durationInSeconds}
-                          value={seekValueClick}
-                          minimumTrackTintColor={colors.primary}
-                          maximumTrackTintColor={colors.grey}
-                          thumbTintColor={colors.primary}
-                          onSlidingComplete={value => {
-                            if (activeVideoIndex === index) {
-                              videoRef?.current?.seek?.(value);
-                              setSeekValueClick(value);
-                            }
-                          }}
-                        />
-                      </View>
-                    )}
+                    {/* Video Seeker moved to bottom */}
 
                     {/* Show Visit Menu button for chefs or users with menus */}
                     {(item?.author?.type === 'chef' || item?.author?.hasMenu === true) && (
@@ -869,6 +850,26 @@ const ReelComponent = ({
                 />
               )}
             </View>
+
+            {/* Professional Video Seeker - TikTok Style at Bottom */}
+            {!!item?.uri && isVideoUri(item?.uri) && (
+              <VideoSeeker
+                videoRef={videoRef}
+                duration={durationInSeconds}
+                primaryColor={colors.primary}
+                isActive={activeVideoIndex === index}
+                isPaused={paused.paused || paused.slider || !isFocused || isCommentOpen}
+                onSeek={(value) => {
+                  videoRef?.current?.seek?.(value);
+                }}
+                onSeekStart={() => {
+                  setpaused(prev => ({ ...prev, slider: true }));
+                }}
+                onSeekEnd={() => {
+                  setpaused(prev => ({ ...prev, slider: false }));
+                }}
+              />
+            )}
           </DoubleClick>
         </View>
       ) : (
@@ -1127,6 +1128,39 @@ const localStyles = StyleSheet.create({
   },
   seekBar: {
     height: 40,
+  },
+  // Professional Seeker Styles - TikTok Style
+  seekerContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: moderateScale(12),
+    paddingBottom: moderateScale(8),
+    paddingTop: moderateScale(4),
+    backgroundColor: 'transparent',
+  },
+  sliderContainer: {
+    flex: 1,
+    marginHorizontal: moderateScale(8),
+  },
+  professionalSeekBar: {
+    height: moderateScale(20),
+    width: '100%',
+  },
+  timeContainer: {
+    minWidth: moderateScale(40),
+    alignItems: 'center',
+  },
+  timeText: {
+    fontSize: moderateScale(11),
+    color: 'rgba(255, 255, 255, 0.9)',
+    fontWeight: '600',
+    textShadowColor: 'rgba(0, 0, 0, 0.8)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   dishesDisplayContainer: {
     position: 'absolute',

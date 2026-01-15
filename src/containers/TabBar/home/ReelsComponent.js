@@ -165,7 +165,7 @@ export default function ReelsComponent({ amIFocused }) {
   }, [storyData, filteredData]);
   useEffect(() => {
     setExtraData(e => !e);
-  }, [activeVideoIndex, isFocused, isCommentOpen]);
+  }, [activeVideoIndex, isFocused, isCommentOpen]); // Restored activeVideoIndex - FlatList handles this efficiently
 
   const onPressSearch = () => navigation.navigate(TabNav.Search);
 
@@ -222,7 +222,7 @@ export default function ReelsComponent({ amIFocused }) {
         />
       );
     },
-    [layoutHeight, user, activeVideoIndex, isFocused, isCommentOpen, isLocationOpen],
+    [layoutHeight, user, activeVideoIndex, isFocused, isCommentOpen, isLocationOpen], // Restored activeVideoIndex - FlatList handles this efficiently
   );
 
   const viewConfig = useRef({ viewAreaCoveragePercentThreshold: 50 }).current;
