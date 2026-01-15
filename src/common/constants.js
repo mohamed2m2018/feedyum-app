@@ -37,6 +37,10 @@ export function moderateScale(size, factor = 0.5) {
 export const iosReelHeight = screenFullHeight - getHeight(100);
 export const androidReelHeight = screenFullHeight - getHeight(70);
 
+// Navigation Heights - Single Source of Truth
+export const BOTTOM_TAB_HEIGHT = 60;
+export const TOP_TAB_HEIGHT = 48;
+
 export const THEME = 'THEME';
 export const APP_OPEN_FIRST_TIME = 'APP_OPEN_FIRST_TIME';
 export const ACCESS_TOKEN = 'ACCESS_TOKEN';

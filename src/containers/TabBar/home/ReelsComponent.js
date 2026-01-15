@@ -1,5 +1,6 @@
 // Libraries import
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Description from '../../../components/models/Descriptions';
 import Locations from '../../../components/models/Locations';
@@ -18,6 +19,8 @@ import {
   isAndroid,
   moderateScale,
   screenFullHeight,
+  BOTTOM_TAB_HEIGHT,
+  TOP_TAB_HEIGHT,
 } from '../../../common/constants';
 import { StackNav, TabNav } from '../../../navigation/NavigationKeys';
 import {
@@ -39,6 +42,9 @@ import AddressDropdown from '../../../components/AddressDropdown';
 import { useOptimizedReels, useOptimizedStory } from '../../../hooks/useOptimizedQueries';
 import { optimizeImageUrl, prefetchImages } from '../../../utils/imageOptimizer';
 
+// Module-level locked height removed in favor of dynamic calculation
+// let GLOBAL_LOCKED_HEIGHT = 0;
+
 export default function ReelsComponent({ amIFocused }) {
   const [storyId, setStoryId] = useState();
   const colors = useSelector(state => state.theme.theme);
@@ -50,9 +56,30 @@ export default function ReelsComponent({ amIFocused }) {
   const locationSheetRef = useRef(null);
   const navigation = useNavigation();
   const route = useRoute();
+
+  // Dynamic Height Calculation
+  const { height: windowHeight } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+
+  // Constants based on navigation structure
+  // BOTTOM_TAB_HEIGHT and TOP_TAB_HEIGHT are imported from constants.js
+
+  // Calculate exact available space
+  const calculatedHeight = Math.floor(windowHeight - insets.top - insets.bottom - BOTTOM_TAB_HEIGHT - TOP_TAB_HEIGHT);
+
+  const [layoutHeight, setLayoutHeight] = useState(calculatedHeight);
+  const layoutHeightRef = useRef(calculatedHeight);
+
+  // Update if dimensions or insets change
+  useEffect(() => {
+    const newHeight = Math.floor(windowHeight - insets.top - insets.bottom - BOTTOM_TAB_HEIGHT - TOP_TAB_HEIGHT);
+    if (newHeight !== layoutHeightRef.current) {
+      layoutHeightRef.current = newHeight;
+      setLayoutHeight(newHeight);
+    }
+  }, [windowHeight, insets]);
   const [activeVideoIndex, setActiveVideoIndex] = useState(0);
   const [selectedPostId, setSelectedPostId] = useState();
-  const [layoutHeight, setLayoutHeight] = useState(0);
   const [extraData, setExtraData] = useState(true);
   const [filteredData, setFilteredData] = useState([]);
   const flatListRef = useRef(null);
@@ -94,17 +121,7 @@ export default function ReelsComponent({ amIFocused }) {
     for (const page of reelsData.pages) {
       for (const story of page.stories) {
         allStoriesWithAds.push(story);
-        storyCounter++;
-
-        if (storyCounter % 5 === 0) {
-          allStoriesWithAds.push({ _id: `ad-${storyCounter}`, type: 'ad' });
-        }
       }
-    }
-
-    // Ensure at least one ad even for less than 5 stories
-    if (allStoriesWithAds.length > 0 && storyCounter < 5) {
-      allStoriesWithAds.push({ _id: 'ad-end', type: 'ad' });
     }
 
     setFilteredData(allStoriesWithAds);
@@ -229,7 +246,10 @@ export default function ReelsComponent({ amIFocused }) {
 
   const keyExtractor = (item, index) => 'item-ForYou' + item?._id + index;
 
-  const onSetLayout = e => setLayoutHeight(e.nativeEvent.layout.height);
+
+
+  // No-op for onLayout as we strictly calculate height now
+  const onSetLayout = useCallback(() => { }, []);
 
   return (
     <View style={[localStyles.outerContainer, { backgroundColor: colors.backgroundColor }]}>

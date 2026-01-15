@@ -8,7 +8,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TabRoute } from '../NavigationRoutes';
 import { StackNav, TabNav } from '../NavigationKeys';
 import { checkPlatform } from '../../utils/helpers';
-import { getHeight, moderateScale } from '../../common/constants';
+
+import { getHeight, moderateScale, BOTTOM_TAB_HEIGHT } from '../../common/constants';
 import ZText from '../../components/common/ZText';
 import strings from '../../i18n/strings';
 
@@ -157,7 +158,7 @@ export default function TabBarNavigation({ route, navigation }) {
         pagerStyle={{ backgroundColor: colors.backgroundColor }}
         screenOptions={{
           headerShown: false,
-          tabBarItemStyle: { height: 60 },
+          tabBarItemStyle: { height: BOTTOM_TAB_HEIGHT },
           animationEnabled: false,
           tabBarLabelStyle: { fontSize: 12 },
           freezeOnBlur: true,
@@ -165,7 +166,7 @@ export default function TabBarNavigation({ route, navigation }) {
           tabBarContentContainerStyle: { backgroundColor: colors.backgroundColor },
           tabBarStyle: {
             backgroundColor: colors.backgroundColor,
-            height: 60 + insets.bottom,
+            height: BOTTOM_TAB_HEIGHT + insets.bottom,
             paddingBottom: insets.bottom,
           },
           tabBarShowLabel: false,

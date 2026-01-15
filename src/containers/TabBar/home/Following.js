@@ -1,26 +1,26 @@
 // Libraries import
-import React, {useEffect, useState} from 'react';
-import { useWindowDimensions, StyleSheet} from 'react-native';
-import {TabView, SceneMap, TabBar} from 'react-native-tab-view';
+import React, { useEffect, useState } from 'react';
+import { useWindowDimensions, StyleSheet } from 'react-native';
+import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
 import ReelsComponent from './ReelsComponent';
 import ReelsComponentFollowing from './ReelsComponentFollowing';
-import {useIsFocused} from '@react-navigation/native';
-import {useScreen} from '../../../navigation/screenContext';
-import {TabNav} from '../../../navigation/NavigationKeys';
-import {commonColor} from '../../../themes';
+import { useIsFocused } from '@react-navigation/native';
+import { useScreen } from '../../../navigation/screenContext';
+import { TabNav } from '../../../navigation/NavigationKeys';
+import { commonColor } from '../../../themes';
 import ZText from '../../../components/common/ZText';
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
-import strings from '../../../i18n/strings';
+import { TOP_TAB_HEIGHT } from '../../../common/constants';
 
 export default function Following() {
   const isFocused = useIsFocused();
-  const {updateCurrentScreen} = useScreen();
+  const { updateCurrentScreen } = useScreen();
   const layout = useWindowDimensions();
 
   const [index, setIndex] = useState(0);
   const [routes] = useState([
-    {key: 'forYou', title: strings.foryou},
-    {key: 'following', title: strings.following},
+    { key: 'forYou', title: strings.foryou },
+    { key: 'following', title: strings.following },
   ]);
 
   const [focusedTab, setFocusedTab] = useState('forYou');
@@ -54,8 +54,8 @@ export default function Following() {
     <TabBar
       {...props}
       indicatorStyle={styles.indicator}
-      style={styles.tabBar}
-      renderLabel={({focused, route}) => (
+      style={[styles.tabBar, { height: TOP_TAB_HEIGHT }]}
+      renderLabel={({ focused, route }) => (
         <ZText style={focused ? styles.selectedLabel : styles.label}>
           {route.title}
         </ZText>
@@ -67,10 +67,10 @@ export default function Following() {
   return (
     <ZSafeAreaView>
       <TabView
-        navigationState={{index, routes}}
+        navigationState={{ index, routes }}
         renderScene={renderScene}
         onIndexChange={setIndex}
-        initialLayout={{width: layout.width}}
+        initialLayout={{ width: layout.width }}
         renderTabBar={renderTabBar}
       />
     </ZSafeAreaView>

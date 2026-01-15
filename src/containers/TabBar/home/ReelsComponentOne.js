@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 // Libraries import
-import { StyleSheet, TouchableOpacity, View, Platform } from 'react-native';
+import { StyleSheet, TouchableOpacity, View, Platform, useWindowDimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Description from '../../../components/models/Descriptions';
 import Locations from '../../../components/models/Locations';
@@ -41,8 +42,17 @@ export default function ReelsComponentOne() {
   const navigation = useNavigation();
   const route = useRoute();
   const [activeVideoIndex, setActiveVideoIndex] = useState(0);
+
   const [selectedPostId, setSelectedPostId] = useState();
-  const [layoutHeight, setLayoutHeight] = useState(0);
+
+  // Smart Layout Initialization
+  const { height: windowHeight } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  // Estimate: Window - Top Inset - Bottom Inset - Header (~65px) - Margin (5px)
+  // This prevents the "default 800" scroll bug on first render
+  const initialHeight = Math.floor(windowHeight - insets.top - insets.bottom - 70);
+
+  const [layoutHeight, setLayoutHeight] = useState(initialHeight);
   const [extraData, setExtraData] = useState(true);
   const [filteredData, setFilteredData] = useState([]);
   const [filteredDataNotSeen, setFilteredDataNotSeen] = useState([]);
@@ -93,17 +103,7 @@ export default function ReelsComponentOne() {
         for (const page of res.pages) {
           for (const story of page.data.stories) {
             allStoriesWithAds.push(story);
-            storyCounter++;
-
-            if (storyCounter % 5 === 0) {
-              allStoriesWithAds.push({ _id: `ad-${storyCounter}`, type: 'ad' });
-            }
           }
-        }
-
-        // Ensure at least one ad even for less than 5 stories
-        if (allStoriesWithAds.length > 0 && storyCounter < 5) {
-          allStoriesWithAds.push({ _id: 'ad-end', type: 'ad' });
         }
 
         setFilteredDataNotSeen(allStoriesWithAds);

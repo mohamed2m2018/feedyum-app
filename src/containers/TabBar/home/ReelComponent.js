@@ -332,9 +332,25 @@ const ReelComponent = ({
   const uri = item?.uri;
   const poster = item?.avatarUri || item?.poster;
 
+  /* 
+   * Transition Fix: 
+   * Track when the video is actually ready to display to prevent black frames.
+   * We initialize opacity to 0 and fade in (set to 1) only after onLoad.
+   */
+  const [isVideoReady, setIsVideoReady] = useState(false);
+
+  // Reset video ready state ONLY when the video source changes (e.g. component recycling)
+  // We do NOT reset it when scrolling away/back, because 'onLoad' might not fire again if the component stays mounted.
+  useEffect(() => {
+    setIsVideoReady(false);
+  }, [item?.uri]);
+
   const handleOnLoad = useCallback(
     ({ duration: durationToBeSet }) => {
       setDurationInSeconds(durationToBeSet);
+      // Video is loaded, mark it as ready immediately so it becomes visible
+      setIsVideoReady(true);
+
       if (activeVideoIndex === index) {
         videoRef?.current?.seek?.(seekValueClick);
       }
@@ -348,19 +364,14 @@ const ReelComponent = ({
     }
   };
 
-  const maxDiscount = item?.author?.discount?.maxAmount
-    ? strings.max + ' ' + item?.author?.discount?.maxAmount + ' ' + strings.EGP
-    : '';
-
-
 
   return (
-    <View>
+    <View style={{ height: layoutHeight, overflow: 'hidden' }}>
 
       {item?.type !== 'ad' ? (
         <View
           style={{
-            height: layoutHeight || screenHeight,
+            flex: 1,
             backgroundColor: colors.backgroundColor,
           }}>
           <DoubleClick
@@ -423,92 +434,116 @@ const ReelComponent = ({
               </View>
             )}
 
-            {!!item?.uri && isVideoUri(item?.uri) &&
-              (activeVideoIndex === index ||
-                activeVideoIndex === index + 1 ||
-                activeVideoIndex === index - 1) &&
-              isFocused ? (
-              <View pointerEvents="none" style={localStyles.imageContainer}>
-                <Video
-                  source={{
-                    uri,
-                  }}
-                  onSeek={({ currentTime }) => {
-                    setSeekValueClick(currentTime);
-                  }}
-                  ref={videoRef}
-                  onProgress={onProgress}
-                  hideShutterView
-                  onLoad={handleOnLoad}
-                  onEnd={() => {
-                    if (activeVideoIndex === index && isFocused && !isCommentOpen) {
-                      console.log('Auto-scroll TIMEOUT EXECUTED. index:', index, 'isCommentOpen (in closure):', isCommentOpen);
-                      if (flatListRef.current) {
-                        flatListRef.current.scrollToIndex({
-                          animated: true,
-                          index: index + 1,
-                        });
-                        setTimeout(() => {
-                          videoRef?.current?.seek?.(0);
-                        }, 100);
-                      }
-                    }
-                  }}
-                  style={[
-                    localStyles.imageContainer,
-                    {
-                      backgroundColor: colors.backgroundColor,
-                    },
-                  ]}
-                  poster={poster}
-                  posterResizeMode="cover"
-                  resizeMode="cover"
-                  playInBackground={false}
-                  disableFocus={true}
-                  onError={error => {
-
-                  }}
-                  seekColor={colors.primary}
-                  muted={!isFocused}
-                  paused={
-                    activeVideoIndex !== index ||
-                    !isFocused ||
-                    paused.paused ||
-                    paused.slider ||
-                    isCommentOpen
-                    // isloading
-                  }
-                  useTextureView={true}
-                />
-              </View>
-            ) : item?.avatarUri ? (
-              <View style={imageStyles}>
-                <FastImage
+            {/* Refactored Media Rendering: Always render the image/poster at the bottom layer to prevent black flash */}
+            <View style={localStyles.imageContainer}>
+              {/* Background Image Layer */}
+              {item?.avatarUri ? (
+                <View style={[imageStyles, { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }]}>
+                  <FastImage
+                    source={{
+                      uri: poster,
+                    }}
+                    // If it's a video, we MUST use cover to match the video player and prevent "zoom" effect
+                    // If it's just an image post, we keep the original logic (contain)
+                    resizeMode={item?.uri && isVideoUri(item?.uri) ? "cover" : "contain"}
+                    style={imageStyles}
+                  />
+                  {/* Zoom indicator - Only show for actual images, not video thumbnails */}
+                  {(!item?.uri || !isVideoUri(item?.uri)) && (
+                    <View style={localStyles.zoomIndicator}>
+                      <Ionicons
+                        name="expand-outline"
+                        size={moderateScale(20)}
+                        color="rgba(255, 255, 255, 0.8)"
+                      />
+                    </View>
+                  )}
+                </View>
+              ) : (
+                <Image
                   source={{
                     uri: poster,
                   }}
-                  resizeMode="contain"
-                  style={imageStyles}
+                  resizeMode="cover"
+                  blurRadius={2}
+                  style={[imageStyles, { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }]}
                 />
-                {/* Zoom indicator */}
-                <View style={localStyles.zoomIndicator}>
-                  <Ionicons
-                    name="expand-outline"
-                    size={moderateScale(20)}
-                    color="rgba(255, 255, 255, 0.8)"
-                  />
-                </View>
-              </View>
-            ) : (
-              <Image
-                source={{
-                  uri: poster,
-                }}
-                resizeMode="cover"
-                blurRadius={2}
-                style={imageStyles}
-              />
-            )}
+              )}
+
+              {/* Video Layer - Renders ON TOP of the image */}
+              {!!item?.uri && isVideoUri(item?.uri) &&
+                (activeVideoIndex === index ||
+                  activeVideoIndex === index + 1 ||
+                  activeVideoIndex === index - 1) &&
+                (
+                  <View pointerEvents="none" style={[localStyles.imageContainer, { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }]}>
+                    <Video
+                      source={{
+                        uri,
+                      }}
+                      onSeek={({ currentTime }) => {
+                        setSeekValueClick(currentTime);
+                      }}
+                      ref={videoRef}
+                      onProgress={onProgress}
+                      hideShutterView
+                      onLoad={handleOnLoad}
+                      onEnd={() => {
+                        if (activeVideoIndex === index && isFocused && !isCommentOpen) {
+                          console.log('Auto-scroll TIMEOUT EXECUTED. index:', index, 'isCommentOpen (in closure):', isCommentOpen);
+                          if (flatListRef.current) {
+                            flatListRef.current.scrollToIndex({
+                              animated: true,
+                              index: index + 1,
+                            });
+                            setTimeout(() => {
+                              videoRef?.current?.seek?.(0);
+                            }, 100);
+                          }
+                        }
+                      }}
+                      style={[
+                        localStyles.imageContainer,
+                        {
+                          backgroundColor: 'transparent',
+                          opacity: isVideoReady ? 1 : 0, // Hide until loaded to prevent black flash
+                        },
+                      ]}
+                      // We can remove the poster here since we have a dedicated image layer below, 
+                      // but keeping it doesn't hurt as a fallback for the video component itself.
+                      poster={poster}
+                      posterResizeMode="cover"
+                      resizeMode="cover"
+                      playInBackground={false}
+                      disableFocus={true}
+                      onError={error => {
+
+                      }}
+                      seekColor={colors.primary}
+                      muted={!isFocused}
+                      paused={
+                        activeVideoIndex !== index ||
+                        !isFocused ||
+                        paused.paused ||
+                        paused.slider ||
+                        isCommentOpen
+                        // isloading
+                      }
+                      useTextureView={true}
+                      // Android buffering configuration for instant playback
+                      bufferConfig={{
+                        minBufferMs: 15000,
+                        maxBufferMs: 50000,
+                        bufferForPlaybackMs: 2500,
+                        bufferForPlaybackAfterRebufferMs: 5000,
+                      }}
+                      // iOS buffering configuration
+                      preferredForwardBufferDuration={15}
+                    // Important: Ensure prev/next videos are mounted but paused so they can buffer
+                    />
+                  </View>
+                )}
+            </View>
 
             {/* Attached Dishes Display - positioned above the action icons */}
             {isOverlayVisible && ((item?.dishes && item.dishes.length > 0) || item?.dishName) && (
@@ -746,11 +781,9 @@ const ReelComponent = ({
                           width: '100%',
                           marginTop: moderateScale(8),
                           marginBottom: moderateScale(8),
-                          direction: 'ltr',
-                          ...(I18nManager.isRTL &&
-                            Platform.OS === 'ios' && { transform: [{ scaleX: -1 }] }),
                         }}>
                         <Slider
+                          inverted={I18nManager.isRTL}
                           style={localStyles.seekBar}
                           minimumValue={0}
                           tapToSeek
@@ -1105,7 +1138,7 @@ const localStyles = StyleSheet.create({
     position: 'absolute',
     top: moderateScale(90),
     left: moderateScale(14),
-    zIndex: 10,
+    zIndex: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,

@@ -26,9 +26,9 @@ const QueryConfigs = {
 export const useOptimizedReels = (categoryIds = []) => {
   const location = useLocation();
   const [user] = useStorage('user');
-  
+
   return useInfiniteQuery(
-    ['stories', user?._id, categoryIds?.toString(), location?.latitude, location?.longitude],
+    ['stories', user?._id, categoryIds?.toString()],
     async ({ pageParam = 1 }) => {
       // Smaller initial page size for faster loading
       const limit = pageParam === 1 ? 8 : 15;
@@ -62,7 +62,7 @@ export const useOptimizedReels = (categoryIds = []) => {
 export const useOptimizedDiscoverData = (selectedTag) => {
   const location = useLocation();
   const [user] = useStorage('user');
-  
+
   // First, load users with stories/reels for the tag
   const usersQuery = useInfiniteQuery(
     ['discover-users', selectedTag, location?.latitude, location?.longitude],
@@ -81,14 +81,14 @@ export const useOptimizedDiscoverData = (selectedTag) => {
     },
     {
       ...QueryConfigs.LOCATION_SENSITIVE,
-      getNextPageParam: (lastPage) => 
-        lastPage?.currentPage < lastPage?.totalPages 
-          ? lastPage.currentPage + 1 
+      getNextPageParam: (lastPage) =>
+        lastPage?.currentPage < lastPage?.totalPages
+          ? lastPage.currentPage + 1
           : undefined,
       enabled: !!selectedTag,
     }
   );
-  
+
   // Then load dishes, but only after users query has some data
   const dishesQuery = useQuery(
     ['discover-dishes', selectedTag, location?.latitude, location?.longitude],
@@ -109,7 +109,7 @@ export const useOptimizedDiscoverData = (selectedTag) => {
       // Wait for users to load first to avoid overwhelming the API
     }
   );
-  
+
   return {
     users: {
       ...usersQuery,
@@ -127,7 +127,7 @@ export const useOptimizedDiscoverData = (selectedTag) => {
 export const useOptimizedFollowingReels = () => {
   const location = useLocation();
   const [user] = useStorage('user');
-  
+
   return useInfiniteQuery(
     ['stories-following', user?._id, location?.latitude, location?.longitude],
     async ({ pageParam = 1 }) => {
@@ -159,7 +159,7 @@ export const useOptimizedFollowingReels = () => {
 export const useOptimizedStory = (storyId) => {
   const location = useLocation();
   const [user] = useStorage('user');
-  
+
   return useQuery(
     ['story', storyId],
     async () => {
