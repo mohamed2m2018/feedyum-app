@@ -17,14 +17,17 @@ import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
 import ZHeader from '../../../components/common/ZHeader';
 import ZText from '../../../components/common/ZText';
 import ZLoader from '../../../components/common/ZLoader';
+import ZButton from '../../../components/common/ZButton';
 import { moderateScale } from '../../../common/constants';
 import { StackNav } from '../../../navigation/NavigationKeys';
 import request from '../../../api/request';
 import strings from '../../../i18n/strings';
+import { useHandleAuth } from '../../../utils/useHandleAuth';
 
 export default function Orders({ navigation }) {
   const colors = useSelector(state => state.theme.theme);
   const [refreshing, setRefreshing] = useState(false);
+  const { isGuest, handleAuthToast } = useHandleAuth();
 
   // Get current user
   const { data: userData } = useQuery('user', () => request.get('/user'));
@@ -234,6 +237,39 @@ export default function Orders({ navigation }) {
       </View>
     );
   };
+
+  // Show sign up prompt for guests
+  if (isGuest) {
+    return (
+      <ZSafeAreaView>
+        <ZHeader title={strings.myOrders} />
+        <View style={localStyles.emptyContainer}>
+          <Ionicons
+            name="receipt-outline"
+            size={moderateScale(64)}
+            color={colors.grayScale4}
+          />
+          <ZText
+            type="B18"
+            color={colors.grayScale7}
+            style={localStyles.emptyTitle}>
+            {strings.dearGuest || 'Dear Guest'}
+          </ZText>
+          <ZText
+            type="M14"
+            color={colors.grayScale7}
+            style={localStyles.emptySubtitle}>
+            {strings.pleaseSignUp || 'Please sign up to view your orders'}
+          </ZText>
+          <ZButton
+            title={strings.goToAuth || 'Sign Up'}
+            onPress={handleAuthToast}
+            containerStyle={{ marginTop: moderateScale(20) }}
+          />
+        </View>
+      </ZSafeAreaView>
+    );
+  }
 
   if (ordersLoading && !orders.length) {
     return (

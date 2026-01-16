@@ -39,4 +39,14 @@ allprojects {
         mavenCentral()
         maven { url 'https://www.jitpack.io' }
     }
+    
+    // Force compatible AndroidX versions for AGP 8.2.1 / SDK 34
+    configurations.all {
+        resolutionStrategy {
+            force 'androidx.core:core:1.13.1'
+            force 'androidx.core:core-ktx:1.13.1'
+            force 'androidx.activity:activity:1.8.2'
+            force 'androidx.activity:activity-ktx:1.8.2'
+        }
+    }
 }

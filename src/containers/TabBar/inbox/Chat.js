@@ -26,6 +26,9 @@ import { useStorage } from '../../../utils/useStorage';
 import ZHeader from '../../../components/common/ZHeader';
 import AudioMessage from '../../../components/AudioMessage';
 import VoiceRecorder from '../../../components/VoiceRecorder';
+import ZText from '../../../components/common/ZText';
+import ZButton from '../../../components/common/ZButton';
+import { useHandleAuth } from '../../../utils/useHandleAuth';
 
 export default function Chat({ navigation, route }) {
   const userName = route.params?.userName;
@@ -34,6 +37,7 @@ export default function Chat({ navigation, route }) {
   const chatUserId = route.params?.chatUserId || "64f48d3b6b45e8f937a49bc0"; // Ensure you get chatUserId from route
   const colors = useSelector(state => state.theme.theme);
   const language = useSelector(state => state.profile?.language);
+  const { isGuest, handleAuthToast } = useHandleAuth();
   // Check if Arabic is selected (can be 'ar', 'Arabic', or contain 'Arabic')
   const isRTL = language === 'ar' || language === 'Arabic' || (typeof language === 'string' && language.toLowerCase().includes('arabic'));
   const [messages, setMessages] = useState([]);
@@ -48,6 +52,33 @@ export default function Chat({ navigation, route }) {
   const messageContainerRef = useRef(null);
   const socketRef = useRef(null); // Ref to store the socket instance
   const userId = useStorage('user')?.[0]?._id;
+
+  // Show sign up prompt for guests
+  if (isGuest) {
+    return (
+      <ZSafeAreaView>
+        <ZHeader title={strings.chat || 'Chat'} showBack />
+        <View style={localStyles.loadingContainer}>
+          <Ionicons
+            name="chatbubbles-outline"
+            size={moderateScale(64)}
+            color={colors.grayScale4}
+          />
+          <ZText type="B18" color={colors.grayScale7} style={styles.mt10}>
+            {strings.dearGuest || 'Dear Guest'}
+          </ZText>
+          <ZText type="M14" color={colors.grayScale7} style={styles.mt5}>
+            {strings.pleaseSignUp || 'Please sign up to access chat'}
+          </ZText>
+          <ZButton
+            title={strings.goToAuth || 'Sign Up'}
+            onPress={handleAuthToast}
+            containerStyle={{ marginTop: moderateScale(20) }}
+          />
+        </View>
+      </ZSafeAreaView>
+    );
+  }
 
   useEffect(() => {
     // Initialize socket only once
@@ -265,9 +296,9 @@ export default function Chat({ navigation, route }) {
       );
     }
 
-    const timeString = new Date(currentMessage.createdAt).toLocaleTimeString([], { 
-      hour: '2-digit', 
-      minute: '2-digit' 
+    const timeString = new Date(currentMessage.createdAt).toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit'
     });
 
     return (
@@ -283,7 +314,7 @@ export default function Chat({ navigation, route }) {
         ]}>
           {/* Render image if present */}
           {currentMessage.image && (
-            <TouchableOpacity 
+            <TouchableOpacity
               activeOpacity={0.9}
               onPress={() => setSelectedImage(currentMessage.image)}
               style={localStyles.messageImageContainer}
@@ -305,13 +336,13 @@ export default function Chat({ navigation, route }) {
                   right: { backgroundColor: 'transparent' },
                 }}
                 textStyle={{
-                  left: { 
-                    color: isOwnMessage ? colors.white : colors.black, 
+                  left: {
+                    color: isOwnMessage ? colors.white : colors.black,
                     textAlign: isRTL ? 'right' : 'left',
                     writingDirection: isRTL ? 'rtl' : 'ltr',
                   },
-                  right: { 
-                    color: isOwnMessage ? colors.white : colors.black, 
+                  right: {
+                    color: isOwnMessage ? colors.white : colors.black,
                     textAlign: isRTL ? 'right' : 'left',
                     writingDirection: isRTL ? 'rtl' : 'ltr',
                   },
@@ -449,8 +480,8 @@ export default function Chat({ navigation, route }) {
           activeOpacity={1}
           onPress={() => setSelectedImage(null)}
         >
-          <TouchableOpacity 
-            activeOpacity={1} 
+          <TouchableOpacity
+            activeOpacity={1}
             onPress={(e) => e.stopPropagation()}
             style={localStyles.imageModalContent}
           >

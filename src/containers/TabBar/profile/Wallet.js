@@ -24,11 +24,13 @@ import { styles } from '../../../themes';
 import { moderateScale } from '../../../common/constants';
 import request from '../../../api/request';
 import strings from '../../../i18n/strings';
+import { useHandleAuth } from '../../../utils/useHandleAuth';
 
 export default function Wallet({ navigation }) {
   const colors = useSelector(state => state.theme.theme);
   const [selectedTab, setSelectedTab] = useState('balance');
   const queryClient = useQueryClient();
+  const { isGuest, handleAuthToast } = useHandleAuth();
 
   // Promocode form state
   const [promocodeForm, setPromocodeForm] = useState({
@@ -949,6 +951,33 @@ export default function Wallet({ navigation }) {
       </TouchableOpacity>
     </View>
   );
+
+  // Show sign up prompt for guests
+  if (isGuest) {
+    return (
+      <ZSafeAreaView>
+        <ZHeader title={strings.wallet} showBack />
+        <View style={localStyles.errorContainer}>
+          <MaterialIcon
+            name="wallet-outline"
+            size={moderateScale(48)}
+            color={colors.grayScale4}
+          />
+          <ZText type="B18" color={colors.grayScale7} style={styles.mt10}>
+            {strings.dearGuest || 'Dear Guest'}
+          </ZText>
+          <ZText type="M14" color={colors.grayScale7} style={styles.mt5}>
+            {strings.pleaseSignUp || 'Please sign up to access wallet'}
+          </ZText>
+          <ZButton
+            title={strings.goToAuth || 'Sign Up'}
+            onPress={handleAuthToast}
+            containerStyle={{ marginTop: moderateScale(20) }}
+          />
+        </View>
+      </ZSafeAreaView>
+    );
+  }
 
   if (!user || walletLoading) {
     return (

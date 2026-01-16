@@ -21,9 +21,9 @@ import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
 import ZButton from '../../../components/common/ZButton';
 
 import { moderateScale } from '../../../common/constants';
-import { styles } from '../../../themes';
 import images from '../../../assets/images';
 import strings from '../../../i18n/strings';
+import { useHandleAuth } from '../../../utils/useHandleAuth';
 import {
   selectCartItems,
   selectCartSubtotal,
@@ -48,6 +48,7 @@ const ShoppingCart = () => {
   const dispatch = useDispatch();
   const navigation = useNavigation();
   const queryClient = useQueryClient();
+  const { isGuest, handleAuthToast } = useHandleAuth();
 
   const cartItems = useSelector(selectCartItems);
   const subtotal = useSelector(selectCartSubtotal);
@@ -118,6 +119,12 @@ const ShoppingCart = () => {
   }, []);
 
   const handleCheckout = async () => {
+    // Block guests from checkout
+    if (isGuest) {
+      handleAuthToast();
+      return;
+    }
+
     showActionDialog({
       type: ALERT_TYPE.INFO,
       title: strings.placeOrderConfirm,
