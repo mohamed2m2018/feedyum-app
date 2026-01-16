@@ -53,34 +53,10 @@ export default function Chat({ navigation, route }) {
   const socketRef = useRef(null); // Ref to store the socket instance
   const userId = useStorage('user')?.[0]?._id;
 
-  // Show sign up prompt for guests
-  if (isGuest) {
-    return (
-      <ZSafeAreaView>
-        <ZHeader title={strings.chat || 'Chat'} showBack />
-        <View style={localStyles.loadingContainer}>
-          <Ionicons
-            name="chatbubbles-outline"
-            size={moderateScale(64)}
-            color={colors.grayScale4}
-          />
-          <ZText type="B18" color={colors.grayScale7} style={styles.mt10}>
-            {strings.dearGuest || 'Dear Guest'}
-          </ZText>
-          <ZText type="M14" color={colors.grayScale7} style={styles.mt5}>
-            {strings.pleaseSignUp || 'Please sign up to access chat'}
-          </ZText>
-          <ZButton
-            title={strings.goToAuth || 'Sign Up'}
-            onPress={handleAuthToast}
-            containerStyle={{ marginTop: moderateScale(20) }}
-          />
-        </View>
-      </ZSafeAreaView>
-    );
-  }
-
   useEffect(() => {
+    // Skip socket initialization for guests
+    if (isGuest) return;
+
     // Initialize socket only once
     if (!socketRef.current) {
       const socketUrl = Platform.OS === 'android' ? 'http://10.0.2.2:4800' : 'http://localhost:4800';
@@ -139,7 +115,34 @@ export default function Chat({ navigation, route }) {
         socketRef.current = null;
       }
     };
-  }, [userId, chatUserId, page]);
+  }, [userId, chatUserId, page, isGuest]);
+
+  // Show sign up prompt for guests (after all hooks)
+  if (isGuest) {
+    return (
+      <ZSafeAreaView>
+        <ZHeader title={strings.chat || 'Chat'} showBack />
+        <View style={localStyles.loadingContainer}>
+          <Ionicons
+            name="chatbubbles-outline"
+            size={moderateScale(64)}
+            color={colors.grayScale4}
+          />
+          <ZText type="B18" color={colors.grayScale7} style={styles.mt10}>
+            {strings.dearGuest || 'Dear Guest'}
+          </ZText>
+          <ZText type="M14" color={colors.grayScale7} style={styles.mt5}>
+            {strings.pleaseSignUp || 'Please sign up to access chat'}
+          </ZText>
+          <ZButton
+            title={strings.goToAuth || 'Sign Up'}
+            onPress={handleAuthToast}
+            containerStyle={{ marginTop: moderateScale(20) }}
+          />
+        </View>
+      </ZSafeAreaView>
+    );
+  }
 
   const loadMessages = (pageNumber) => {
     if (socketRef.current && !loading && pageNumber <= totalPages) {
