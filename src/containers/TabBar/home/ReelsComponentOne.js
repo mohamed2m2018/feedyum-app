@@ -31,8 +31,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocation } from '../../../navigation/locationContext';
 import ZButton from '../../../components/common/ZButton';
 
+import { optimizeImageUrl, prefetchImages } from '../../../utils/imageOptimizer';
+import { prefetchVideosAroundIndex } from '../../../services/VideoPrefetchService';
+
 export default function ReelsComponentOne() {
-  const [storyId, setStoryId] = useState();
+  const route = useRoute();
+  const [storyId, setStoryId] = useState(route.params?.storyId);
   const colors = useSelector(state => state.theme.theme);
   const isFocused = useIsFocused();
   const commentSheetRef = useRef('');
@@ -40,7 +44,8 @@ export default function ReelsComponentOne() {
   const [adFailedToLoad, setadFailedToLoad] = useState(false);
   const locationSheetRef = useRef('');
   const navigation = useNavigation();
-  const route = useRoute();
+
+  const [userProfile, setUserProfile] = useState(route.params?.profile);
   const [activeVideoIndex, setActiveVideoIndex] = useState(0);
 
   const [selectedPostId, setSelectedPostId] = useState();
@@ -67,7 +72,7 @@ export default function ReelsComponentOne() {
 
   const fetchReels = page =>
     request.get(
-      `/story/author?limit=15&page=${page}&id=${route.params?.profile?._id}&&lat=${location?.latitude}&long=${location?.longitude}`,
+      `/story/author?limit=15&page=${page}&id=${userProfile?._id}&&lat=${location?.latitude}&long=${location?.longitude}`,
     );
 
   const {
@@ -78,7 +83,7 @@ export default function ReelsComponentOne() {
     refetch,
     isRefetching,
   } = useInfiniteQuery(
-    ['stories-user', route?.params?.profile._id],
+    ['stories-user', userProfile?._id],
     ({ pageParam = 1 }) => fetchReels(pageParam),
     {
       retry: 0,
@@ -110,39 +115,73 @@ export default function ReelsComponentOne() {
       },
       refetchOnWindowFocus: true,
       refetchOnMount: true,
-      enabled: !!route.params?.profile._id,
+      enabled: !!userProfile?._id,
       refetchOnReconnect: true,
     },
   );
 
-  useQuery(
+  const { isFetching: isFetchingStory } = useQuery(
     ['storyById', storyId],
     () =>
       request.get(
         `/story/${storyId}?lat=${location?.latitude}&long=${location?.longitude}`,
         {
           params: {
-            userId: route.params?.profile._id,
+            userId: userProfile?._id,
           },
         },
       ),
     {
-      enabled: !!filteredDataNotSeen?.length && !!storyId,
+      enabled: !!storyId,
       onSuccess: res => {
+        if (res?.data?.story?.author && !userProfile) {
+          setUserProfile(res.data.story.author);
+        }
+
         const filtered = filteredDataNotSeen?.filter(item => {
           return res?.data?.story?._id !== item?._id;
         });
-        if (filtered.length && !filteredData.length) {
+
+        // Always update filteredData when story loads, merging it with the list
+        if (filtered.length) {
           setFilteredData([res?.data?.story, ...filtered]);
+        } else {
+          // Fallback if list is empty but story loaded
+          setFilteredData([res?.data?.story]);
         }
         updateViewsMutation.mutate(res?.data?.story?._id);
       },
-      onError: () => { },
+      onError: () => {
+        // If individual story load fails, still show the list!
+        if (filteredDataNotSeen?.length && !filteredData.length) {
+          setFilteredData(filteredDataNotSeen);
+        }
+      },
     },
   );
+
+  // Late merge effect: If list arrives AFTER story is already shown
+  useEffect(() => {
+    if (filteredDataNotSeen?.length > 0 && storyId && filteredData.length === 1) {
+      // We have the story (filteredData len 1) and now the list arrived. Merge them.
+      const currentStory = filteredData[0];
+      const others = filteredDataNotSeen.filter(x => x._id !== currentStory._id);
+      setFilteredData([currentStory, ...others]);
+    } else if (filteredDataNotSeen?.length > 0 && !storyId && filteredData.length === 0) {
+      // Fallback for no storyId case
+      setFilteredData(filteredDataNotSeen);
+    }
+  }, [filteredDataNotSeen, storyId]);
   useEffect(() => {
     setExtraData(e => !e);
   }, [activeVideoIndex, isFocused]);
+
+  // PREFETCH VIDEOS: When active index changes, prefetch next 3 videos at network level
+  useEffect(() => {
+    if (filteredData?.length > 0 && isFocused) {
+      prefetchVideosAroundIndex(filteredData, activeVideoIndex, 3);
+    }
+  }, [activeVideoIndex, filteredData, isFocused]);
 
   const onPressSearch = () => navigation.navigate(TabNav.Search);
 
@@ -236,7 +275,13 @@ export default function ReelsComponentOne() {
             viewConfig={viewConfig}
             viewableItemsChanged={viewableItemsChanged}
             layoutHeight={layoutHeight}
-            isLoading={isLoading || !filteredData.length}
+            // detailed loading logic:
+            // 1. isLoading from network (list OR single story) && no data
+            // 2. We have data in 'NotSeen' but haven't populated 'filteredData' yet (processing gap)
+            isLoading={
+              ((isLoading || isFetchingStory) && !filteredData.length) ||
+              (filteredDataNotSeen.length > 0 && !filteredData.length)
+            }
             onSetLayout={onSetLayout}
             emptylistMessage={strings.noDishesYetForYou}
             flatListRef={flatListRef}

@@ -286,31 +286,41 @@ const ReelComponent = ({
   // Local cache path for instant playback
   const [cachedVideoPath, setCachedVideoPath] = useState(null);
 
+  const isVideoReadyRef = useRef(false);
+
   // Check if video is cached when component mounts or uri changes
   useEffect(() => {
+    let active = true;
     const checkCache = async () => {
       if (uri && isVideoUri(uri)) {
         const cached = await getCachedVideoPath(uri);
-        if (cached) {
-          setCachedVideoPath(cached);
+        if (active) {
+          // CRITICAL FIX: Only switch to cached version if we haven't started playing yet
+          // This prevents the video from restarting if the remote stream is already active
+          if (cached && !isVideoReadyRef.current) {
+            setCachedVideoPath(cached);
+          }
         }
       }
     };
+
     setCachedVideoPath(null); // Reset when uri changes
     checkCache();
+
+    return () => { active = false; };
   }, [uri]);
 
   /* 
    * Transition Fix: 
    * Track when the video is actually ready to display to prevent black frames.
-   * We initialize opacity to 0 and fade in (set to 1) only after onLoad.
+   * We initialize opacity to 0 and fade in (set to 1) only after onReadyForDisplay.
    */
   const [isVideoReady, setIsVideoReady] = useState(false);
 
   // Reset video ready state and currentTime ONLY when the video source changes (e.g. component recycling)
-  // We do NOT reset it when scrolling away/back, because 'onLoad' might not fire again if the component stays mounted.
   useEffect(() => {
     setIsVideoReady(false);
+    isVideoReadyRef.current = false;
     setCurrentTime(0);
     seekProgressRef.current = 0;
   }, [item?.uri]);
@@ -318,10 +328,7 @@ const ReelComponent = ({
   const handleOnLoad = useCallback(
     ({ duration: durationToBeSet }) => {
       setDurationInSeconds(durationToBeSet);
-      // Video is loaded, mark it as ready immediately so it becomes visible
-      setIsVideoReady(true);
-      // Note: We no longer auto-seek here - videos always start fresh from the beginning
-      // This prevents unexpected jumps when video loads
+      // We rely on onReadyForDisplay to show the video to prevent black flash
     },
     [],
   );
@@ -434,7 +441,7 @@ const ReelComponent = ({
                 />
               )}
 
-              {/* Video Layer - Renders ON TOP of the image */}
+              {/* Video Layer - Renders ON TOP of the image - But only after cache check is complete */}
               {!!item?.uri && isVideoUri(item?.uri) &&
                 (activeVideoIndex === index ||
                   activeVideoIndex === index + 1 ||
@@ -453,6 +460,10 @@ const ReelComponent = ({
                       onProgress={onProgress}
                       hideShutterView
                       onLoad={handleOnLoad}
+                      onReadyForDisplay={() => {
+                        setIsVideoReady(true);
+                        isVideoReadyRef.current = true;
+                      }}
                       onEnd={() => {
                         // Only auto-scroll if NOT seeking (slider interaction) and meets other conditions
                         if (activeVideoIndex === index && isFocused && !isCommentOpen && !paused.slider) {
@@ -490,7 +501,7 @@ const ReelComponent = ({
 
                       }}
                       seekColor={colors.primary}
-                      muted={!isFocused}
+                      muted={!isFocused || activeVideoIndex !== index}
                       paused={
                         activeVideoIndex !== index ||
                         !isFocused ||
@@ -502,11 +513,11 @@ const ReelComponent = ({
                       useTextureView={true}
                       // Android buffering configuration for FAST initial playback
                       bufferConfig={{
-                        minBufferMs: 2000,       // Reduced from 15000 - less memory usage
-                        maxBufferMs: 10000,      // Reduced from 50000 - faster startup
-                        bufferForPlaybackMs: 500, // CRITICAL: Reduced from 2500 - start playing after just 500ms of buffer
-                        bufferForPlaybackAfterRebufferMs: 1500, // Reduced from 5000 - faster recovery
-                        cacheSizeMB: 100,        // Enable video caching for instant replay
+                        minBufferMs: 15000,       // Increased for stability during playback
+                        maxBufferMs: 50000,      // Increased for better caching
+                        bufferForPlaybackMs: 100, // CRITICAL: Minimized for instant start
+                        bufferForPlaybackAfterRebufferMs: 500, // Reduced for faster recovery
+                        cacheSizeMB: 200,        // Increased cache size
                       }}
                       // iOS buffering configuration - reduced for faster start
                       preferredForwardBufferDuration={3}
