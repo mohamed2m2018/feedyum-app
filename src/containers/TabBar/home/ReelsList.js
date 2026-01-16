@@ -87,9 +87,9 @@ const ReelsList = ({
           }
           removeClippedSubviews={false}
           maxToRenderPerBatch={3}
-          updateCellsBatchingPeriod={50}
-          initialNumToRender={2}
-          windowSize={3}
+          updateCellsBatchingPeriod={30}
+          initialNumToRender={3}
+          windowSize={5}
         />
       </View>
     </View>

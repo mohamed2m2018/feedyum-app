@@ -24,6 +24,32 @@ export const showSuccessToast = (title, message) => {
 };
 
 /**
+ * Show a persistent success toast that doesn't auto-close
+ * Ideal for upload progress indicators
+ * @param {string} title - The toast title
+ * @param {string} message - The toast message (optional)
+ */
+export const showPersistentSuccessToast = (title, message) => {
+    if (Toast && typeof Toast.show === 'function') {
+        Toast.show({
+            type: ALERT_TYPE.SUCCESS,
+            title: title,
+            textBody: message || '',
+            autoClose: false,
+        });
+    }
+};
+
+/**
+ * Hide any currently showing toast
+ */
+export const hideToast = () => {
+    if (Toast && typeof Toast.hide === 'function') {
+        Toast.hide();
+    }
+};
+
+/**
  * Show a clickable success toast notification
  * @param {string} title - The toast title
  * @param {string} message - The toast message
@@ -287,10 +313,12 @@ export { ALERT_TYPE, Dialog };
 export default {
     // Toasts (auto-dismiss, no interaction needed)
     success: showSuccessToast,
+    persistentSuccess: showPersistentSuccessToast,
     error: showErrorToast,
     warning: showWarningToast,
     info: showInfoToast,
     show: showToast,
+    hide: hideToast,
 
     // Dialogs (with buttons, require user interaction)
     successDialog: showSuccessDialog,

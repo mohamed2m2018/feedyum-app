@@ -32,6 +32,7 @@ import ZButton from '../../../components/common/ZButton';
 import { useStorage } from '../../../utils/useStorage';
 import { useOptimizedFollowingReels } from '../../../hooks/useOptimizedQueries';
 import { optimizeImageUrl, prefetchImages } from '../../../utils/imageOptimizer';
+import { prefetchVideosAroundIndex } from '../../../services/VideoPrefetchService';
 
 export default function ReelsComponent({ amIFocused }) {
   const colors = useSelector(state => state.theme.theme);
@@ -138,6 +139,13 @@ export default function ReelsComponent({ amIFocused }) {
   useEffect(() => {
     setExtraData(e => !e);
   }, [activeVideoIndex, isFocused, isCommentOpen]);
+
+  // PREFETCH VIDEOS: When active index changes, prefetch next 3 videos at network level (Android-safe)
+  useEffect(() => {
+    if (filteredData?.length > 0 && isFocused) {
+      prefetchVideosAroundIndex(filteredData, activeVideoIndex, 3);
+    }
+  }, [activeVideoIndex, filteredData, isFocused]);
 
   const onPressSearch = () => navigation.navigate(TabNav.Search);
 

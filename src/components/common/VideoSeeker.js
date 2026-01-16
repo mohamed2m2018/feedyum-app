@@ -4,19 +4,35 @@ import Slider from '@react-native-community/slider';
 import ZText from './ZText';
 import { moderateScale } from '../../common/constants';
 
-// Memoized Video Seeker Component - Uses internal timer to avoid parent re-renders
+/**
+ * VideoSeeker - A stable video progress slider
+ * 
+ * Key design principles:
+ * 1. Uses a ref to track the "true" progress from video, avoiding state conflicts
+ * 2. Only updates state for display purposes at controlled intervals
+ * 3. Completely isolates user-controlled seeking from video-progress updates
+ * 4. Communicates seeking state back to parent to block auto-scroll
+ */
 const VideoSeeker = React.memo(({
     duration,
+    currentTime, // Actual video progress from onProgress callback
     onSeek,
     onSeekStart,
     onSeekEnd,
     primaryColor,
-    isActive,
-    isPaused
+    isActive
 }) => {
+    // Display time shown on the slider - only updates when NOT seeking
     const [displayTime, setDisplayTime] = useState(0);
+
+    // Whether user is currently dragging the slider
     const [isSeeking, setIsSeeking] = useState(false);
-    const progressInterval = useRef(null);
+
+    // Ref to track if we're in a seeking state (avoids stale closure issues)
+    const isSeekingRef = useRef(false);
+
+    // Ref to hold the last known video time (stable reference)
+    const lastVideoTimeRef = useRef(0);
 
     // Format time helper
     const formatTime = (seconds) => {
@@ -26,61 +42,65 @@ const VideoSeeker = React.memo(({
         return `${mins}:${secs.toString().padStart(2, '0')}`;
     };
 
-    // Internal progress tracking using interval - completely isolated from parent
+    // Update display from video progress - ONLY when not seeking
     useEffect(() => {
-        if (isActive && !isPaused && !isSeeking) {
-            progressInterval.current = setInterval(() => {
-                // Increment display time smoothly
-                setDisplayTime(prev => {
-                    const newTime = prev + 0.5;
-                    // Don't exceed duration
-                    return duration && newTime > duration ? duration : newTime;
-                });
-            }, 500);
-        } else {
-            if (progressInterval.current) {
-                clearInterval(progressInterval.current);
-                progressInterval.current = null;
-            }
+        // Store the video time in ref for reference
+        if (currentTime !== undefined && currentTime !== null) {
+            lastVideoTimeRef.current = currentTime;
         }
 
-        return () => {
-            if (progressInterval.current) {
-                clearInterval(progressInterval.current);
-                progressInterval.current = null;
-            }
-        };
-    }, [isActive, isPaused, isSeeking, duration]);
-
-    // Reset display time when video changes (becomes active)
-    useEffect(() => {
-        if (!isActive) {
-            setDisplayTime(0);
+        // Only update display if NOT seeking
+        if (!isSeekingRef.current && currentTime !== undefined && currentTime !== null) {
+            setDisplayTime(currentTime);
         }
+    }, [currentTime]);
+
+    // Reset when video changes (isActive changes)
+    useEffect(() => {
+        setDisplayTime(0);
+        lastVideoTimeRef.current = 0;
+        isSeekingRef.current = false;
+        setIsSeeking(false);
     }, [isActive]);
 
     const handleSlidingStart = useCallback(() => {
+        isSeekingRef.current = true;
         setIsSeeking(true);
         onSeekStart?.();
     }, [onSeekStart]);
 
     const handleSlidingComplete = useCallback((value) => {
-        setIsSeeking(false);
-        setDisplayTime(value);
+        // First seek the video
         onSeek?.(value);
-        onSeekEnd?.();
+
+        // Update display to the seeked position
+        setDisplayTime(value);
+        lastVideoTimeRef.current = value;
+
+        // Small delay before ending seek state to let video catch up
+        setTimeout(() => {
+            isSeekingRef.current = false;
+            setIsSeeking(false);
+            onSeekEnd?.();
+        }, 100);
     }, [onSeek, onSeekEnd]);
 
     const handleValueChange = useCallback((value) => {
-        if (isSeeking) {
+        // During seeking, update display immediately
+        if (isSeekingRef.current) {
             setDisplayTime(value);
         }
-    }, [isSeeking]);
+    }, []);
 
     if (!isActive) return null;
 
     return (
-        <View style={styles.container}>
+        <View
+            style={styles.container}
+            onStartShouldSetResponder={() => true}
+            onMoveShouldSetResponder={() => true}
+            onResponderTerminationRequest={() => false}
+        >
             <View style={styles.timeContainer}>
                 <ZText style={styles.timeText}>
                     {formatTime(displayTime)}

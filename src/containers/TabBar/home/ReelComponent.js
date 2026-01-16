@@ -37,6 +37,7 @@ import DeepLinkingService from '../../../services/DeepLinkingService';
 import ImageZoomModal from '../../../components/common/ImageZoomModal';
 import ShareOptionsSheet from '../../../components/models/ShareOptionsSheet';
 import strings from '../../../i18n/strings';
+import { getCachedVideoPath, initCache } from '../../../services/VideoCacheService';
 
 // Helper function to check if a URI is a video URL
 // S3 uploads from our app are videos, so we trust them unless they're obviously images
@@ -107,56 +108,7 @@ const ReelComponent = ({
     }
   }, [indexState, index]);
 
-  // Pulse animation for review badge
-  useEffect(() => {
-    if (item?.reviewMode && activeVideoIndex === index) {
-      const pulseAnimation = Animated.loop(
-        Animated.sequence([
-          Animated.timing(pulseAnim, {
-            toValue: 1.1,
-            duration: 1000,
-            useNativeDriver: true,
-          }),
-          Animated.timing(pulseAnim, {
-            toValue: 1,
-            duration: 1000,
-            useNativeDriver: true,
-          }),
-        ])
-      );
-      pulseAnimation.start();
-
-      return () => pulseAnimation.stop();
-    }
-  }, [item?.reviewMode, activeVideoIndex, index, pulseAnim]);
-
   const [isOverlayVisible, setIsOverlayVisible] = useState(true);
-
-
-  // Animation for review badge pulse effect
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-
-  // Add new animation for header entrance
-  const headerSlideAnim = useRef(new Animated.Value(-50)).current;
-  const headerOpacityAnim = useRef(new Animated.Value(0)).current;
-
-  // Add animation for header entrance effect
-  useEffect(() => {
-    if (activeVideoIndex === index) {
-      Animated.parallel([
-        Animated.timing(headerSlideAnim, {
-          toValue: 0,
-          duration: 50,
-          useNativeDriver: true,
-        }),
-        Animated.timing(headerOpacityAnim, {
-          toValue: 1,
-          duration: 30,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    }
-  }, [activeVideoIndex, index]);
 
   const onPressMore = () => {
     setIsMoreDescriptionSeen(true);
@@ -212,19 +164,11 @@ const ReelComponent = ({
 
   const videoRef = useRef();
   const [durationInSeconds, setDurationInSeconds] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
 
-  const [paused, setpaused] = useState({ slider: true, paused: true });
-
-  useEffect(() => {
-    if (layoutHeight) {
-      setTimeout(() => {
-        setpaused({
-          slider: false,
-          paused: false,
-        });
-      }, 1000);
-    }
-  }, [layoutHeight]);
+  // Start paused=false immediately for active video - no delay needed
+  // The video component's paused prop already handles play/pause based on activeVideoIndex
+  const [paused, setpaused] = useState({ slider: false, paused: false });
 
   const generateDynamicLink = async postItem => {
     const shareableLinks = DeepLinkingService.generateShareableLink('reel', postItem?._id, {
@@ -293,29 +237,34 @@ const ReelComponent = ({
 
   const duration = item?.duration?.split(' ');
 
+  // Auto-scroll for IMAGE posts only (no video) - after 10 seconds
+  // This should NOT run for video posts - video scroll is handled by onEnd
+  const isImageOnlyPost = !item?.uri || !isVideoUri(item?.uri);
+
   useEffect(() => {
     let timeout;
 
-    if (index === activeVideoIndex && !!item.avatarUri && isFocused && !isCommentOpen && !isLocationOpen && !showImageZoom) {
-      console.log('Auto-scroll EFFECT START. index:', index);
+    // Only auto-scroll for IMAGE posts, NOT videos
+    // Also block if seeking, comment open, location open, or image zoom
+    if (index === activeVideoIndex && isImageOnlyPost && isFocused && !isCommentOpen && !isLocationOpen && !showImageZoom && !paused.slider) {
+      console.log('Auto-scroll for IMAGE EFFECT START. index:', index);
       timeout = setTimeout(() => {
         try {
           flatListRef.current.scrollToIndex({
             animated: true,
             index: index + 1,
           });
-          console.log('Auto-scroll SCROLL CALLED');
+          console.log('Auto-scroll for IMAGE SCROLL CALLED');
         } catch (e) {
           console.log('Reached last item, cannot auto-scroll');
         }
       }, 10000);
       return () => {
-        console.log('Auto-scroll EFFECT CLEANUP (Clear Timeout). index:', index);
+        console.log('Auto-scroll for IMAGE EFFECT CLEANUP. index:', index);
         clearTimeout(timeout);
       };
-    } else {
     }
-  }, [isFocused, index, activeVideoIndex, flatListRef, item.avatarUri, isCommentOpen, isLocationOpen, showImageZoom]);
+  }, [isFocused, index, activeVideoIndex, flatListRef, isImageOnlyPost, isCommentOpen, isLocationOpen, showImageZoom, paused.slider]);
 
   const handlePressProfile = () => {
     // Navigate to author's profile, not the current user's profile unless they match
@@ -334,6 +283,23 @@ const ReelComponent = ({
   const uri = item?.uri;
   const poster = item?.avatarUri || item?.poster;
 
+  // Local cache path for instant playback
+  const [cachedVideoPath, setCachedVideoPath] = useState(null);
+
+  // Check if video is cached when component mounts or uri changes
+  useEffect(() => {
+    const checkCache = async () => {
+      if (uri && isVideoUri(uri)) {
+        const cached = await getCachedVideoPath(uri);
+        if (cached) {
+          setCachedVideoPath(cached);
+        }
+      }
+    };
+    setCachedVideoPath(null); // Reset when uri changes
+    checkCache();
+  }, [uri]);
+
   /* 
    * Transition Fix: 
    * Track when the video is actually ready to display to prevent black frames.
@@ -341,10 +307,12 @@ const ReelComponent = ({
    */
   const [isVideoReady, setIsVideoReady] = useState(false);
 
-  // Reset video ready state ONLY when the video source changes (e.g. component recycling)
+  // Reset video ready state and currentTime ONLY when the video source changes (e.g. component recycling)
   // We do NOT reset it when scrolling away/back, because 'onLoad' might not fire again if the component stays mounted.
   useEffect(() => {
     setIsVideoReady(false);
+    setCurrentTime(0);
+    seekProgressRef.current = 0;
   }, [item?.uri]);
 
   const handleOnLoad = useCallback(
@@ -352,17 +320,17 @@ const ReelComponent = ({
       setDurationInSeconds(durationToBeSet);
       // Video is loaded, mark it as ready immediately so it becomes visible
       setIsVideoReady(true);
-
-      if (activeVideoIndex === index) {
-        videoRef?.current?.seek?.(seekProgressRef.current);
-      }
+      // Note: We no longer auto-seek here - videos always start fresh from the beginning
+      // This prevents unexpected jumps when video loads
     },
-    [activeVideoIndex, index],
+    [],
   );
 
-  const onProgress = ({ currentTime }) => {
+  const onProgress = ({ currentTime: time }) => {
     // Update the ref for accurate tracking (used by handleOnLoad)
-    seekProgressRef.current = currentTime;
+    seekProgressRef.current = time;
+    // Update state for VideoSeeker
+    setCurrentTime(time);
   };
 
 
@@ -400,12 +368,7 @@ const ReelComponent = ({
 
             {/* Review Badge - compact, positioned at top left */}
             {(item?.reviewMode || item?.author?.type !== 'chef') && (
-              <Animated.View
-                style={[
-                  localStyles.reviewBadge,
-                  { transform: [{ scale: pulseAnim }] }
-                ]}
-              >
+              <View style={localStyles.reviewBadge}>
                 <LinearGradient
                   colors={['#FF6B6B', '#FF8E53']}
                   start={{ x: 0, y: 0 }}
@@ -417,7 +380,7 @@ const ReelComponent = ({
                     REVIEW
                   </ZText>
                 </LinearGradient>
-              </Animated.View>
+              </View>
             )}
             {/* KM Away / Branches Button */}
             {item?.author?.type === 'chef' && (
@@ -480,7 +443,8 @@ const ReelComponent = ({
                   <View pointerEvents="none" style={[localStyles.imageContainer, { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }]}>
                     <Video
                       source={{
-                        uri,
+                        // Use cached local path for instant playback, fallback to remote URL
+                        uri: cachedVideoPath || uri,
                       }}
                       onSeek={({ currentTime }) => {
                         seekProgressRef.current = currentTime;
@@ -490,10 +454,10 @@ const ReelComponent = ({
                       hideShutterView
                       onLoad={handleOnLoad}
                       onEnd={() => {
-                        if (activeVideoIndex === index && isFocused && !isCommentOpen) {
-                          console.log('Auto-scroll TIMEOUT EXECUTED. index:', index, 'isCommentOpen (in closure):', isCommentOpen);
+                        // Only auto-scroll if NOT seeking (slider interaction) and meets other conditions
+                        if (activeVideoIndex === index && isFocused && !isCommentOpen && !paused.slider) {
+                          console.log('Video onEnd - auto-scroll. index:', index);
                           if (flatListRef.current) {
-                            // Use try-catch to handle scrollToIndex out of range gracefully
                             try {
                               flatListRef.current.scrollToIndex({
                                 animated: true,
@@ -503,7 +467,6 @@ const ReelComponent = ({
                                 videoRef?.current?.seek?.(0);
                               }, 100);
                             } catch (e) {
-                              // Reached the last item, can't scroll further
                               console.log('Reached last item, cannot auto-scroll');
                             }
                           }
@@ -537,15 +500,18 @@ const ReelComponent = ({
                         // isloading
                       }
                       useTextureView={true}
-                      // Android buffering configuration for instant playback
+                      // Android buffering configuration for FAST initial playback
                       bufferConfig={{
-                        minBufferMs: 15000,
-                        maxBufferMs: 50000,
-                        bufferForPlaybackMs: 2500,
-                        bufferForPlaybackAfterRebufferMs: 5000,
+                        minBufferMs: 2000,       // Reduced from 15000 - less memory usage
+                        maxBufferMs: 10000,      // Reduced from 50000 - faster startup
+                        bufferForPlaybackMs: 500, // CRITICAL: Reduced from 2500 - start playing after just 500ms of buffer
+                        bufferForPlaybackAfterRebufferMs: 1500, // Reduced from 5000 - faster recovery
+                        cacheSizeMB: 100,        // Enable video caching for instant replay
                       }}
-                      // iOS buffering configuration
-                      preferredForwardBufferDuration={15}
+                      // iOS buffering configuration - reduced for faster start
+                      preferredForwardBufferDuration={3}
+                      // Optimize for streaming
+                      automaticallyWaitsToMinimizeStalling={false}
                     // Important: Ensure prev/next videos are mounted but paused so they can buffer
                     />
                   </View>
@@ -596,14 +562,7 @@ const ReelComponent = ({
                   }}
                 />
                 <View style={styles.flex}>
-                  <Animated.View
-                    style={[
-                      localStyles.headerContainer,
-                      {
-                        transform: [{ translateY: headerSlideAnim }],
-                        opacity: headerOpacityAnim,
-                      },
-                    ]}>
+                  <View style={localStyles.headerContainer}>
                     <View style={localStyles.headerInnerContainer}>
                       <TouchableOpacity onPress={handlePressProfile}>
                         <View style={localStyles.avatarRing}>
@@ -798,7 +757,7 @@ const ReelComponent = ({
                         }}
                       />
                     )}
-                  </Animated.View>
+                  </View>
                 </View>
                 <View style={localStyles.verticalContainer}>
                   <VideoItem
@@ -856,11 +815,13 @@ const ReelComponent = ({
               <VideoSeeker
                 videoRef={videoRef}
                 duration={durationInSeconds}
+                currentTime={currentTime}
                 primaryColor={colors.primary}
                 isActive={activeVideoIndex === index}
                 isPaused={paused.paused || paused.slider || !isFocused || isCommentOpen}
                 onSeek={(value) => {
                   videoRef?.current?.seek?.(value);
+                  setCurrentTime(value);
                 }}
                 onSeekStart={() => {
                   setpaused(prev => ({ ...prev, slider: true }));

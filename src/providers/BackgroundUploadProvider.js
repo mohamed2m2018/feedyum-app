@@ -2,7 +2,7 @@ import React, { createContext, useEffect, useState } from 'react';
 import { convertVideoToMP4, generateThumbnail } from '../utils/UploadUtils';
 import BackgroundUpload from 'react-native-background-upload';
 import { ALERT_TYPE, Dialog, Toast } from 'react-native-alert-notification';
-import { showSuccessToast, showErrorToast, showWarningToast } from '../utils/toast';
+import { showSuccessToast, showErrorToast, showWarningToast, showPersistentSuccessToast, hideToast } from '../utils/toast';
 import { useMutation, useQueryClient } from 'react-query';
 import request from '../api/request';
 import { Platform } from 'react-native';
@@ -64,11 +64,14 @@ export function BackgroundUploadProvider({ children }) {
 
   const { mutate } = useMutation(dataToBeSent?.isEdit ? editPost : addNewPost, {
     onSuccess: () => {
-      // queryClient.invalidateQueries('stories'); // Invalidate the 'stories' query to trigger a refetch
+      // Invalidate all stories queries to force refetch and show new post
+      queryClient.invalidateQueries('stories');
+      queryClient.invalidateQueries({ queryKey: ['stories'] });
       queryClient.invalidateQueries('user');
       queryClient.invalidateQueries({ queryKey: 'profile-stories' });
-      queryClient.invalidateQueries({ queryKey: 'profile-reviews' }); // Also invalidate reviews
+      queryClient.invalidateQueries({ queryKey: 'profile-reviews' });
       queryClient.invalidateQueries({ queryKey: 'stories_following' });
+      queryClient.invalidateQueries({ queryKey: ['stories-following'] });
       setImageId();
       setVideoId();
     },
@@ -80,7 +83,7 @@ export function BackgroundUploadProvider({ children }) {
 
   useEffect(() => {
     if (isFormFilled) {
-      showSuccessToast(
+      showPersistentSuccessToast(
         dataToBeSent?.isEdit ? strings.editingPost : strings.addingPost,
         toastTitle
       );
@@ -115,7 +118,10 @@ export function BackgroundUploadProvider({ children }) {
 
       mutate(data, {
         onSuccess: async res => {
-          // await queryClient.invalidateQueries({queryKey: 'stories'});
+          // Invalidate all stories to show new post in feed
+          await queryClient.invalidateQueries({ queryKey: 'stories' });
+          await queryClient.invalidateQueries({ queryKey: ['stories'] });
+          await queryClient.invalidateQueries({ queryKey: ['stories-following'] });
           await queryClient.invalidateQueries({
             queryKey: 'profile-stories',
           });
@@ -128,7 +134,7 @@ export function BackgroundUploadProvider({ children }) {
           setDataToBeSent({});
           settoastTitle(strings.congratulations);
           setTimeout(() => {
-            Toast.hide();
+            hideToast();
             settoastTitle('');
           }, 500);
           navigation.navigate(TabNav.FollowingTab, {

@@ -41,6 +41,7 @@ import { useStorage } from '../../../utils/useStorage';
 import AddressDropdown from '../../../components/AddressDropdown';
 import { useOptimizedReels, useOptimizedStory } from '../../../hooks/useOptimizedQueries';
 import { optimizeImageUrl, prefetchImages } from '../../../utils/imageOptimizer';
+import { prefetchVideosAroundIndex, clearPrefetchCache } from '../../../services/VideoPrefetchService';
 
 // Module-level locked height removed in favor of dynamic calculation
 // let GLOBAL_LOCKED_HEIGHT = 0;
@@ -135,6 +136,9 @@ export default function ReelsComponent({ amIFocused }) {
         .filter(Boolean);
 
       prefetchImages(imagesToPrefetch, { concurrent: 2 });
+
+      // PREFETCH FIRST 5 VIDEOS immediately for instant playback
+      prefetchVideosAroundIndex(allStoriesWithAds, 0, 5);
     }
   }, [reelsData]);
 
@@ -166,6 +170,15 @@ export default function ReelsComponent({ amIFocused }) {
   useEffect(() => {
     setExtraData(e => !e);
   }, [activeVideoIndex, isFocused, isCommentOpen]); // Restored activeVideoIndex - FlatList handles this efficiently
+
+  // PREFETCH VIDEOS: When active index changes, prefetch next 3 videos at network level
+  // This downloads video data to HTTP cache without using hardware decoders (Android-safe)
+  useEffect(() => {
+    if (filteredData?.length > 0 && isFocused) {
+      // Prefetch videos: current +1 to +3 (and -1 for back-scroll)
+      prefetchVideosAroundIndex(filteredData, activeVideoIndex, 3);
+    }
+  }, [activeVideoIndex, filteredData, isFocused]);
 
   const onPressSearch = () => navigation.navigate(TabNav.Search);
 
