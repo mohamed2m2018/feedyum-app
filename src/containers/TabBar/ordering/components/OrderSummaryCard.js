@@ -45,7 +45,7 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
-const OrderSummaryCard = ({ order, colors, onPressPrimary, initialCollapsed = true, onClose, autoPeek = true, peekDurationMs = 900, isChef, onAccept, onReject }) => {
+const OrderSummaryCard = ({ order, colors, onPressPrimary, initialCollapsed = true, onClose, autoPeek = true, peekDurationMs = 400, isChef, onAccept, onReject }) => {
   const [collapsed, setCollapsed] = useState(!!initialCollapsed);
   const [contentOpacity] = useState(new Animated.Value(initialCollapsed ? 0 : 1));
   const hasPeekedRef = useRef(false);

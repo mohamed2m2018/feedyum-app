@@ -791,7 +791,7 @@ export default {
   // Analytics & Dashboard
   analyticsDashboard: 'لوحة تحكم التحليلات',
   revenueChartsAndMetrics: 'سيتم عرض مخططات الإيرادات ومقاييس الأداء هنا',
-  
+
   // Analytics Screen
   overview: 'نظرة عامة',
   periodRevenue: 'إيرادات الفترة',
@@ -809,7 +809,7 @@ export default {
   ordersCount: 'طلبات',
   totalOrdersCount: 'إجمالي الطلبات',
   items: 'عناصر',
-  
+
   // Order Statuses
   statusPending: 'قيد الانتظار',
   statusAccepted: 'مقبول',
@@ -1418,5 +1418,10 @@ export default {
 
   // Comments
   replyingTo: 'الرد على',
+
+  // Explore Empty States
+  noCategoryItemsInExplore: 'لا توجد مطابخ أو أطباق في هذا التصنيف حتى الآن',
+  noCategoryItemsInExploreDesc: 'تحقق لاحقاً أو استكشف تصنيفات أخرى',
+  noCategoryDishesAvailable: 'لا توجد أطباق {category} متاحة من هذا المطبخ',
 
 };

@@ -76,6 +76,31 @@ export const showClickableToast = (title, message, onPress) => {
 };
 
 /**
+ * Show a persistent clickable toast that stays until user taps or dismisses
+ * Ideal for notifications that require user acknowledgment
+ * @param {string} title - The toast title
+ * @param {string} message - The toast message
+ * @param {Function} onPress - Callback when toast is pressed
+ */
+export const showPersistentClickableToast = (title, message, onPress) => {
+    if (!Toast || typeof Toast.show !== 'function') {
+        console.error('🐞 [toast.js] Toast.show is not available!', { Toast });
+        throw new Error('Toast library not available');
+    }
+
+    Toast.show({
+        type: ALERT_TYPE.SUCCESS,
+        title: title,
+        textBody: message || '',
+        autoClose: false,
+        onPress: () => {
+            if (Toast.hide) Toast.hide();
+            onPress?.();
+        }
+    });
+};
+
+/**
  * Show an error toast notification
  * @param {string} title - The toast title
  * @param {string} message - The toast message (optional)

@@ -89,11 +89,21 @@ export default function ReelsComponent({ amIFocused }) {
   const [selectedGov, setselectedGov] = useState('');
   const [queryClient] = React.useState(() => new QueryClient());
   const [categoryIds, setcategoryIds] = useState([]);
+  const [isFilterLoading, setIsFilterLoading] = useState(false);
   const [user] = useStorage('user');
   const [isCommentOpen, setIsCommentOpen] = useState(false);
   const [isLocationOpen, setIsLocationOpen] = useState(false);
 
   const location = useLocation();
+
+  // When categoryIds change, show loading indicator
+  useEffect(() => {
+    // Skip initial render (when categoryIds is empty array)
+    if (categoryIds.length > 0 || filteredData.length > 0) {
+      setIsFilterLoading(true);
+      setFilteredData([]); // Clear data to show loader
+    }
+  }, [categoryIds]);
 
 
 
@@ -112,7 +122,10 @@ export default function ReelsComponent({ amIFocused }) {
   // Process data and add ads
   useEffect(() => {
     if (!reelsData?.pages?.[0]?.stories) {
-      setFilteredData([]);
+      // Only clear if we're not in the middle of a fetch (and not filter loading)
+      if (!isFetching && !isLoading && !isFilterLoading) {
+        setFilteredData([]);
+      }
       return;
     }
 
@@ -126,6 +139,7 @@ export default function ReelsComponent({ amIFocused }) {
     }
 
     setFilteredData(allStoriesWithAds);
+    setIsFilterLoading(false); // Data arrived, stop filter loading
 
     // Prefetch images for next few items
     if (allStoriesWithAds.length > 0) {
@@ -140,7 +154,7 @@ export default function ReelsComponent({ amIFocused }) {
       // PREFETCH FIRST 5 VIDEOS immediately for instant playback
       prefetchVideosAroundIndex(allStoriesWithAds, 0, 5);
     }
-  }, [reelsData]);
+  }, [reelsData, isFetching, isLoading, isFilterLoading]);
 
   // Use optimized story hook
   const {
@@ -285,7 +299,6 @@ export default function ReelsComponent({ amIFocused }) {
           navigation.navigate(StackNav.SelectCategory, {
             setcategoryIds,
             categoryIds,
-            setFilteredData: setFilteredData,
           });
         }}
         style={localStyles.headerContainer2}>
@@ -309,7 +322,7 @@ export default function ReelsComponent({ amIFocused }) {
         viewConfig={viewConfig}
         viewableItemsChanged={viewableItemsChanged}
         layoutHeight={layoutHeight}
-        isLoading={isLoading}
+        isLoading={isLoading || isFilterLoading}
         activeVideoIndex={activeVideoIndex}
         setActiveVideoIndex={setActiveVideoIndex}
         onSetLayout={onSetLayout}

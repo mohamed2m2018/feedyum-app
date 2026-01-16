@@ -1,6 +1,6 @@
 import { OneSignal } from 'react-native-onesignal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Alert } from 'react-native';
+import { showPersistentClickableToast } from '../utils/toast';
 import DeepLinkingService from './DeepLinkingService';
 
 class NotificationService {
@@ -52,40 +52,32 @@ class NotificationService {
       }
     });
 
-    // Handle foreground notifications
-    // Using native Alert.alert because Toast library requires AlertNotificationRoot
-    // to be mounted first, which happens AFTER this service initializes
+    // Handle foreground notifications with elegant toast
     OneSignal.Notifications.addEventListener('foregroundWillDisplay', (event) => {
       console.log('🐞 [NotificationService] Foreground notification received');
 
       // Prevent default OneSignal banner
       event.preventDefault();
 
-      // Don't show alert if this is from a background notification tap
+      // Don't show toast if this is from a background notification tap
       if (justHandledClick) {
-        console.log('🐞 [NotificationService] Skipping alert - coming from background tap');
+        console.log('🐞 [NotificationService] Skipping toast - coming from background tap');
         return;
       }
 
       const notification = event.notification;
       const data = notification.additionalData;
 
-      // Use native Alert - guaranteed to work
-      Alert.alert(
+      // Show elegant persistent toast - stays until user clicks or dismisses
+      showPersistentClickableToast(
         notification.title || 'New Notification',
         notification.body || '',
-        [
-          {
-            text: 'View Details',
-            onPress: () => {
-              console.log('🐞 [NotificationService] Alert clicked!', data);
-              if (data) {
-                this.handleNotificationTap(data);
-              }
-            }
-          },
-          { text: 'Close', style: 'cancel' }
-        ]
+        () => {
+          console.log('🐞 [NotificationService] Toast clicked!', data);
+          if (data) {
+            this.handleNotificationTap(data);
+          }
+        }
       );
     });
   }

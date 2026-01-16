@@ -566,6 +566,31 @@ export default function HashtagCategory({ selectedTag, isLocationChanging }) {
     return <ZLoader absolute height={80} top={300} />;
   }
 
+  // Empty state component
+  const renderEmptyState = () => (
+    <View style={localStyles.emptyStateContainer}>
+      <Ionicons
+        name="restaurant-outline"
+        size={moderateScale(64)}
+        color={colors.grayScale7}
+      />
+      <ZText
+        type="b18"
+        align="center"
+        color={colors.dark ? colors.grayScale3 : colors.grayScale7}
+        style={styles.mt20}>
+        {strings.noCategoryItemsInExplore}
+      </ZText>
+      <ZText
+        type="m14"
+        align="center"
+        color={colors.grayScale7}
+        style={styles.mt10}>
+        {strings.noCategoryItemsInExploreDesc}
+      </ZText>
+    </View>
+  );
+
   return (
     <FlatList
       data={kitchensWithTaggedContent}
@@ -582,6 +607,7 @@ export default function HashtagCategory({ selectedTag, isLocationChanging }) {
         }
       }}
       onEndReachedThreshold={0.5}
+      ListEmptyComponent={renderEmptyState}
       ListFooterComponent={
         !!batchError && isFetchingNextPageUsers ? (
           <View style={localStyles.paginationLoader}>
@@ -721,6 +747,15 @@ const localStyles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: moderateScale(20),
+  },
+  emptyStateContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: moderateScale(40),
+    paddingTop: moderateScale(100),
+    paddingBottom: moderateScale(40),
+    width: '100%',
   },
   distanceContainer: {
     flexDirection: 'row',

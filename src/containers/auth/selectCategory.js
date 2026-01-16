@@ -6,33 +6,32 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useState} from 'react';
-import {useSelector} from 'react-redux';
+import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
 
 // Local Imports
 import ZSafeAreaView from '../../components/common/ZSafeAreaView';
 import ZHeader from '../../components/common/ZHeader';
-import {styles} from '../../themes';
+import { styles } from '../../themes';
 import strings from '../../i18n/strings';
 import ZText from '../../components/common/ZText';
-import {moderateScale} from '../../common/constants';
+import { moderateScale } from '../../common/constants';
 import ZButton from '../../components/common/ZButton';
-import {useRoute} from '@react-navigation/native';
+import { useRoute } from '@react-navigation/native';
 import request from '../../api/request';
-import {QueryClient, useQuery} from 'react-query';
+import { useQuery } from 'react-query';
 
-const SelectCategory = ({navigation}) => {
+const SelectCategory = ({ navigation }) => {
   const colors = useSelector(state => state.theme.theme);
   const [chips, setchips] = useState([]);
 
   const route = useRoute();
   const [selectedChips, setSelectedChips] = useState(route.params.categoryIds);
   const [names, setNames] = useState(route?.params?.categoryNames || []);
-  const [queryClient] = React.useState(() => new QueryClient());
 
-  const {setcategoryIds} = route.params;
+  const { setcategoryIds } = route.params;
 
-  const {isFetching} = useQuery(
+  const { isFetching } = useQuery(
     'categories',
     () => request.get('/categories').then(res => setchips(res.data)),
     {
@@ -41,14 +40,14 @@ const SelectCategory = ({navigation}) => {
   );
 
   // eslint-disable-next-line react/no-unstable-nested-components
-  const RenderChips = ({item, id}) => {
+  const RenderChips = ({ item, id }) => {
     return (
       <TouchableOpacity
         onPress={() => onPressChips(id, item)}
         style={[
           localStyles.chipsContainer,
-          {borderColor: colors.primary},
-          selectedChips.includes(id) && {backgroundColor: colors.primary},
+          { borderColor: colors.primary },
+          selectedChips.includes(id) && { backgroundColor: colors.primary },
         ]}>
         <ZText
           type={'b18'}
@@ -73,19 +72,19 @@ const SelectCategory = ({navigation}) => {
     setcategoryIds([...selectedChips]);
     route.params?.setCategoryNames?.([...names]);
     navigation?.goBack();
-    queryClient.invalidateQueries({
-      queryKey: [route.params.categoryIds?.toLocaleString()],
-    });
-    if (route.params?.setFilteredData) {
-      route.params?.setFilteredData([]);
-    }
+    // Note: React-query will automatically re-fetch when categoryIds state changes
+    // (it's part of the query key in useOptimizedReels)
   };
 
   const InterestChips = () => {
     return chips?.map(item => {
+      // Use Arabic name if RTL and available, otherwise fallback to English name
+      const displayName = I18nManager.isRTL
+        ? (item?.nameArabic || item?.name)
+        : item?.name;
       return (
         <RenderChips
-          item={I18nManager.isRTL ? item?.nameArabic : item?.name}
+          item={displayName}
           id={item?._id}
           key={item?._id}
         />
@@ -97,7 +96,7 @@ const SelectCategory = ({navigation}) => {
     <ZSafeAreaView>
       <ZHeader title={strings.selectInterest} />
       {isFetching && (
-        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <ActivityIndicator size={'large'} color={colors.primary} />
         </View>
       )}

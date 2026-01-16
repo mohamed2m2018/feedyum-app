@@ -814,7 +814,7 @@ export default {
   analyticsDashboard: 'Analytics Dashboard',
   revenueChartsAndMetrics:
     'Revenue charts and performance metrics will be displayed here',
-  
+
   // Analytics Screen
   overview: 'Overview',
   periodRevenue: 'Period Revenue',
@@ -832,7 +832,7 @@ export default {
   ordersCount: 'orders',
   totalOrdersCount: 'total orders',
   items: 'items',
-  
+
   // Order Statuses
   statusPending: 'Pending',
   statusAccepted: 'Accepted',
@@ -1435,5 +1435,10 @@ export default {
 
   // Comments
   replyingTo: 'Replying to',
+
+  // Explore Empty States
+  noCategoryItemsInExplore: 'No kitchens or dishes found in this category yet',
+  noCategoryItemsInExploreDesc: 'Check back later or explore other categories',
+  noCategoryDishesAvailable: 'No {category} dishes available from this kitchen',
 
 };
