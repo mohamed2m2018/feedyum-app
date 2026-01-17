@@ -27,6 +27,7 @@ import ZButton from '../../../components/common/ZButton';
 import DishCard from './components/DishCard';
 import AddEditDishModal from './components/AddEditDishModal';
 import { useChefSocket } from './hooks/useChefSocket';
+import { useBackgroundUpload } from '../../../providers/BackgroundUploadProvider';
 import request from '../../../api/request';
 import { moderateScale } from '../../../common/constants';
 import strings from '../../../i18n/strings';
@@ -91,6 +92,7 @@ const EmptyState = ({ searchQuery, colors, onAddDish }) => (
 export default function MenuManagement() {
   const colors = useSelector(state => state.theme.theme);
   const queryClient = useQueryClient();
+  const { uploadDish } = useBackgroundUpload();
   const navigation = useNavigation();
   const route = useRoute();
   const fromTabsParam = !!route?.params?.fromTabs;
@@ -434,16 +436,39 @@ export default function MenuManagement() {
     });
   };
 
-  const handleSaveDish = dishData => {
+  const handleSaveDish = async dishData => {
     if (editingDish) {
-      // Update existing dish
+      // Update existing dish - keep blocking behavior
       updateDishMutation.mutate({
         dishId: editingDish._id,
         dishData,
       });
     } else {
-      // Create new dish
-      createDishMutation.mutate(dishData);
+      // Create new dish with background upload
+      // Close modal immediately for better UX
+      setModalVisible(false);
+      setEditingDish(null);
+
+      // Ensure chef has a menu first
+      try {
+        const menuId = await ensureMenu();
+
+        // Use background upload
+        uploadDish(
+          dishData,
+          menuId,
+          userId,
+          () => {
+            // Success callback - queries are already invalidated in provider
+          },
+          (error) => {
+            // Error callback - toast is already shown in provider
+            console.error('Dish creation failed:', error);
+          }
+        );
+      } catch (error) {
+        showErrorToast(strings.error, error?.message || strings.dishUploadFailed);
+      }
     }
   };
 
@@ -624,7 +649,7 @@ export default function MenuManagement() {
         dish={editingDish}
         onClose={handleCloseModal}
         onSave={handleSaveDish}
-        isLoading={createDishMutation.isLoading || updateDishMutation.isLoading}
+        isLoading={editingDish ? updateDishMutation.isLoading : false}
       />
     </ZSafeAreaView>
   );

@@ -7,7 +7,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
-
+  ActivityIndicator,
 } from 'react-native';
 import { showActionDialog } from '../../../../utils/toast';
 import { ALERT_TYPE } from 'react-native-alert-notification';
@@ -193,14 +193,30 @@ const AddEditDishModal = ({
   const validateForm = () => {
     const newErrors = {};
 
+    // Image validation
+    if (!imageUri && !formData.image) {
+      newErrors.image = strings.dishImageRequired || 'Dish image is required';
+    }
+
+    // Name validation
     if (!formData.name.trim()) {
       newErrors.name = strings.dishNameRequired;
+    } else if (formData.name.trim().length < 2) {
+      newErrors.name = strings.dishNameTooShort || 'Dish name must be at least 2 characters';
+    } else if (formData.name.trim().length > 100) {
+      newErrors.name = strings.dishNameTooLong || 'Dish name must be less than 100 characters';
     }
 
+    // Description validation
     if (!formData.description.trim()) {
       newErrors.description = strings.descriptionRequired;
+    } else if (formData.description.trim().length < 10) {
+      newErrors.description = strings.descriptionTooShort || 'Description must be at least 10 characters';
+    } else if (formData.description.trim().length > 500) {
+      newErrors.description = strings.descriptionTooLong || 'Description must be less than 500 characters';
     }
 
+    // Price validation
     if (!formData.price.trim()) {
       newErrors.price = strings.priceRequired;
     } else if (
@@ -208,22 +224,28 @@ const AddEditDishModal = ({
       parseFloat(formData.price) <= 0
     ) {
       newErrors.price = strings.validPriceRequired;
+    } else if (parseFloat(formData.price) > 99999) {
+      newErrors.price = strings.priceTooHigh || 'Price cannot exceed 99,999 EGP';
     }
 
+    // Category validation
     if ((!Array.isArray(formData.categories) || formData.categories.length === 0) && !formData.category.trim()) {
       newErrors.category = strings.categoryRequired;
     }
 
+    // Section validation
     if (!formData.section.trim()) {
       newErrors.section = strings.sectionRequired;
     }
 
-    if (
-      formData.cookingTime &&
-      (isNaN(parseInt(formData.cookingTime)) ||
-        parseInt(formData.cookingTime) < 0)
-    ) {
-      newErrors.cookingTime = strings.validCookingTime;
+    // Cooking time validation (optional but must be valid if provided)
+    if (formData.cookingTime) {
+      const cookingTimeNum = parseInt(formData.cookingTime);
+      if (isNaN(cookingTimeNum) || cookingTimeNum < 0) {
+        newErrors.cookingTime = strings.validCookingTime;
+      } else if (cookingTimeNum > 480) {
+        newErrors.cookingTime = strings.cookingTimeTooLong || 'Cooking time cannot exceed 8 hours (480 minutes)';
+      }
     }
 
     setErrors(newErrors);
@@ -264,9 +286,6 @@ const AddEditDishModal = ({
 
   const openCamera = () => {
     ImageCropPicker.openCamera({
-      width: 800,
-      height: 600,
-      cropping: true,
       compressImageQuality: 0.8,
       mediaType: 'photo',
     })
@@ -281,9 +300,6 @@ const AddEditDishModal = ({
 
   const openGallery = () => {
     ImageCropPicker.openPicker({
-      width: 800,
-      height: 600,
-      cropping: true,
       compressImageQuality: 0.8,
       mediaType: 'photo',
     })
@@ -333,12 +349,15 @@ const AddEditDishModal = ({
               type="M14"
               color={colors.textColor}
               style={localStyles.label}>
-              Dish Image
+              {strings.dishImage || 'Dish Image'} *
             </ZText>
             <TouchableOpacity
               style={[
                 localStyles.imageContainer,
-                { backgroundColor: colors.inputBg, borderColor: colors.bColor },
+                {
+                  backgroundColor: colors.inputBg,
+                  borderColor: errors.image ? colors.redColor : colors.bColor,
+                },
               ]}
               onPress={handleImagePicker}>
               {imageUri ? (
@@ -348,45 +367,50 @@ const AddEditDishModal = ({
                   <Ionicons
                     name="camera-outline"
                     size={moderateScale(32)}
-                    color={colors.grayScale7}
+                    color={errors.image ? colors.redColor : colors.grayScale7}
                   />
                   <ZText
                     type="M14"
-                    color={colors.grayScale7}
+                    color={errors.image ? colors.redColor : colors.grayScale7}
                     style={localStyles.imageText}>
-                    Tap to add image
+                    {strings.tapToAddImage || 'Tap to add image'}
                   </ZText>
                 </View>
               )}
             </TouchableOpacity>
+            {errors.image && (
+              <ZText type="R12" color={colors.redColor} style={localStyles.imageErrorText}>
+                {errors.image}
+              </ZText>
+            )}
           </View>
 
           {/* Form Fields */}
           <ZInput
             label={strings.dishName}
-            value={formData.name}
-            onChangeText={text => updateFormData('name', text)}
-            placeholder={strings.enterDishName}
-            error={errors.name}
+            _value={formData.name}
+            toGetTextFieldValue={text => updateFormData('name', text)}
+            placeHolder={strings.enterDishName}
+            _errorText={errors.name}
           />
 
           <ZInput
             label={strings.dishDescription}
-            value={formData.description}
-            onChangeText={text => updateFormData('description', text)}
-            placeholder={strings.describeDish}
+            _value={formData.description}
+            toGetTextFieldValue={text => updateFormData('description', text)}
+            placeHolder={strings.describeDish}
             multiline
             numberOfLines={3}
-            error={errors.description}
+            _errorText={errors.description}
           />
 
           <ZInput
             label={strings.priceEGP}
-            value={formData.price}
-            onChangeText={text => updateFormData('price', text)}
-            placeholder="0.00"
-            keyboardType="decimal-pad"
-            error={errors.price}
+            _value={formData.price}
+            toGetTextFieldValue={text => updateFormData('price', text)}
+            placeHolder="0.00"
+            keyBoardType="decimal-pad"
+            _errorText={errors.price}
           />
 
           {/* Category Picker (now supports multi-select) */}
@@ -411,18 +435,18 @@ const AddEditDishModal = ({
 
           <ZInput
             label={strings.cookingTimeMinutes}
-            value={formData.cookingTime}
-            onChangeText={text => updateFormData('cookingTime', text)}
-            placeholder="15"
-            keyboardType="numeric"
-            error={errors.cookingTime}
+            _value={formData.cookingTime}
+            toGetTextFieldValue={text => updateFormData('cookingTime', text)}
+            placeHolder="15"
+            keyBoardType="numeric"
+            _errorText={errors.cookingTime}
           />
 
           <ZInput
             label={strings.ingredients}
-            value={formData.ingredients}
-            onChangeText={text => updateFormData('ingredients', text)}
-            placeholder={strings.listMainIngredients}
+            _value={formData.ingredients}
+            toGetTextFieldValue={text => updateFormData('ingredients', text)}
+            placeHolder={strings.listMainIngredients}
             multiline
             numberOfLines={2}
           />
@@ -430,7 +454,7 @@ const AddEditDishModal = ({
           {/* Visibility Toggle */}
           <View style={localStyles.visibilityContainer}>
             <ZText type="M14" color={colors.textColor}>
-              Make dish visible to customers
+              {strings.makeDishVisible || 'Make dish visible to customers'}
             </ZText>
             <TouchableOpacity
               style={[
@@ -473,7 +497,6 @@ const AddEditDishModal = ({
             textType="M16"
             color={colors.white}
             containerStyle={[localStyles.button, localStyles.saveButton]}
-            isLoading={isLoading}
             disabled={isLoading}
           />
         </View>
@@ -517,6 +540,17 @@ const AddEditDishModal = ({
         title={strings.selectSection}
         subtitle={strings.chooseSectionForDish}
       />
+      {/* Full Screen Loading Overlay */}
+      {isLoading && (
+        <View style={localStyles.loadingOverlay}>
+          <View style={localStyles.loadingContainer}>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <ZText type="M16" color={colors.white} style={localStyles.loadingText}>
+              {isEditing ? (strings.updatingDish || 'Updating dish...') : (strings.addingDish || 'Adding dish...')}
+            </ZText>
+          </View>
+        </View>
+      )}
     </Modal>
   );
 };
@@ -624,6 +658,30 @@ const localStyles = StyleSheet.create({
   },
   saveButton: {
     // Primary button styling is handled by ZButton
+  },
+  imageErrorText: {
+    marginTop: moderateScale(4),
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  loadingContainer: {
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    paddingHorizontal: moderateScale(40),
+    paddingVertical: moderateScale(30),
+    borderRadius: moderateScale(16),
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: moderateScale(16),
   },
 });
 

@@ -111,7 +111,7 @@ const CategorySelectionModal = ({
               type="B16"
               color={isSelected ? colors.white : colors.textColor}
               style={styles.categoryName}>
-              {item.name}
+              {translateCategoryName(item.name)}
             </ZText>
             {item.description && (
               <ZText
@@ -154,8 +154,28 @@ const CategorySelectionModal = ({
       'Coupons': '🎫',
       'Dessert': '🍨',
       'Main Course': '🍽️',
+      'Pizza': '🍕',
+      'Burger': '🍔',
+      'Vegetarian': '🥗',
+      'Beverages': '🥤',
+      'Fast food': '🍟',
     };
     return iconMap[categoryName] || '🍴';
+  };
+
+  // Translate category name based on current language
+  const translateCategoryName = (englishName) => {
+    if (!englishName) return '';
+
+    // Create a key from the English name (e.g., "Main Course" -> "categoryMainCourse")
+    const key = 'category' + englishName
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join('')
+      .replace(/[^a-zA-Z]/g, '');
+
+    // Return translated string if available, otherwise return original
+    return strings[key] || englishName;
   };
 
   return (

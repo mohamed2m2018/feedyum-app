@@ -360,12 +360,151 @@ export function BackgroundUploadProvider({ children }) {
     }
   };
 
+  // Background upload for dish creation
+  const uploadDish = async (dishData, menuId, userId, onSuccess, onError) => {
+    try {
+      // Show persistent toast immediately
+      showPersistentSuccessToast(
+        strings.addingDish || 'Adding dish...',
+        strings.uploadingDishImage || 'Uploading dish image...'
+      );
+
+      let imageUrl = dishData.image || '';
+
+      // Upload image to S3 if it's a local file path
+      if (imageUrl && (imageUrl.startsWith('file://') || imageUrl.startsWith('/'))) {
+        try {
+          // Get presigned URL
+          const extension = imageUrl.toLowerCase().substring(imageUrl.lastIndexOf('.') + 1) || 'jpg';
+          const urlResponse = await request.get('/story/get-upload-url', {
+            params: { type: 'image', extension }
+          });
+
+          if (!urlResponse.data?.success || !urlResponse.data?.presignedUrl) {
+            throw new Error('Failed to get presigned URL');
+          }
+
+          const { presignedUrl, publicUrl, contentType } = urlResponse.data;
+
+          // Format path for upload
+          let uploadPath = imageUrl;
+          if (Platform.OS === 'android' && !imageUrl.startsWith('file://')) {
+            uploadPath = `file://${imageUrl}`;
+          } else if (Platform.OS === 'ios' && imageUrl.startsWith('file://')) {
+            uploadPath = imageUrl.replace('file://', '');
+          }
+
+          // Upload to R2 with progress
+          await new Promise((resolve, reject) => {
+            const uploadOptions = {
+              url: presignedUrl,
+              path: uploadPath,
+              method: 'PUT',
+              type: 'raw',
+              headers: {
+                'Content-Type': contentType,
+              },
+              maxRetries: 2,
+            };
+
+            BackgroundUpload.startUpload(uploadOptions)
+              .then(uploadId => {
+                BackgroundUpload.addListener('progress', uploadId, data => {
+                  const progress = Number(data.progress)?.toFixed(0);
+                  showPersistentSuccessToast(
+                    strings.addingDish || 'Adding dish...',
+                    strings.formatString
+                      ? strings.formatString(strings.dishUploadProgress || 'Uploading... {0}%', progress)
+                      : `Uploading... ${progress}%`
+                  );
+                });
+
+                BackgroundUpload.addListener('error', uploadId, data => {
+                  console.log('Dish image upload error:', data);
+                  reject(new Error(data.error || 'Image upload failed'));
+                });
+
+                BackgroundUpload.addListener('completed', uploadId, data => {
+                  if (data.responseCode >= 200 && data.responseCode < 300) {
+                    imageUrl = publicUrl;
+                    resolve();
+                  } else {
+                    reject(new Error(`Upload failed with status ${data.responseCode}`));
+                  }
+                });
+              })
+              .catch(reject);
+          });
+        } catch (uploadError) {
+          console.error('Failed to upload dish image:', uploadError);
+          // Continue without image if upload fails (image is optional)
+          imageUrl = '';
+        }
+      }
+
+      // Update toast for dish creation
+      showPersistentSuccessToast(
+        strings.addingDish || 'Adding dish...',
+        strings.processingThumbnail || 'Creating dish...'
+      );
+
+      // Prepare request data
+      const requestData = {
+        name: dishData.name.trim(),
+        description: dishData.description.trim(),
+        price: parseFloat(dishData.price),
+        category: (dishData.category || '').trim(),
+        categories: Array.isArray(dishData.categories)
+          ? dishData.categories
+          : ((dishData.category && dishData.category.trim()) ? [dishData.category.trim()] : []),
+        sectionName: dishData.section.trim(),
+        menuId: menuId,
+        image: imageUrl,
+        cookingTime: dishData.cookingTime ? parseInt(dishData.cookingTime) : undefined,
+        ingredients: dishData.ingredients,
+        visible: dishData.visible,
+      };
+
+      // Create the dish
+      const response = await request.post('/dishes', requestData);
+
+      // Success! Hide toast and show success message
+      hideToast();
+
+      setTimeout(() => {
+        showSuccessToast(
+          strings.success || 'Success',
+          strings.dishAddedSuccess || 'Dish added successfully!'
+        );
+      }, 300);
+
+      // Invalidate queries to refresh dish list
+      queryClient.invalidateQueries('menuDishes');
+      queryClient.invalidateQueries('menuSections');
+
+      if (onSuccess) {
+        onSuccess(response.data);
+      }
+    } catch (error) {
+      console.error('Dish upload error:', error);
+      hideToast();
+
+      const errorMessage = error?.response?.data?.message || error?.message || strings.dishUploadFailed || 'Failed to add dish';
+      showErrorToast(strings.error, errorMessage);
+
+      if (onError) {
+        onError(error);
+      }
+    }
+  };
+
   const providerValue = {
     uploadData,
     handleDataToBeSent,
     handleEditUser,
     handleEditedData,
     setisFormFilled,
+    uploadDish,
   };
 
   return (
