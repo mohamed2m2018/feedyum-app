@@ -66,6 +66,9 @@ export default function Profile({ navigation }) {
     },
   ];
   const colors = useSelector(state => state.theme.theme);
+  const { isGuest, handleAuthToast } = useHandleAuth();
+  const isFocused = useIsFocused();
+  const { updateCurrentScreen } = useScreen();
 
   const [page, setpage] = useState(1);
   const [reviewsPage, setReviewsPage] = useState(1);
@@ -491,11 +494,6 @@ export default function Profile({ navigation }) {
       )}
     </View>
   );
-
-  const { isGuest, handleAuthToast } = useHandleAuth();
-
-  const isFocused = useIsFocused();
-  const { updateCurrentScreen } = useScreen();
 
   useEffect(() => {
     if (isFocused) {

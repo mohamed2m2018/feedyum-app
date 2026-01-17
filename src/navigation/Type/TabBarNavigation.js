@@ -52,21 +52,13 @@ export default function TabBarNavigation({ route, navigation }) {
   const { currentScreen: previousScreen } = useScreen();
   const [modalState, setModalState] = useState({ visible: false, title: '', message: '' });
 
+  // Extract initialTab from route params or default to Discover
+  const { initialTab = TabNav.Discover } = route.params || {};
+
   // Hide splash screen when component mounts
   useEffect(() => {
     SplashScreen.hideAsync();
   }, []);
-
-  if (isLoading && !data) {
-    return (
-      <View style={{ flex: 1 }}>
-        <ZLoader height={150} top={300} />
-      </View>
-    );
-  }
-
-  // Extract initialTab from route params or default to Discover
-  const { initialTab = TabNav.Discover } = route.params || {};
 
   // Handle deep linking navigation
   useEffect(() => {
@@ -85,6 +77,15 @@ export default function TabBarNavigation({ route, navigation }) {
     ? TabRoute.OrderManagement
     : TabRoute.Orders;
   const DiscoverTabComponent = isChef ? ChefDashboard : TabRoute.Discover;
+
+  // Show loading AFTER all hooks have been called
+  if (isLoading && !data) {
+    return (
+      <View style={{ flex: 1 }}>
+        <ZLoader height={150} top={300} />
+      </View>
+    );
+  }
 
   const TabText = ({ text, focused, icon }) => (
     <View style={localStyles.tabViewContainer}>

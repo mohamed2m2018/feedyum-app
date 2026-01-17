@@ -264,7 +264,7 @@ export default function Orders({ navigation }) {
           <ZButton
             title={strings.goToAuth || 'Sign Up'}
             onPress={handleAuthToast}
-            containerStyle={{ marginTop: moderateScale(20) }}
+            containerStyle={{ marginTop: moderateScale(20), width: '100%' }}
           />
         </View>
       </ZSafeAreaView>
