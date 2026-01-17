@@ -1,0 +1,329 @@
+// Library import
+import React, { useCallback } from 'react';
+import {
+    View,
+    StyleSheet,
+    FlatList,
+    ActivityIndicator,
+    TouchableOpacity,
+    Image,
+    Keyboard,
+} from 'react-native';
+import { useSelector } from 'react-redux';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import { useInfiniteQuery } from 'react-query';
+import { useNavigation } from '@react-navigation/native';
+import LinearGradient from 'react-native-linear-gradient';
+
+// Local imports
+import ZText from '../../../../components/common/ZText';
+import { moderateScale } from '../../../../common/constants';
+import { styles as globalStyles } from '../../../../themes';
+import strings from '../../../../i18n/strings';
+import request from '../../../../api/request';
+import images from '../../../../assets/images';
+import { StackNav } from '../../../../navigation/NavigationKeys';
+
+/**
+ * KitchensTab - Tab 2: "Kitchens"
+ * Browse & search kitchens (CHEF users only) with semantic search
+ */
+export default function KitchensTab({ searchQuery = '', useSemanticSearch = true, userLocation, rtlStyle }) {
+    const colors = useSelector(state => state.theme.theme);
+    const navigation = useNavigation();
+
+    // Fetch kitchens (CHEF users only) with semantic search and location
+    const {
+        data,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage,
+        isLoading,
+        refetch,
+    } = useInfiniteQuery(
+        ['kitchens_browse', searchQuery, useSemanticSearch, userLocation?.lat],
+        async ({ pageParam = 1 }) => {
+            // Use semantic search for longer queries
+            if (searchQuery?.trim().length >= 2 && useSemanticSearch) {
+                try {
+                    const response = await request.get('/user/semantic-search', {
+                        params: {
+                            searchString: searchQuery.trim(),
+                            cursor: pageParam > 1 ? pageParam : null,
+                            limit: 10,
+                            type: 'chef',
+                            ...(userLocation && { lat: userLocation.lat, lng: userLocation.lng }),
+                        },
+                    });
+                    return response.data;
+                } catch (error) {
+                    console.log('Semantic search failed, falling back to text:', error.message);
+                }
+            }
+
+            // Text search / browse all chefs
+            const params = {
+                page: pageParam,
+                limit: 10,
+                type: 'chef',
+                ...(userLocation && { lat: userLocation.lat, lng: userLocation.lng }),
+            };
+
+            if (searchQuery?.trim().length >= 2) {
+                params.searchString = searchQuery.trim();
+            }
+
+            const response = await request.get('/user/search', { params });
+            return response.data;
+        },
+        {
+            getNextPageParam: lastPage =>
+                lastPage?.data?.pagination?.hasNextPage || lastPage?.data?.pagination?.hasMore
+                    ? (lastPage?.data?.pagination?.currentPage || 1) + 1
+                    : undefined,
+            staleTime: 1000 * 60 * 5,
+        },
+    );
+
+    const kitchens =
+        data?.pages?.flatMap(page => {
+            const users = page?.data?.users || page?.users || page?.results || [];
+            // Filter to ensure only chefs
+            return users.filter(u => u?.type === 'chef' || u?.isChef);
+        }) || [];
+
+    const handleKitchenPress = useCallback(kitchen => {
+        Keyboard.dismiss();
+        navigation.navigate(StackNav.ProfileDetail, {
+            userName: kitchen?.fullName || kitchen?.username,
+            userImage: kitchen?.avatar,
+            id: kitchen?._id,
+        });
+    }, [navigation]);
+
+    // Premium kitchen card
+    const renderKitchenCard = ({ item: kitchen }) => (
+        <TouchableOpacity
+            onPress={() => handleKitchenPress(kitchen)}
+            activeOpacity={0.9}
+            style={[localStyles.kitchenCard, { backgroundColor: colors.inputBg }]}>
+            {/* Cover/Avatar */}
+            <View style={localStyles.coverContainer}>
+                <Image
+                    source={
+                        kitchen?.cover || kitchen?.avatar
+                            ? { uri: kitchen.cover || kitchen.avatar }
+                            : images.userDark
+                    }
+                    style={localStyles.cover}
+                    resizeMode="cover"
+                />
+                <LinearGradient
+                    colors={['transparent', 'rgba(0,0,0,0.7)']}
+                    style={localStyles.coverGradient}
+                />
+                <View style={localStyles.avatarContainer}>
+                    <Image
+                        source={
+                            kitchen?.avatar ? { uri: kitchen.avatar } : images.userDark
+                        }
+                        style={localStyles.avatar}
+                    />
+                </View>
+            </View>
+
+            {/* Info */}
+            <View style={localStyles.kitchenInfo}>
+                <ZText type="b16" numberOfLines={1}>
+                    {kitchen?.fullName || kitchen?.username || 'Kitchen'}
+                </ZText>
+                {kitchen?.bio && (
+                    <ZText
+                        type="m12"
+                        color={colors.grayScale5}
+                        numberOfLines={2}
+                        style={globalStyles.mt5}>
+                        {kitchen.bio}
+                    </ZText>
+                )}
+
+                {/* Stats Row */}
+                <View style={localStyles.statsRow}>
+                    <View style={localStyles.statItem}>
+                        <Ionicons name="star" size={14} color={colors.yellow} />
+                        <ZText type="s12" color={colors.textColor} style={globalStyles.ml5}>
+                            {kitchen?.averageRating?.toFixed(1) || '0.0'}
+                        </ZText>
+                    </View>
+                    <View style={localStyles.statItem}>
+                        <Ionicons name="restaurant-outline" size={14} color={colors.grayScale5} />
+                        <ZText type="s12" color={colors.grayScale5} style={globalStyles.ml5}>
+                            {kitchen?.dishCount || 0} {strings.dishes || 'dishes'}
+                        </ZText>
+                    </View>
+                </View>
+            </View>
+
+            {/* Visit Button */}
+            <TouchableOpacity
+                onPress={() => handleKitchenPress(kitchen)}
+                style={localStyles.visitBtn}>
+                <LinearGradient
+                    colors={[colors.primary, colors.lightRed || '#FF8A9B']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={localStyles.visitGradient}>
+                    <ZText type="s12" color={colors.white}>
+                        {strings.visitMenu || 'Visit'}
+                    </ZText>
+                    <Ionicons name="arrow-forward" size={14} color={colors.white} style={globalStyles.ml5} />
+                </LinearGradient>
+            </TouchableOpacity>
+        </TouchableOpacity>
+    );
+
+    const renderEmpty = () => {
+        if (isLoading) return null;
+        return (
+            <View style={localStyles.emptyContainer}>
+                <View style={localStyles.emptyIconBg}>
+                    <Ionicons name="storefront-outline" size={40} color={colors.primary} />
+                </View>
+                <ZText type="b18" color={colors.textColor} style={globalStyles.mt20}>
+                    {searchQuery?.length >= 2
+                        ? strings.noKitchensFound || 'No Kitchens Found'
+                        : strings.browseKitchens || 'Browse Kitchens'}
+                </ZText>
+                <ZText
+                    type="m14"
+                    color={colors.grayScale5}
+                    style={globalStyles.mt10}
+                    align="center">
+                    {searchQuery?.length >= 2
+                        ? strings.tryDifferentSearch || 'Try a different search'
+                        : strings.discoverLocalKitchens || 'Discover local home kitchens'}
+                </ZText>
+            </View>
+        );
+    };
+
+    const renderFooter = () => {
+        if (isFetchingNextPage) {
+            return (
+                <View style={localStyles.footerLoader}>
+                    <ActivityIndicator size="small" color={colors.primary} />
+                </View>
+            );
+        }
+        return null;
+    };
+
+    return (
+        <View style={[{ flex: 1 }, rtlStyle]}>
+            <FlatList
+                data={kitchens}
+                renderItem={renderKitchenCard}
+                keyExtractor={(item, index) => item._id || `kitchen-${index}`}
+                ListEmptyComponent={renderEmpty}
+                ListFooterComponent={renderFooter}
+                onEndReached={() => hasNextPage && fetchNextPage()}
+                onEndReachedThreshold={0.5}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={localStyles.listContent}
+                refreshing={isLoading}
+                onRefresh={refetch}
+                keyboardShouldPersistTaps="handled"
+                keyboardDismissMode="on-drag"
+            />
+        </View>
+    );
+}
+
+const localStyles = StyleSheet.create({
+    listContent: {
+        paddingHorizontal: moderateScale(16),
+        paddingTop: moderateScale(8),
+        paddingBottom: moderateScale(100),
+        flexGrow: 1,
+    },
+    kitchenCard: {
+        borderRadius: moderateScale(20),
+        marginBottom: moderateScale(16),
+        overflow: 'hidden',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 12,
+        elevation: 5,
+    },
+    coverContainer: {
+        height: moderateScale(120),
+        position: 'relative',
+    },
+    cover: {
+        width: '100%',
+        height: '100%',
+    },
+    coverGradient: {
+        ...StyleSheet.absoluteFillObject,
+    },
+    avatarContainer: {
+        position: 'absolute',
+        bottom: -moderateScale(30),
+        left: moderateScale(16),
+        borderWidth: 3,
+        borderColor: '#fff',
+        borderRadius: moderateScale(35),
+        overflow: 'hidden',
+    },
+    avatar: {
+        width: moderateScale(60),
+        height: moderateScale(60),
+        borderRadius: moderateScale(30),
+    },
+    kitchenInfo: {
+        paddingTop: moderateScale(40),
+        paddingHorizontal: moderateScale(16),
+        paddingBottom: moderateScale(16),
+    },
+    statsRow: {
+        flexDirection: 'row',
+        marginTop: moderateScale(12),
+        gap: moderateScale(16),
+    },
+    statItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    visitBtn: {
+        position: 'absolute',
+        top: moderateScale(16),
+        right: moderateScale(16),
+        borderRadius: moderateScale(20),
+        overflow: 'hidden',
+    },
+    visitGradient: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: moderateScale(14),
+        paddingVertical: moderateScale(8),
+    },
+    emptyContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingTop: moderateScale(60),
+        paddingHorizontal: moderateScale(40),
+    },
+    emptyIconBg: {
+        width: moderateScale(80),
+        height: moderateScale(80),
+        borderRadius: moderateScale(40),
+        backgroundColor: '#FF4D6710',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    footerLoader: {
+        paddingVertical: moderateScale(20),
+    },
+});

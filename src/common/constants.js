@@ -1,6 +1,6 @@
 import { Dimensions, Platform, StatusBar } from 'react-native';
 import strings from '../i18n/strings';
-export const API_BASE_URL = 'https://feedyum.com/api';
+export const API_BASE_URL = __DEV__ ? 'http://192.168.1.104:4800/api' : 'https://feedyum.com/api';
 
 // Initial Dimensions
 const windowDimensions = Dimensions.get('window');
