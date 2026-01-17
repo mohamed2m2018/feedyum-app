@@ -370,12 +370,15 @@ export function BackgroundUploadProvider({ children }) {
       );
 
       let imageUrl = dishData.image || '';
+      console.log('[uploadDish] Initial image URL:', imageUrl);
 
-      // Upload image to S3 if it's a local file path
+      // Upload image to R2 if it's a local file path
       if (imageUrl && (imageUrl.startsWith('file://') || imageUrl.startsWith('/'))) {
         try {
           // Get presigned URL
           const extension = imageUrl.toLowerCase().substring(imageUrl.lastIndexOf('.') + 1) || 'jpg';
+          console.log('[uploadDish] Getting presigned URL for extension:', extension);
+
           const urlResponse = await request.get('/story/get-upload-url', {
             params: { type: 'image', extension }
           });
@@ -385,17 +388,20 @@ export function BackgroundUploadProvider({ children }) {
           }
 
           const { presignedUrl, publicUrl, contentType } = urlResponse.data;
+          console.log('[uploadDish] Got public URL:', publicUrl);
 
           // Format path for upload
+          // react-native-background-upload requires:
+          // - Android: absolute path (/) or content:// - NOT file://
+          // - iOS: absolute path without file://
           let uploadPath = imageUrl;
-          if (Platform.OS === 'android' && !imageUrl.startsWith('file://')) {
-            uploadPath = `file://${imageUrl}`;
-          } else if (Platform.OS === 'ios' && imageUrl.startsWith('file://')) {
+          if (imageUrl.startsWith('file://')) {
             uploadPath = imageUrl.replace('file://', '');
           }
+          console.log('[uploadDish] Upload path:', uploadPath);
 
           // Upload to R2 with progress
-          await new Promise((resolve, reject) => {
+          const uploadedUrl = await new Promise((resolve, reject) => {
             const uploadOptions = {
               url: presignedUrl,
               path: uploadPath,
@@ -420,14 +426,14 @@ export function BackgroundUploadProvider({ children }) {
                 });
 
                 BackgroundUpload.addListener('error', uploadId, data => {
-                  console.log('Dish image upload error:', data);
+                  console.log('[uploadDish] Image upload error:', data);
                   reject(new Error(data.error || 'Image upload failed'));
                 });
 
                 BackgroundUpload.addListener('completed', uploadId, data => {
+                  console.log('[uploadDish] Upload completed with status:', data.responseCode);
                   if (data.responseCode >= 200 && data.responseCode < 300) {
-                    imageUrl = publicUrl;
-                    resolve();
+                    resolve(publicUrl);
                   } else {
                     reject(new Error(`Upload failed with status ${data.responseCode}`));
                   }
@@ -435,8 +441,11 @@ export function BackgroundUploadProvider({ children }) {
               })
               .catch(reject);
           });
+
+          imageUrl = uploadedUrl;
+          console.log('[uploadDish] Final image URL after upload:', imageUrl);
         } catch (uploadError) {
-          console.error('Failed to upload dish image:', uploadError);
+          console.error('[uploadDish] Failed to upload dish image:', uploadError);
           // Continue without image if upload fails (image is optional)
           imageUrl = '';
         }

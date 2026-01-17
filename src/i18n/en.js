@@ -568,6 +568,14 @@ export default {
   dishUpdatedSuccess: 'Dish updated successfully!',
   dishUploadFailed: 'Failed to add dish',
   makeDishVisible: 'Make dish visible to customers',
+  rating: 'Rating',
+  prepTime: 'Prep Time',
+  visible: 'Visible',
+  hidden: 'Hidden',
+  addedOn: 'Added On',
+  show: 'Show',
+  hide: 'Hide',
+  categories: 'Categories',
 
   // Image & Media
   selectImage: 'Select Image',

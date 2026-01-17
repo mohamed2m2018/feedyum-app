@@ -26,6 +26,7 @@ import ZLoader from '../../../components/common/ZLoader';
 import ZButton from '../../../components/common/ZButton';
 import DishCard from './components/DishCard';
 import AddEditDishModal from './components/AddEditDishModal';
+import ChefDishPreviewModal from './components/ChefDishPreviewModal';
 import { useChefSocket } from './hooks/useChefSocket';
 import { useBackgroundUpload } from '../../../providers/BackgroundUploadProvider';
 import request from '../../../api/request';
@@ -112,6 +113,10 @@ export default function MenuManagement() {
   // Modal state
   const [modalVisible, setModalVisible] = useState(false);
   const [editingDish, setEditingDish] = useState(null);
+
+  // Dish details modal state
+  const [detailsModalVisible, setDetailsModalVisible] = useState(false);
+  const [selectedDish, setSelectedDish] = useState(null);
 
   // Helper function to ensure chef has a menu (no default sections)
   const ensureMenu = async () => {
@@ -500,10 +505,16 @@ export default function MenuManagement() {
     }
   };
 
+  const handleDishPress = (dish) => {
+    setSelectedDish(dish);
+    setDetailsModalVisible(true);
+  };
+
   const renderDishItem = ({ item }) => (
     <View style={localStyles.dishItemContainer}>
       <DishCard
         dish={item}
+        onPress={handleDishPress}
         onEdit={handleEditDish}
         onDelete={handleDeleteDish}
         onToggleVisibility={handleToggleVisibility}
@@ -650,6 +661,19 @@ export default function MenuManagement() {
         onClose={handleCloseModal}
         onSave={handleSaveDish}
         isLoading={editingDish ? updateDishMutation.isLoading : false}
+      />
+
+      {/* Dish Details Modal */}
+      <ChefDishPreviewModal
+        visible={detailsModalVisible}
+        dish={selectedDish}
+        onClose={() => {
+          setDetailsModalVisible(false);
+          setSelectedDish(null);
+        }}
+        onEdit={handleEditDish}
+        onDelete={handleDeleteDish}
+        onToggleVisibility={handleToggleVisibility}
       />
     </ZSafeAreaView>
   );

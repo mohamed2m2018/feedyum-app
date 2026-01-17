@@ -103,49 +103,6 @@ export default function ChefDashboard() {
           </View>
         </TouchableOpacity>
 
-        {/* Quick Stats Grid */}
-        <View style={localStyles.statsContainer}>
-          <ZText type="S18" style={localStyles.sectionTitle}>
-            {strings.todaysOverview}
-          </ZText>
-          <View style={localStyles.statsGrid}>
-            <DashboardCard
-              title={strings.todaysRevenue}
-              value={`${strings.currency} ${formatCurrency(stats?.todayRevenue)}`}
-              icon="cash-outline"
-              color={colors.primary}
-              containerStyle={localStyles.statCard}
-              onPress={() => navigateToSection('Analytics')}
-            />
-            <DashboardCard
-              title={strings.pendingOrders}
-              value={stats?.pendingOrders?.toString() || '0'}
-              icon="time-outline"
-              color={colors.orange}
-              containerStyle={localStyles.statCard}
-              onPress={() => navigateToSection('Orders')}
-            />
-          </View>
-          <View style={localStyles.statsGrid}>
-            <DashboardCard
-              title={strings.totalDishes}
-              value={stats?.totalDishes?.toString() || '0'}
-              icon="restaurant-outline"
-              color={colors.blue}
-              containerStyle={localStyles.statCard}
-              onPress={() => navigateToSection('Menu')}
-            />
-            <DashboardCard
-              title={strings.completedOrders}
-              value={stats?.completedOrders?.toString() || '0'}
-              icon="checkmark-circle-outline"
-              color={colors.green}
-              containerStyle={localStyles.statCard}
-              onPress={() => navigateToSection('Analytics')}
-            />
-          </View>
-        </View>
-
         {/* Quick Actions Section */}
         <View style={localStyles.quickActionsSection}>
           <ZText type="S18" style={localStyles.sectionTitle}>
@@ -209,6 +166,49 @@ export default function ChefDashboard() {
                 {strings.checkPerformance}
               </ZText>
             </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Quick Stats Grid */}
+        <View style={localStyles.statsContainer}>
+          <ZText type="S18" style={localStyles.sectionTitle}>
+            {strings.todaysOverview}
+          </ZText>
+          <View style={localStyles.statsGrid}>
+            <DashboardCard
+              title={strings.todaysRevenue}
+              value={`${strings.currency} ${formatCurrency(stats?.todayRevenue)}`}
+              icon="cash-outline"
+              color={colors.primary}
+              containerStyle={localStyles.statCard}
+              onPress={() => navigateToSection('Analytics')}
+            />
+            <DashboardCard
+              title={strings.pendingOrders}
+              value={stats?.pendingOrders?.toString() || '0'}
+              icon="time-outline"
+              color={colors.orange}
+              containerStyle={localStyles.statCard}
+              onPress={() => navigateToSection('Orders')}
+            />
+          </View>
+          <View style={localStyles.statsGrid}>
+            <DashboardCard
+              title={strings.totalDishes}
+              value={stats?.totalDishes?.toString() || '0'}
+              icon="restaurant-outline"
+              color={colors.blue}
+              containerStyle={localStyles.statCard}
+              onPress={() => navigateToSection('Menu')}
+            />
+            <DashboardCard
+              title={strings.completedOrders}
+              value={stats?.completedOrders?.toString() || '0'}
+              icon="checkmark-circle-outline"
+              color={colors.green}
+              containerStyle={localStyles.statCard}
+              onPress={() => navigateToSection('Analytics')}
+            />
           </View>
         </View>
 

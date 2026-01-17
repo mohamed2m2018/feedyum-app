@@ -561,6 +561,14 @@ export default {
   dishUpdatedSuccess: 'تم تحديث الطبق بنجاح!',
   dishUploadFailed: 'فشل في إضافة الطبق',
   makeDishVisible: 'اجعل الطبق مرئياً للعملاء',
+  rating: 'التقييم',
+  prepTime: 'وقت التحضير',
+  visible: 'مرئي',
+  hidden: 'مخفي',
+  addedOn: 'أضيف في',
+  show: 'إظهار',
+  hide: 'إخفاء',
+  categories: 'التصنيفات',
 
   // Image & Media
   selectImage: 'اختر صورة',
