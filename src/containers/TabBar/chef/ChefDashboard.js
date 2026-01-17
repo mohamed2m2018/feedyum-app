@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import { useSelector } from 'react-redux';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 // Local imports
@@ -31,6 +31,8 @@ const formatCurrency = (value) => {
 export default function ChefDashboard() {
   const colors = useSelector(state => state.theme.theme);
   const navigation = useNavigation();
+  const route = useRoute();
+  const isFromProfile = route.params?.isFromProfile;
   const [refreshing, setRefreshing] = useState(false);
   const { data: stats, refetch } = useDashboardStats();
 
@@ -59,7 +61,7 @@ export default function ChefDashboard() {
 
   return (
     <ZSafeAreaView>
-      <ZHeader title={strings.chefDashboard} isHideBack={true} />
+      <ZHeader title={strings.chefDashboard} isHideBack={!isFromProfile} />
       <ScrollView
         style={localStyles.container}
         showsVerticalScrollIndicator={false}

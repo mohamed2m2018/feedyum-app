@@ -364,7 +364,7 @@ export default function Profile({ navigation }) {
         {user?.type === 'chef' && (
           <TouchableOpacity
             style={[localStyles.iconButton, localStyles.primaryButton, { backgroundColor: colors.primary, borderColor: colors.primary }]}
-            onPress={() => navigation.navigate(StackNav.ChefDashboard)}
+            onPress={() => navigation.navigate(StackNav.ChefDashboard, { isFromProfile: true })}
           >
             <MaterialIcon
               name="chef-hat"
