@@ -1,0 +1,30 @@
+name: Validate PR Title Pattern
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+jobs:
+  validate-pr-title:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate PR Title Format
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prTitle = context.payload.pull_request.title;
+            
+            // Pattern: FEEDYUM-<number>: <short description>
+            // Example: FEEDYUM-123: Add user authentication feature
+            const pattern = /^FEEDYUM-\d+:\s.+/;
+            
+            if (!pattern.test(prTitle)) {
+              core.setFailed(
+                `❌ PR Title does not follow the required pattern!\n\n` +
+                `Current title: "${prTitle}"\n\n` +
+                `Required pattern: FEEDYUM-<number>: <short description>\n` +
+                `Example: FEEDYUM-123: Add user authentication feature`
+              );
+            } else {
+              console.log(`✅ PR Title is valid: "${prTitle}"`);
+            }
