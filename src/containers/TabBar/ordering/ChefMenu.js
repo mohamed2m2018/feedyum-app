@@ -38,6 +38,7 @@ import {
 import { useStorage } from '../../../utils/useStorage';
 import FeaturedReelsSection from '../../../components/common/FeaturedReelsSection';
 import FeaturedReviewsSection from '../../../components/common/FeaturedReviewsSection';
+import FollowButton from '../../../components/common/FollowButton';
 
 const ChefMenu = () => {
   const colors = useSelector(state => state.theme.theme);
@@ -75,12 +76,18 @@ const ChefMenu = () => {
       // Get chef information
       try {
         const chefResponse = await request.get(`/user/${chefId}`);
-        chef = chefResponse.data;
+        // API returns { success, user, currentUserFollowed }
+        const userData = chefResponse.data?.user || chefResponse.data;
+        chef = {
+          ...userData,
+          currentUserFollowed: chefResponse.data?.currentUserFollowed || false
+        };
       } catch (chefError) {
         chef = {
           _id: chefId,
           fullName: chefName || strings.unknownChef,
           avatar: null,
+          currentUserFollowed: false,
         };
       }
 
@@ -694,6 +701,16 @@ const ChefMenu = () => {
                   </ZText>
                 </View>
               </View>
+              {/* Follow Button - Only show if not current user's profile */}
+              {chefId && user?._id?.toString() !== chefId?.toString() && (
+                <FollowButton
+                  userId={chefId}
+                  isFollowed={menuData?.chef?.currentUserFollowed}
+                  compact={false}
+                  size="medium"
+                  style={{ marginTop: moderateScale(10), alignSelf: 'flex-start' }}
+                />
+              )}
             </View>
           </View>
         </View>

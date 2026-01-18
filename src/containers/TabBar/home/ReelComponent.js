@@ -38,6 +38,7 @@ import ImageZoomModal from '../../../components/common/ImageZoomModal';
 import ShareOptionsSheet from '../../../components/models/ShareOptionsSheet';
 import strings from '../../../i18n/strings';
 import { getCachedVideoPath, initCache } from '../../../services/VideoCacheService';
+import FollowButton from '../../../components/common/FollowButton';
 
 // Helper function to check if a URI is a video URL
 // S3 uploads from our app are videos, so we trust them unless they're obviously images
@@ -628,61 +629,79 @@ const ReelComponent = ({
                           )}
                         </View>
 
+                        {/* Follow Button for chef posts - UNDER the chef name */}
+                        {item?.author?.type === 'chef' && item?.author?._id && item?.author?._id !== data?.data?.user?._id && (
+                          <FollowButton
+                            userId={item?.author?._id}
+                            isFollowed={item?.author?.currentUserFollowed}
+                            compact={true}
+                            size="small"
+                            style={{ marginTop: moderateScale(6), alignSelf: 'flex-start' }}
+                          />
+                        )}
+
                         {/* Restaurant Name for Reviews - Premium Badge Design - Moved BELOW Name */}
                         {((item?.reviewMode || item?.isReview || item?.author?.type !== 'chef') && (item?.restaurantName || item?.reviewedChef?.fullName)) && (
                           <View style={[localStyles.glassContainer, {
                             borderRadius: moderateScale(12),
-                            paddingVertical: moderateScale(4),
+                            paddingVertical: moderateScale(6),
                             paddingHorizontal: moderateScale(10),
                             marginTop: moderateScale(6),
                             alignSelf: 'flex-start',
                             backgroundColor: 'rgba(0, 0, 0, 0.4)',
                             borderWidth: 1,
                             borderColor: 'rgba(255, 255, 255, 0.3)',
-                            flexDirection: 'row',
-                            alignItems: 'center',
+                            flexDirection: 'column',
+                            alignItems: 'flex-start',
                             shadowColor: '#000',
                             shadowOffset: { width: 0, height: 2 },
                             shadowOpacity: 0.2,
                             shadowRadius: 4,
                             elevation: 3
                           }]}>
-                            <Ionicons
-                              name="location"
-                              size={moderateScale(12)}
-                              color="#FF4B4B"
-                              style={{ marginRight: moderateScale(4) }}
-                            />
-                            <View>
-                              <ZText style={{
-                                fontSize: moderateScale(12),
-                                color: '#FFFFFF',
-                                fontWeight: '700',
-                                textShadowColor: 'rgba(0,0,0,0.5)',
-                                textShadowRadius: 3,
-                                lineHeight: 16
-                              }} numberOfLines={1}>
-                                {item?.restaurantName || item?.reviewedChef?.fullName}
-                              </ZText>
-                              {/* Address Subtitle */}
-                              {(item?.restaurantAddress || (item?.reviewedChef?.locations && item?.reviewedChef?.locations[0]?.address)) && (
+                            {/* Restaurant info row */}
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                              <Ionicons
+                                name="location"
+                                size={moderateScale(12)}
+                                color="#FF4B4B"
+                                style={{ marginRight: moderateScale(4) }}
+                              />
+                              <View style={{ flex: 1 }}>
                                 <ZText style={{
-                                  fontSize: moderateScale(10),
-                                  color: 'rgba(255,255,255,0.8)',
-                                  fontWeight: '500',
-                                  marginTop: 1
+                                  fontSize: moderateScale(12),
+                                  color: '#FFFFFF',
+                                  fontWeight: '700',
+                                  textShadowColor: 'rgba(0,0,0,0.5)',
+                                  textShadowRadius: 3,
+                                  lineHeight: 16
                                 }} numberOfLines={1}>
-                                  {/* Extract city/area from address if possible, or show truncated address */}
-                                  {item?.restaurantAddress?.split(',')[0] || item?.restaurantAddress || item?.reviewedChef?.locations?.[0]?.address?.split(',')[0]}
+                                  {item?.restaurantName || item?.reviewedChef?.fullName}
                                 </ZText>
-                              )}
+                                {/* Address Subtitle */}
+                                {(item?.restaurantAddress || (item?.reviewedChef?.locations && item?.reviewedChef?.locations[0]?.address)) && (
+                                  <ZText style={{
+                                    fontSize: moderateScale(10),
+                                    color: 'rgba(255,255,255,0.8)',
+                                    fontWeight: '500',
+                                    marginTop: 1
+                                  }} numberOfLines={1}>
+                                    {/* Extract city/area from address if possible, or show truncated address */}
+                                    {item?.restaurantAddress?.split(',')[0] || item?.restaurantAddress || item?.reviewedChef?.locations?.[0]?.address?.split(',')[0]}
+                                  </ZText>
+                                )}
+                              </View>
                             </View>
-                            <Ionicons
-                              name="chevron-forward"
-                              size={moderateScale(12)}
-                              color="rgba(255,255,255,0.6)"
-                              style={{ marginLeft: moderateScale(6) }}
-                            />
+                            {/* Follow Button - under the restaurant name */}
+                            {item?.reviewedChef?._id && (
+                              <FollowButton
+                                userId={item?.reviewedChef?._id}
+                                isFollowed={item?.reviewedChef?.currentUserFollowed}
+                                compact={true}
+                                size="small"
+                                style={{ marginTop: moderateScale(6) }}
+                              />
+                            )}
                           </View>
                         )}
                       </TouchableOpacity>

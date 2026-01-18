@@ -128,29 +128,6 @@ function SearchHeader({
                         {strings.findYourCraving || 'Find your next craving'}
                     </ZText>
                 </View>
-
-                {/* AI Toggle */}
-                {onToggleSemantic && (
-                    <TouchableOpacity
-                        onPress={onToggleSemantic}
-                        activeOpacity={0.8}
-                        style={[
-                            localStyles.aiToggle,
-                            {
-                                backgroundColor: useSemanticSearch
-                                    ? colors.primaryTransparent
-                                    : colors.btnColor3,
-                            }
-                        ]}
-                    >
-                        <ZText
-                            type="s12"
-                            color={useSemanticSearch ? colors.primary : colors.grayScale6}
-                        >
-                            {useSemanticSearch ? '🤖 AI' : 'Text'}
-                        </ZText>
-                    </TouchableOpacity>
-                )}
             </View>
 
             {/* Search Input with Glassmorphism */}
@@ -248,14 +225,7 @@ function SearchHeader({
                 </View>
             )}
 
-            {/* AI Search Indicator */}
-            {useSemanticSearch && value?.length >= 2 && (
-                <View style={localStyles.aiIndicator}>
-                    <ZText type="m10" color={colors.primary}>
-                        ✨ {strings.aiSearching || 'AI-powered search'}
-                    </ZText>
-                </View>
-            )}
+
         </View>
     );
 
@@ -286,11 +256,7 @@ const localStyles = StyleSheet.create({
         alignItems: 'flex-start',
         marginBottom: moderateScale(16),
     },
-    aiToggle: {
-        paddingHorizontal: moderateScale(12),
-        paddingVertical: moderateScale(6),
-        borderRadius: moderateScale(20),
-    },
+
     inputWrapper: {
         borderRadius: moderateScale(20),
         borderWidth: 2,
@@ -344,10 +310,7 @@ const localStyles = StyleSheet.create({
         paddingVertical: moderateScale(8),
         borderRadius: moderateScale(16),
     },
-    aiIndicator: {
-        marginTop: moderateScale(8),
-        alignSelf: 'flex-start',
-    },
+
 });
 
 export default memo(SearchHeader);

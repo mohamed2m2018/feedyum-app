@@ -52,6 +52,14 @@ export const APP_OPEN_FIRST_TIME = 'APP_OPEN_FIRST_TIME';
 export const ACCESS_TOKEN = 'ACCESS_TOKEN';
 export const REGISTRATION_COMPLETED = 'REGISTRATION_COMPLETED';
 
+// Function to get translated gender options - must be called at runtime
+export const getGenderData = () => [
+  { label: strings.male, value: 'male' },
+  { label: strings.female, value: 'female' },
+  { label: strings.other, value: 'other' },
+];
+
+// Deprecated: Use getGenderData() instead
 export const GenderData = [
   { label: strings.male, value: 'male' },
   { label: strings.female, value: 'female' },

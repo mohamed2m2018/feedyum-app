@@ -1,26 +1,26 @@
 // Library import
-import {StyleSheet, TouchableOpacity, View} from 'react-native';
-import React, {useEffect, useRef} from 'react';
-import {useSelector} from 'react-redux';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { useSelector } from 'react-redux';
 import ActionSheet from 'react-native-actions-sheet';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 // Custom import
-import {moderateScale} from '../../common/constants';
-import {styles} from '../../themes';
+import { moderateScale } from '../../common/constants';
+import { styles } from '../../themes';
 import ZText from '../common/ZText';
 import strings from '../../i18n/strings';
-import {useNavigation} from '@react-navigation/native';
-import {TabNav} from '../../navigation/NavigationKeys';
-import {useScreen} from '../../navigation/screenContext';
+import { useNavigation } from '@react-navigation/native';
+import { TabNav } from '../../navigation/NavigationKeys';
+import { useScreen } from '../../navigation/screenContext';
 
 const ProfilePicture = props => {
-  const {SheetRef, onPressGallery, onPressCamera, title, post, isFromSwipe} =
+  const { SheetRef, onPressGallery, onPressCamera, title, post, isFromSwipe } =
     props;
   const colors = useSelector(state => state.theme.theme);
 
   const navigation = useNavigation();
-  const {currentScreen: previousScreen} = useScreen();
+  const { currentScreen: previousScreen } = useScreen();
   const buttonClicked = useRef(false);
 
   const handleClose = () => {
@@ -46,11 +46,11 @@ const ProfilePicture = props => {
       ref={SheetRef}
       gestureEnabled={true}
       onClose={handleClose}
-      indicatorStyle={{width: moderateScale(100)}}
+      indicatorStyle={{ width: moderateScale(100) }}
       containerStyle={[
         localStyles.actionSheetContainer,
-        {backgroundColor: colors.backgroundColor},
-        {...(post && {height: 300})},
+        { backgroundColor: colors.backgroundColor },
+        { ...(post && { height: 300 }) },
       ]}>
       <View style={localStyles.bottomContainer}>
         <ZText type={'M24'} color={colors.primary}>
@@ -60,21 +60,21 @@ const ProfilePicture = props => {
         <TouchableOpacity
           style={[
             localStyles.contextContainer,
-            {borderColor: colors.textColor},
+            { borderColor: colors.textColor },
           ]}
           onPress={
             onPressGallery
               ? () => {
-                  onPressGallery();
-                  buttonClicked.current = true;
-                }
+                onPressGallery();
+                buttonClicked.current = true;
+              }
               : () => {
-                  onPressCamera(true);
-                  buttonClicked.current = true;
-                }
+                onPressCamera(true);
+                buttonClicked.current = true;
+              }
           }>
           <Ionicons
-            name={post ? 'add-circle-outline' : 'ios-camera'}
+            name={post ? 'add-circle-outline' : 'images-outline'}
             size={moderateScale(20)}
             color={colors.textColor}
             style={styles.mr5}
@@ -83,11 +83,33 @@ const ProfilePicture = props => {
             {post ? strings.postDishImage : strings.chooseFromGallery}
           </ZText>
         </TouchableOpacity>
+
+        {!post && (
+          <TouchableOpacity
+            style={[
+              localStyles.contextContainer,
+              { borderColor: colors.textColor },
+            ]}
+            onPress={() => {
+              onPressCamera();
+              buttonClicked.current = true;
+            }}>
+            <Ionicons
+              name={'camera-outline'}
+              size={moderateScale(20)}
+              color={colors.textColor}
+              style={styles.mr5}
+            />
+            <ZText type={'s18'} style={styles.ml10}>
+              {strings.takeAPicture}
+            </ZText>
+          </TouchableOpacity>
+        )}
         {post && (
           <TouchableOpacity
             style={[
               localStyles.contextContainer,
-              {borderColor: colors.textColor},
+              { borderColor: colors.textColor },
             ]}
             onPress={() => {
               onPressCamera(false);
@@ -112,7 +134,7 @@ const ProfilePicture = props => {
 const localStyles = StyleSheet.create({
   actionSheetContainer: {
     ...styles.p25,
-    height: 220,
+    height: 280,
   },
   contextContainer: {
     ...styles.flexRow,

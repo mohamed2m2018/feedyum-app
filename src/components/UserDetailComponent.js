@@ -1,21 +1,21 @@
 // Library import
-import {Image, StyleSheet, TouchableOpacity, View} from 'react-native';
-import {useSelector} from 'react-redux';
+import { Image, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { useSelector } from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 // Local import
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import ZText from './common/ZText';
 import ZButton from './common/ZButton';
-import {getHeight, moderateScale} from '../common/constants';
-import {styles} from '../themes';
-import {StackNav, TabNav} from '../navigation/NavigationKeys';
-import {useNavigation} from '@react-navigation/native';
+import { getHeight, moderateScale } from '../common/constants';
+import { styles } from '../themes';
+import { StackNav, TabNav } from '../navigation/NavigationKeys';
+import { useNavigation } from '@react-navigation/native';
 import images from '../assets/images';
 import request from '../api/request';
-import {useMutation, useQueryClient} from 'react-query';
+import { useMutation, useQueryClient } from 'react-query';
 import strings from '../i18n/strings';
-import {useHandleAuth} from '../utils/useHandleAuth';
+import { useHandleAuth } from '../utils/useHandleAuth';
 
 export default function UserDetailComponent({
   id,
@@ -26,7 +26,7 @@ export default function UserDetailComponent({
   isSuggested = false,
   currentUserId,
   isSearch,
-  setIsAdding = () => {},
+  setIsAdding = () => { },
 }) {
   const navigation = useNavigation();
   const colors = useSelector(state => state.theme.theme);
@@ -37,14 +37,17 @@ export default function UserDetailComponent({
   }, [isFollowed]);
 
   const followMutation = useMutation(
-    userToFollow => request.post('/follow', {userToFollow}),
+    userToFollow => request.post('/follow', { userToFollow }),
     {
       onSuccess: () => {
-        queryClient.invalidateQueries({queryKey: 'stories_following'});
+        queryClient.invalidateQueries({ queryKey: 'stories_following' });
+        queryClient.invalidateQueries({ queryKey: 'stories' });
         if (!isSearch) {
-          queryClient.invalidateQueries({queryKey: 'search_user'});
+          queryClient.invalidateQueries({ queryKey: 'search_user' });
         }
-        queryClient.invalidateQueries({queryKey: 'followStatistics'});
+        queryClient.invalidateQueries({ queryKey: 'followStatistics' });
+        queryClient.invalidateQueries({ queryKey: 'profile' });
+        queryClient.invalidateQueries({ queryKey: 'chefInfo' });
         queryClient.invalidateQueries('IamFollowing');
         queryClient.invalidateQueries('IamFollowed');
         setTimeout(() => {
@@ -60,14 +63,17 @@ export default function UserDetailComponent({
   );
 
   const unfollowMutation = useMutation(
-    userToUnfollow => request.delete('/follow', {data: {userToUnfollow}}),
+    userToUnfollow => request.delete('/follow', { data: { userToUnfollow } }),
     {
       onSuccess: () => {
-        queryClient.invalidateQueries({queryKey: 'stories_following'});
+        queryClient.invalidateQueries({ queryKey: 'stories_following' });
+        queryClient.invalidateQueries({ queryKey: 'stories' });
         if (!isSearch) {
-          queryClient.invalidateQueries({queryKey: 'search_user'});
+          queryClient.invalidateQueries({ queryKey: 'search_user' });
         }
-        queryClient.invalidateQueries({queryKey: 'followStatistics'});
+        queryClient.invalidateQueries({ queryKey: 'followStatistics' });
+        queryClient.invalidateQueries({ queryKey: 'profile' });
+        queryClient.invalidateQueries({ queryKey: 'chefInfo' });
         queryClient.invalidateQueries('IamFollowing');
         queryClient.invalidateQueries('IamFollowed');
         setTimeout(() => {
@@ -79,7 +85,7 @@ export default function UserDetailComponent({
       },
     },
   );
-  const {handleAuthToast} = useHandleAuth();
+  const { handleAuthToast } = useHandleAuth();
 
   const onPressFollow = () => {
     if (handleAuthToast()) {
@@ -87,9 +93,9 @@ export default function UserDetailComponent({
     }
     setIsAdding?.(true);
     if (isFollow) {
-      unfollowMutation.mutate({_id: id});
+      unfollowMutation.mutate({ _id: id });
     } else {
-      followMutation.mutate({_id: id});
+      followMutation.mutate({ _id: id });
     }
     setIsFollow(!isFollow);
   };
@@ -110,10 +116,10 @@ export default function UserDetailComponent({
         <Image
           source={
             userImage
-              ? {uri: userImage}
+              ? { uri: userImage }
               : colors.dark
-              ? images.userDark
-              : images.userLight
+                ? images.userDark
+                : images.userLight
           }
           style={localStyles.imageStyle}
         />
@@ -139,7 +145,7 @@ export default function UserDetailComponent({
           textType="b14"
           containerStyle={[
             localStyles.buttonContainer,
-            {borderColor: colors.primary},
+            { borderColor: colors.primary },
           ]}
           bgColor={!isFollow ? colors.primary : colors.tranparent}
           onPress={onPressFollow}

@@ -35,11 +35,19 @@ export default Setting = ({ navigation }) => {
   const { data: user } = useQuery('user', () => request.get('/user'));
 
   const [isloading, setisloading] = useState(false);
+
+  // Get dynamic edit profile title based on user type
+  const getEditProfileTitle = () => {
+    return user?.data?.user?.type === 'chef'
+      ? strings.editProfileAndBranches
+      : strings.editProfile;
+  };
+
   const ProfileSetting = [
     {
       id: 1,
-      title: strings.editProfile,
-      header: strings.editProfile,
+      title: getEditProfileTitle(),
+      header: getEditProfileTitle(),
       icon: 'person-outline',
       route: StackNav.SetUpProfile,
     },
@@ -219,7 +227,7 @@ export default Setting = ({ navigation }) => {
         showsVerticalScrollIndicator={false}
         style={localStyles.root}>
         {ProfileSetting.map((item, index) => {
-          if (item.title === strings.editProfile && handleAuthToast()) {
+          if (item.id === 1 && handleAuthToast()) {
             return;
           }
           return (
