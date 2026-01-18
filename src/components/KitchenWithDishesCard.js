@@ -38,10 +38,10 @@ function KitchenWithDishesCard({
     const isRTL = I18nManager.isRTL;
 
     const handleKitchenPress = () => {
-        navigation.navigate(StackNav.ProfileDetail, {
-            userName: kitchen?.fullName || kitchen?.username,
-            userImage: kitchen?.avatar,
-            id: kitchen?._id,
+        // Navigate to ChefMenu for kitchen profiles
+        navigation.navigate(StackNav.ChefMenu, {
+            chefId: kitchen?._id,
+            chefName: kitchen?.fullName || kitchen?.username,
         });
     };
 
@@ -96,10 +96,18 @@ function KitchenWithDishesCard({
                 <View style={[localStyles.actionButtons, isRTL && styles.flexRowReverse]}>
                     <TouchableOpacity
                         onPress={handleCheckReels}
-                        style={[localStyles.iconButton, { backgroundColor: colors.primaryTransparent }]}
+                        style={localStyles.reelsButton}
                         activeOpacity={0.8}
                     >
-                        <MaterialCommunityIcons name="movie-open-play" size={18} color={colors.primary} />
+                        <LinearGradient
+                            colors={['#9C27B0', '#E040FB']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                            style={localStyles.gradientButton}
+                        >
+                            <MaterialCommunityIcons name="movie-open-play" size={14} color={colors.white} />
+                            <ZText type="s12" color={colors.white} style={styles.ml5}>{strings.reelsTab || 'Reels'}</ZText>
+                        </LinearGradient>
                     </TouchableOpacity>
                     <TouchableOpacity
                         onPress={handleVisitMenu}
@@ -189,6 +197,7 @@ const localStyles = StyleSheet.create({
     kitchenDetails: {
         marginLeft: moderateScale(12),
         flex: 1,
+        marginRight: moderateScale(8),
     },
     ratingRow: {
         ...styles.flexRow,
@@ -205,6 +214,10 @@ const localStyles = StyleSheet.create({
         height: moderateScale(36),
         borderRadius: moderateScale(18),
         ...styles.center,
+    },
+    reelsButton: {
+        borderRadius: moderateScale(18),
+        overflow: 'hidden',
     },
     menuButton: {
         borderRadius: moderateScale(18),

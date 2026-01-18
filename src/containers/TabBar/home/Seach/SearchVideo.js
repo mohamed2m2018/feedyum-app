@@ -42,13 +42,15 @@ export default function SearchVideo({
           )
         }
         renderItem={({ item }) => (
-          <LiveComponent
-            id={item._id}
-            data={item?.title}
-            reelUrl={item?.avatarUri || item?.poster}
-            userName={item?.title}
-            userId={item?.author}
-          />
+          <View style={{ flex: 1, maxWidth: '50%' }}>
+            <LiveComponent
+              id={item._id}
+              data={item?.title}
+              reelUrl={item?.avatarUri || item?.poster}
+              userName={item?.title}
+              userId={item?.author}
+            />
+          </View>
         )}
         {...props}
         keyExtractor={(item, index) => item?._id || `story-${index}`}

@@ -11,7 +11,7 @@ import ZHeader from '../../../components/common/ZHeader';
 import ZText from '../../../components/common/ZText';
 import ZButton from '../../../components/common/ZButton';
 import DashboardCard from './components/DashboardCard';
-import { useDashboardStats } from './hooks/useDashboardData';
+import { useDashboardStats, useRecentActivity } from './hooks/useDashboardData';
 import { styles } from '../../../themes';
 import { moderateScale } from '../../../common/constants';
 import { StackNav } from '../../../navigation/NavigationKeys';
@@ -35,10 +35,11 @@ export default function ChefDashboard() {
   const isFromProfile = route.params?.isFromProfile;
   const [refreshing, setRefreshing] = useState(false);
   const { data: stats, refetch } = useDashboardStats();
+  const { data: recentActivity = [], refetch: refetchActivity } = useRecentActivity();
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await refetch();
+    await Promise.all([refetch(), refetchActivity()]);
     setRefreshing(false);
   };
 
@@ -115,13 +116,13 @@ export default function ChefDashboard() {
               style={[localStyles.actionCard, { backgroundColor: colors.inputBg }]}
               onPress={() => navigateToSection('Menu')}>
               <View style={[localStyles.actionIcon, { backgroundColor: colors.primary }]}>
-                <Ionicons name="add-outline" size={moderateScale(24)} color={colors.white} />
+                <Ionicons name="restaurant-outline" size={moderateScale(24)} color={colors.white} />
               </View>
               <ZText type="S16" style={localStyles.actionTitle}>
-                {strings.addNewDish}
+                {strings.manageMenu}
               </ZText>
               <ZText type="M12" color={colors.grayScale7} align="center">
-                {strings.createNewMenuItem}
+                {strings.addEditRemoveDishes}
               </ZText>
             </TouchableOpacity>
 
@@ -174,12 +175,12 @@ export default function ChefDashboard() {
         {/* Quick Stats Grid */}
         <View style={localStyles.statsContainer}>
           <ZText type="S18" style={localStyles.sectionTitle}>
-            {strings.todaysOverview}
+            {strings.overview}
           </ZText>
           <View style={localStyles.statsGrid}>
             <DashboardCard
-              title={strings.todaysRevenue}
-              value={`${strings.currency} ${formatCurrency(stats?.todayRevenue)}`}
+              title={strings.totalRevenue}
+              value={`${strings.currency} ${formatCurrency(stats?.totalRevenue)}`}
               icon="cash-outline"
               color={colors.primary}
               containerStyle={localStyles.statCard}
@@ -214,104 +215,40 @@ export default function ChefDashboard() {
           </View>
         </View>
 
-        {/* Menu Management Section */}
-        <View style={localStyles.sectionContainer}>
-          <View style={localStyles.sectionHeader}>
-            <ZText type="S18" style={localStyles.sectionTitle}>
-              {strings.menuManagement}
-            </ZText>
-            <TouchableOpacity onPress={() => navigateToSection('Menu')}>
-              <ZText type="M14" color={colors.primary}>
-                {strings.manage}
-              </ZText>
-            </TouchableOpacity>
-          </View>
-          <TouchableOpacity
-            style={[localStyles.sectionCard, { backgroundColor: colors.inputBg }]}
-            onPress={() => navigateToSection('Menu')}>
-            <View style={localStyles.sectionContent}>
-              <Ionicons name="restaurant" size={moderateScale(32)} color={colors.primary} />
-              <View style={localStyles.sectionInfo}>
-                <ZText type="B16">{strings.manageYourMenu}</ZText>
-                <ZText type="M14" color={colors.grayScale7}>
-                  {strings.addEditRemoveDishes}
-                </ZText>
-              </View>
-              <Ionicons name="chevron-forward" size={moderateScale(20)} color={colors.grayScale7} />
-            </View>
-          </TouchableOpacity>
-        </View>
-
-        {/* Order Management Section */}
-        <View style={localStyles.sectionContainer}>
-          <View style={localStyles.sectionHeader}>
-            <ZText type="S18" style={localStyles.sectionTitle}>
-              {strings.orderManagement}
-            </ZText>
-            <TouchableOpacity onPress={() => navigateToSection('Orders')}>
-              <ZText type="M14" color={colors.primary}>
-                {strings.manage}
-              </ZText>
-            </TouchableOpacity>
-          </View>
-          <TouchableOpacity
-            style={[localStyles.sectionCard, { backgroundColor: colors.inputBg }]}
-            onPress={() => navigateToSection('Orders')}>
-            <View style={localStyles.sectionContent}>
-              <Ionicons name="receipt" size={moderateScale(32)} color={colors.orange} />
-              <View style={localStyles.sectionInfo}>
-                <ZText type="B16">{strings.trackOrders}</ZText>
-                <ZText type="M14" color={colors.grayScale7}>
-                  {strings.monitorUpdateOrderStatus}
-                </ZText>
-              </View>
-              <Ionicons name="chevron-forward" size={moderateScale(20)} color={colors.grayScale7} />
-            </View>
-          </TouchableOpacity>
-        </View>
-
-        {/* Analytics Section */}
-        <View style={localStyles.sectionContainer}>
-          <View style={localStyles.sectionHeader}>
-            <ZText type="S18" style={localStyles.sectionTitle}>
-              {strings.analyticsAndInsights}
-            </ZText>
-            <TouchableOpacity onPress={() => navigateToSection('Analytics')}>
-              <ZText type="M14" color={colors.primary}>
-                {strings.viewReports}
-              </ZText>
-            </TouchableOpacity>
-          </View>
-          <TouchableOpacity
-            style={[localStyles.sectionCard, { backgroundColor: colors.inputBg }]}
-            onPress={() => navigateToSection('Analytics')}>
-            <View style={localStyles.sectionContent}>
-              <Ionicons name="analytics" size={moderateScale(32)} color={colors.blue} />
-              <View style={localStyles.sectionInfo}>
-                <ZText type="B16">{strings.performanceMetrics}</ZText>
-                <ZText type="M14" color={colors.grayScale7}>
-                  {strings.viewSalesReportsAndTrends}
-                </ZText>
-              </View>
-              <Ionicons name="chevron-forward" size={moderateScale(20)} color={colors.grayScale7} />
-            </View>
-          </TouchableOpacity>
-        </View>
 
         {/* Recent Activity Section */}
         <View style={localStyles.sectionContainer}>
           <ZText type="S18" style={localStyles.sectionTitle}>
             {strings.recentActivity}
           </ZText>
-          <View style={[localStyles.activityCard, { backgroundColor: colors.inputBg }]}>
-            <Ionicons name="time-outline" size={moderateScale(32)} color={colors.grayScale7} />
-            <ZText type="M16" align="center" color={colors.grayScale7} style={localStyles.activityText}>
-              {strings.noRecentActivity}
-            </ZText>
-            <ZText type="M12" align="center" color={colors.grayScale7}>
-              {strings.recentActivityDescription}
-            </ZText>
-          </View>
+          {recentActivity.length > 0 ? (
+            recentActivity.slice(0, 5).map((activity, index) => (
+              <TouchableOpacity
+                key={activity.id || index}
+                style={[localStyles.activityItem, { backgroundColor: colors.inputBg }]}
+                onPress={() => navigation.navigate(StackNav.OrderManagement)}
+                activeOpacity={0.7}>
+                <View style={[localStyles.activityIconContainer, { backgroundColor: activity.color + '20' }]}>
+                  <Ionicons name={activity.icon} size={moderateScale(20)} color={activity.color} />
+                </View>
+                <View style={localStyles.activityInfo}>
+                  <ZText type="M14" numberOfLines={1}>{activity.message}</ZText>
+                  <ZText type="M12" color={colors.grayScale7}>{activity.time}</ZText>
+                </View>
+                <Ionicons name="chevron-forward" size={moderateScale(16)} color={colors.grayScale7} />
+              </TouchableOpacity>
+            ))
+          ) : (
+            <View style={[localStyles.activityCard, { backgroundColor: colors.inputBg }]}>
+              <Ionicons name="time-outline" size={moderateScale(32)} color={colors.grayScale7} />
+              <ZText type="M16" align="center" color={colors.grayScale7} style={localStyles.activityText}>
+                {strings.noRecentActivity}
+              </ZText>
+              <ZText type="M12" align="center" color={colors.grayScale7}>
+                {strings.recentActivityDescription}
+              </ZText>
+            </View>
+          )}
         </View>
       </ScrollView>
     </ZSafeAreaView>
@@ -442,5 +379,27 @@ const localStyles = StyleSheet.create({
   activityText: {
     marginTop: moderateScale(14),
     marginBottom: moderateScale(10),
+  },
+  activityItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: moderateScale(14),
+    borderRadius: moderateScale(12),
+    marginBottom: moderateScale(10),
+    ...styles.shadowStyle,
+    shadowOpacity: 0.05,
+    elevation: 1,
+  },
+  activityIconContainer: {
+    width: moderateScale(40),
+    height: moderateScale(40),
+    borderRadius: moderateScale(20),
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: moderateScale(12),
+  },
+  activityInfo: {
+    flex: 1,
+    marginRight: moderateScale(8),
   },
 });

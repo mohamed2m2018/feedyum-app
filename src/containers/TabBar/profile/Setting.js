@@ -98,34 +98,6 @@ export default Setting = ({ navigation }) => {
       icon: 'alert-circle-outline',
       route: StackNav.PrivacyPolicy,
     },
-    {
-      id: 8,
-      title:
-        strings.switchTo +
-        ' ' +
-        (user?.data?.user?.type === 'chef'
-          ? strings.userSwitchAccount
-          : strings.chefSwitchAccount),
-      icon: 'alert-circle-outline',
-      onPress: () => {
-        if (!isloading) {
-          setisloading(true);
-          request
-            .patch('/user', {
-              type: user?.data?.user?.type === 'chef' ? 'user' : 'chef',
-            })
-            .then(async () => {
-              await queryClient.invalidateQueries({ queryKey: 'user' });
-              setisloading(false);
-              navigation.navigate(TabNav.ForYou);
-            })
-            .catch(err => {
-              setisloading(false);
-              showErrorToast(strings.error, err[Object.keys(err)?.[0]]);
-            });
-        }
-      },
-    },
   ];
 
   const color = useSelector(state => state.theme.theme);
@@ -176,17 +148,37 @@ export default Setting = ({ navigation }) => {
       // Check if user is signed in with Google
       const isSignedIn = await GoogleSignin.isSignedIn();
       if (isSignedIn) {
-        // Revoke access to disconnect the app from Google account
-        await GoogleSignin.revokeAccess();
+        try {
+          // Try to get and clear cached access token first
+          const tokens = await GoogleSignin.getTokens();
+          if (tokens?.accessToken) {
+            await GoogleSignin.clearCachedAccessToken(tokens.accessToken);
+          }
+        } catch (tokenError) {
+          // Token might not exist, continue with logout
+          console.log('[Setting] Token clear error (non-critical):', tokenError);
+        }
+
+        try {
+          // Revoke access to fully disconnect the app from Google account
+          // This forces the account picker to show on next sign-in
+          await GoogleSignin.revokeAccess();
+        } catch (revokeError) {
+          // revokeAccess might fail if already revoked, continue with signOut
+          console.log('[Setting] Revoke access error (non-critical):', revokeError);
+        }
+
         // Sign out to clear session tokens
         await GoogleSignin.signOut();
       }
-      // Clear any cached user data from memory
-      // After signOut, getCurrentUser should return null, but calling it ensures cache is cleared
-      await GoogleSignin.getCurrentUser();
     } catch (error) {
       console.log('[Setting] Google sign-out error:', error);
-      // Continue with logout even if Google sign-out fails
+      // Attempt signOut as fallback even if previous steps failed
+      try {
+        await GoogleSignin.signOut();
+      } catch (signOutError) {
+        console.log('[Setting] Fallback sign-out error:', signOutError);
+      }
     }
   };
 
@@ -201,7 +193,7 @@ export default Setting = ({ navigation }) => {
       delete request.defaults.headers.common.Authorization;
       // Clear AsyncStorage-stored session/notification data
       await AppInitializer.handleUserLogout();
-      googleSignOut();
+      await googleSignOut();
       // OneSignal v5
       OneSignal.logout();
       setTimeout(() => {

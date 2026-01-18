@@ -25,6 +25,7 @@ import { StackNav } from '../../../../navigation/NavigationKeys';
 import SuccessModal from '../../../../components/models/SuccessModal';
 import ReelComponent from '../../../../components/ReelComponent';
 import { UserDetailCategory } from '../../../../api/constant';
+import ImageZoomModal from '../../../../components/common/ImageZoomModal';
 import {
   useInfiniteQuery,
   useQuery,
@@ -56,10 +57,7 @@ export default function ProfileDetail({ navigation, route }) {
   const [modalVisible, setModalVisible] = useState(false);
   const locationSheetRef = useRef('');
   const [selectedGov, setselectedGov] = useState('');
-  // Tab selection based on viewed user type (set properly after user data loads)
-  const [selectedTab, setSelectedTab] = useState('posts');
-  const [hasCheckedEmptyPosts, setHasCheckedEmptyPosts] = useState(false);
-  const [showReviewsFirst, setShowReviewsFirst] = useState(false);
+  const [isProfileImageVisible, setIsProfileImageVisible] = useState(false);
 
   const { data: currentUserQuery } = useQuery(
     'user',
@@ -144,16 +142,6 @@ export default function ProfileDetail({ navigation, route }) {
       params: {
         limit: 10,
         page: pageParam,
-        excludeReviews: true, // Exclude review posts from regular posts
-      },
-    });
-
-  const fetchReviewPosts = ({ pageParam = 1 }) =>
-    request.get(`/story/author?id=${id}`, {
-      params: {
-        limit: 10,
-        page: pageParam,
-        reviewsOnly: true, // Only get review posts
       },
     });
 
@@ -163,7 +151,7 @@ export default function ProfileDetail({ navigation, route }) {
     isLoading,
   } = useInfiniteQuery(['user_stories', id], fetchPosts, {
     keepPreviousData: true,
-    enabled: !!id && selectedTab === 'posts',
+    enabled: !!id,
     getNextPageParam: (lastPage, allPages) => {
       const nextPage =
         lastPage?.data?.currentPage < lastPage?.data?.totalPages
@@ -174,81 +162,8 @@ export default function ProfileDetail({ navigation, route }) {
 
     select: res => res?.pages.flatMap(page => page.data?.stories || []),
   });
-
-  const {
-    data: reviewStories,
-    fetchNextPage: fetchNextReviewPage,
-    isLoading: isLoadingReviews,
-  } = useInfiniteQuery(['user_review_stories', id], fetchReviewPosts, {
-    keepPreviousData: true,
-    enabled: !!id && selectedTab === 'reviews',
-    getNextPageParam: (lastPage, allPages) => {
-      const nextPage =
-        lastPage?.data?.currentPage < lastPage?.data?.totalPages
-          ? allPages.length + 1
-          : undefined;
-      return nextPage;
-    },
-
-    select: res => res?.pages.flatMap(page => page.data?.stories || []),
-  });
-
-  // Auto-switch to reviews tab if posts are empty but reviews exist
-  React.useEffect(() => {
-    // Only check once after posts data loads
-    if (!hasCheckedEmptyPosts && !isLoading && stories !== undefined) {
-      setHasCheckedEmptyPosts(true);
-
-      // If no posts exist, switch to reviews tab and show it first
-      if (!stories || stories.length === 0) {
-        setSelectedTab('reviews');
-        setShowReviewsFirst(true);
-      }
-    }
-  }, [stories, isLoading, hasCheckedEmptyPosts]);
-
-  // const categoryData = [
-  //   {
-  //     id: 0,
-  //     icon: 'apps',
-  //     onPress: () => setIsSelect(0),
-  //   },
-  //   {
-  //     id: 1,
-  //     icon: 'bookmark',
-  //     onPress: () => setIsSelect(1),
-  //   },
-  //   {
-  //     id: 2,
-  //     icon: 'heart',
-  //     onPress: () => setIsSelect(2),
-  //   },
-  // ];
-
-  const onPressEditProfile = page =>
-    navigation.navigate(StackNav.UserNetwork, {
-      userId: user?._id,
-      page,
-      isOther: true,
-    });
-
-  // const onPressProfile = () => setModalVisible(true);
-  const onPressModalClose = () => setModalVisible(false);
-
-
 
   const user = data?.data?.user;
-
-  // Set correct tab based on viewed user type
-  React.useEffect(() => {
-    if (user?.type === 'chef') {
-      setSelectedTab('posts');
-    } else if (user) {
-      setSelectedTab('reviews');
-    }
-  }, [user?.type]);
-
-
 
   const onPressAvailableLocation = () => {
     setselectedGov(data?.data?.user?.locations);
@@ -258,16 +173,20 @@ export default function ProfileDetail({ navigation, route }) {
     <View>
       <ZHeader />
       <View style={styles.itemsCenter}>
-        <Image
-          source={
-            user?.avatar
-              ? { uri: user?.avatar }
-              : colors.dark
-                ? images.userDark
-                : images.userLight
-          }
-          style={localStyles.userImage}
-        />
+        <TouchableOpacity
+          onPress={() => user?.avatar && setIsProfileImageVisible(true)}
+          activeOpacity={user?.avatar ? 0.8 : 1}>
+          <Image
+            source={
+              user?.avatar
+                ? { uri: user?.avatar }
+                : colors.dark
+                  ? images.userDark
+                  : images.userLight
+            }
+            style={localStyles.userImage}
+          />
+        </TouchableOpacity>
         <View style={styles.mv20}>
           <ZText type="b24" align={'center'}>
             {user?.fullName}
@@ -379,60 +298,24 @@ export default function ProfileDetail({ navigation, route }) {
             : strings.foodReelsAndPosts}
         </ZText>
       </View>
-
-      {/* Tab buttons - Only show for chefs (regular users only have reviews) */}
-      {user?.type === 'chef' && (
-        <View style={[localStyles.tabContainer, showReviewsFirst && { flexDirection: 'row-reverse' }]}>
-          <TouchableOpacity
-            style={[
-              localStyles.tabButton,
-              selectedTab === 'posts' && { borderBottomColor: colors.primary, borderBottomWidth: 2 }
-            ]}
-            onPress={() => setSelectedTab('posts')}>
-            <ZText type={selectedTab === 'posts' ? 'b16' : 'm16'} color={selectedTab === 'posts' ? colors.primary : colors.textColor}>
-              Posts
-            </ZText>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              localStyles.tabButton,
-              selectedTab === 'reviews' && { borderBottomColor: colors.primary, borderBottomWidth: 2 }
-            ]}
-            onPress={() => setSelectedTab('reviews')}>
-            <ZText type={selectedTab === 'reviews' ? 'b16' : 'm16'} color={selectedTab === 'reviews' ? colors.primary : colors.textColor}>
-              Reviews
-            </ZText>
-          </TouchableOpacity>
-        </View>
-      )}
     </View>
   );
-
-
-
-  // Get current data based on selected tab
-  const currentData = selectedTab === 'posts' ? stories : reviewStories;
-  const currentLoading = selectedTab === 'posts' ? isLoading : isLoadingReviews;
-  const currentFetchNext = selectedTab === 'posts' ? fetchNextPage : fetchNextReviewPage;
 
   return (
     <ZSafeAreaView style={[localStyles.screenContainer, { backgroundColor: colors.backgroundColor }]}>
       <FlatList
-        data={currentData}
+        data={stories}
         ListHeaderComponent={renderHeader}
         showsVerticalScrollIndicator={false}
-        key={selectedTab} // Force re-render when tab changes
         contentContainerStyle={localStyles.flatListContent}
         ListEmptyComponent={
-          currentLoading ? (
+          isLoading ? (
             <ZLoader height={100} />
           ) : (
             <ZText style={localStyles.emptyStateText} type={'B20'}>
-              {selectedTab === 'posts'
-                ? (user?.type === 'chef' || user?.hasMenu)
-                  ? strings.noFoodReelsYet
-                  : strings.noDishesYetProfileOther
-                : strings.noReviewReelsYet
+              {(user?.type === 'chef' || user?.hasMenu)
+                ? strings.noFoodReelsYet
+                : strings.noDishesYetProfileOther
               }
             </ZText>
           )
@@ -450,8 +333,8 @@ export default function ProfileDetail({ navigation, route }) {
           </View>
         )}
         numColumns={3}
-        onMomentumScrollBegin={currentFetchNext}
-        keyExtractor={item => `${selectedTab}-${item?._id}`}
+        onMomentumScrollBegin={fetchNextPage}
+        keyExtractor={item => `post-${item?._id}`}
         columnWrapperStyle={localStyles.dishRowContainer}
         ItemSeparatorComponent={() => <View style={localStyles.dishRowSeparator} />}
       />
@@ -463,6 +346,11 @@ export default function ProfileDetail({ navigation, route }) {
         itemImage={<LikeIconModal style={styles.selfCenter} />}
       />
       <Locations SheetRef={locationSheetRef} selectedGov={selectedGov} />
+      <ImageZoomModal
+        visible={isProfileImageVisible}
+        imageUri={user?.avatar}
+        onClose={() => setIsProfileImageVisible(false)}
+      />
     </ZSafeAreaView>
   );
 }
@@ -520,7 +408,7 @@ const localStyles = StyleSheet.create({
     height: getHeight(40),
     borderRadius: moderateScale(20),
     width: '40%',
-    backgroundColor: '#FF4D67', // Background color for shadow efficiency
+    backgroundColor: '#FF4D67',
     marginHorizontal: moderateScale(5),
     shadowColor: '#FF4D67',
     shadowOffset: {
@@ -582,7 +470,6 @@ const localStyles = StyleSheet.create({
   dishRowSeparator: {
     height: moderateScale(8),
   },
-  // Stats Styles
   statsContainer: {
     paddingVertical: moderateScale(15),
     paddingHorizontal: moderateScale(12),
@@ -596,21 +483,5 @@ const localStyles = StyleSheet.create({
   },
   statsLabel: {
     paddingHorizontal: moderateScale(4),
-  },
-  // Tab styles
-  tabContainer: {
-    flexDirection: 'row',
-    marginHorizontal: moderateScale(8),
-    marginTop: moderateScale(16),
-    marginBottom: moderateScale(16),
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  tabButton: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: moderateScale(12),
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
   },
 });

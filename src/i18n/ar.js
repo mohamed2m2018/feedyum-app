@@ -82,6 +82,7 @@ export default {
   search: 'بحث',
   yourDownloadEmptyDesc: 'يبدو أنك لم تقم بتنزيل أي شيء حتى الآن',
   cancel: 'إلغاء',
+  done: 'تم',
   delete: 'حذف',
   editProfile: 'تعديل ملفك وفروعك',
   security: 'الأمان',
@@ -427,6 +428,27 @@ export default {
   noo: 'مستخدم',
   chefOrResutaurantMessage:
     'يمكن للمطابخ / المطاعم مشاركة مزيد من معلومات الأطباق واستقبال استفسارات المستخدمين عبر واتساب أو روابط مخصصة.',
+
+  // User Type Selection Modal
+  userTypeSelectionTitle: 'اختر نوع حسابك',
+  userTypeSelectionSubtitle: 'هذا سيحدد تجربتك في فيديوم',
+  foodLoverTitle: 'اكيل',
+  foodLoverSubtitle: 'أريد اكتشاف وطلب الطعام',
+  foodLoverFeature1: 'اكتشف أطباق رائعة بالقرب منك',
+  foodLoverFeature2: 'اطلب من المطابخ المنزلية والمطاعم',
+  foodLoverFeature3: 'اكسب فلوس من التقييمات وترشيح مطاعم جديدة',
+  foodLoverFeature4: 'احفظ أطباقك المفضلة',
+  chefKitchenTitle: 'مطبخ / مطعم',
+  chefKitchenSubtitle: 'أريد بيع طعامي',
+  chefKitchenFeature1: 'أنشئ وأدر قائمة طعامك',
+  chefKitchenFeature2: 'استلم وتابع طلبات العملاء',
+  chefKitchenFeature3: 'ابنِ علامتك التجارية',
+  chefKitchenFeature4: 'تواصل مباشرة مع العملاء',
+  importantNotice: 'ملاحظة هامة',
+  accountTypeWarning: 'نوع حسابك يؤثر على تجربتك بالكامل. اختر بعناية!',
+  continueAs: 'استمر كـ',
+  selectAccountType: 'الرجاء اختيار نوع الحساب للمتابعة',
+
   optional: 'اختياري',
   switchTo: 'التبديل إلى',
   account: 'حساب',
@@ -461,7 +483,7 @@ export default {
   address: 'العنوان',
   browseMenus: 'تصفح القوائم',
   orderId: 'رقم الطلب:',
-  chef: 'المطبخ:',
+  chef: 'المطبخ',
   customer: 'العميل:',
   orderDate: 'تاريخ الطلب:',
   orderTime: 'وقت الطلب:',
@@ -776,6 +798,7 @@ export default {
   completedOrders: 'الطلبات المكتملة',
   addDish: 'إضافة طبق',
   addNewDish: 'إضافة طبق جديد',
+  manageMenu: 'إدارة القائمة',
   editDish: 'تعديل الطبق',
   viewOrders: 'عرض الطلبات',
   customerChats: 'محادثات العملاء',
@@ -934,6 +957,21 @@ export default {
   // Promocode Management
   promocodeCreatedSuccessfully: 'تم إنشاء كود الخصم بنجاح',
   promocodeDeletedSuccessfully: 'تم حذف كود الخصم بنجاح',
+
+  // Recent Activity Messages
+  activityNewOrderFrom: 'طلب جديد من {0}',
+  activityOrderAccepted: 'تم قبول الطلب #{0}',
+  activityOrderPreparing: 'جاري تحضير الطلب #{0}',
+  activityOrderReady: 'الطلب #{0} جاهز للاستلام',
+  activityOrderCompleted: 'تم إكمال الطلب #{0}',
+  activityOrderCancelled: 'تم إلغاء الطلب #{0}',
+  activityOrderFrom: 'طلب من {0}',
+  justNow: 'الآن',
+  minAgo: 'منذ {0} دقيقة',
+  hourAgo: 'منذ ساعة',
+  hoursAgo: 'منذ {0} ساعات',
+  dayAgo: 'منذ يوم',
+  daysAgo: 'منذ {0} أيام',
 
   // Additional wallet translations used in the component
   amountOwed: 'المبلغ المستحق',
@@ -1502,5 +1540,29 @@ export default {
   viewKitchen: 'عرض المطبخ',
   dishes: 'أطباق',
   trySearching: 'جرب البحث عن:',
+
+  // Translation & Bilingual Support
+  translating: 'جاري الترجمة...',
+  autoTranslated: 'ترجمة تلقائية - يمكنك التعديل',
+  translationFailed: 'فشلت الترجمة - أدخل يدوياً',
+  nameInArabic: 'الاسم (عربي)',
+  nameInEnglish: 'الاسم (إنجليزي)',
+  descriptionInArabic: 'الوصف (عربي)',
+  descriptionInEnglish: 'الوصف (إنجليزي)',
+  enterNameInYourLanguage: 'أدخل اسم الطبق بلغتك',
+  translatedName: 'الاسم المترجم',
+  translatedDescription: 'الوصف المترجم',
+  editTranslation: 'عدّل الترجمة إذا لزم الأمر',
+  sectionNameArabic: 'اسم القسم (عربي)',
+  sectionNameEnglish: 'اسم القسم (إنجليزي)',
+  englishTranslation: 'الترجمة الإنجليزية',
+  arabicTranslation: 'الترجمة العربية',
+
+  // Featured Reels & Reviews
+  featuredReels: 'فيديوهات مميزة',
+  seeMore: 'عرض المزيد',
+  featuredReviews: 'تقييمات مميزة',
+  viewAllReviews: 'عرض كل التقييمات',
+  noReelsYet: 'لا توجد فيديوهات بعد',
 
 };

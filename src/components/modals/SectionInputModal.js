@@ -10,6 +10,8 @@ import {
   Dimensions,
   KeyboardAvoidingView,
   Platform,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { useSelector } from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -32,6 +34,24 @@ const SectionInputModal = ({
   const colors = useSelector(state => state.theme.theme);
   const [customSection, setCustomSection] = useState('');
   const [slideAnim] = useState(new Animated.Value(screenHeight));
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  // Track keyboard height
+  useEffect(() => {
+    const keyboardWillShow = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+      (e) => setKeyboardHeight(e.endCoordinates.height)
+    );
+    const keyboardWillHide = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      () => setKeyboardHeight(0)
+    );
+
+    return () => {
+      keyboardWillShow.remove();
+      keyboardWillHide.remove();
+    };
+  }, []);
 
   useEffect(() => {
     if (visible) {
@@ -51,10 +71,16 @@ const SectionInputModal = ({
     }
   }, [visible, selectedSection]);
 
+  // Always show all sections - no filtering
   const filteredSections = useMemo(() => {
-    if (!customSection.trim()) return availableSections;
-    return availableSections.filter(section =>
-      section.name.toLowerCase().includes(customSection.toLowerCase())
+    return availableSections;
+  }, [availableSections]);
+
+  // Check if the typed section name is new (doesn't exist in available sections)
+  const isNewSection = useMemo(() => {
+    if (!customSection.trim()) return false;
+    return !availableSections.some(section =>
+      section.name.toLowerCase() === customSection.trim().toLowerCase()
     );
   }, [availableSections, customSection]);
 
@@ -160,7 +186,8 @@ const SectionInputModal = ({
       onRequestClose={onClose}>
       <KeyboardAvoidingView
         style={styles.keyboardContainer}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}>
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 0}>
         <View style={[styles.overlay, { backgroundColor: colors.black + '50' }]}>
           <Animated.View
             style={[
@@ -168,6 +195,9 @@ const SectionInputModal = ({
               {
                 backgroundColor: colors.backgroundColor,
                 transform: [{ translateY: slideAnim }],
+                height: keyboardHeight > 0
+                  ? screenHeight - keyboardHeight - moderateScale(50)
+                  : screenHeight * 0.80,
               }
             ]}>
             {/* Header */}
@@ -193,7 +223,7 @@ const SectionInputModal = ({
               </View>
             </View>
 
-            {/* Custom Input */}
+            {/* Custom Input - Fixed at top */}
             <View style={styles.inputContainer}>
               <ZText type="M14" color={colors.textColor} style={styles.inputLabel}>
                 {strings.sectionName || "Section Name"}
@@ -227,7 +257,7 @@ const SectionInputModal = ({
               </View>
             </View>
 
-            {/* Previously Used Sections */}
+            {/* Sections List */}
             <View style={styles.listContainer}>
               <View style={styles.sectionHeaderContainer}>
                 <ZText type="M16" color={colors.textColor} style={styles.sectionHeader}>
@@ -238,36 +268,92 @@ const SectionInputModal = ({
                 </ZText>
               </View>
 
-              {filteredSections.length > 0 ? (
-                <FlatList
-                  data={filteredSections}
-                  renderItem={renderSectionItem}
-                  keyExtractor={(item, index) => `${item.name}-${index}`}
-                  showsVerticalScrollIndicator={false}
-                  contentContainerStyle={styles.listContent}
-                  ItemSeparatorComponent={() => <View style={styles.separator} />}
-                />
-              ) : (
-                <View style={styles.emptyStateContainer}>
-                  <Ionicons
-                    name="folder-outline"
-                    size={moderateScale(48)}
-                    color={colors.grayScale5}
-                  />
-                  <ZText type="B16" color={colors.grayScale7} style={styles.emptyTitle}>
-                    {customSection.trim() ?
-                      (strings.createNewSection || "Create new section") :
-                      (strings.noSectionsFound || "No sections found")
-                    }
-                  </ZText>
-                  <ZText type="R14" color={colors.grayScale5} style={styles.emptySubtitle}>
-                    {customSection.trim() ?
-                      (strings.newSectionWillBeCreated || "This will create a new section") :
-                      (strings.startTypingSection || "Start typing to create a section")
-                    }
-                  </ZText>
-                </View>
-              )}
+              <FlatList
+                data={filteredSections}
+                renderItem={renderSectionItem}
+                keyExtractor={(item, index) => `${item.name}-${index}`}
+                showsVerticalScrollIndicator={false}
+                style={{ flex: 1 }}
+                contentContainerStyle={styles.listContent}
+                keyboardShouldPersistTaps="handled"
+                ItemSeparatorComponent={() => <View style={styles.separator} />}
+                ListHeaderComponent={
+                  isNewSection ? (
+                    <TouchableOpacity
+                      style={[
+                        styles.createNewSectionItem,
+                        {
+                          backgroundColor: colors.primary + '15',
+                          borderColor: colors.primary,
+                        }
+                      ]}
+                      onPress={handleConfirm}
+                      activeOpacity={0.7}>
+                      <View style={styles.sectionContent}>
+                        <View style={styles.sectionIconContainer}>
+                          <View
+                            style={[
+                              styles.sectionIcon,
+                              {
+                                backgroundColor: colors.primary + '30',
+                              }
+                            ]}>
+                            <Ionicons
+                              name="add-circle"
+                              size={moderateScale(20)}
+                              color={colors.primary}
+                            />
+                          </View>
+                        </View>
+
+                        <View style={styles.sectionTextContainer}>
+                          <ZText
+                            type="B16"
+                            color={colors.primary}
+                            style={styles.sectionName}>
+                            {strings.createNewSection || "Create new section"}
+                          </ZText>
+                          <ZText
+                            type="R12"
+                            color={colors.primary}
+                            style={styles.sectionDescription}>
+                            "{customSection.trim()}"
+                          </ZText>
+                        </View>
+
+                        <View style={styles.selectedIndicator}>
+                          <Ionicons
+                            name="arrow-forward-circle"
+                            size={moderateScale(20)}
+                            color={colors.primary}
+                          />
+                        </View>
+                      </View>
+                    </TouchableOpacity>
+                  ) : null
+                }
+                ListEmptyComponent={
+                  <View style={styles.emptyStateContainer}>
+                    <Ionicons
+                      name="folder-outline"
+                      size={moderateScale(48)}
+                      color={colors.grayScale5}
+                    />
+                    <ZText type="B16" color={colors.grayScale7} style={styles.emptyTitle}>
+                      {customSection.trim() ?
+                        (strings.createNewSection || "Create new section") :
+                        (strings.noSectionsFound || "No sections found")
+                      }
+                    </ZText>
+                    <ZText type="R14" color={colors.grayScale5} style={styles.emptySubtitle}>
+                      {customSection.trim() ?
+                        (strings.newSectionWillBeCreated || "This will create a new section") :
+                        (strings.startTypingSection || "Start typing to create a section")
+                      }
+                    </ZText>
+                  </View>
+                }
+              />
             </View>
 
             {/* Action Buttons */}
@@ -312,10 +398,10 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContainer: {
-    height: screenHeight * 0.85,
     borderTopLeftRadius: moderateScale(20),
     borderTopRightRadius: moderateScale(20),
     overflow: 'hidden',
+    flexDirection: 'column',
   },
   header: {
     paddingHorizontal: moderateScale(20),
@@ -380,6 +466,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   listContent: {
+    flexGrow: 1,
     paddingHorizontal: moderateScale(20),
     paddingBottom: moderateScale(20),
   },
@@ -387,6 +474,13 @@ const styles = StyleSheet.create({
     borderRadius: moderateScale(12),
     borderWidth: 1,
     overflow: 'hidden',
+  },
+  createNewSectionItem: {
+    borderRadius: moderateScale(12),
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    overflow: 'hidden',
+    marginBottom: moderateScale(12),
   },
   sectionContent: {
     flexDirection: 'row',

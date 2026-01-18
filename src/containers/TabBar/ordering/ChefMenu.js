@@ -8,6 +8,7 @@ import {
   RefreshControl,
   InteractionManager,
   ActivityIndicator,
+  I18nManager,
 } from 'react-native';
 import { showErrorToast } from '../../../utils/toast';
 import { useSelector, useDispatch } from 'react-redux';
@@ -35,6 +36,8 @@ import {
   clearError,
 } from '../../../redux/reducer/cartSlice';
 import { useStorage } from '../../../utils/useStorage';
+import FeaturedReelsSection from '../../../components/common/FeaturedReelsSection';
+import FeaturedReviewsSection from '../../../components/common/FeaturedReviewsSection';
 
 const ChefMenu = () => {
   const colors = useSelector(state => state.theme.theme);
@@ -553,6 +556,7 @@ const ChefMenu = () => {
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={localStyles.stunningCategoriesList}
+            style={I18nManager.isRTL ? { transform: [{ scaleX: -1 }] } : null}
             renderItem={({ item: category, index }) => {
               const itemCount = dishCategories[category].length;
               const gradientColors = getCategoryGradient(index);
@@ -565,6 +569,7 @@ const ChefMenu = () => {
                       backgroundColor: gradientColors.primary,
                       shadowColor: gradientColors.primary,
                     },
+                    I18nManager.isRTL && { transform: [{ scaleX: -1 }] },
                   ]}
                   onPress={() => {
                     // Scroll to first dish in this category
@@ -636,50 +641,76 @@ const ChefMenu = () => {
   };
 
   const renderHeader = () => {
+    // Create chef profile object for navigation
+    const chefProfile = {
+      _id: chefId,
+      fullName: menuData?.chef?.fullName || chefName,
+      avatar: menuData?.chef?.avatar,
+    };
+
     return (
-      <View
-        style={[
-          localStyles.headerContainer,
-          { backgroundColor: colors.backgroundColor },
-        ]}>
-        <View style={localStyles.chefInfo}>
-          <Image
-            source={
-              menuData?.chef?.avatar
-                ? { uri: menuData.chef.avatar }
-                : colors.dark
-                  ? images.userDark
-                  : images.userLight
-            }
-            style={localStyles.chefAvatar}
-          />
-          <View style={localStyles.chefDetails}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <ZText type="B18" color={colors.textColor}>
+      <View style={{ backgroundColor: colors.backgroundColor }}>
+        {/* Professional Restaurant Header */}
+        <View style={localStyles.restaurantHeader}>
+          {/* Restaurant Avatar & Info */}
+          <View style={localStyles.restaurantInfoRow}>
+            <Image
+              source={
+                menuData?.chef?.avatar
+                  ? { uri: menuData.chef.avatar }
+                  : colors.dark
+                    ? images.userDark
+                    : images.userLight
+              }
+              style={localStyles.restaurantAvatar}
+            />
+            <View style={localStyles.restaurantDetails}>
+              <ZText type="B20" color={colors.textColor} numberOfLines={1}>
                 {menuData?.chef?.fullName || chefName}
               </ZText>
-              {((Number.isFinite(menuData?.chef?.ratedDishesCount) && menuData.chef.ratedDishesCount > 0 && Number.isFinite(menuData?.chef?.averageDishRating) && menuData.chef.averageDishRating > 0) ||
-                (headerCount > 0 && headerAvg > 0)) ? (
-                <StarRating
-                  rating={Number.isFinite(menuData?.chef?.averageDishRating)
-                    ? menuData.chef.averageDishRating
-                    : headerAvg}
-                  totalReviews={Number.isFinite(menuData?.chef?.ratedDishesCount)
-                    ? menuData.chef.ratedDishesCount
-                    : headerCount}
-                  size="small"
-                  showText={true}
-                  showCount={true}
-                />
-              ) : (
-                <ZText type="B14" color={colors.grayScale7}>-</ZText>
+              {/* Bio / Description */}
+              {menuData?.chef?.bio && (
+                <ZText type="M13" color={colors.grayScale6} numberOfLines={2} style={{ marginTop: 4 }}>
+                  {menuData.chef.bio}
+                </ZText>
               )}
+              {/* Stats Row */}
+              <View style={localStyles.restaurantStats}>
+                {/* Rating */}
+                {((Number.isFinite(menuData?.chef?.averageDishRating) && menuData.chef.averageDishRating > 0) ||
+                  (headerAvg > 0)) && (
+                    <View style={localStyles.statBadge}>
+                      <Ionicons name="star" size={14} color="#FFD700" />
+                      <ZText type="B13" color={colors.textColor} style={{ marginLeft: 4 }}>
+                        {(Number.isFinite(menuData?.chef?.averageDishRating) ? menuData.chef.averageDishRating : headerAvg).toFixed(1)}
+                      </ZText>
+                    </View>
+                  )}
+                {/* Dish count */}
+                <View style={localStyles.statBadge}>
+                  <Ionicons name="restaurant-outline" size={14} color={colors.primary} />
+                  <ZText type="M13" color={colors.grayScale6} style={{ marginLeft: 4 }}>
+                    {menuData?.dishes?.length || 0} {strings.dishes || 'dishes'}
+                  </ZText>
+                </View>
+              </View>
             </View>
-            <ZText type="M14" color={colors.grayScale7}>
-              {menuData?.dishes?.length || 0} {strings.dishesAvailable}
-            </ZText>
           </View>
         </View>
+
+        {/* Featured Reels Section */}
+        <FeaturedReelsSection
+          chefId={chefId}
+          chefProfile={chefProfile}
+          limit={5}
+        />
+
+        {/* Featured Reviews Section */}
+        <FeaturedReviewsSection
+          chefId={chefId}
+          chefProfile={chefProfile}
+          limit={5}
+        />
       </View>
     );
   };
@@ -687,7 +718,7 @@ const ChefMenu = () => {
   if (isLoading) {
     return (
       <ZSafeAreaView>
-        <ZHeader title={strings.menu} showBack />
+        <ZHeader title={chefName || strings.menu} showBack />
         <ZLoader />
       </ZSafeAreaView>
     );
@@ -696,7 +727,7 @@ const ChefMenu = () => {
   if (error) {
     return (
       <ZSafeAreaView>
-        <ZHeader title={strings.menu} showBack />
+        <ZHeader title={chefName || strings.menu} showBack />
         <View style={localStyles.errorContainer}>
           <Ionicons
             name="restaurant-outline"
@@ -731,7 +762,7 @@ const ChefMenu = () => {
   if (menuData && (!menuData.dishes || menuData.dishes.length === 0)) {
     return (
       <ZSafeAreaView>
-        <ZHeader title={strings.menu} showBack />
+        <ZHeader title={chefName || strings.menu} showBack />
         {renderHeader()}
         <View style={localStyles.emptyContainer}>
           <Ionicons
@@ -760,27 +791,29 @@ const ChefMenu = () => {
 
   return (
     <ZSafeAreaView>
-      <ZHeader title={strings.menu} showBack />
-
-      {/* Sticky Browse Menu */}
-      {renderStickyBrowseMenu()}
-
-      {/* Search bar + toggle */}
-      {/* Removed standalone search row and semantic button per request */}
-
-      {/* Optional small loader below search when searching */}
-      {debouncedSearch.length > 0 && isSearching ? (
-        <View style={{ paddingHorizontal: moderateScale(16), paddingBottom: moderateScale(6) }}>
-          <ZText type="M12" color={colors.grayScale7}>{strings.searching}</ZText>
-        </View>
-      ) : null}
+      <ZHeader title={menuData?.chef?.fullName || chefName || strings.menu} showBack />
 
       <FlatList
         ref={flatListRef}
         data={(debouncedSearch ? searchedDishes : menuData?.dishes) || []}
         renderItem={renderDishCard}
         keyExtractor={item => item._id}
-        ListHeaderComponent={renderHeader}
+        ListHeaderComponent={() => (
+          <View style={{ backgroundColor: colors.backgroundColor }}>
+            {/* Chef Info + Featured Sections */}
+            {renderHeader()}
+
+            {/* Categories Section (scrolls with content) */}
+            {renderStickyBrowseMenu()}
+
+            {/* Search indicator */}
+            {debouncedSearch.length > 0 && isSearching ? (
+              <View style={{ paddingHorizontal: moderateScale(16), paddingBottom: moderateScale(6) }}>
+                <ZText type="M12" color={colors.grayScale7}>{strings.searching}</ZText>
+              </View>
+            ) : null}
+          </View>
+        )}
         contentContainerStyle={localStyles.listContainer}
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -852,6 +885,74 @@ const localStyles = StyleSheet.create({
   },
   chefDetails: {
     flex: 1,
+  },
+  // Professional Restaurant Header Styles
+  restaurantHeader: {
+    paddingHorizontal: moderateScale(16),
+    paddingTop: moderateScale(16),
+    paddingBottom: moderateScale(12),
+  },
+  restaurantInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  restaurantAvatar: {
+    width: moderateScale(70),
+    height: moderateScale(70),
+    borderRadius: moderateScale(16),
+    marginRight: moderateScale(14),
+    borderWidth: 1,
+    borderColor: 'rgba(128,128,128,0.2)',
+  },
+  restaurantDetails: {
+    flex: 1,
+    paddingTop: moderateScale(4),
+  },
+  restaurantStats: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: moderateScale(8),
+    gap: moderateScale(12),
+    flexWrap: 'wrap',
+  },
+  statBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  // Legacy styles (keeping for compatibility)
+  premiumHeader: {
+    paddingHorizontal: moderateScale(16),
+    paddingTop: moderateScale(12),
+    paddingBottom: moderateScale(8),
+  },
+  chefInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  chefAvatarSmall: {
+    width: moderateScale(50),
+    height: moderateScale(50),
+    borderRadius: moderateScale(25),
+    marginRight: moderateScale(12),
+    borderWidth: 2,
+    borderColor: '#FF6B6B',
+  },
+  chefInfoText: {
+    flex: 1,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: moderateScale(4),
+    gap: moderateScale(12),
+  },
+  ratingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,215,0,0.15)',
+    paddingHorizontal: moderateScale(8),
+    paddingVertical: moderateScale(3),
+    borderRadius: moderateScale(10),
   },
   // Sticky Browse Menu Container
   stickyBrowseContainer: {

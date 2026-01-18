@@ -94,10 +94,10 @@ export default function KitchensTab({ searchQuery = '', useSemanticSearch = true
 
     const handleKitchenPress = useCallback(kitchen => {
         Keyboard.dismiss();
-        navigation.navigate(StackNav.ProfileDetail, {
-            userName: kitchen?.fullName || kitchen?.username,
-            userImage: kitchen?.avatar,
-            id: kitchen?._id,
+        // Navigate to ChefMenu for kitchen profiles (chef users)
+        navigation.navigate(StackNav.ChefMenu, {
+            chefId: kitchen?._id,
+            chefName: kitchen?.fullName || kitchen?.username,
         });
     }, [navigation]);
 

@@ -1,5 +1,5 @@
 // Library imports
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   StyleSheet,
@@ -15,6 +15,7 @@ import { useSelector } from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import ImageCropPicker from 'react-native-image-crop-picker';
 import { useQuery } from 'react-query';
+import debounce from 'lodash/debounce';
 
 // Local imports
 import ZText from '../../../../components/common/ZText';
@@ -25,6 +26,21 @@ import SectionInputModal from '../../../../components/modals/SectionInputModal';
 import request from '../../../../api/request';
 import { moderateScale } from '../../../../common/constants';
 import strings from '../../../../i18n/strings';
+
+// Helper function to translate category name based on current language
+const translateCategoryName = (englishName) => {
+  if (!englishName) return '';
+
+  // Create a key from the English name (e.g., "Main Course" -> "categoryMainCourse")
+  const key = 'category' + englishName
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join('')
+    .replace(/[^a-zA-Z]/g, '');
+
+  // Return translated string if available, otherwise return original
+  return strings[key] || englishName;
+};
 
 // PickerButton component moved outside to avoid React warning
 const PickerButton = ({ label, value, onPress, error, colors }) => (
@@ -68,19 +84,31 @@ const AddEditDishModal = ({
   const colors = useSelector(state => state.theme.theme);
   const isEditing = !!dish;
 
-  // Form state
+  // Form state with bilingual fields
   const [formData, setFormData] = useState({
     name: '',
+    nameArabic: '',
+    nameEnglish: '',
     description: '',
+    descriptionArabic: '',
+    descriptionEnglish: '',
     price: '',
     category: '',
     categories: [],
     section: '',
+    sectionNameArabic: '',
+    sectionNameEnglish: '',
     image: '',
     cookingTime: '',
     ingredients: '',
     visible: true,
   });
+
+  // Translation states
+  const [isTranslatingName, setIsTranslatingName] = useState(false);
+  const [isTranslatingDesc, setIsTranslatingDesc] = useState(false);
+  const [nameTranslationEdited, setNameTranslationEdited] = useState(false);
+  const [descTranslationEdited, setDescTranslationEdited] = useState(false);
 
   const [errors, setErrors] = useState({});
   const [imageUri, setImageUri] = useState('');
@@ -135,34 +163,53 @@ const AddEditDishModal = ({
     if (dish) {
       setFormData({
         name: dish.name || '',
+        nameArabic: dish.nameArabic || '',
+        nameEnglish: dish.nameEnglish || '',
         description: dish.description || '',
+        descriptionArabic: dish.descriptionArabic || '',
+        descriptionEnglish: dish.descriptionEnglish || '',
         price: dish.price?.toString() || '',
         category: dish.category || '',
         categories: Array.isArray(dish.categories) ? dish.categories : (dish.category ? [dish.category] : []),
         section: dish.section?.name || dish.section || '',
+        sectionNameArabic: dish.section?.nameArabic || '',
+        sectionNameEnglish: dish.section?.nameEnglish || '',
         image: dish.image || '',
         cookingTime: dish.cookingTime?.toString() || '',
         ingredients: dish.ingredients || '',
         visible: dish.visible !== false,
       });
       setImageUri(dish.image || '');
+      // Reset translation states for editing
+      setNameTranslationEdited(true);
+      setDescTranslationEdited(true);
     } else {
       // Reset form for new dish
       setFormData({
         name: '',
+        nameArabic: '',
+        nameEnglish: '',
         description: '',
+        descriptionArabic: '',
+        descriptionEnglish: '',
         price: '',
         category: '',
         categories: [],
         section: '',
+        sectionNameArabic: '',
+        sectionNameEnglish: '',
         image: '',
         cookingTime: '',
         ingredients: '',
         visible: true,
       });
       setImageUri('');
+      setNameTranslationEdited(false);
+      setDescTranslationEdited(false);
     }
     setErrors({});
+    setIsTranslatingName(false);
+    setIsTranslatingDesc(false);
   }, [dish, visible]);
 
   const updateFormData = (field, value) => {
@@ -172,6 +219,114 @@ const AddEditDishModal = ({
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
   };
+
+  // Detect language from text (Arabic vs English)
+  const detectLanguage = useCallback((text) => {
+    if (!text || typeof text !== 'string') return 'en';
+    // Use global flag (g) to count all matches
+    const arabicPattern = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/g;
+    const arabicMatches = (text.match(arabicPattern) || []).length;
+    const latinMatches = (text.match(/[a-zA-Z]/g) || []).length;
+    // If any Arabic, prioritize Arabic detection (for mixed content)
+    return arabicMatches > 0 && arabicMatches >= latinMatches ? 'ar' : 'en';
+  }, []);
+
+  // Translate text to target language
+  const translateText = useCallback(async (text, targetLang) => {
+    if (!text || text.trim().length < 2) return '';
+    try {
+      const response = await request.post('/translate', {
+        text: text.trim(),
+        to: targetLang,
+      });
+      return response.data?.translation || '';
+    } catch (error) {
+      console.error('Translation error:', error);
+      return '';
+    }
+  }, []);
+
+  // Debounced name translation
+  const debouncedTranslateName = useCallback(
+    debounce(async (name) => {
+      if (!name || name.trim().length < 2 || nameTranslationEdited) {
+        setIsTranslatingName(false);
+        return;
+      }
+      setIsTranslatingName(true);
+      const detectedLang = detectLanguage(name);
+      const targetLang = detectedLang === 'ar' ? 'en' : 'ar';
+      const translation = await translateText(name, targetLang);
+
+      if (translation) {
+        setFormData(prev => ({
+          ...prev,
+          nameArabic: detectedLang === 'ar' ? name : translation,
+          nameEnglish: detectedLang === 'en' ? name : translation,
+        }));
+      }
+      setIsTranslatingName(false);
+    }, 700),
+    [nameTranslationEdited, detectLanguage, translateText]
+  );
+
+  // Debounced description translation
+  const debouncedTranslateDesc = useCallback(
+    debounce(async (description) => {
+      if (!description || description.trim().length < 5 || descTranslationEdited) {
+        setIsTranslatingDesc(false);
+        return;
+      }
+      setIsTranslatingDesc(true);
+      const detectedLang = detectLanguage(description);
+      const targetLang = detectedLang === 'ar' ? 'en' : 'ar';
+      const translation = await translateText(description, targetLang);
+
+      if (translation) {
+        setFormData(prev => ({
+          ...prev,
+          descriptionArabic: detectedLang === 'ar' ? description : translation,
+          descriptionEnglish: detectedLang === 'en' ? description : translation,
+        }));
+      }
+      setIsTranslatingDesc(false);
+    }, 700),
+    [descTranslationEdited, detectLanguage, translateText]
+  );
+
+  // Handle name change with translation
+  const handleNameChange = useCallback((text) => {
+    updateFormData('name', text);
+    setNameTranslationEdited(false);
+    debouncedTranslateName(text);
+  }, [debouncedTranslateName]);
+
+  // Handle description change with translation
+  const handleDescriptionChange = useCallback((text) => {
+    updateFormData('description', text);
+    setDescTranslationEdited(false);
+    debouncedTranslateDesc(text);
+  }, [debouncedTranslateDesc]);
+
+  // Handle manual edit of translated name
+  const handleTranslatedNameChange = useCallback((text, isArabic) => {
+    setNameTranslationEdited(true);
+    if (isArabic) {
+      updateFormData('nameArabic', text);
+    } else {
+      updateFormData('nameEnglish', text);
+    }
+  }, []);
+
+  // Handle manual edit of translated description
+  const handleTranslatedDescChange = useCallback((text, isArabic) => {
+    setDescTranslationEdited(true);
+    if (isArabic) {
+      updateFormData('descriptionArabic', text);
+    } else {
+      updateFormData('descriptionEnglish', text);
+    }
+  }, []);
 
   const handleSectionSelection = (sectionName) => {
     updateFormData('section', sectionName);
@@ -267,6 +422,14 @@ const AddEditDishModal = ({
       // Ensure both single and multi are present for backward compatibility
       category: formData.category || formData.categories?.[0] || '',
       categories: formData.categories || (formData.category ? [formData.category] : []),
+      // Bilingual fields
+      nameArabic: formData.nameArabic || '',
+      nameEnglish: formData.nameEnglish || '',
+      descriptionArabic: formData.descriptionArabic || '',
+      descriptionEnglish: formData.descriptionEnglish || '',
+      // Section bilingual names
+      sectionNameArabic: formData.sectionNameArabic || '',
+      sectionNameEnglish: formData.sectionNameEnglish || '',
     };
 
     onSave(dishData);
@@ -386,23 +549,101 @@ const AddEditDishModal = ({
           </View>
 
           {/* Form Fields */}
+          {/* Primary Name Input */}
           <ZInput
             label={strings.dishName}
             _value={formData.name}
-            toGetTextFieldValue={text => updateFormData('name', text)}
-            placeHolder={strings.enterDishName}
+            toGetTextFieldValue={handleNameChange}
+            placeHolder={strings.enterNameInYourLanguage || 'Enter dish name in your language'}
             _errorText={errors.name}
           />
 
+          {/* Translated Name (Auto-generated, Editable) */}
+          {formData.name && formData.name.length >= 2 && (
+            <View style={localStyles.translationContainer}>
+              <View style={localStyles.translationHeader}>
+                <ZText type="M12" color={colors.grayScale7}>
+                  {detectLanguage(formData.name) === 'ar'
+                    ? (strings.englishTranslation || 'English Translation')
+                    : (strings.arabicTranslation || 'Arabic Translation')}
+                </ZText>
+                {isTranslatingName && (
+                  <View style={localStyles.translatingBadge}>
+                    <ActivityIndicator size="small" color={colors.primary} />
+                    <ZText type="R10" color={colors.primary} style={{ marginLeft: 4 }}>
+                      {strings.translating}
+                    </ZText>
+                  </View>
+                )}
+              </View>
+              <ZInput
+                _value={detectLanguage(formData.name) === 'ar'
+                  ? formData.nameEnglish
+                  : formData.nameArabic}
+                toGetTextFieldValue={(text) => handleTranslatedNameChange(
+                  text,
+                  detectLanguage(formData.name) !== 'ar'
+                )}
+                placeHolder={strings.translatedName || 'Translated name'}
+                inputContainerStyle={localStyles.translatedInput}
+              />
+              {!isTranslatingName && (formData.nameArabic || formData.nameEnglish) && (
+                <ZText type="R10" color={colors.grayScale6} style={localStyles.translationHint}>
+                  {strings.autoTranslated}
+                </ZText>
+              )}
+            </View>
+          )}
+
+          {/* Primary Description Input */}
           <ZInput
             label={strings.dishDescription}
             _value={formData.description}
-            toGetTextFieldValue={text => updateFormData('description', text)}
+            toGetTextFieldValue={handleDescriptionChange}
             placeHolder={strings.describeDish}
             multiline
             numberOfLines={3}
             _errorText={errors.description}
           />
+
+          {/* Translated Description (Auto-generated, Editable) */}
+          {formData.description && formData.description.length >= 5 && (
+            <View style={localStyles.translationContainer}>
+              <View style={localStyles.translationHeader}>
+                <ZText type="M12" color={colors.grayScale7}>
+                  {detectLanguage(formData.description) === 'ar'
+                    ? (strings.englishTranslation || 'English Translation')
+                    : (strings.arabicTranslation || 'Arabic Translation')}
+                </ZText>
+                {isTranslatingDesc && (
+                  <View style={localStyles.translatingBadge}>
+                    <ActivityIndicator size="small" color={colors.primary} />
+                    <ZText type="R10" color={colors.primary} style={{ marginLeft: 4 }}>
+                      {strings.translating}
+                    </ZText>
+                  </View>
+                )}
+              </View>
+              <ZInput
+                _value={detectLanguage(formData.description) === 'ar'
+                  ? formData.descriptionEnglish
+                  : formData.descriptionArabic}
+                toGetTextFieldValue={(text) => handleTranslatedDescChange(
+                  text,
+                  detectLanguage(formData.description) !== 'ar'
+                )}
+                placeHolder={strings.translatedDescription || 'Translated description'}
+                multiline
+                numberOfLines={2}
+                inputContainerStyle={localStyles.translatedInput}
+              />
+              {!isTranslatingDesc && (formData.descriptionArabic || formData.descriptionEnglish) && (
+                <ZText type="R10" color={colors.grayScale6} style={localStyles.translationHint}>
+                  {strings.autoTranslated}
+                </ZText>
+              )}
+            </View>
+          )}
 
           <ZInput
             label={strings.priceEGP}
@@ -417,8 +658,8 @@ const AddEditDishModal = ({
           <PickerButton
             label={strings.category}
             value={(formData.categories && formData.categories.length > 0)
-              ? formData.categories.join(', ')
-              : formData.category}
+              ? formData.categories.map(translateCategoryName).join(', ')
+              : translateCategoryName(formData.category)}
             error={errors.category}
             colors={colors}
             onPress={() => setShowCategoryModal(true)}
@@ -682,6 +923,33 @@ const localStyles = StyleSheet.create({
   },
   loadingText: {
     marginTop: moderateScale(16),
+  },
+  // Translation UI Styles
+  translationContainer: {
+    marginTop: moderateScale(-8),
+    marginBottom: moderateScale(8),
+    paddingLeft: moderateScale(12),
+    borderLeftWidth: 2,
+    borderLeftColor: '#E0E0E0',
+  },
+  translationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: moderateScale(4),
+  },
+  translatingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  translatedInput: {
+    backgroundColor: 'rgba(0, 0, 0, 0.02)',
+    borderStyle: 'dashed',
+  },
+  translationHint: {
+    marginTop: moderateScale(2),
+    marginLeft: moderateScale(4),
+    fontStyle: 'italic',
   },
 });
 

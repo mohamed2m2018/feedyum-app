@@ -78,6 +78,7 @@ export default {
   search: 'Search',
   yourDownloadEmptyDesc: "Looks like you haven't downloaded anime at all",
   cancel: 'Cancel',
+  done: 'Done',
   delete: 'Delete',
   editProfile: 'Edit Profile and Branches',
   yourBranches: 'Your Branches',
@@ -416,6 +417,27 @@ export default {
   noo: 'User',
   chefOrResutaurantMessage:
     'Kitchens/Restaurants can share more dish info and receive user inquiries through whatsapp or custom links.',
+
+  // User Type Selection Modal
+  userTypeSelectionTitle: 'Choose Your Account Type',
+  userTypeSelectionSubtitle: 'This will determine your experience in FeedYum',
+  foodLoverTitle: 'Food Lover',
+  foodLoverSubtitle: 'I want to discover and order food',
+  foodLoverFeature1: 'Discover amazing dishes nearby',
+  foodLoverFeature2: 'Order from home kitchens & restaurants',
+  foodLoverFeature3: 'Earn money from reviews & recommendations',
+  foodLoverFeature4: 'Save your favorite dishes',
+  chefKitchenTitle: 'Kitchen / Restaurant',
+  chefKitchenSubtitle: 'I want to sell my food',
+  chefKitchenFeature1: 'Create and manage your menu',
+  chefKitchenFeature2: 'Receive and track customer orders',
+  chefKitchenFeature3: 'Build your food brand',
+  chefKitchenFeature4: 'Connect directly with customers',
+  importantNotice: 'Important Notice',
+  accountTypeWarning: 'Your account type affects your entire app experience. Choose carefully!',
+  continueAs: 'Continue as',
+  selectAccountType: 'Please select an account type to continue',
+
   optional: '(optional)',
   switchTo: 'Switch to ',
   account: 'account',
@@ -520,7 +542,7 @@ export default {
 
   // Chef Dashboard & Management
   manageYourMenu: 'Manage Your Menu',
-  addEditRemoveDishes: 'Add, edit, or remove dishes from your menu',
+  addEditRemoveDishes: 'View, add, edit, or remove dishes',
   trackOrders: 'Track Orders',
   monitorUpdateOrderStatus: 'Monitor and update order status',
   performanceMetrics: 'Performance Metrics',
@@ -797,6 +819,7 @@ export default {
   completedOrders: 'Completed Orders',
   addDish: 'Add Dish',
   addNewDish: 'Add New Dish',
+  manageMenu: 'Manage Menu',
   editDish: 'Edit Dish',
   viewOrders: 'View Orders',
   customerChats: 'Customer Chats',
@@ -899,6 +922,21 @@ export default {
   completeOrder: 'Complete Order',
   promocodeCreatedSuccessfully: 'Promocode created successfully',
   promocodeDeletedSuccessfully: 'Promocode deleted successfully',
+
+  // Recent Activity Messages
+  activityNewOrderFrom: 'New order from {0}',
+  activityOrderAccepted: 'Order #{0} accepted',
+  activityOrderPreparing: 'Order #{0} is being prepared',
+  activityOrderReady: 'Order #{0} ready for pickup',
+  activityOrderCompleted: 'Order #{0} completed',
+  activityOrderCancelled: 'Order #{0} cancelled',
+  activityOrderFrom: 'Order from {0}',
+  justNow: 'Just now',
+  minAgo: '{0} min ago',
+  hourAgo: '{0} hour ago',
+  hoursAgo: '{0} hours ago',
+  dayAgo: '{0} day ago',
+  daysAgo: '{0} days ago',
 
   // Miscellaneous
   postSound: 'Post Sound',
@@ -1519,5 +1557,29 @@ export default {
   viewKitchen: 'View Kitchen',
   dishes: 'dishes',
   trySearching: 'Try searching:',
+
+  // Translation & Bilingual Support
+  translating: 'Translating...',
+  autoTranslated: 'Auto-translated - you can edit',
+  translationFailed: 'Translation failed - enter manually',
+  nameInArabic: 'Name (Arabic)',
+  nameInEnglish: 'Name (English)',
+  descriptionInArabic: 'Description (Arabic)',
+  descriptionInEnglish: 'Description (English)',
+  enterNameInYourLanguage: 'Enter dish name in your language',
+  translatedName: 'Translated name',
+  translatedDescription: 'Translated description',
+  editTranslation: 'Edit translation if needed',
+  sectionNameArabic: 'Section name (Arabic)',
+  sectionNameEnglish: 'Section name (English)',
+  englishTranslation: 'English Translation',
+  arabicTranslation: 'Arabic Translation',
+
+  // Featured Reels & Reviews
+  featuredReels: 'Featured Reels',
+  seeMore: 'See More',
+  featuredReviews: 'Featured Reviews',
+  viewAllReviews: 'View All Reviews',
+  noReelsYet: 'No reels yet',
 
 };

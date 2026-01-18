@@ -180,6 +180,7 @@ export default function TabBarNavigation({ route, navigation }) {
         }}
         freezeOnBlur={true}
         initialRouteName={initialTab}>
+        {/* Dashboard/Discover Tab - always visible */}
         <Tab.Screen
           name={TabNav.Discover}
           component={DiscoverTabComponent}
@@ -197,40 +198,64 @@ export default function TabBarNavigation({ route, navigation }) {
             ),
           }}
         />
-        <Tab.Screen
-          name={TabNav.FollowingTab}
-          component={TabRoute.Following}
-          options={{
-            tabBarIcon: ({ focused }) => (
-              <TabText
-                text={strings.watch}
-                focused={focused}
-                icon={focused ? <Home_Dark /> : <Home_Light />}
-              />
-            ),
-          }}
-          listeners={{
-            tabPress: e => {
-              // Additional work on tab press for FollowingTab
-              // console.log('Following tab pressed');
-            },
-          }}
-        />
 
-        <Tab.Screen
-          name={TabNav.Search}
-          component={TabRoute.Search}
-          options={{
-            tabBarIcon: ({ focused }) => (
-              <TabText
-                text={strings.search}
-                focused={focused}
-                icon={focused ? <Search_Dark /> : <Search_Light />}
-              />
-            ),
-          }}
-        />
+        {/* Orders Tab - shown second for chefs */}
+        {isChef && (
+          <Tab.Screen
+            name={TabNav.Orders}
+            component={OrdersTabComponent}
+            options={{
+              tabBarIcon: ({ focused }) => (
+                <TabText
+                  text={strings.orders}
+                  focused={focused}
+                  icon={focused ? <Orders_Dark /> : <Orders_Light />}
+                />
+              ),
+            }}
+          />
+        )}
 
+        {/* Watch/Following Tab - only for regular users */}
+        {!isChef && (
+          <Tab.Screen
+            name={TabNav.FollowingTab}
+            component={TabRoute.Following}
+            options={{
+              tabBarIcon: ({ focused }) => (
+                <TabText
+                  text={strings.watch}
+                  focused={focused}
+                  icon={focused ? <Home_Dark /> : <Home_Light />}
+                />
+              ),
+            }}
+            listeners={{
+              tabPress: e => {
+                // Additional work on tab press for FollowingTab
+              },
+            }}
+          />
+        )}
+
+        {/* Search Tab - only for regular users */}
+        {!isChef && (
+          <Tab.Screen
+            name={TabNav.Search}
+            component={TabRoute.Search}
+            options={{
+              tabBarIcon: ({ focused }) => (
+                <TabText
+                  text={strings.search}
+                  focused={focused}
+                  icon={focused ? <Search_Dark /> : <Search_Light />}
+                />
+              ),
+            }}
+          />
+        )}
+
+        {/* Add Post Tab - always visible */}
         <Tab.Screen
           name={'AddPost'}
           component={AddPost}
@@ -271,19 +296,24 @@ export default function TabBarNavigation({ route, navigation }) {
           }}
         />
 
-        <Tab.Screen
-          name={TabNav.Orders}
-          component={OrdersTabComponent}
-          options={{
-            tabBarIcon: ({ focused }) => (
-              <TabText
-                text={strings.orders}
-                focused={focused}
-                icon={focused ? <Orders_Dark /> : <Orders_Light />}
-              />
-            ),
-          }}
-        />
+        {/* Orders Tab - shown after plus for regular users */}
+        {!isChef && (
+          <Tab.Screen
+            name={TabNav.Orders}
+            component={OrdersTabComponent}
+            options={{
+              tabBarIcon: ({ focused }) => (
+                <TabText
+                  text={strings.orders}
+                  focused={focused}
+                  icon={focused ? <Orders_Dark /> : <Orders_Light />}
+                />
+              ),
+            }}
+          />
+        )}
+
+        {/* Chat Tab - always visible */}
         <Tab.Screen
           name={TabNav.Chat}
           component={TabRoute.Chat}
@@ -297,6 +327,8 @@ export default function TabBarNavigation({ route, navigation }) {
             ),
           }}
         />
+
+        {/* Profile Tab - always visible */}
         <Tab.Screen
           name={TabNav.Profile}
           component={TabRoute.Profile}

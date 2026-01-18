@@ -31,10 +31,10 @@ import axios from 'axios';
 import request from '../../api/request';
 import { useQueryClient } from 'react-query';
 import { OneSignal } from 'react-native-onesignal';
-import { ALERT_TYPE, Dialog } from 'react-native-alert-notification';
 import { showErrorToast } from '../../utils/toast';
 import { useStorage } from '../../utils/useStorage';
 import AppInitializer from '../../services/AppInitializer';
+import UserTypeSelectionModal from '../../components/modals/UserTypeSelectionModal';
 
 GoogleSignin.configure({
   // Add your web client ID here
@@ -72,28 +72,33 @@ const Register = ({ navigation, route }) => {
   const colors = useSelector(state => state.theme.theme);
   const queryClient = useQueryClient();
   const [isLoading, setisLoading] = useState(false);
+  const [showUserTypeModal, setShowUserTypeModal] = useState(false);
+  const [pendingAction, setPendingAction] = useState(null); // 'google' or 'password'
 
   useEffect(() => {
     if (route.params?.isGoogleSignInFailed) {
-      Dialog.show({
-        title: strings.chefOrResutaurant,
-        buttonOne: strings.yes,
-        buttonTwo: strings.noo,
-        textBody: strings.chefOrResutaurantMessage,
-        type: ALERT_TYPE.WARNING,
-        onPressButtonOne: () => {
-          Dialog.hide();
-          setIsChef(true);
-          onPressSignUpWithGoogle();
-        },
-        onPressButtonTwo: () => {
-          Dialog.hide();
-          setIsChef(false);
-          onPressSignUpWithGoogle();
-        },
-      });
+      setPendingAction('google');
+      setShowUserTypeModal(true);
     }
   }, [route]);
+
+  // Handle user type selection from modal
+  const handleUserTypeSelect = (isChefSelected) => {
+    setShowUserTypeModal(false);
+    setIsChef(isChefSelected);
+
+    if (pendingAction === 'google') {
+      onPressSignUpWithGoogle(isChefSelected);
+    } else if (pendingAction === 'password') {
+      navigation.navigate(StackNav.SetUpProfile, {
+        title: strings.fillYourProfile,
+        email,
+        password,
+        type: isChefSelected ? 'chef' : 'user',
+      });
+    }
+    setPendingAction(null);
+  };
 
   const BlurredStyle = {
     backgroundColor: colors.inputBg,
@@ -220,23 +225,8 @@ const Register = ({ navigation, route }) => {
     {
       icon: <Google_Icon />,
       onPress: () => {
-        Dialog.show({
-          title: strings.chefOrResutaurant,
-          buttonOne: strings.yes,
-          buttonTwo: strings.noo,
-          textBody: strings.chefOrResutaurantMessage,
-          type: ALERT_TYPE.WARNING,
-          onPressButtonOne: () => {
-            Dialog.hide();
-            setIsChef(true);
-            onPressSignUpWithGoogle(true);
-          },
-          onPressButtonTwo: () => {
-            Dialog.hide();
-            setIsChef(false);
-            onPressSignUpWithGoogle(false);
-          },
-        });
+        setPendingAction('google');
+        setShowUserTypeModal(true);
       },
     },
   ];
@@ -285,31 +275,8 @@ const Register = ({ navigation, route }) => {
   };
 
   const onPressSignWithPassword = () => {
-    Dialog.show({
-      title: strings.chefOrResutaurant,
-      buttonOne: strings.yes,
-      buttonTwo: strings.noo,
-      textBody: strings.chefOrResutaurantMessage,
-      type: ALERT_TYPE.WARNING,
-      onPressButtonOne: () => {
-        Dialog.hide();
-        navigation.navigate(StackNav.SetUpProfile, {
-          title: strings.fillYourProfile,
-          email,
-          password,
-          type: 'chef',
-        });
-      },
-      onPressButtonTwo: () => {
-        Dialog.hide();
-        navigation.navigate(StackNav.SetUpProfile, {
-          title: strings.fillYourProfile,
-          email,
-          password,
-          type: 'user',
-        });
-      },
-    });
+    setPendingAction('password');
+    setShowUserTypeModal(true);
   };
 
   const onPressPasswordEyeIcon = () => {
@@ -462,6 +429,16 @@ const Register = ({ navigation, route }) => {
           </TouchableOpacity>
         </View>
       </ZKeyBoardAvoidWrapper>
+
+      {/* User Type Selection Modal */}
+      <UserTypeSelectionModal
+        visible={showUserTypeModal}
+        onSelect={handleUserTypeSelect}
+        onClose={() => {
+          setShowUserTypeModal(false);
+          setPendingAction(null);
+        }}
+      />
     </ZSafeAreaView>
   );
 };

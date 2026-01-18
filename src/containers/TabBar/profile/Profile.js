@@ -71,21 +71,7 @@ export default function Profile({ navigation }) {
   const { updateCurrentScreen } = useScreen();
 
   const [page, setpage] = useState(1);
-  const [reviewsPage, setReviewsPage] = useState(1);
-  // Regular users only have reviews, chefs only have posts
-  const [selectedTab, setSelectedTab] = useState('posts');
   const [refreshing, setRefreshing] = useState(false);
-  const [hasCheckedEmptyPosts, setHasCheckedEmptyPosts] = useState(false);
-  const [showReviewsFirst, setShowReviewsFirst] = useState(false);
-
-  // Set correct default tab based on user type
-  useEffect(() => {
-    if (user?.type === 'chef') {
-      setSelectedTab('posts');
-    } else if (user) {
-      setSelectedTab('reviews');
-    }
-  }, [user?.type]);
 
   const [isLoadingSomething, setisLoadingSomething] = useState();
 
@@ -111,24 +97,10 @@ export default function Profile({ navigation }) {
       params: {
         limit: 10,
         page,
-        excludeReviews: true, // Exclude review posts from regular posts
-      },
-    });
-
-  const fetchReviewPosts = () =>
-    // If user is a chef, fetch reviews RECEIVED (reviews of their dishes/menu)
-    // If not a chef, fetch reviews AUTHORED (reviews they wrote)
-    request.get(`/story/author?id=${user?._id}`, {
-      params: {
-        limit: 10,
-        page: reviewsPage,
-        reviewsOnly: user?.type !== 'chef', // Get authored reviews for regular users
-        receivedReviews: user?.type === 'chef', // Get received reviews for chefs
       },
     });
 
   const [storiesData, setstoriesData] = useState([]);
-  const [reviewsData, setReviewsData] = useState([]);
 
   const {
     data: queryData,
@@ -138,7 +110,7 @@ export default function Profile({ navigation }) {
   } = useQuery({
     queryKey: ['profile-stories', page],
     queryFn: () => fetchPosts(page),
-    enabled: !!data?.data?.user?._id && selectedTab === 'posts',
+    enabled: !!data?.data?.user?._id,
     onSuccess: res => {
       if (res?.data?.currentPage === '1') {
         setstoriesData(res?.data?.stories);
@@ -152,43 +124,6 @@ export default function Profile({ navigation }) {
     },
   });
 
-  const {
-    data: reviewQueryData,
-    isLoading: reviewsLoading,
-    isFetching: reviewsFetching,
-    refetch: refetchReviews,
-  } = useQuery({
-    queryKey: ['profile-reviews', reviewsPage],
-    queryFn: () => fetchReviewPosts(reviewsPage),
-    enabled: !!data?.data?.user?._id && selectedTab === 'reviews',
-    onSuccess: res => {
-      if (res?.data?.currentPage === '1') {
-        setReviewsData(res?.data?.stories);
-        setReviewsPage(1);
-      } else {
-        setReviewsData([...reviewsData, ...res?.data?.stories]);
-      }
-    },
-    onError: err => {
-      showErrorToast(strings.error, err[Object.keys(err)?.[0]]);
-    },
-  });
-
-  // Auto-switch to reviews tab if posts are empty but reviews exist
-  useEffect(() => {
-    // Only check once after posts data loads
-    if (!hasCheckedEmptyPosts && queryData?.data && !isLoading) {
-      setHasCheckedEmptyPosts(true);
-
-      // If no posts exist (check both stories array and total count), switch to reviews tab
-      const postsEmpty = (!queryData?.data?.stories || queryData?.data?.stories?.length === 0);
-      if (postsEmpty) {
-        setSelectedTab('reviews');
-        setShowReviewsFirst(true); // Show reviews tab first in the order
-      }
-    }
-  }, [queryData, isLoading, hasCheckedEmptyPosts]);
-
   const onDeletePost = (id) => {
     showActionDialog({
       type: ALERT_TYPE.WARNING,
@@ -201,11 +136,7 @@ export default function Profile({ navigation }) {
           setisLoadingSomething(true);
           const { data } = await request.delete(`/story/${id}`);
           if (data?.success) {
-            if (selectedTab === 'posts') {
-              refetchPosts();
-            } else {
-              refetchReviews();
-            }
+            refetchPosts();
             showSuccessToast(strings.success, strings.postDeletedSuccess);
           }
         } catch (error) {
@@ -224,7 +155,7 @@ export default function Profile({ navigation }) {
         refetch(),
         refetchFollowStats(),
         refetchViews(),
-        selectedTab === 'posts' ? refetchPosts() : refetchReviews(),
+        refetchPosts(),
       ]);
     } finally {
       setRefreshing(false);
@@ -395,103 +326,6 @@ export default function Profile({ navigation }) {
         )}
       </View>
 
-      {/* Enhanced Tab Bar - Only show for chefs (users only have reviews) */}
-      {user?.type === 'chef' && (
-        <View style={localStyles.tabBarContainer}>
-          <LinearGradient
-            colors={colors.dark ? ['#1C1C1E', '#2C2C2E'] : ['#F8F9FA', '#FFFFFF']}
-            style={[localStyles.tabBar, showReviewsFirst && { flexDirection: 'row-reverse' }]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-          >
-            <TouchableOpacity
-              style={[
-                localStyles.tab,
-                selectedTab === 'posts' && [
-                  localStyles.activeTab,
-                  { backgroundColor: colors.primary }
-                ]
-              ]}
-              onPress={() => setSelectedTab('posts')}
-              activeOpacity={0.8}
-            >
-              {selectedTab === 'posts' && (
-                <LinearGradient
-                  colors={[colors.primary, colors.primary + '90']}
-                  style={localStyles.activeTabGradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                />
-              )}
-              <Ionicons
-                name={selectedTab === 'posts' ? 'grid' : 'grid-outline'}
-                size={moderateScale(18)}
-                color={selectedTab === 'posts' ? colors.white : colors.textColor}
-                style={localStyles.tabIcon}
-              />
-              <ZText
-                type="B14"
-                color={selectedTab === 'posts' ? colors.white : colors.textColor}
-                style={[localStyles.tabText, {
-                  position: 'relative',
-                  zIndex: 10,
-                  backgroundColor: 'transparent',
-                }]}
-                numberOfLines={1}
-                ellipsizeMode="tail"
-              >
-                {strings.posts}
-              </ZText>
-              {selectedTab === 'posts' && (
-                <View style={[localStyles.tabIndicator, { backgroundColor: colors.white }]} />
-              )}
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                localStyles.tab,
-                selectedTab === 'reviews' && [
-                  localStyles.activeTab,
-                  { backgroundColor: colors.primary }
-                ]
-              ]}
-              onPress={() => setSelectedTab('reviews')}
-              activeOpacity={0.8}
-            >
-              {selectedTab === 'reviews' && (
-                <LinearGradient
-                  colors={[colors.primary, colors.primary + '90']}
-                  style={localStyles.activeTabGradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                />
-              )}
-              <Ionicons
-                name={selectedTab === 'reviews' ? 'star' : 'star-outline'}
-                size={moderateScale(18)}
-                color={selectedTab === 'reviews' ? colors.white : colors.textColor}
-                style={localStyles.tabIcon}
-              />
-              <ZText
-                type="B14"
-                color={selectedTab === 'reviews' ? colors.white : colors.textColor}
-                style={[localStyles.tabText, {
-                  position: 'relative',
-                  zIndex: 10,
-                  backgroundColor: 'transparent',
-                }]}
-                numberOfLines={1}
-                ellipsizeMode="tail"
-              >
-                {strings.reviews}
-              </ZText>
-              {selectedTab === 'reviews' && (
-                <View style={[localStyles.tabIndicator, { backgroundColor: colors.white }]} />
-              )}
-            </TouchableOpacity>
-          </LinearGradient>
-        </View>
-      )}
     </View>
   );
 
@@ -504,11 +338,6 @@ export default function Profile({ navigation }) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isFocused]);
-
-  const currentData = selectedTab === 'posts' ? storiesData : reviewsData;
-  const currentLoading = selectedTab === 'posts' ? isLoading : reviewsLoading;
-  const currentFetching = selectedTab === 'posts' ? isFetching : reviewsFetching;
-  const currentQueryData = selectedTab === 'posts' ? queryData : reviewQueryData;
 
   const renderPostItem = ({ item, index }) => (
     <View style={localStyles.gridItem}>
@@ -529,7 +358,7 @@ export default function Profile({ navigation }) {
   const emptyComponent = () => (
     <View style={localStyles.emptyContainer}>
       <Ionicons
-        name={selectedTab === 'posts' ? 'grid-outline' : 'star-outline'}
+        name="grid-outline"
         size={moderateScale(64)}
         color={colors.grayScale4}
       />
@@ -537,28 +366,20 @@ export default function Profile({ navigation }) {
         style={localStyles.emptyTitle}
         type={'B18'}
         color={colors.textColor}>
-        {selectedTab === 'posts' ? strings.noDishesYetCurrentProfile : strings.noReviewPostsYet}
+        {strings.noDishesYetCurrentProfile}
       </ZText>
       <ZText
         style={localStyles.emptySubtitle}
         type={'M14'}
         color={colors.grayScale5}>
-        {selectedTab === 'posts'
-          ? strings.startSharingCulinaryCreations
-          : strings.shareYourFoodExperiences}
+        {strings.startSharingCulinaryCreations}
       </ZText>
     </View>
   );
 
   const onEndReached = () => {
-    if (selectedTab === 'posts') {
-      if (queryData?.data?.totalPages > page) {
-        setpage(old => old + 1);
-      }
-    } else {
-      if (reviewQueryData?.data?.totalPages > reviewsPage) {
-        setReviewsPage(old => old + 1);
-      }
+    if (queryData?.data?.totalPages > page) {
+      setpage(old => old + 1);
     }
   };
 
@@ -571,12 +392,11 @@ export default function Profile({ navigation }) {
           )}
 
           <FlatList
-            data={currentData}
+            data={storiesData}
             renderItem={renderPostItem}
             numColumns={3}
-            key={selectedTab} // Force re-render when tab changes
             ListHeaderComponent={ProfileHeader}
-            ListEmptyComponent={currentLoading || !data?.data?.user?._id ? (
+            ListEmptyComponent={isLoading || !data?.data?.user?._id ? (
               <ZLoader top={44} left={-10} />
             ) : emptyComponent}
             showsVerticalScrollIndicator={false}
@@ -586,7 +406,7 @@ export default function Profile({ navigation }) {
             onEndReached={onEndReached}
             onEndReachedThreshold={0.9}
             ListFooterComponent={
-              currentFetching && !currentLoading ? (
+              isFetching && !isLoading ? (
                 <ActivityIndicator
                   size={'large'}
                   color={colors.primary}
@@ -594,7 +414,7 @@ export default function Profile({ navigation }) {
                 />
               ) : null
             }
-            keyExtractor={(item, index) => `${selectedTab}-${item._id || index}`}
+            keyExtractor={(item, index) => `post-${item._id || index}`}
             contentContainerStyle={localStyles.flatListContent}
             columnWrapperStyle={localStyles.columnWrapper}
           />

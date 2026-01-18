@@ -80,7 +80,7 @@ const ImageZoomModal = ({ visible, imageUri, onClose }) => {
           }
 
           const scaleValue = distance / initialDistanceRef.current;
-          const newScale = Math.max(0.8, Math.min(scaleValue, 4));
+          const newScale = Math.max(0.8, Math.min(scaleValue, 2));
           scale.setValue(newScale);
 
           // Update zoom state
@@ -174,7 +174,7 @@ const ImageZoomModal = ({ visible, imageUri, onClose }) => {
   };
 
   const handleDoubleTap = (evt) => {
-    const targetScale = lastScale > 1.5 ? 1 : 2.5;
+    const targetScale = lastScale > 1.5 ? 1 : 1.8;
 
     let targetX = 0;
     let targetY = 0;
@@ -255,7 +255,11 @@ const ImageZoomModal = ({ visible, imageUri, onClose }) => {
                 },
               ]}>
               <FastImage
-                source={{ uri: imageUri }}
+                source={{
+                  uri: imageUri,
+                  priority: FastImage.priority.high,
+                  cache: FastImage.cacheControl.immutable,
+                }}
                 style={styles.image}
                 resizeMode={FastImage.resizeMode.contain}
                 onLoadStart={() => setImageLoading(true)}

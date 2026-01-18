@@ -150,9 +150,15 @@ const ReelComponent = ({
   const shareSheetRef = useRef(null);
   const [shareItem, setShareItem] = useState(null);
 
-  const onPressProfile = (userName, userImage, id) => {
+  const onPressProfile = (userName, userImage, id, authorType) => {
     if (id === data?.data?.user?._id) {
       navigation.navigate(TabNav.Profile);
+    } else if (authorType === 'chef') {
+      // Navigate to ChefMenu for chef profiles
+      navigation.navigate(StackNav.ChefMenu, {
+        chefId: id,
+        chefName: userName,
+      });
     } else {
       navigation.navigate(StackNav.ProfileDetail, {
         userName: userName,
@@ -269,7 +275,7 @@ const ReelComponent = ({
   const handlePressProfile = () => {
     // Navigate to author's profile, not the current user's profile unless they match
     // Correctly using author._id from the item
-    onPressProfile(item?.channelName, item?.avatarUri, item?.author?._id);
+    onPressProfile(item?.channelName, item?.avatarUri, item?.author?._id, item?.author?.type);
   };
 
   const imageStyles = useMemo(
@@ -597,6 +603,7 @@ const ReelComponent = ({
                             item?.channelName,
                             item?.avatarUri,
                             item?.author?._id,
+                            item?.author?.type,
                           )
                         }>
                         <View style={localStyles.userNameRow}>

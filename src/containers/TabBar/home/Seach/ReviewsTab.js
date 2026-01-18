@@ -110,11 +110,19 @@ export default function ReviewsTab({ searchQuery = '', useSemanticSearch = true,
 
     const handleAuthorPress = useCallback(author => {
         Keyboard.dismiss();
-        navigation.navigate(StackNav.ProfileDetail, {
-            userName: author?.fullName || author?.username,
-            userImage: author?.avatar,
-            id: author?._id,
-        });
+        // Navigate to ChefMenu for chef profiles, ProfileDetail for regular users
+        if (author?.type === 'chef') {
+            navigation.navigate(StackNav.ChefMenu, {
+                chefId: author?._id,
+                chefName: author?.fullName || author?.username,
+            });
+        } else {
+            navigation.navigate(StackNav.ProfileDetail, {
+                userName: author?.fullName || author?.username,
+                userImage: author?.avatar,
+                id: author?._id,
+            });
+        }
     }, [navigation]);
 
     // Premium review card

@@ -535,17 +535,6 @@ export default function MenuManagement() {
       <ZHeader
         title={strings.menuManagement}
         isHideBack={fromTabsParam || isFromTabBar || !navigation.canGoBack()}
-        rightIcon={
-          <TouchableOpacity
-            onPress={handleAddDish}
-            style={localStyles.addButton}>
-            <Ionicons
-              name="add-circle"
-              size={moderateScale(28)}
-              color={colors.primary}
-            />
-          </TouchableOpacity>
-        }
       />
 
       <View style={localStyles.container}>
@@ -675,6 +664,21 @@ export default function MenuManagement() {
         onDelete={handleDeleteDish}
         onToggleVisibility={handleToggleVisibility}
       />
+
+      {/* Floating Action Button */}
+      <TouchableOpacity
+        style={[localStyles.fab, { backgroundColor: colors.primary }]}
+        onPress={handleAddDish}
+        activeOpacity={0.85}>
+        <Ionicons
+          name="add"
+          size={moderateScale(24)}
+          color={colors.white}
+        />
+        <ZText type="B14" color={colors.white} style={localStyles.fabText}>
+          {strings.addDish}
+        </ZText>
+      </TouchableOpacity>
     </ZSafeAreaView>
   );
 }
@@ -683,6 +687,24 @@ const localStyles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: moderateScale(20),
+  },
+  fab: {
+    position: 'absolute',
+    bottom: moderateScale(24),
+    right: moderateScale(20),
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: moderateScale(14),
+    paddingHorizontal: moderateScale(20),
+    borderRadius: moderateScale(28),
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  fabText: {
+    marginLeft: moderateScale(8),
   },
   addButton: {
     padding: moderateScale(4),
@@ -737,6 +759,7 @@ const localStyles = StyleSheet.create({
   },
   dishItemContainer: {
     flex: 1,
+    maxWidth: '50%',
     marginHorizontal: moderateScale(4),
   },
   loadingContainer: {

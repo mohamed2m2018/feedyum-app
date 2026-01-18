@@ -45,6 +45,10 @@ export default function ReelsComponentOne() {
   const locationSheetRef = useRef('');
   const navigation = useNavigation();
 
+  // Custom title support for Reviews view
+  const customTitle = route.params?.customTitle;
+  const reviewsOnly = route.params?.reviewsOnly;
+
   const [userProfile, setUserProfile] = useState(route.params?.profile);
   const [activeVideoIndex, setActiveVideoIndex] = useState(0);
 
@@ -70,10 +74,14 @@ export default function ReelsComponentOne() {
   const [selectedGov, setselectedGov] = useState('');
   const [isLocationOpen, setIsLocationOpen] = useState(false);
 
-  const fetchReels = page =>
-    request.get(
-      `/story/author?limit=15&page=${page}&id=${userProfile?._id}&&lat=${location?.latitude}&long=${location?.longitude}`,
-    );
+  const fetchReels = page => {
+    let url = `/story/author?limit=15&page=${page}&id=${userProfile?._id}&&lat=${location?.latitude}&long=${location?.longitude}`;
+    // Add reviewsOnly filter if specified
+    if (reviewsOnly) {
+      url += `&reviewsOnly=true`;
+    }
+    return request.get(url);
+  };
 
   const {
     hasNextPage,
@@ -249,7 +257,7 @@ export default function ReelsComponentOne() {
       <View style={{ height: '100%' }}>
         <View style={{ marginTop: 5 }}>
           <ZHeader
-            title={route?.params?.profile?.fullName}
+            title={customTitle || route?.params?.profile?.fullName}
             rightIcon={
               <TouchableOpacity onPress={onPressSearch}>
                 <Ionicons
