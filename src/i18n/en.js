@@ -65,6 +65,7 @@ export default {
     'Your account is ready to use. You will be redirected to the Home page in a few seconds..',
   forgotPasswordDesc:
     'Select which contact details should we use to reset your password',
+  forgotPasswordEmailDesc: 'Enter your email address and we will send you a link to reset your password.',
   createNewPassword: 'Create New Password',
   createYourNewPassword: 'Create Your New Password',
   viaSms: 'via SMS',
@@ -75,6 +76,20 @@ export default {
   resendCode: 'Resend code',
   second: 'second',
   confirmNewPassword: 'Confirm New Password',
+
+  // Password Reset
+  sendResetLink: 'Send Reset Link',
+  resetLinkSent: 'Reset Link Sent!',
+  resetLinkSentDesc: 'If an account exists with this email, you will receive a password reset link shortly.',
+  checkYourEmail: 'Check your email',
+  invalidResetToken: 'Invalid Reset Link',
+  invalidResetTokenDesc: 'This reset link is invalid or has expired. Please request a new one.',
+  requestNewLink: 'Request New Link',
+  backToLogin: 'Back to Login',
+  resetPassword: 'Reset Password',
+  passwordResetSuccess: 'Password Reset Successfully',
+  passwordResetSuccessDesc: 'You can now login with your new password.',
+
   search: 'Search',
   yourDownloadEmptyDesc: "Looks like you haven't downloaded anime at all",
   cancel: 'Cancel',

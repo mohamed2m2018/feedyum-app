@@ -1,76 +1,100 @@
-import {ScrollView, StyleSheet, TouchableOpacity, View} from 'react-native';
-import React, {memo, useState} from 'react';
+import { ScrollView, StyleSheet, View, ActivityIndicator } from 'react-native';
+import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+
+// Local Imports
 import ZSafeAreaView from '../../components/common/ZSafeAreaView';
 import ZHeader from '../../components/common/ZHeader';
 import strings from '../../i18n/strings';
-import {styles} from '../../themes';
+import { styles } from '../../themes';
 import ZText from '../../components/common/ZText';
-import {useSelector} from 'react-redux';
 import {
-  Email_Icon,
   ForgotPassword_Dark,
   ForgotPassword_Light,
-  Sms_Icon,
 } from '../../assets/svgs';
-import {getHeight, moderateScale} from '../../common/constants';
-import {StackNav} from '../../navigation/NavigationKeys';
+import { getHeight, moderateScale } from '../../common/constants';
 import ZButton from '../../components/common/ZButton';
+import ZInput from '../../components/common/ZInput';
+import { validateEmail } from '../../utils/validators';
+import request from '../../api/request';
+import { showSuccessToast, showErrorToast } from '../../utils/toast';
 
-const ForgotPassword = ({navigation}) => {
+const ForgotPassword = ({ navigation }) => {
   const colors = useSelector(state => state.theme.theme);
-  const [isSelected, setIsSelected] = useState('sms');
 
-  const ModeData = [
-    {
-      id: 1,
-      title: strings.viaSms,
-      icon: <Sms_Icon />,
-      msgId: '+1 233 456 78 90',
-      onPress: () => onPressSms(),
-    },
-    {
-      id: 2,
-      title: strings.viaEmail,
-      icon: <Email_Icon />,
-      msgId: 'qweew********1233@gmai.com',
-      onPress: () => onPressEmail(),
-    },
-  ];
+  const [email, setEmail] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [emailInputStyle, setEmailInputStyle] = useState({});
+  const [emailIcon, setEmailIcon] = useState(colors.grayScale4);
 
-  const onPressSms = () => {
-    setIsSelected(isSelected === 'sms' ? '' : 'sms');
+  const BlurredStyle = {
+    backgroundColor: colors.inputBg,
+    borderColor: colors.bColor,
+  };
+  const FocusedStyle = {
+    backgroundColor: colors.primaryTransparent,
+    borderColor: colors.primary,
   };
 
-  const onPressEmail = () => {
-    setIsSelected(isSelected === 'email' ? '' : 'email');
+  const onChangedEmail = val => {
+    const { msg } = validateEmail(val.trim());
+    setEmail(val.trim());
+    setEmailError(msg);
   };
 
-  const onPressPinContinue = () =>
-    navigation.navigate(StackNav.ForgotPasswordOtp);
+  const onFocusEmail = () => {
+    setEmailInputStyle(FocusedStyle);
+    setEmailIcon(colors.primary);
+  };
 
-  const RenderMode = memo(({title, icon, msgId, onPress, isActive}) => {
-    return (
-      <TouchableOpacity
-        onPress={onPress}
-        activeOpacity={0.8}
-        style={[
-          localStyles.mainContainer,
-          {
-            borderColor: isActive ? colors.primary : colors.bColor,
-          },
-        ]}>
-        {icon}
-        <View style={[styles.ml20, styles.flex]}>
-          <ZText type={'m14'} color={colors.grayScale6}>
-            {title}
-          </ZText>
-          <ZText style={styles.mt10} type={'b16'}>
-            {msgId}
-          </ZText>
-        </View>
-      </TouchableOpacity>
-    );
-  });
+  const onBlurEmail = () => {
+    setEmailInputStyle(BlurredStyle);
+    setEmailIcon(colors.grayScale4);
+  };
+
+  const EmailIcon = () => (
+    <Ionicons name="mail" size={moderateScale(20)} color={emailIcon} />
+  );
+
+  const onPressSendLink = async () => {
+    // Validate email first
+    const { msg } = validateEmail(email.trim());
+    if (msg) {
+      setEmailError(msg);
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await request.post('/user/forgot-password', {
+        email: email.trim().toLowerCase(),
+      });
+
+      if (response.data?.success) {
+        setIsSuccess(true);
+        showSuccessToast(
+          strings.resetLinkSent || 'Reset Link Sent',
+          strings.checkYourEmail || 'Check your email'
+        );
+      } else {
+        // Still show success for security (don't reveal if email exists)
+        setIsSuccess(true);
+      }
+    } catch (error) {
+      console.log('[ForgotPassword] Error:', error);
+      // Still show success for security (don't reveal if email exists)
+      setIsSuccess(true);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const onPressBackToLogin = () => {
+    navigation.goBack();
+  };
 
   return (
     <ZSafeAreaView>
@@ -78,42 +102,80 @@ const ForgotPassword = ({navigation}) => {
       <ScrollView
         bounces={false}
         contentContainerStyle={localStyles.root}
-        showsVerticalScrollIndicator={false}>
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
         <View style={[styles.mv20, styles.selfCenter]}>
           {colors.dark ? (
             <ForgotPassword_Dark
               width={moderateScale(250)}
-              height={getHeight(244)}
+              height={getHeight(200)}
             />
           ) : (
             <ForgotPassword_Light
               width={moderateScale(250)}
-              height={getHeight(244)}
+              height={getHeight(200)}
             />
           )}
         </View>
-        <ZText type={'r18'}>{strings.forgotPasswordDesc}</ZText>
-        <RenderMode
-          title={strings.viaSms}
-          icon={<Sms_Icon width={moderateScale(80)} height={getHeight(80)} />}
-          msgId="+1 233 456 78 90"
-          onPress={() => onPressSms()}
-          isActive={isSelected === 'sms'}
-        />
-        <RenderMode
-          title={strings.viaEmail}
-          icon={<Email_Icon width={moderateScale(80)} height={getHeight(80)} />}
-          msgId="qweew********1233@gmai.com"
-          onPress={() => onPressEmail()}
-          isActive={isSelected === 'email'}
-        />
-        <ZButton
-          textType={'b18'}
-          color={colors.white}
-          title={strings.continue}
-          onPress={onPressPinContinue}
-          containerStyle={localStyles.continueBtn}
-        />
+
+        {!isSuccess ? (
+          <>
+            <ZText type={'r16'} style={styles.mb20}>
+              {strings.forgotPasswordEmailDesc || 'Enter your email address and we will send you a link to reset your password.'}
+            </ZText>
+
+            <ZInput
+              placeHolder={strings.email}
+              keyBoardType={'email-address'}
+              _value={email}
+              _errorText={emailError}
+              autoCapitalize={'none'}
+              insideLeftIcon={() => <EmailIcon />}
+              toGetTextFieldValue={onChangedEmail}
+              inputContainerStyle={[
+                { backgroundColor: colors.inputBg },
+                localStyles.inputContainerStyle,
+                emailInputStyle,
+              ]}
+              inputBoxStyle={[localStyles.inputBoxStyle]}
+              _onFocus={onFocusEmail}
+              onBlur={onBlurEmail}
+            />
+
+            <ZButton
+              textType={'b18'}
+              color={colors.white}
+              title={strings.sendResetLink || 'Send Reset Link'}
+              onPress={onPressSendLink}
+              containerStyle={localStyles.sendBtn}
+              isLoading={isLoading}
+              disabled={isLoading || !email.trim()}
+            />
+          </>
+        ) : (
+          <View style={localStyles.successContainer}>
+            <View style={[localStyles.successIcon, { backgroundColor: colors.primary + '20' }]}>
+              <Ionicons name="checkmark-circle" size={moderateScale(60)} color={colors.primary} />
+            </View>
+            <ZText type={'b20'} style={styles.mt20} align="center">
+              {strings.resetLinkSent || 'Reset Link Sent!'}
+            </ZText>
+            <ZText type={'r16'} style={[styles.mt10, styles.ph20]} align="center" color={colors.grayScale6}>
+              {strings.resetLinkSentDesc || 'If an account exists with this email, you will receive a password reset link shortly.'}
+            </ZText>
+            <ZText type={'r14'} style={[styles.mt20]} align="center" color={colors.grayScale5}>
+              {email}
+            </ZText>
+            <ZButton
+              textType={'b18'}
+              color={colors.white}
+              title={strings.backToLogin || 'Back to Login'}
+              onPress={onPressBackToLogin}
+              containerStyle={localStyles.sendBtn}
+            />
+          </View>
+        )}
       </ScrollView>
     </ZSafeAreaView>
   );
@@ -124,21 +186,30 @@ export default ForgotPassword;
 const localStyles = StyleSheet.create({
   root: {
     ...styles.ph20,
-    ...styles.selfCenter,
-    ...styles.flex,
+    ...styles.flexGrow1,
   },
-  mainContainer: {
-    ...styles.p15,
-    ...styles.flexRow,
-    ...styles.mt20,
-    ...styles.itemsCenter,
+  inputContainerStyle: {
+    height: getHeight(60),
+    borderRadius: moderateScale(12),
     borderWidth: moderateScale(1),
-    borderRadius: moderateScale(30),
+    ...styles.ph15,
   },
-  continueBtn: {
-    position: 'absolute',
-    bottom: moderateScale(30),
+  inputBoxStyle: {
+    ...styles.ph15,
+  },
+  sendBtn: {
+    ...styles.mt30,
     width: '100%',
-    ...styles.selfCenter,
+  },
+  successContainer: {
+    ...styles.center,
+    ...styles.flex,
+    ...styles.pv20,
+  },
+  successIcon: {
+    width: moderateScale(100),
+    height: moderateScale(100),
+    borderRadius: moderateScale(50),
+    ...styles.center,
   },
 });

@@ -69,6 +69,7 @@ export default {
     'حسابك جاهز للاستخدام. ستتم إعادة توجيهك إلى الصفحة الرئيسية في غضون ثوانٍ قليلة.',
   forgotPasswordDesc:
     'حدد معلومات الاتصال التي يجب أن نستخدمها لإعادة تعيين كلمة المرور الخاصة بك',
+  forgotPasswordEmailDesc: 'أدخل عنوان بريدك الإلكتروني وسنرسل لك رابطاً لإعادة تعيين كلمة المرور.',
   createNewPassword: 'إنشاء كلمة مرور جديدة',
   createYourNewPassword: 'إنشاء كلمة مرور جديدة',
   viaSms: 'عبر الرسائل القصيرة',
@@ -79,6 +80,20 @@ export default {
   resendCode: 'إعادة إرسال الرمز',
   second: 'ثانية',
   confirmNewPassword: 'تأكيد كلمة المرور الجديدة',
+
+  // Password Reset
+  sendResetLink: 'إرسال رابط إعادة التعيين',
+  resetLinkSent: 'تم إرسال رابط إعادة التعيين!',
+  resetLinkSentDesc: 'إذا كان هناك حساب مرتبط بهذا البريد الإلكتروني، ستتلقى رابط إعادة تعيين كلمة المرور قريباً.',
+  checkYourEmail: 'تحقق من بريدك الإلكتروني',
+  invalidResetToken: 'رابط إعادة تعيين غير صالح',
+  invalidResetTokenDesc: 'هذا الرابط غير صالح أو منتهي الصلاحية. يرجى طلب رابط جديد.',
+  requestNewLink: 'طلب رابط جديد',
+  backToLogin: 'العودة لتسجيل الدخول',
+  resetPassword: 'إعادة تعيين كلمة المرور',
+  passwordResetSuccess: 'تم إعادة تعيين كلمة المرور بنجاح',
+  passwordResetSuccessDesc: 'يمكنك الآن تسجيل الدخول باستخدام كلمة المرور الجديدة.',
+
   search: 'بحث',
   yourDownloadEmptyDesc: 'يبدو أنك لم تقم بتنزيل أي شيء حتى الآن',
   cancel: 'إلغاء',

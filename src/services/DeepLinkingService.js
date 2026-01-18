@@ -41,23 +41,35 @@ class DeepLinkingService {
   }
 
   handleIncomingURL = (event) => {
+    console.log('🐞 [DeepLinkingService] handleIncomingURL:', event.url);
     this.handleDeepLink(event.url);
   };
 
   // Parse and handle deep link URLs
   handleDeepLink(url) {
     try {
+      console.log('🐞 [DeepLinkingService] handleDeepLink called with:', url);
       const parsed = this.parseDeepLink(url);
+      console.log('🐞 [DeepLinkingService] Parsed deep link:', JSON.stringify(parsed));
       if (parsed) {
         this.navigateToScreen(parsed);
       }
     } catch (error) {
+      console.error('🐞 [DeepLinkingService] Error handling deep link:', error);
     }
   }
 
   parseDeepLink(url) {
     const urlObj = new URL(url);
-    const path = urlObj.pathname;
+    // For custom schemes like feedyum://, pathname may not have leading slash
+    let path = urlObj.pathname;
+    // Also check hostname - for feedyum://reset-password, path might be empty and hostname is reset-password
+    if (!path || path === '') {
+      path = '/' + urlObj.hostname;
+    } else if (!path.startsWith('/')) {
+      path = '/' + path;
+    }
+    console.log('🐞 [DeepLinkingService] Parsed path:', path, 'hostname:', urlObj.hostname);
     const params = Object.fromEntries(urlObj.searchParams);
 
     // Define supported deep link patterns
@@ -115,6 +127,9 @@ class DeepLinkingService {
       post: /^\/post\/([a-f\d]{24})$/i,
       hashtag: /^\/hashtag\/([a-zA-Z0-9_]+)$/i,
       sound: /^\/sound\/([a-f\d]{24})$/i,
+
+      // Auth deep links
+      resetPassword: /^\/reset-password$/i,
     };
 
     for (const [type, pattern] of Object.entries(patterns)) {
@@ -146,6 +161,7 @@ class DeepLinkingService {
     }
 
     const { type, id, secondaryId, username, params } = linkData;
+    console.log('🐞 [DeepLinkingService] navigateToScreen type:', type, 'params:', params);
 
     try {
       switch (type) {
@@ -259,6 +275,11 @@ class DeepLinkingService {
           break;
         case 'sound':
           this.navigateToSound(id, params);
+          break;
+
+        // Auth navigation
+        case 'resetPassword':
+          this.navigateToResetPassword(params);
           break;
 
         default:
@@ -661,6 +682,18 @@ class DeepLinkingService {
     DeepLinkingService.navigationRef?.dispatch(
       CommonActions.navigate('PostSound', {
         soundId,
+        ...params
+      })
+    );
+  }
+
+  // Auth navigation
+  navigateToResetPassword(params) {
+    console.log('🐞 [DeepLinkingService] Navigating to CreateNewPassword with params:', params);
+    DeepLinkingService.navigationRef?.dispatch(
+      CommonActions.navigate('CreateNewPassword', {
+        token: params.token || '',
+        email: params.email || '',
         ...params
       })
     );

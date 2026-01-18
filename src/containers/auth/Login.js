@@ -329,8 +329,8 @@ const Login = ({ navigation }) => {
       onPressSignWithPassword();
     }, 100);
   };
-  // const onPressForgotPassword = () =>
-  //   navigation.navigate(StackNav.ForgotPassword);
+  const onPressForgotPassword = () =>
+    navigation.navigate(StackNav.ForgotPassword);
 
   return (
     <ZSafeAreaView style={localStyles.root}>
@@ -390,7 +390,7 @@ const Login = ({ navigation }) => {
             onPress={onPressSignWithPassword}
             disabled={isSubmitDisabled}
           />
-          {/* <TouchableOpacity
+          <TouchableOpacity
             onPress={onPressForgotPassword}
             style={localStyles.forgotPasswordContainer}>
             <ZText
@@ -400,7 +400,7 @@ const Login = ({ navigation }) => {
               style={styles.mh10}>
               {strings.forgotPassword}
             </ZText>
-          </TouchableOpacity> */}
+          </TouchableOpacity>
           {/* <View style={localStyles.divider}>
             <View
               style={[
@@ -519,5 +519,9 @@ const localStyles = StyleSheet.create({
     borderWidth: moderateScale(1),
     borderColor: 'grey',
     ...styles.mh10,
+  },
+  forgotPasswordContainer: {
+    ...styles.rowCenter,
+    ...styles.mb10,
   },
 });

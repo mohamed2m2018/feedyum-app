@@ -26,6 +26,8 @@ const SuccessModal = props => {
     btnText = false,
     headerTitle,
     subTitle,
+    hideCounter = false,
+    primaryBtnText,
   } = props;
   return (
     <Modal animationType="fade" transparent={true} visible={visible}>
@@ -42,29 +44,31 @@ const SuccessModal = props => {
             <ZText type={'r16'} align={'center'} style={styles.mt25}>
               {subTitle || strings.modalDesc}
             </ZText>
-            <View style={[styles.rowCenter]}>
-              <TouchableOpacity
-                onPress={() => setnumberOfItems(numberOfItems + 1)}>
-                <ZText type={'s24'} style={{ marginRight: 10 }}>
-                  +
+            {!hideCounter && (
+              <View style={[styles.rowCenter]}>
+                <TouchableOpacity
+                  onPress={() => setnumberOfItems(numberOfItems + 1)}>
+                  <ZText type={'s24'} style={{ marginRight: 10 }}>
+                    +
+                  </ZText>
+                </TouchableOpacity>
+                <ZText
+                  color={colors.primary}
+                  type={'s24'}
+                  style={{ marginRight: 10 }}>
+                  {numberOfItems}
                 </ZText>
-              </TouchableOpacity>
-              <ZText
-                color={colors.primary}
-                type={'s24'}
-                style={{ marginRight: 10 }}>
-                {numberOfItems}
-              </ZText>
-              <ZText
-                type={'s24'}
-                onPress={() => {
-                  if (numberOfItems !== 1) {
-                    setnumberOfItems(numberOfItems - 1);
-                  }
-                }}>
-                -
-              </ZText>
-            </View>
+                <ZText
+                  type={'s24'}
+                  onPress={() => {
+                    if (numberOfItems !== 1) {
+                      setnumberOfItems(numberOfItems - 1);
+                    }
+                  }}>
+                  -
+                </ZText>
+              </View>
+            )}
 
             {!!btnText && (
               <ZButton
@@ -76,7 +80,7 @@ const SuccessModal = props => {
               />
             )}
             <ZButton
-              title={strings.checkout}
+              title={primaryBtnText || strings.checkout}
               textType={'b18'}
               color={colors.textColor}
               containerStyle={localStyles.signBtnContainer}
