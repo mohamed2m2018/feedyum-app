@@ -296,6 +296,7 @@ export default {
   addBio: 'من فضلك قم باضافة نبذة عنك',
   error: 'حدث خطأ',
   pleaseProvideCorrectNo: 'من فضلك اكتب رقم مصري صحيح',
+  invalidPhoneNumber: 'رقم الهاتف غير صحيح للبلد المحدد',
   postDishImage: 'نشر صورة',
   postDishVideo: 'نشر فيديو',
   uploadDishMedia: 'رفع وسائط',

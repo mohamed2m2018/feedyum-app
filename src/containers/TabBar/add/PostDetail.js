@@ -49,6 +49,7 @@ import AttachedDishesComponent from './components/AttachedDishesComponent';
 import RestaurantSearch from '../../../components/RestaurantSearch';
 import DishSelector from '../../../components/DishSelector';
 import RatingInput from '../../../components/RatingInput';
+import ZPhoneInput from '../../../components/common/ZPhoneInput';
 
 export default function PostDetail() {
 
@@ -620,13 +621,13 @@ export default function PostDetail() {
 
 
             {user?.type === 'chef' && !user?.phone && (
-              <ZInput
-                label={strings.phoneNumber} // Ensure this string exists or use a hardcoded one if needed, but safe to assume similar pattern or just use placeholder
+              <ZPhoneInput
+                label={strings.phoneNumber}
+                value={phone}
+                defaultCode="EG"
                 placeholder={strings.addPhoneNumberPlaceholder}
-                _value={phone}
-                toGetTextFieldValue={setPhone}
-                keyBoardType="phone-pad"
-                inputContainerStyle={{ marginTop: moderateScale(10) }}
+                onChangeText={setPhone}
+                containerStyle={{ marginTop: moderateScale(10) }}
               />
             )}
 

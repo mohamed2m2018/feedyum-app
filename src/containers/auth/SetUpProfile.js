@@ -10,7 +10,7 @@ import {
   ScrollView,
 } from 'react-native';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import React, { createRef, useEffect, useState } from 'react';
+import React, { createRef, useEffect, useState, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -33,6 +33,7 @@ import {
   moderateScale,
 } from '../../common/constants';
 import ZInput from '../../components/common/ZInput';
+import ZPhoneInput from '../../components/common/ZPhoneInput';
 import ZKeyBoardAvoidWrapper from '../../components/common/ZKeyBoardAvoidWrapper';
 import { StackNav, TabNav } from '../../navigation/NavigationKeys';
 import ProfilePicture from '../../components/models/ProfilePicture';
@@ -111,6 +112,8 @@ const SetUpProfile = props => {
   );
 
   const [phoneNo, setPhoneNo] = useState(editUser?.data?.user?.phone || '');
+  const [isPhoneValid, setIsPhoneValid] = useState(false);
+  const phoneInputRef = useRef(null);
   const [gender, setGender] = useState(editUser?.data?.user?.gender || '');
   const [bio, setBio] = useState(editUser?.data?.user?.bio || '');
   const [fullNameInputStyle, setFullNameInputStyle] = useState(BlurredStyle);
@@ -118,6 +121,7 @@ const SetUpProfile = props => {
   const [bioStyle, setBioStyle] = useState(BlurredStyle);
   const [selectImage, setSelectImage] = useState(editUser?.data?.user?.avatar);
   const [isPhotoUploading, setisPhotoUploading] = useState(false);
+  const [phoneError, setPhoneError] = useState('');
 
   const onFocusInput = onHighlight => onHighlight(FocusedStyle);
   const onBlurInput = onUnHighlight => onUnHighlight(BlurredStyle);
@@ -138,13 +142,22 @@ const SetUpProfile = props => {
   const onChangedGender = text => setGender(text.value.toLowerCase());
   const [_, setAccessToken] = useStorage(ACCESS_TOKEN);
   const queryClient = useQueryClient();
-  const validatePhoneNumber = input => {
-    const pattern = /^01[0125][0-9]{8}$/;
-    return pattern.test(input);
+
+  const handlePhoneValidation = (isValid) => {
+    setIsPhoneValid(isValid);
+    if (phoneNo && !isValid) {
+      setPhoneError(strings.invalidPhoneNumber || 'Invalid phone number');
+    } else {
+      setPhoneError('');
+    }
   };
+
   const handleSubmit = () => {
-    if (!validatePhoneNumber(phoneNo)) {
+    // Validate phone using the library's method
+    const phoneValid = phoneInputRef.current?.isValidNumber() || isPhoneValid;
+    if (!phoneValid) {
       showErrorToast(strings.error, strings.pleaseProvideCorrectNo);
+      setPhoneError(strings.pleaseProvideCorrectNo);
       return;
     }
     request
@@ -390,26 +403,15 @@ const SetUpProfile = props => {
               _onBlur={onBlurFullName}
             />
 
-            <ZInput
-              placeHolder={strings.phoneNumberStarts}
-              keyBoardType={'number-pad'}
-              _value={phoneNo}
-              _maxLength={11}
-              toGetTextFieldValue={onChangedPhoneNo}
-              insideLeftIcon={() => (
-                <EntypoIcon
-                  name="phone"
-                  size={moderateScale(18)}
-                  color={colors.grayScale5}
-                />
-              )}
-              inputContainerStyle={[
-                localStyles.inputStyle,
-                { backgroundColor: colors.dark ? colors.backgroundColor : colors.inputBg },
-                phoneNoInputStyle,
-              ]}
-              _onFocus={onFocusPhoneNo}
-              _onBlur={onBlurPhoneNo}
+            <ZPhoneInput
+              ref={phoneInputRef}
+              value={phoneNo}
+              defaultCode="EG"
+              placeholder={strings.phoneNumber}
+              onChangeText={onChangedPhoneNo}
+              onValidation={handlePhoneValidation}
+              errorText={phoneError}
+              containerStyle={localStyles.phoneInputContainer}
             />
 
             <ZInput
@@ -689,6 +691,9 @@ const localStyles = StyleSheet.create({
     borderWidth: moderateScale(1),
     paddingHorizontal: moderateScale(20),
     marginTop: moderateScale(4),
+  },
+  phoneInputContainer: {
+    marginVertical: moderateScale(4),
   },
 
   // Branches Section

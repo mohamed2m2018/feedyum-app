@@ -17,6 +17,7 @@ import { moderateScale } from '../../../common/constants';
 import { styles } from '../../../themes';
 import ZText from '../../../components/common/ZText';
 import ZInput from '../../../components/common/ZInput';
+import ZPhoneInput from '../../../components/common/ZPhoneInput';
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
 import ZLoader from '../../../components/common/ZLoader';
 import strings from '../../../i18n/strings';
@@ -349,25 +350,13 @@ const EditAddress = () => {
             <ZText type="B16" color={colors.textColor} style={localStyles.sectionTitle}>
               {strings.contactInfo}
             </ZText>
-            <View style={localStyles.phoneContainer}>
-              <View style={localStyles.countryCodeContainer}>
-                <ZInput
-                  placeHolder={strings.phoneCodePlaceholder}
-                  _value={formData.countryCode}
-                  toGetTextFieldValue={(value) => handleInputChange('countryCode', value)}
-                  inputContainerStyle={[localStyles.inputContainer, { backgroundColor: colors.inputBg }]}
-                />
-              </View>
-              <View style={localStyles.phoneNumberContainer}>
-                <ZInput
-                  placeHolder={strings.phoneNumber}
-                  _value={formData.phoneNumber}
-                  keyBoardType="phone-pad"
-                  toGetTextFieldValue={(value) => handleInputChange('phoneNumber', value)}
-                  inputContainerStyle={[localStyles.inputContainer, { backgroundColor: colors.inputBg }]}
-                />
-              </View>
-            </View>
+            <ZPhoneInput
+              value={formData.phoneNumber}
+              defaultCode="EG"
+              placeholder={strings.phoneNumber}
+              onChangeText={(text) => handleInputChange('phoneNumber', text)}
+              onChangeCountryCode={(code) => handleInputChange('countryCode', code)}
+            />
           </View>
 
           {/* Map View */}
@@ -495,16 +484,6 @@ const localStyles = StyleSheet.create({
   },
   addressTypeText: {
     marginLeft: moderateScale(8),
-  },
-  phoneContainer: {
-    flexDirection: 'row',
-  },
-  countryCodeContainer: {
-    width: moderateScale(80),
-    marginRight: moderateScale(12),
-  },
-  phoneNumberContainer: {
-    flex: 1,
   },
   mapContainer: {
     minHeight: moderateScale(80),

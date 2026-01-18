@@ -301,11 +301,17 @@ class DeepLinkingService {
 
   // Reel/Video navigation
   navigateToReel(reelId, params) {
+    // Navigate to TabBar > Home with storyId so user sees full TabBar experience
+    // and can browse other videos after viewing the shared one (like TikTok)
     DeepLinkingService.navigationRef?.dispatch(
-      CommonActions.navigate('ReelsComponent', {
-        postId: reelId,
-        startIndex: params.index ? parseInt(params.index) : 0,
-        ...params
+      CommonActions.navigate('TabBar', {
+        screen: 'Home',
+        params: {
+          storyId: reelId,
+          postId: reelId,
+          startIndex: params.index ? parseInt(params.index) : 0,
+          ...params
+        }
       })
     );
   }
@@ -628,13 +634,16 @@ class DeepLinkingService {
 
   // General navigation
   navigateToPost(postId, params) {
-    // Navigate to ReelsComponent to view the post (PostDetail is for creating posts)
+    // Navigate to TabBar > Home with storyId so user sees full TabBar experience
     console.log('🐞 [DeepLinkingService] Navigating to post/story:', postId, params);
     DeepLinkingService.navigationRef?.dispatch(
-      CommonActions.navigate('ReelsComponent', {
-        postId,
-        storyId: postId, // Some components use storyId
-        ...params
+      CommonActions.navigate('TabBar', {
+        screen: 'Home',
+        params: {
+          postId,
+          storyId: postId,
+          ...params
+        }
       })
     );
   }

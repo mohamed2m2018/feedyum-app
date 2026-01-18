@@ -313,6 +313,7 @@ export default {
   addBio: 'Add Bio about you',
   error: 'Error',
   pleaseProvideCorrectNo: 'Please provide a correct egyptian phone number',
+  invalidPhoneNumber: 'Invalid phone number for the selected country',
   postDishImage: 'Post a photo',
   postDishVideo: 'Post a video',
   uploadDishMedia: 'Upload media',
