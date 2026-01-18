@@ -41,7 +41,7 @@ import ZButton from '../../components/common/ZButton';
 import request from '../../api/request';
 import { showErrorToast } from '../../utils/toast';
 import { useQuery, useQueryClient } from 'react-query';
-import OneSignal from 'react-native-onesignal';
+import { OneSignal } from 'react-native-onesignal';
 import { RNS3 } from 'react-native-aws3';
 import ZText from '../../components/common/ZText';
 import { useStorage } from '../../utils/useStorage';
@@ -152,7 +152,13 @@ const SetUpProfile = props => {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    // Validate name - minimum 2 characters
+    if (!fullName || fullName.trim().length < 2) {
+      showErrorToast(strings.error, strings.nameTooShort || 'Name must be at least 2 characters');
+      return;
+    }
+
     // Validate phone using the library's method
     const phoneValid = phoneInputRef.current?.isValidNumber() || isPhoneValid;
     if (!phoneValid) {
@@ -160,6 +166,21 @@ const SetUpProfile = props => {
       setPhoneError(strings.pleaseProvideCorrectNo);
       return;
     }
+
+    // Check if phone is available (not already registered)
+    try {
+      const checkResponse = await request.post('/user/check-availability', {
+        phone: phoneNo,
+      });
+      if (checkResponse?.data?.fields?.phone?.available === false) {
+        showErrorToast(strings.error, strings.phoneAlreadyRegistered);
+        setPhoneError(strings.phoneAlreadyRegistered);
+        return;
+      }
+    } catch (error) {
+      // Phone check failed, proceed anyway
+    }
+
     request
       .post('/user', {
         fullName,
@@ -174,17 +195,16 @@ const SetUpProfile = props => {
       })
       .then(async res => {
         setAccessToken(res?.data?.token);
-        OneSignal.setExternalUserId(res?.data?.user?._id);
-        // Clear React Query cache to force fresh data fetch for this device
+        OneSignal.login(String(res?.data?.user?._id));
         await queryClient.clear();
         navigation.reset({
           index: 0,
           routes: [{ name: StackNav.TabBar }],
         });
       })
-      .catch(err =>
-        showErrorToast(strings.error, err[Object.keys(err)?.[0]])
-      );
+      .catch(err => {
+        showErrorToast(strings.error, err[Object.keys(err)?.[0]]);
+      });
   };
 
   // Helper function to upload image via backend API
@@ -196,7 +216,10 @@ const SetUpProfile = props => {
       name: 'profile_' + Date.now() + '.jpg',
     });
 
-    const response = await request.post('/messages/upload-image', formData, {
+    // Use public endpoint for registration, authenticated endpoint for edit
+    const uploadEndpoint = isEdit ? '/messages/upload-image' : '/user/upload-profile-picture';
+
+    const response = await request.post(uploadEndpoint, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -366,7 +389,10 @@ const SetUpProfile = props => {
             )}
           </TouchableOpacity>
           <ZText type="m14" color={colors.grayScale5} style={localStyles.avatarHint}>
-            {strings.tapToChangePhoto || 'Tap to change photo'}
+            {selectImage
+              ? (strings.tapToChangePhoto || 'Tap to change photo')
+              : (strings.addPhoto || 'Add photo')
+            }
           </ZText>
         </View>
 
@@ -382,7 +408,7 @@ const SetUpProfile = props => {
             </View>
 
             <ZInput
-              placeHolder={strings.fullName}
+              placeHolder={userType === 'user' ? strings.fullName : (strings.fullNameChef || strings.fullName)}
               keyboard
               insideLeftIcon={() => (
                 <EntypoIcon

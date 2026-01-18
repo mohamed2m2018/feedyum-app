@@ -230,6 +230,10 @@ export default Setting = ({ navigation }) => {
           if (item.id === 1 && handleAuthToast()) {
             return;
           }
+          // Hide saved addresses for chef accounts
+          if (item.id === 2 && user?.data?.user?.type === 'chef') {
+            return;
+          }
           return (
             <TouchableOpacity
               disabled={item.title === strings.darkMode}

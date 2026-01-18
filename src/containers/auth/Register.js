@@ -30,11 +30,13 @@ import {
 import axios from 'axios';
 import request from '../../api/request';
 import { useQueryClient } from 'react-query';
-import { OneSignal } from 'react-native-onesignal';
 import { showErrorToast } from '../../utils/toast';
 import { useStorage } from '../../utils/useStorage';
 import AppInitializer from '../../services/AppInitializer';
 import UserTypeSelectionModal from '../../components/modals/UserTypeSelectionModal';
+
+// Debounce timeout ref for email availability check
+let emailCheckTimeout = null;
 
 GoogleSignin.configure({
   // Add your web client ID here
@@ -263,9 +265,31 @@ const Register = ({ navigation, route }) => {
   }, [email, password, emailError, passwordError]);
 
   const onChangedEmail = val => {
-    const { msg } = validateEmail(val.trim());
-    setEmail(val.trim());
+    const trimmedEmail = val.trim();
+    const { msg } = validateEmail(trimmedEmail);
+    setEmail(trimmedEmail);
     setEmailError(msg);
+
+    // Clear any pending check
+    if (emailCheckTimeout) {
+      clearTimeout(emailCheckTimeout);
+    }
+
+    // If email format is valid, check availability after debounce
+    if (!msg && trimmedEmail.length > 0) {
+      emailCheckTimeout = setTimeout(async () => {
+        try {
+          const response = await request.post('/user/check-availability', {
+            email: trimmedEmail,
+          });
+          if (response?.data?.fields?.email?.available === false) {
+            setEmailError(strings.emailAlreadyRegistered);
+          }
+        } catch (error) {
+          console.log('Email check error:', error);
+        }
+      }, 500); // 500ms debounce
+    }
   };
 
   const onChangedPassword = val => {

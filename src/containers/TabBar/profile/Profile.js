@@ -36,35 +36,44 @@ import { useScreen } from '../../../navigation/screenContext';
 import ZLoader from '../../../components/common/ZLoader';
 
 export default function Profile({ navigation }) {
-  const UserDetail = (postsNo, followersNo, followingNo, viewsNo) => [
-    {
-      title: strings.post,
-      value: postsNo,
-    },
-    {
-      title: strings.followers,
-      value: followersNo,
-      onPress: () => {
-        navigation.navigate(StackNav.UserNetwork, {
-          userId: user?._id,
-          page: strings.followers,
-        });
+  const UserDetail = (postsNo, followersNo, followingNo, viewsNo, userType) => {
+    const stats = [
+      {
+        title: strings.post,
+        value: postsNo,
       },
-    },
-    {
-      title: strings.following,
-      value: followingNo,
-      onPress: () =>
-        navigation.navigate(StackNav.UserNetwork, {
-          userId: user?._id,
-          page: strings.following,
-        }),
-    },
-    {
-      title: strings.Views,
-      value: viewsNo || 0,
-    },
-  ];
+      {
+        title: strings.followers,
+        value: followersNo,
+        onPress: () => {
+          navigation.navigate(StackNav.UserNetwork, {
+            userId: user?._id,
+            page: strings.followers,
+          });
+        },
+      },
+      {
+        title: strings.following,
+        value: followingNo,
+        onPress: () =>
+          navigation.navigate(StackNav.UserNetwork, {
+            userId: user?._id,
+            page: strings.following,
+          }),
+      },
+      {
+        title: strings.Views,
+        value: viewsNo || 0,
+      },
+    ];
+
+    // Hide "Following" stat for chef's own profile
+    if (userType === 'chef') {
+      return stats.filter(stat => stat.title !== strings.following);
+    }
+
+    return stats;
+  };
   const colors = useSelector(state => state.theme.theme);
   const { isGuest, handleAuthToast } = useHandleAuth();
   const isFocused = useIsFocused();
@@ -261,6 +270,7 @@ export default function Profile({ navigation }) {
           followStatistics?.data?.followersCount,
           followStatistics?.data?.followingCount,
           views?.data?.viewsCount || 0,
+          user?.type,
         ).map((item, index) => (
           <RenderUserDetail item={item} key={index} />
         ))}
