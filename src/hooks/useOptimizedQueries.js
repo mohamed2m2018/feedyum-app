@@ -28,10 +28,14 @@ export const useOptimizedReels = (categoryIds = []) => {
   const [user] = useStorage('user');
 
   return useInfiniteQuery(
-    ['stories', user?._id, categoryIds?.toString()],
+    ['stories', user?._id, categoryIds?.join(',') || 'all'],
     async ({ pageParam = 1 }) => {
       // Smaller initial page size for faster loading
       const limit = pageParam === 1 ? 8 : 15;
+      const categoryIdsParam = categoryIds?.length > 0 ? categoryIds.join(',') : undefined;
+
+      console.log('[useOptimizedReels] Fetching stories with categoryIds:', categoryIdsParam, 'page:', pageParam);
+
       const response = await request.get('/story/stories', {
         params: {
           limit,
@@ -39,9 +43,11 @@ export const useOptimizedReels = (categoryIds = []) => {
           userId: user?._id,
           lat: location?.latitude,
           long: location?.longitude,
-          categoryIds: categoryIds?.join(',')
+          categoryIds: categoryIdsParam
         }
       });
+
+      console.log('[useOptimizedReels] Got', response.data?.stories?.length, 'stories');
       return response.data;
     },
     {
@@ -52,7 +58,6 @@ export const useOptimizedReels = (categoryIds = []) => {
           : undefined;
       },
       enabled: !!user?._id,
-      // Prefetch next page when user is 80% through current page
       getPreviousPageParam: (firstPage) => firstPage?.currentPage > 1 ? firstPage.currentPage - 1 : undefined,
     }
   );

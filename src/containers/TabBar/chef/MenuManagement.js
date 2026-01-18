@@ -666,19 +666,21 @@ export default function MenuManagement() {
       />
 
       {/* Floating Action Button */}
-      <TouchableOpacity
-        style={[localStyles.fab, { backgroundColor: colors.primary }]}
-        onPress={handleAddDish}
-        activeOpacity={0.85}>
-        <Ionicons
-          name="add"
-          size={moderateScale(24)}
-          color={colors.white}
-        />
-        <ZText type="B14" color={colors.white} style={localStyles.fabText}>
-          {strings.addDish}
-        </ZText>
-      </TouchableOpacity>
+      {dishesData && dishesData.length > 0 && (
+        <TouchableOpacity
+          style={[localStyles.fab, { backgroundColor: colors.primary }]}
+          onPress={handleAddDish}
+          activeOpacity={0.85}>
+          <Ionicons
+            name="add"
+            size={moderateScale(24)}
+            color={colors.white}
+          />
+          <ZText type="B14" color={colors.white} style={localStyles.fabText}>
+            {strings.addDish}
+          </ZText>
+        </TouchableOpacity>
+      )}
     </ZSafeAreaView>
   );
 }

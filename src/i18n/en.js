@@ -558,6 +558,16 @@ export default {
   addedToCartMsg: '{0} x {1} added to your cart',
   great: 'Great',
 
+  // Media Selection Modal
+  createReviewPost: 'Create Review Post',
+  chooseHowToCreateReview: 'Choose how you want to create your review',
+  recordVideo: 'Record Video',
+  recordVideoSubtitle: 'Record a new video review (max 60s)',
+  takePhoto: 'Take Photo',
+  takePhotoSubtitle: 'Capture a new photo',
+  chooseFromGalleryTitle: 'Choose from Gallery',
+  chooseFromGallerySubtitle: 'Select existing photo or video',
+
   // Chat & Messages
   chat: 'Chat',
   typeMessage: 'Type a message...',

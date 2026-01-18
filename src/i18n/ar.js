@@ -551,6 +551,16 @@ export default {
   addedToCartMsg: 'تم إضافة {0} x {1} إلى عربتك',
   great: 'ممتاذ',
 
+  // Media Selection Modal
+  createReviewPost: 'إنشاء منشور مراجعة',
+  chooseHowToCreateReview: 'اختر كيف تريد إنشاء مراجعتك',
+  recordVideo: 'تسجيل فيديو',
+  recordVideoSubtitle: 'سجل مراجعة فيديو جديدة (حد أقصى 60 ثانية)',
+  takePhoto: 'التقط صورة',
+  takePhotoSubtitle: 'التقط صورة جديدة',
+  chooseFromGalleryTitle: 'اختر من المعرض',
+  chooseFromGallerySubtitle: 'اختر صورة أو فيديو موجود',
+
   // Chat & Messages
   chat: 'محادثة',
   typeMessage: 'اكتب رسالة...',

@@ -71,7 +71,7 @@ function KitchenWithDishesCard({
     return (
         <View style={[localStyles.container, { backgroundColor: colors.inputBg }, style]}>
             {/* Kitchen Header */}
-            <View style={localStyles.header}>
+            <View style={[localStyles.header, isRTL && styles.flexRowReverse]}>
                 <TouchableOpacity
                     onPress={handleKitchenPress}
                     style={[localStyles.kitchenInfo, isRTL && styles.flexRowReverse]}
@@ -133,19 +133,26 @@ function KitchenWithDishesCard({
                     horizontal
                     showsHorizontalScrollIndicator={false}
                     contentContainerStyle={localStyles.dishesContainer}
-                    style={localStyles.dishesScroll}
+                    style={[
+                        localStyles.dishesScroll,
+                        isRTL && { transform: [{ scaleX: -1 }] },
+                    ]}
                 >
                     {dishes.map((dish, index) => (
-                        <DishCardCompact
+                        <View
                             key={dish._id || index}
-                            dish={dish}
-                            onPress={() => handleDishPress(dish)}
-                            onAddToCart={() => onAddToCart?.(dish)}
                             style={[
                                 localStyles.dishCard,
                                 index === dishes.length - 1 && localStyles.lastDishCard,
+                                isRTL && { transform: [{ scaleX: -1 }] },
                             ]}
-                        />
+                        >
+                            <DishCardCompact
+                                dish={dish}
+                                onPress={() => handleDishPress(dish)}
+                                onAddToCart={() => onAddToCart?.(dish)}
+                            />
+                        </View>
                     ))}
                 </ScrollView>
             )}

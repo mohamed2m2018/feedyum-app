@@ -629,8 +629,9 @@ const ReelComponent = ({
                           )}
                         </View>
 
-                        {/* Follow Button for chef posts - UNDER the chef name */}
-                        {item?.author?.type === 'chef' && item?.author?._id && item?.author?._id !== data?.data?.user?._id && (
+                        {/* Follow Button for chef posts AND review posts - UNDER the name */}
+                        {/* Show for: 1) Chef authors, OR 2) Review posts (to follow the reviewer) */}
+                        {item?.author?._id && item?.author?._id !== data?.data?.user?._id && (
                           <FollowButton
                             userId={item?.author?._id}
                             isFollowed={item?.author?.currentUserFollowed}

@@ -109,10 +109,10 @@ const MediaSelectionModal = ({
                     {/* Header */}
                     <View style={styles.header}>
                         <ZText type="B20" color={colors.textColor} style={styles.title}>
-                            Create Review Post
+                            {strings.createReviewPost}
                         </ZText>
                         <ZText type="R14" color={colors.grayScale5} style={styles.headerSubtitle}>
-                            Choose how you want to create your review
+                            {strings.chooseHowToCreateReview}
                         </ZText>
                     </View>
 
@@ -120,24 +120,24 @@ const MediaSelectionModal = ({
                     <View style={styles.optionsContainer}>
                         {renderOption(
                             'videocam',
-                            'Record Video',
-                            'Record a new video review (max 60s)',
+                            strings.recordVideo,
+                            strings.recordVideoSubtitle,
                             onRecordVideo,
                             '#FF4D67'
                         )}
 
                         {renderOption(
                             'camera',
-                            'Take Photo',
-                            'Capture a new photo',
+                            strings.takePhoto,
+                            strings.takePhotoSubtitle,
                             onTakePhoto,
                             '#4CAF50'
                         )}
 
                         {renderOption(
                             'images',
-                            'Choose from Gallery',
-                            'Select existing photo or video',
+                            strings.chooseFromGalleryTitle,
+                            strings.chooseFromGallerySubtitle,
                             onPickFromGallery,
                             '#2196F3'
                         )}
@@ -148,7 +148,7 @@ const MediaSelectionModal = ({
                         style={[styles.cancelButton, { borderColor: colors.bColor }]}
                         onPress={onClose}>
                         <ZText type="B16" color={colors.textColor}>
-                            Cancel
+                            {strings.cancel}
                         </ZText>
                     </TouchableOpacity>
                 </Animated.View>

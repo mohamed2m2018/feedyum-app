@@ -76,7 +76,6 @@ const ReviewReelCreator = ({ route }) => {
 
   const recordVideo = async () => {
     try {
-      setIsLoading(true);
       const video = await ImagePicker.openCamera({
         mediaType: 'video',
         quality: 0.8,
@@ -86,10 +85,9 @@ const ReviewReelCreator = ({ route }) => {
       setSelectedMedia(video);
       setMediaType('video');
 
-      // Upload the media immediately
-      await handleMediaUpload(video, false);
+      // Start background upload - user can fill form while uploading
+      handleMediaUpload(video, false);
     } catch (error) {
-      setIsLoading(false);
       if (error.code !== 'E_PICKER_CANCELLED') {
         showErrorToast(strings.error, strings.failedToRecordVideo);
       }
@@ -98,7 +96,6 @@ const ReviewReelCreator = ({ route }) => {
 
   const takePhoto = async () => {
     try {
-      setIsLoading(true);
       const image = await ImagePicker.openCamera({
         mediaType: 'photo',
         quality: 0.8,
@@ -107,10 +104,9 @@ const ReviewReelCreator = ({ route }) => {
       setSelectedMedia(image);
       setMediaType('image');
 
-      // Upload the media immediately
-      await handleMediaUpload(image, true);
+      // Start background upload - user can fill form while uploading
+      handleMediaUpload(image, true);
     } catch (error) {
-      setIsLoading(false);
       if (error.code !== 'E_PICKER_CANCELLED') {
         showErrorToast(strings.error, strings.failedToTakePhoto);
       }
@@ -119,7 +115,6 @@ const ReviewReelCreator = ({ route }) => {
 
   const pickFromGallery = async () => {
     try {
-      setIsLoading(true);
       const media = await ImagePicker.openPicker({
         mediaType: 'any',
         quality: 0.8,
@@ -129,32 +124,24 @@ const ReviewReelCreator = ({ route }) => {
       setSelectedMedia(media);
       setMediaType(isImage ? 'image' : 'video');
 
-      // Upload the media immediately
-      await handleMediaUpload(media, isImage);
+      // Start background upload - user can fill form while uploading
+      handleMediaUpload(media, isImage);
     } catch (error) {
-      setIsLoading(false);
       if (error.code !== 'E_PICKER_CANCELLED') {
         showErrorToast(strings.error, strings.failedToSelectMedia);
       }
     }
   };
 
-  // Handle media upload when media is selected
-  const handleMediaUpload = async (media, isImage) => {
-    try {
-      setIsLoading(true);
-      await uploadData(
-        media,
-        setIsMediaUploading,
-        setLocalUri,
-        isImage,
-      );
-      setIsLoading(false);
-    } catch (error) {
-      setIsLoading(false);
-      console.error('Media upload error:', error);
-      showErrorToast(strings.error, strings.failedToUploadMedia);
-    }
+  // Handle media upload when media is selected - fires in background (no await)
+  const handleMediaUpload = (media, isImage) => {
+    // Start background upload - don't await, let user fill form while uploading
+    uploadData(
+      media,
+      setIsMediaUploading,
+      setLocalUri,
+      isImage,
+    );
   };
 
   const handleSubmitReview = () => {
