@@ -40,12 +40,22 @@ jobs:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
-      - name: Decode Keystore
-        run: |
-          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/app/feedyum.jks
 
       - name: Run Expo Prebuild
         run: npx expo prebuild --platform android --clean
+
+      - name: Patch Android Gradle Plugin version
+        run: |
+          # Update build.gradle to use AGP 8.6.0
+          sed -i "s/classpath('com.android.tools.build:gradle')/classpath('com.android.tools.build:gradle:8.6.0')/" android/build.gradle
+          
+          # Add suppressUnsupportedCompileSdk to gradle.properties
+          echo "android.suppressUnsupportedCompileSdk=35" >> android/gradle.properties
+
+      - name: Decode Keystore
+        run: |
+          mkdir -p android/app
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/app/feedyum.jks
 
       - name: Build Android APK
         working-directory: android
