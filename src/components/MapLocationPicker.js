@@ -1,11 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View,
   StyleSheet,
   TouchableOpacity,
   Dimensions,
   Platform,
-  ScrollView
 } from 'react-native';
 import { showErrorToast } from '../utils/toast';
 import { useSelector, useDispatch } from 'react-redux';
@@ -13,6 +12,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { useQuery } from 'react-query';
 import FreeAddressSearch from './FreeAddressSearch';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 
 import ZInput from './common/ZInput';
 import Feather from 'react-native-vector-icons/Feather';
@@ -26,7 +26,11 @@ import strings from '../i18n/strings';
 import addressService from '../services/addressService';
 import { addAddress } from '../redux/actions/addressActions';
 import request from '../api/request';
+import { useLocation } from '../navigation/locationContext';
+import GoogleMapsService from '../services/GoogleMapsService';
+
 const { width, height } = Dimensions.get('window');
+const MAP_HEIGHT = height * 0.35;
 
 const MapLocationPicker = () => {
   const colors = useSelector(state => state.theme.theme);
@@ -34,23 +38,38 @@ const MapLocationPicker = () => {
   const dispatch = useDispatch();
   const navigation = useNavigation();
   const route = useRoute();
+  const location = useLocation();
+  const mapRef = useRef(null);
 
-  const { onLocationSelect, initialLocation } = route.params || {};
+  const { onLocationSelect, initialLocation, editMode, addressToEdit } = route.params || {};
 
   // Fetch user data using the same pattern as other components
   const { data } = useQuery('user', () => request.get('/user'), { retry: 1 });
   const user = data?.data?.user;
 
+  // Initial map region - use current location or Cairo default
+  const initialRegion = {
+    latitude: initialLocation?.latitude || location?.latitude || 30.0444,
+    longitude: initialLocation?.longitude || location?.longitude || 31.2357,
+    latitudeDelta: 0.01,
+    longitudeDelta: 0.01,
+  };
+
   const [selectedLocation, setSelectedLocation] = useState(null);
+  const [markerPosition, setMarkerPosition] = useState({
+    latitude: initialRegion.latitude,
+    longitude: initialRegion.longitude,
+  });
   const [loading, setLoading] = useState(false);
+  const [reverseGeocoding, setReverseGeocoding] = useState(false);
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [addressDetails, setAddressDetails] = useState({
-    label: 'Home',
-    addressType: 'house',
-    buildingName: '',
-    apartmentNumber: '',
-    floorNumber: '',
-    area: '',
+    label: editMode ? addressToEdit?.label || 'Home' : 'Home',
+    addressType: editMode ? addressToEdit?.addressType || 'house' : 'house',
+    buildingName: editMode ? addressToEdit?.buildingDetails?.buildingName || '' : '',
+    apartmentNumber: editMode ? addressToEdit?.buildingDetails?.apartmentNumber || '' : '',
+    floorNumber: editMode ? addressToEdit?.buildingDetails?.floorNumber || '' : '',
+    area: editMode ? addressToEdit?.streetDetails?.area || '' : '',
     phoneNumber: '',
     countryCode: '+20',
     additionalInstructions: ''
@@ -66,19 +85,86 @@ const MapLocationPicker = () => {
     }
   }, [user?.phone, addressDetails.phoneNumber]);
 
+  // Reverse geocode marker position
+  const reverseGeocodePosition = useCallback(async (latitude, longitude) => {
+    setReverseGeocoding(true);
+    try {
+      const result = await GoogleMapsService.reverseGeocode(latitude, longitude);
+      if (result?.address) {
+        setSelectedLocation({
+          description: result.address,
+          lat: latitude.toString(),
+          lng: longitude.toString(),
+          formattedAddress: result.address
+        });
+        setShowAddressForm(true);
+      }
+    } catch (error) {
+      console.error('Reverse geocode error:', error);
+    } finally {
+      setReverseGeocoding(false);
+    }
+  }, []);
 
+  // Handle map drag end
+  const handleMapDragEnd = useCallback((e) => {
+    const { latitude, longitude } = e.nativeEvent.coordinate;
+    setMarkerPosition({ latitude, longitude });
+    reverseGeocodePosition(latitude, longitude);
+  }, [reverseGeocodePosition]);
 
+  // Handle map press
+  const handleMapPress = useCallback((e) => {
+    const { latitude, longitude } = e.nativeEvent.coordinate;
+    setMarkerPosition({ latitude, longitude });
+    reverseGeocodePosition(latitude, longitude);
+  }, [reverseGeocodePosition]);
+
+  // Handle location select from search
   const handleLocationSelect = (data, details = null) => {
     if (details) {
+      const lat = details.geometry.location.lat;
+      const lng = details.geometry.location.lng;
+
       setSelectedLocation({
         description: data.description,
-        lat: details.geometry.location.lat.toString(),
-        lng: details.geometry.location.lng.toString(),
+        lat: lat.toString(),
+        lng: lng.toString(),
         formattedAddress: data.description
       });
+
+      setMarkerPosition({ latitude: lat, longitude: lng });
+
+      // Animate map to new location
+      mapRef.current?.animateToRegion({
+        latitude: lat,
+        longitude: lng,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      }, 500);
+
       setShowAddressForm(true);
     }
   };
+
+  // Center map on current GPS location
+  const handleCenterOnCurrentLocation = useCallback(() => {
+    if (location?.latitude && location?.longitude) {
+      const lat = location.latitude;
+      const lng = location.longitude;
+
+      setMarkerPosition({ latitude: lat, longitude: lng });
+
+      mapRef.current?.animateToRegion({
+        latitude: lat,
+        longitude: lng,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      }, 500);
+
+      reverseGeocodePosition(lat, lng);
+    }
+  }, [location, reverseGeocodePosition]);
 
   const handleAddressDetailChange = (field, value) => {
     setAddressDetails(prev => ({
@@ -177,19 +263,7 @@ const MapLocationPicker = () => {
           <View style={localStyles.placeholder} />
         </View>
 
-        {/* Search Instructions */}
-        <View style={localStyles.instructionsContainer}>
-          <MaterialIcons
-            name="search"
-            size={moderateScale(24)}
-            color={colors.grayScale5}
-          />
-          <ZText type="s16" color={colors.grayScale6} style={localStyles.instructionsText}>
-            {strings.searchForLocation}
-          </ZText>
-        </View>
-
-        {/* Free Address Search */}
+        {/* Search Bar */}
         <View style={localStyles.searchContainer}>
           <FreeAddressSearch
             placeholder={strings.searchLocationPlaceholder}
@@ -198,8 +272,46 @@ const MapLocationPicker = () => {
               setSelectedLocation(null);
               setShowAddressForm(false);
             }}
-            autoFocus={true}
+            autoFocus={false}
           />
+        </View>
+
+        {/* Interactive Map */}
+        <View style={localStyles.mapWrapper}>
+          <MapView
+            ref={mapRef}
+            provider={PROVIDER_GOOGLE}
+            style={localStyles.map}
+            initialRegion={initialRegion}
+            onPress={handleMapPress}
+            showsUserLocation={true}
+            showsMyLocationButton={false}
+          >
+            <Marker
+              coordinate={markerPosition}
+              draggable
+              onDragEnd={handleMapDragEnd}
+            >
+              <View style={[localStyles.customMarker, { backgroundColor: colors.primary }]}>
+                <MaterialIcons name="restaurant" size={moderateScale(20)} color={colors.white} />
+              </View>
+            </Marker>
+          </MapView>
+
+          {/* Center on GPS button */}
+          <TouchableOpacity
+            style={[localStyles.gpsButton, { backgroundColor: colors.white }]}
+            onPress={handleCenterOnCurrentLocation}
+          >
+            <MaterialIcons name="my-location" size={moderateScale(22)} color={colors.primary} />
+          </TouchableOpacity>
+
+          {/* Reverse geocoding indicator */}
+          {reverseGeocoding && (
+            <View style={localStyles.geocodingIndicator}>
+              <ZLoader size="small" />
+            </View>
+          )}
         </View>
 
         {/* Selected Location Display */}
@@ -228,8 +340,6 @@ const MapLocationPicker = () => {
             </View>
           </View>
         )}
-
-
 
         {/* Address Details Form */}
         {showAddressForm && (
@@ -361,7 +471,7 @@ const localStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: moderateScale(16),
-    paddingVertical: moderateScale(16),
+    paddingVertical: moderateScale(12),
     borderBottomWidth: 1,
     borderBottomColor: '#E5E5E5',
   },
@@ -371,22 +481,63 @@ const localStyles = StyleSheet.create({
   placeholder: {
     width: moderateScale(32),
   },
-  instructionsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: moderateScale(16),
-    paddingVertical: moderateScale(20),
-  },
-  instructionsText: {
-    marginLeft: moderateScale(12),
-  },
   searchContainer: {
     paddingHorizontal: moderateScale(16),
+    paddingVertical: moderateScale(8),
     flexShrink: 0,
+  },
+  mapWrapper: {
+    height: MAP_HEIGHT,
+    marginHorizontal: moderateScale(16),
+    borderRadius: moderateScale(16),
+    overflow: 'hidden',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+  },
+  map: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  customMarker: {
+    width: moderateScale(44),
+    height: moderateScale(44),
+    borderRadius: moderateScale(22),
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+  gpsButton: {
+    position: 'absolute',
+    bottom: moderateScale(12),
+    right: moderateScale(12),
+    width: moderateScale(44),
+    height: moderateScale(44),
+    borderRadius: moderateScale(22),
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  geocodingIndicator: {
+    position: 'absolute',
+    top: moderateScale(12),
+    right: moderateScale(12),
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    borderRadius: moderateScale(20),
+    padding: moderateScale(8),
   },
   selectedLocationContainer: {
     marginHorizontal: moderateScale(16),
-    marginVertical: moderateScale(16),
+    marginTop: moderateScale(12),
     borderRadius: moderateScale(12),
     elevation: 2,
     shadowColor: '#000',
@@ -397,7 +548,7 @@ const localStyles = StyleSheet.create({
   selectedLocationContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: moderateScale(16),
+    padding: moderateScale(14),
   },
   locationIcon: {
     marginRight: moderateScale(12),
@@ -407,8 +558,8 @@ const localStyles = StyleSheet.create({
   },
   buttonContainer: {
     paddingHorizontal: moderateScale(16),
-    paddingTop: moderateScale(16),
-    paddingBottom: moderateScale(40),
+    paddingTop: moderateScale(12),
+    paddingBottom: moderateScale(24),
   },
   confirmButton: {
     paddingVertical: moderateScale(16),
@@ -419,20 +570,20 @@ const localStyles = StyleSheet.create({
   formContainer: {
     flex: 1,
     marginHorizontal: moderateScale(16),
-    marginTop: moderateScale(16),
+    marginTop: moderateScale(12),
   },
   formContent: {
     paddingBottom: moderateScale(20),
   },
   section: {
-    marginBottom: moderateScale(20),
+    marginBottom: moderateScale(16),
   },
   sectionTitle: {
-    marginBottom: moderateScale(12),
+    marginBottom: moderateScale(10),
   },
   inputContainer: {
     borderRadius: moderateScale(12),
-    marginBottom: moderateScale(12),
+    marginBottom: moderateScale(10),
   },
   row: {
     flexDirection: 'row',

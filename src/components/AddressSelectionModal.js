@@ -1,24 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Modal,
   TouchableOpacity,
   FlatList,
   StyleSheet,
-
-  Dimensions
 } from 'react-native';
 import { showErrorToast } from '../utils/toast';
 import { useSelector, useDispatch } from 'react-redux';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import Feather from 'react-native-vector-icons/Feather';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { moderateScale } from '../common/constants';
-import { styles } from '../themes';
 import ZText from './common/ZText';
 import ZSafeAreaView from './common/ZSafeAreaView';
 import strings from '../i18n/strings';
-import { setCurrentLocation, deleteAddress, getAddresses, setSelectedAddress } from '../redux/actions/addressActions';
+import { deleteAddress, getAddresses, setSelectedAddress } from '../redux/actions/addressActions';
 import { useLocation } from '../navigation/locationContext';
 import { StackNav } from '../navigation/NavigationKeys';
 
@@ -39,11 +36,31 @@ const AddressSelectionModal = ({
 
   const [loadingCurrentLocation, setLoadingCurrentLocation] = useState(false);
 
-  // ... useEffect ...
+  // Handle edit address - navigate to edit screen
+  const handleEditAddress = (address) => {
+    onClose();
+    navigation.navigate(StackNav.MapLocationPicker, {
+      editMode: true,
+      addressToEdit: address,
+      onLocationSelect: async (updatedAddress) => {
+        if (onAddressUpdated) {
+          await onAddressUpdated(updatedAddress);
+        }
+      }
+    });
+  };
 
-  // ... handleEditAddress ...
+  // Handle delete address
+  const handleDeleteAddress = async (addressId) => {
+    try {
+      await dispatch(deleteAddress(addressId));
+      // Refresh addresses list
+      dispatch(getAddresses());
+    } catch (error) {
+      showErrorToast(strings.error, strings.failedToDeleteAddress || 'Failed to delete address');
+    }
+  };
 
-  // ... handleDeleteAddress ...
 
   const handleCurrentLocation = async () => {
     setLoadingCurrentLocation(true);
@@ -143,8 +160,8 @@ const AddressSelectionModal = ({
               >
                 {[
                   item.buildingDetails?.buildingName,
-                  item.buildingDetails?.floorNumber && strings.formatString(strings.floorLabel, item.buildingDetails.floorNumber),
-                  item.buildingDetails?.apartmentNumber && strings.formatString(strings.aptLabel, item.buildingDetails.apartmentNumber)
+                  item.buildingDetails?.floorNumber && `${strings.floorNumber} ${item.buildingDetails.floorNumber}`,
+                  item.buildingDetails?.apartmentNumber && `${strings.apartmentNumber || 'Apt'} ${item.buildingDetails.apartmentNumber}`
                 ].filter(Boolean).join(' • ')}
               </ZText>
             )}

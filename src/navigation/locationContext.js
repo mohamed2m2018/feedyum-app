@@ -144,7 +144,8 @@ export const LocationProvider = ({ children }) => {
       const newDeliveryLocation = {
         latitude: parseFloat(address.location.lat),
         longitude: parseFloat(address.location.long),
-        address: address
+        address: address.formattedAddress || address.nameLine || 'Selected Address', // Use string, not object
+        selectedAddress: address // Keep full object for reference if needed
       };
       setDeliveryLocation(newDeliveryLocation);
       setUseDeliveryAddress(true);

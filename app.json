@@ -23,6 +23,9 @@
         "NSPhotoLibraryUsageDescription": "FeedYum needs access to your photos to upload images",
         "NSPhotoLibraryAddUsageDescription": "FeedYum needs access to save photos to your library",
         "NSMicrophoneUsageDescription": "FeedYum needs microphone access for recording videos"
+      },
+      "config": {
+        "googleMapsApiKey": "***REMOVED***"
       }
     },
     "android": {
@@ -32,6 +35,11 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FF4D67"
+      },
+      "config": {
+        "googleMaps": {
+          "apiKey": "***REMOVED***"
+        }
       },
 
       "permissions": [
@@ -74,7 +82,10 @@
             "deploymentTarget": "15.0"
           },
           "android": {
-            "kotlinVersion": "1.9.23"
+            "kotlinVersion": "1.9.23",
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 34,
+            "buildToolsVersion": "35.0.0"
           }
         }
       ],
