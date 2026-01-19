@@ -6,7 +6,6 @@ import Description from '../../../components/models/Descriptions';
 import Locations from '../../../components/models/Locations';
 import Comment from '../../../components/models/Comment';
 import { useSelector } from 'react-redux';
-import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { useIsFocused, useNavigation, useRoute } from '@react-navigation/native';
@@ -32,16 +31,13 @@ import ReelComponent from './ReelComponent';
 import request from '../../../api/request';
 import ReelsList from './ReelsList';
 import strings from '../../../i18n/strings';
-import { OneSignal } from 'react-native-onesignal';
-import { showSuccessToast } from '../../../utils/toast';
 import ZLoader from '../../../components/common/ZLoader';
 import { useLocation } from '../../../navigation/locationContext';
-import ZButton from '../../../components/common/ZButton';
 import { useStorage } from '../../../utils/useStorage';
 import AddressDropdown from '../../../components/AddressDropdown';
 import { useOptimizedReels, useOptimizedStory } from '../../../hooks/useOptimizedQueries';
-import { optimizeImageUrl, prefetchImages } from '../../../utils/imageOptimizer';
-import { prefetchVideosAroundIndex, clearPrefetchCache } from '../../../services/VideoPrefetchService';
+import { prefetchImages } from '../../../utils/imageOptimizer';
+import { prefetchVideosAroundIndex } from '../../../services/VideoPrefetchService';
 
 // Module-level locked height removed in favor of dynamic calculation
 // let GLOBAL_LOCKED_HEIGHT = 0;
@@ -52,8 +48,7 @@ export default function ReelsComponent({ amIFocused }) {
   const isFocused = useIsFocused() && amIFocused;
   const commentSheetRef = useRef(null);
   const descriptionSheetRef = useRef(null);
-  const [notificationReceived, setnotificationReceived] = useState(false);
-  const [adFailedToLoad, setadFailedToLoad] = useState(false);
+
   const locationSheetRef = useRef(null);
   const navigation = useNavigation();
   const route = useRoute();
@@ -87,7 +82,6 @@ export default function ReelsComponent({ amIFocused }) {
   const likeRef = useRef([]);
   const [selectedDescription, setselectedDescription] = useState('');
   const [selectedGov, setselectedGov] = useState('');
-  const [queryClient] = React.useState(() => new QueryClient());
   const [categoryIds, setcategoryIds] = useState([]);
   const [isFilterLoading, setIsFilterLoading] = useState(false);
   const [user] = useStorage('user');
@@ -130,7 +124,6 @@ export default function ReelsComponent({ amIFocused }) {
     }
 
     const allStoriesWithAds = [];
-    let storyCounter = 0;
 
     for (const page of reelsData.pages) {
       for (const story of page.stories) {
@@ -194,7 +187,6 @@ export default function ReelsComponent({ amIFocused }) {
     }
   }, [activeVideoIndex, filteredData, isFocused]);
 
-  const onPressSearch = () => navigation.navigate(TabNav.Search);
 
   useEffect(() => {
     // Initialize deep linking service
@@ -286,9 +278,6 @@ export default function ReelsComponent({ amIFocused }) {
           compact={true}
           style={{
             width: moderateScale(140), // Fixed width to match discover
-          }}
-          onAddressSelect={address => {
-            // You can add logic here to filter content by delivery area if needed
           }}
         />
       </View>
