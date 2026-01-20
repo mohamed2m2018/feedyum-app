@@ -194,7 +194,10 @@ export default function HashtagCategory({ selectedTag, isLocationChanging }) {
           stories: [], // No stories for this chef
           dishes: [],
           reelDishes: [],
-          categoryDishes: []
+          categoryDishes: [],
+          // Include rating data from chef info
+          averageDishRating: chefInfo.averageRating || 0,
+          ratedDishesCount: chefInfo.totalReviews || 0
         });
       }
 

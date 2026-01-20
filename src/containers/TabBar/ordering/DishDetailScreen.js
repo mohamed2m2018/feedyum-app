@@ -109,7 +109,7 @@ const DishDetailScreen = () => {
       return response.data;
     },
     {
-      enabled: !!dishId && selectedTab === 'reviews',
+      enabled: !!dishId,
       retry: 2,
     },
   );
@@ -461,7 +461,7 @@ const DishDetailScreen = () => {
         <ZText
           type="B14"
           color={selectedTab === 'reviews' ? colors.white : colors.textColor}>
-          {strings.formatString(strings.reviewsCount, reviewsData?.reviews?.length || 0)}
+          {strings.formatString(strings.reviewsCount, reviewStoriesData?.reviewStories?.length || 0)}
         </ZText>
       </TouchableOpacity>
 
@@ -1098,8 +1098,7 @@ const localStyles = StyleSheet.create({
 
   // Tab Content
   tabContent: {
-    padding: moderateScale(20),
-    minHeight: moderateScale(200),
+    padding: moderateScale(12),
   },
 
   nutritionSection: {
@@ -1254,14 +1253,16 @@ const localStyles = StyleSheet.create({
 
   // Review Posts Section Styles
   reviewPostsContainer: {
-    padding: moderateScale(20),
+    paddingHorizontal: moderateScale(4),
+    paddingTop: moderateScale(8),
   },
 
   reviewPostsHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: moderateScale(20),
+    marginBottom: moderateScale(12),
+    paddingHorizontal: moderateScale(8),
   },
 
   prominentButtonContainer: {
@@ -1329,24 +1330,24 @@ const localStyles = StyleSheet.create({
   reviewGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    paddingHorizontal: moderateScale(8),
+    paddingHorizontal: moderateScale(4),
   },
 
   reviewPostCard: {
     width: '48%',
-    marginBottom: moderateScale(16),
+    marginBottom: moderateScale(10),
     marginHorizontal: '1%',
-    borderRadius: moderateScale(16),
-    backgroundColor: '#FFFFFF', // Background color for shadow efficiency
-    padding: moderateScale(12),
+    borderRadius: moderateScale(12),
+    backgroundColor: '#FFFFFF',
+    padding: moderateScale(8),
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 2,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 3,
   },
 
   ratingBadge: {
@@ -1363,19 +1364,19 @@ const localStyles = StyleSheet.create({
 
   reviewMediaContainer: {
     position: 'relative',
-    marginBottom: moderateScale(12),
+    marginBottom: moderateScale(8),
   },
 
   reviewMedia: {
     width: '100%',
-    height: moderateScale(120),
-    borderRadius: moderateScale(12),
+    height: moderateScale(100),
+    borderRadius: moderateScale(10),
   },
 
   reviewMediaPlaceholder: {
     width: '100%',
-    height: moderateScale(120),
-    borderRadius: moderateScale(12),
+    height: moderateScale(100),
+    borderRadius: moderateScale(10),
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1416,7 +1417,7 @@ const localStyles = StyleSheet.create({
 
   emptyReviewsContainer: {
     alignItems: 'center',
-    paddingVertical: moderateScale(40),
+    paddingVertical: moderateScale(24),
   },
 
   seeMoreButton: {
