@@ -324,24 +324,51 @@ const SetUpProfile = props => {
 
   const [locationIndexToEdit, setlocationIndexToEdit] = useState();
 
+  const handleLocationSelect = (newLocation) => {
+    // Adapt newLocation to the structure SetUpProfile expects
+    const adaptedLocation = {
+      description: newLocation.formattedAddress || newLocation.address || '',
+      latitude: newLocation.lat || newLocation.latitude,
+      longitude: newLocation.long || newLocation.longitude,
+      ...newLocation
+    };
+
+    if (locationIndexToEdit !== undefined && locationIndexToEdit !== null) {
+      setLocations(prev => {
+        const newLocs = [...prev];
+        newLocs[locationIndexToEdit] = adaptedLocation;
+        return newLocs;
+      });
+      setlocationIndexToEdit(null);
+    } else {
+      setLocations(prev => [...prev, adaptedLocation]);
+    }
+  };
+
   const onPressProfilePic = () => ProfilePictureSheetRef?.current.show();
+
   const onPressLocation = () => {
-    navigation.navigate(StackNav.locations, {
-      locationIndexToEdit,
-      setlocationIndexToEdit,
-      setLocations,
-      locations: locations,
+    setlocationIndexToEdit(null);
+    navigation.navigate(StackNav.MapLocationPicker, {
+      onLocationSelect: handleLocationSelect,
+      isChefBranch: true,
     });
   };
+
   const onEditLocation = index => {
     setlocationIndexToEdit(index);
-    navigation.navigate(StackNav.locations, {
-      locationIndexToEdit: index,
-      setlocationIndexToEdit,
-      setLocations,
-      locations: locations,
+    const loc = locations[index];
+    navigation.navigate(StackNav.MapLocationPicker, {
+      onLocationSelect: handleLocationSelect,
+      isChefBranch: true,
+      initialLocation: {
+        latitude: loc.latitude,
+        longitude: loc.longitude,
+        address: loc.description
+      },
     });
   };
+
   const onDeleteLocation = indexToDelete => {
     setLocations(l => l.filter((_, index) => index !== indexToDelete));
   };

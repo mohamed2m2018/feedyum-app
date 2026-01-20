@@ -9,6 +9,8 @@ import {
   InteractionManager,
   ActivityIndicator,
   I18nManager,
+  TextInput,
+  Keyboard,
 } from 'react-native';
 import { showErrorToast } from '../../../utils/toast';
 import { useSelector, useDispatch } from 'react-redux';
@@ -51,6 +53,7 @@ const ChefMenu = () => {
 
 
   const flatListRef = useRef(null);
+  const searchInputRef = useRef(null);
   const hasAttemptedScrollRef = useRef(false);
   const [scrollRetryCount, setScrollRetryCount] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
@@ -192,11 +195,17 @@ const ChefMenu = () => {
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [useSemanticSearch, setUseSemanticSearch] = useState(true);
 
-  const onSearchInput = text => {
+  const onSearchInput = useCallback((text) => {
     setSearch(text);
     clearTimeout(onSearchInput._t);
     onSearchInput._t = setTimeout(() => setDebouncedSearch(text), 500);
-  };
+    // Refocus the input after state update to prevent keyboard dismissal
+    requestAnimationFrame(() => {
+      if (searchInputRef.current) {
+        searchInputRef.current.focus();
+      }
+    });
+  }, []);
 
   // Fetch searched dishes scoped to chef
   const fetchSearchedDishes = async ({ pageParam = null }) => {
@@ -526,37 +535,14 @@ const ChefMenu = () => {
     return (
       <View style={[localStyles.stickyBrowseContainer, { backgroundColor: colors.backgroundColor }]}>
         <View style={localStyles.stunningCategoriesContainer}>
-          {/* Header row: Browse Menu + Search */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: moderateScale(10), marginTop: moderateScale(-6), marginBottom: moderateScale(8) }}>
+          {/* Browse Menu title */}
+          <View style={{ marginTop: moderateScale(-6), marginBottom: moderateScale(8) }}>
             <ZText
               type="B16"
               color={colors.textColor}
               style={[localStyles.categoriesTitle, { marginBottom: 0 }]}>
               {strings.browseMenu}
             </ZText>
-            <View style={{ flex: 1, marginTop: -moderateScale(4) }}>
-              <ZInput
-                _value={search}
-                placeHolder={strings.searchDishes}
-                toGetTextFieldValue={onSearchInput}
-                insideLeftIcon={() => (
-                  <Ionicons name="search" size={moderateScale(16)} color={colors.grayScale6} />
-                )}
-                inputContainerStyle={{ backgroundColor: colors.inputBg || colors.grayScale2, borderColor: colors.bColor || colors.grayScale3, height: getHeight(42) }}
-                inputBoxStyle={{ color: colors.textColor, height: getHeight(42), paddingVertical: moderateScale(6) }}
-                rightAccessory={() => (
-                  isSearching ? (
-                    <ActivityIndicator size="small" color={colors.primary} />
-                  ) : (
-                    search?.length > 0 ? (
-                      <TouchableOpacity onPress={() => { setSearch(''); setDebouncedSearch(''); }}>
-                        <Ionicons name="close-circle" size={moderateScale(18)} color={colors.grayScale6} />
-                      </TouchableOpacity>
-                    ) : null
-                  )
-                )}
-              />
-            </View>
           </View>
           <FlatList
             data={categoryNames}
@@ -810,11 +796,45 @@ const ChefMenu = () => {
     <ZSafeAreaView>
       <ZHeader title={menuData?.chef?.fullName || chefName || strings.menu} showBack />
 
+      {/* Search Bar - Outside FlatList to prevent keyboard dismissal */}
+      {menuData?.dishes?.length > 0 && (
+        <View style={{ backgroundColor: colors.backgroundColor, paddingHorizontal: moderateScale(16), paddingVertical: moderateScale(8) }}>
+          <ZInput
+            fieldRef={searchInputRef}
+            _value={search}
+            placeHolder={strings.searchDishes}
+            toGetTextFieldValue={onSearchInput}
+            blurOnSubmit={false}
+            insideLeftIcon={() => (
+              <Ionicons name="search" size={moderateScale(16)} color={colors.grayScale6} />
+            )}
+            inputContainerStyle={{ backgroundColor: colors.inputBg || colors.grayScale2, borderColor: colors.bColor || colors.grayScale3, height: getHeight(42) }}
+            inputBoxStyle={{ color: colors.textColor, height: getHeight(42), paddingVertical: moderateScale(6) }}
+            rightAccessory={() => (
+              isSearching ? (
+                <ActivityIndicator size="small" color={colors.primary} />
+              ) : (
+                search?.length > 0 ? (
+                  <TouchableOpacity onPress={() => { setSearch(''); setDebouncedSearch(''); }}>
+                    <Ionicons name="close-circle" size={moderateScale(18)} color={colors.grayScale6} />
+                  </TouchableOpacity>
+                ) : null
+              )
+            )}
+          />
+          {/* Search indicator */}
+          {debouncedSearch.length > 0 && isSearching ? (
+            <ZText type="M12" color={colors.grayScale7} style={{ marginTop: moderateScale(4) }}>{strings.searching}</ZText>
+          ) : null}
+        </View>
+      )}
+
       <FlatList
         ref={flatListRef}
         data={(debouncedSearch ? searchedDishes : menuData?.dishes) || []}
         renderItem={renderDishCard}
         keyExtractor={item => item._id}
+        keyboardShouldPersistTaps="handled"
         ListHeaderComponent={() => (
           <View style={{ backgroundColor: colors.backgroundColor }}>
             {/* Chef Info + Featured Sections */}
@@ -822,13 +842,6 @@ const ChefMenu = () => {
 
             {/* Categories Section (scrolls with content) */}
             {renderStickyBrowseMenu()}
-
-            {/* Search indicator */}
-            {debouncedSearch.length > 0 && isSearching ? (
-              <View style={{ paddingHorizontal: moderateScale(16), paddingBottom: moderateScale(6) }}>
-                <ZText type="M12" color={colors.grayScale7}>{strings.searching}</ZText>
-              </View>
-            ) : null}
           </View>
         )}
         contentContainerStyle={localStyles.listContainer}

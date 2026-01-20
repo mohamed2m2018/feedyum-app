@@ -18,6 +18,7 @@ import GoogleMapsService from '../services/GoogleMapsService';
 const FreeAddressSearch = ({
   onLocationSelect,
   onClear,
+  onFocus,
   placeholder,
   autoFocus = false,
   initialValue = ''
@@ -28,6 +29,20 @@ const FreeAddressSearch = ({
   const [loading, setLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const isSelectingRef = React.useRef(false);
+  const prevInitialValueRef = React.useRef(initialValue);
+
+  // Sync searchText when initialValue changes from parent (e.g., pin moved)
+  useEffect(() => {
+    // Only update if the initialValue actually changed and it's not from user typing
+    if (initialValue !== prevInitialValueRef.current) {
+      prevInitialValueRef.current = initialValue;
+      // Set flag to prevent triggering search
+      isSelectingRef.current = true;
+      setSearchText(initialValue);
+      setSuggestions([]);
+      setShowSuggestions(false);
+    }
+  }, [initialValue]);
 
   // Debounce search to avoid too many API calls
   useEffect(() => {
@@ -128,6 +143,7 @@ const FreeAddressSearch = ({
           placeholderTextColor={colors.grayScale5}
           autoFocus={autoFocus}
           multiline={false}
+          onFocus={onFocus}
         />
         {loading && (
           <ActivityIndicator

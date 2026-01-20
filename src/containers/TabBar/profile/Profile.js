@@ -184,156 +184,212 @@ export default function Profile({ navigation }) {
 
   const onPressSetting = () => navigation.navigate(StackNav.Setting);
 
-  // eslint-disable-next-line react/no-unstable-nested-components
-  const RenderUserDetail = ({ item }) => {
+  // Render User Detail - Clean Style
+  const RenderUserDetail = ({ item, index }) => {
+    // Different accent colors for each stat
+    const accentColors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4'];
+    const accent = accentColors[index % accentColors.length];
+
     return (
-      <TouchableOpacity onPress={item.onPress} style={[styles.itemsCenter, localStyles.statsContainer]}>
-        <ZText type="b24" align={'center'} style={localStyles.statsNumber}>
+      <TouchableOpacity
+        onPress={item.onPress}
+        style={[
+          localStyles.statItem,
+          {
+            backgroundColor: colors.dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
+            borderRadius: moderateScale(8),
+            paddingVertical: moderateScale(6),
+            paddingHorizontal: moderateScale(4),
+          }
+        ]}
+      >
+        <ZText type="b16" align={'center'} color={accent} style={{ fontWeight: '800' }}>
           {item.value}
         </ZText>
-        <ZText type="m16" align={'center'} style={[styles.mt10, localStyles.statsLabel]}>
+        <ZText type="m10" align={'center'} color={colors.grayScale5}>
           {item.title}
         </ZText>
       </TouchableOpacity>
     );
   };
 
-  // Profile Header Component
+  // Profile Header Component - Stunning Premium Design
   const ProfileHeader = () => (
-    <View style={localStyles.headerContent}>
-      {/* Profile Header */}
-      <View style={localStyles.headerContainer}>
-        <TouchableOpacity onPress={onPressSetting}>
+    <View style={[localStyles.headerContent, { backgroundColor: colors.backgroundColor }]}>
+
+      {/* Gradient Accent Bar at Top */}
+      <LinearGradient
+        colors={['#FF4D67', '#FF8E53', '#FFCD38']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={localStyles.accentBar}
+      />
+
+      {/* Top Bar: Username & Settings */}
+      <View style={localStyles.topBar}>
+        <View style={localStyles.placeholderIcon} />
+        <View style={localStyles.usernameContainer}>
+          <ZText type="b20" style={localStyles.headerUsername} color={colors.textColor}>
+            {user?.username || user?.fullName}
+          </ZText>
+          {user?.type === 'chef' && (
+            <View style={[localStyles.verifiedBadge, { backgroundColor: colors.primary }]}>
+              <Ionicons name="restaurant" size={moderateScale(10)} color={colors.white} />
+            </View>
+          )}
+        </View>
+        <TouchableOpacity
+          onPress={onPressSetting}
+          style={[localStyles.settingsButton, { backgroundColor: colors.dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }]}
+        >
           <Ionicons
             name="settings-outline"
-            size={moderateScale(24)}
-            color={colors.dark ? colors.white : colors.darkColor}
+            size={moderateScale(22)}
+            color={colors.textColor}
           />
         </TouchableOpacity>
       </View>
 
-      <View style={styles.itemsCenter}>
-        <TouchableOpacity onPress={() => onPressEditProfile(false)}>
-          <Image
-            source={
-              user?.avatar
-                ? { uri: user?.avatar }
-                : colors.dark
-                  ? images.userDark
-                  : images.userLight
-            }
-            style={localStyles.userImage}
-          />
-          <MaterialIcon
-            name="pencil-box"
-            size={moderateScale(24)}
-            color={colors.primary}
-            style={localStyles.editIcon}
-          />
+      {/* Main Profile Section: Avatar + Stats */}
+      <View style={localStyles.profileTopSection}>
+        {/* Avatar with Gradient Ring */}
+        <TouchableOpacity onPress={() => onPressEditProfile(false)} style={localStyles.avatarWrapper}>
+          <LinearGradient
+            colors={['#FF4D67', '#FF8E53', '#FFCD38', '#4ECDC4']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={localStyles.avatarGradientRing}
+          >
+            <View style={[localStyles.avatarInnerRing, { backgroundColor: colors.backgroundColor }]}>
+              <Image
+                source={
+                  user?.avatar
+                    ? { uri: user?.avatar }
+                    : colors.dark
+                      ? images.userDark
+                      : images.userLight
+                }
+                style={localStyles.userImage}
+              />
+            </View>
+          </LinearGradient>
+          <LinearGradient
+            colors={['#FF4D67', '#FF8E53']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={localStyles.editBadge}
+          >
+            <Ionicons name="add" size={moderateScale(16)} color={colors.white} />
+          </LinearGradient>
         </TouchableOpacity>
-        <View style={styles.mv20}>
-          <ZText type="b24" align={'center'}>
-            {user?.fullName}
-          </ZText>
-          {user?.profileCompleted && (
-            <ZText type="m10" align={'center'}>
-              {strings?.unofficial}
-            </ZText>
-          )}
-          <ZText type="m14" align={'center'} style={styles.mt10}>
-            {user?.email}
-          </ZText>
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={() => onPressEditProfile(true)}
-            style={localStyles.bioContainer}>
-            <ZText
-              type={user?.bio ? 'm16' : 'm14'}
-              align={'center'}
-              color={user?.bio ? colors.textColor : colors.background}
-              style={[styles.mt10, localStyles.bioText]}>
-              {user?.bio ?? strings.addBio}
-            </ZText>
-            <MaterialIcon
-              name="pencil-box"
-              size={moderateScale(20)}
-              style={localStyles.bioIcon}
-              color={colors.primary}
-            />
-          </TouchableOpacity>
+
+        {/* Stats (Right) - Colorful Cards */}
+        <View style={localStyles.statsContainer}>
+          {UserDetail(
+            user?.postsNo,
+            followStatistics?.data?.followersCount,
+            followStatistics?.data?.followingCount,
+            views?.data?.viewsCount || 0,
+            user?.type,
+          ).map((item, index) => (
+            <RenderUserDetail item={item} key={index} index={index} />
+          ))}
         </View>
       </View>
 
-      <View style={[styles.flexRow, styles.justifyEvenly]}>
-        {UserDetail(
-          user?.postsNo,
-          followStatistics?.data?.followersCount,
-          followStatistics?.data?.followingCount,
-          views?.data?.viewsCount || 0,
-          user?.type,
-        ).map((item, index) => (
-          <RenderUserDetail item={item} key={index} />
-        ))}
-      </View>
-
-      <View style={localStyles.actionButtonsContainer}>
-        <TouchableOpacity
-          style={[localStyles.iconButton, { borderColor: colors.primary }]}
-          onPress={() => onPressEditProfile(false)}
-        >
-          <MaterialIcon
-            name="account-edit"
-            size={moderateScale(20)}
-            color={colors.primary}
-          />
-          <ZText type="m12" color={colors.primary} style={styles.mt5}>
-            {strings.edit}
-          </ZText>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[localStyles.iconButton, { borderColor: colors.primary }]}
-          onPress={() => navigation.navigate(StackNav.ChatList)}
-        >
-          <Ionicons
-            name="chatbubbles-outline"
-            size={moderateScale(20)}
-            color={colors.primary}
-          />
-          <ZText type="m12" color={colors.primary} style={styles.mt5}>
-            {strings.chats}
-          </ZText>
-        </TouchableOpacity>
+      {/* Bio Section with subtle accent */}
+      <View style={[localStyles.bioSection, { borderLeftColor: colors.primary, borderLeftWidth: 3 }]}>
+        <ZText type="b18" color={colors.textColor}>
+          {user?.fullName}
+        </ZText>
 
         {user?.type === 'chef' && (
-          <TouchableOpacity
-            style={[localStyles.iconButton, localStyles.primaryButton, { backgroundColor: colors.primary, borderColor: colors.primary }]}
-            onPress={() => navigation.navigate(StackNav.ChefDashboard, { isFromProfile: true })}
-          >
-            <MaterialIcon
-              name="chef-hat"
-              size={moderateScale(20)}
-              color={colors.white}
-            />
-            <ZText type="m12" color={colors.white} style={styles.mt5}>
-              {strings.chef}
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: moderateScale(2) }}>
+            <Ionicons name="restaurant-outline" size={moderateScale(14)} color={colors.primary} />
+            <ZText type="m13" color={colors.primary} style={{ marginLeft: moderateScale(4) }}>
+              {strings.kitchen || 'Kitchen'}
             </ZText>
-          </TouchableOpacity>
+          </View>
         )}
 
-        {/* WALLET BUTTON - Only for chefs */}
-        {user?.type === 'chef' && (
-          <TouchableOpacity
-            style={[localStyles.iconButton, { borderColor: colors.primary }]}
-            onPress={() => navigation.navigate(StackNav.Wallet)}
+        <TouchableOpacity onPress={() => onPressEditProfile(false)} activeOpacity={0.7}>
+          <ZText
+            type={'m14'}
+            color={colors.dark ? colors.grayScale4 : colors.grayScale6}
+            style={localStyles.bioText}
+            numberOfLines={4}
           >
-            <Ionicons
-              name="wallet-outline"
-              size={moderateScale(20)}
-              color={colors.primary}
-            />
-            <ZText type="m12" color={colors.primary} style={styles.mt5}>
-              {strings.wallet}
+            {user?.bio || (user?.type === 'chef' ? (strings.addRestaurantBio || 'Tap to add your kitchen bio') : (strings.addBio || 'Tap to add your bio'))}
+          </ZText>
+        </TouchableOpacity>
+      </View>
+
+      {/* Premium Action Buttons Row */}
+      <View style={localStyles.actionButtonsContainer}>
+        {/* Edit Profile - Primary Gradient */}
+        <TouchableOpacity
+          onPress={() => onPressEditProfile(false)}
+          activeOpacity={0.8}
+          style={localStyles.gradientButtonWrapper}
+        >
+          <LinearGradient
+            colors={['#FF4D67', '#FF8E53']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={localStyles.gradientButton}
+          >
+            <Ionicons name="pencil" size={moderateScale(14)} color={colors.white} style={{ marginRight: moderateScale(4) }} />
+            <ZText type="b13" color={colors.white}>
+              {strings.editProfile}
+            </ZText>
+          </LinearGradient>
+        </TouchableOpacity>
+
+        {user?.type === 'chef' ? (
+          <>
+            {/* Branches - Secondary Style */}
+            <TouchableOpacity
+              style={[localStyles.secondaryButton, {
+                backgroundColor: colors.dark ? 'rgba(255,77,103,0.15)' : 'rgba(255,77,103,0.1)',
+                borderColor: colors.primary,
+              }]}
+              onPress={() => navigation.navigate(StackNav.ChefBranchesScreen)}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="location" size={moderateScale(14)} color={colors.primary} style={{ marginRight: moderateScale(4) }} />
+              <ZText type="b13" color={colors.primary}>
+                {strings.branches || 'Branches'}
+              </ZText>
+            </TouchableOpacity>
+
+            {/* Wallet - Accent Style */}
+            <TouchableOpacity
+              style={[localStyles.secondaryButton, {
+                backgroundColor: colors.dark ? 'rgba(78,205,196,0.15)' : 'rgba(78,205,196,0.1)',
+                borderColor: '#4ECDC4',
+              }]}
+              onPress={() => navigation.navigate(StackNav.Wallet)}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="wallet" size={moderateScale(14)} color="#4ECDC4" style={{ marginRight: moderateScale(4) }} />
+              <ZText type="b13" color="#4ECDC4">
+                {strings.wallet || 'Wallet'}
+              </ZText>
+            </TouchableOpacity>
+          </>
+        ) : (
+          /* Chats Button for regular users */
+          <TouchableOpacity
+            style={[localStyles.secondaryButton, {
+              backgroundColor: colors.dark ? 'rgba(78,205,196,0.15)' : 'rgba(78,205,196,0.1)',
+              borderColor: '#4ECDC4',
+            }]}
+            onPress={() => navigation.navigate(StackNav.ChatList)}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="chatbubbles" size={moderateScale(14)} color="#4ECDC4" style={{ marginRight: moderateScale(4) }} />
+            <ZText type="b13" color="#4ECDC4">
+              {strings.chats || 'Chats'}
             </ZText>
           </TouchableOpacity>
         )}
@@ -353,7 +409,7 @@ export default function Profile({ navigation }) {
   }, [isFocused]);
 
   const renderPostItem = ({ item, index }) => (
-    <View style={localStyles.gridItem}>
+    <View style={[localStyles.gridItem, { borderColor: colors.backgroundColor }]}>
       <ReelComponent
         data={item?.views}
         profileId={user}
@@ -397,7 +453,7 @@ export default function Profile({ navigation }) {
   };
 
   return (
-    <ZSafeAreaView style={localStyles.screenContainer}>
+    <ZSafeAreaView style={[localStyles.screenContainer, { backgroundColor: colors.backgroundColor }]}>
       {!isGuest && (
         <View style={localStyles.container}>
           {isLoadingSomething && (
@@ -440,160 +496,187 @@ export default function Profile({ navigation }) {
 const localStyles = StyleSheet.create({
   screenContainer: {
     flex: 1,
-    paddingHorizontal: moderateScale(20),
-    paddingTop: moderateScale(10),
   },
   container: {
     flex: 1,
-    backgroundColor: 'transparent',
   },
   flatListContent: {
-    paddingHorizontal: moderateScale(0),
     paddingBottom: moderateScale(30),
   },
   columnWrapper: {
-    marginBottom: moderateScale(15),
-    paddingHorizontal: moderateScale(8),
+    // No margin for grid look
   },
+
+  // Header Component Styles
   headerContent: {
     width: '100%',
-    marginBottom: moderateScale(20),
-    paddingHorizontal: moderateScale(0),
+    marginBottom: moderateScale(10),
   },
-  headerContainer: {
-    ...styles.flex,
-    ...styles.flexRow,
-    ...styles.alignCenter,
-    ...styles.justifyBetween,
-    ...styles.mt20,
-    marginBottom: moderateScale(20),
+
+  // Gradient Accent Bar
+  accentBar: {
+    height: moderateScale(4),
+    width: '100%',
   },
-  userImage: {
+
+  topBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: moderateScale(20),
+    paddingTop: moderateScale(12),
+    height: moderateScale(54),
+  },
+  usernameContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerUsername: {
+    fontWeight: '800',
+    letterSpacing: 0.3,
+  },
+  verifiedBadge: {
+    width: moderateScale(18),
+    height: moderateScale(18),
+    borderRadius: moderateScale(9),
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: moderateScale(6),
+  },
+  placeholderIcon: {
+    width: moderateScale(36),
+  },
+  settingsButton: {
+    width: moderateScale(36),
+    height: moderateScale(36),
+    borderRadius: moderateScale(18),
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  // Profile Top Section (Avatar + Stats)
+  profileTopSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: moderateScale(20),
+    marginTop: moderateScale(16),
+  },
+
+  // Avatar with Gradient Ring
+  avatarWrapper: {
+    position: 'relative',
+    marginRight: moderateScale(20),
+  },
+  avatarGradientRing: {
     width: moderateScale(100),
     height: moderateScale(100),
     borderRadius: moderateScale(50),
+    padding: moderateScale(3),
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  editIcon: {
+  avatarInnerRing: {
+    width: moderateScale(94),
+    height: moderateScale(94),
+    borderRadius: moderateScale(47),
+    padding: moderateScale(3),
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  userImage: {
+    width: moderateScale(88),
+    height: moderateScale(88),
+    borderRadius: moderateScale(44),
+  },
+  editBadge: {
     position: 'absolute',
-    bottom: 0,
-    right: 0,
-  },
-  bioContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    bottom: moderateScale(2),
+    right: moderateScale(2),
+    width: moderateScale(28),
+    height: moderateScale(28),
+    borderRadius: moderateScale(14),
     justifyContent: 'center',
-  },
-  bioText: {
-    maxWidth: 260,
-    marginRight: 5,
-  },
-  bioIcon: {
-    marginTop: 7,
-  },
-  // Stats Styles
-  statsContainer: {
-    paddingVertical: moderateScale(15),
-    paddingHorizontal: moderateScale(12),
-    marginHorizontal: moderateScale(2),
-    borderRadius: moderateScale(8),
-    minWidth: moderateScale(70),
-  },
-  statsNumber: {
-    paddingHorizontal: moderateScale(8),
-    paddingVertical: moderateScale(4),
-  },
-  statsLabel: {
-    paddingHorizontal: moderateScale(4),
-  },
-  actionButtonsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-evenly',
-    marginTop: moderateScale(20),
-    marginBottom: moderateScale(20),
-    paddingHorizontal: moderateScale(15),
-    flexWrap: 'wrap',
-  },
-  iconButton: {
     alignItems: 'center',
-    justifyContent: 'center',
-    width: moderateScale(70),
-    height: moderateScale(65),
-    borderRadius: moderateScale(12),
-    borderWidth: 1,
-    backgroundColor: 'transparent',
-    paddingVertical: moderateScale(8),
-    marginHorizontal: moderateScale(2),
-  },
-  primaryButton: {
-    // Additional styles for the chef dashboard button
+    shadowColor: '#FF4D67',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 4,
+    elevation: 5,
   },
 
-  // Enhanced Tab Bar Styles
-  tabBarContainer: {
-    marginTop: moderateScale(10),
-    marginBottom: moderateScale(20),
-    marginHorizontal: moderateScale(0),
-  },
-  tabBar: {
-    flexDirection: 'row',
-    borderRadius: moderateScale(16),
-    padding: moderateScale(6),
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
-    minHeight: moderateScale(50),
-  },
-  tab: {
+  // Stats
+  statsContainer: {
     flex: 1,
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: moderateScale(14),
-    paddingHorizontal: moderateScale(12),
-    borderRadius: moderateScale(12),
-    position: 'relative',
-    overflow: 'visible',
-    minWidth: moderateScale(80),
+    marginLeft: moderateScale(10),
+    gap: moderateScale(8),
   },
-  activeTab: {
-    transform: [{ scale: 1.02 }],
-  },
-  activeTabGradient: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    borderRadius: moderateScale(12),
-  },
-  tabIcon: {
-    marginRight: moderateScale(6),
-    zIndex: 10,
-  },
-  tabText: {
-    zIndex: 2,
-    fontWeight: '600',
-    fontSize: moderateScale(14),
-    flexShrink: 0,
-  },
-  tabIndicator: {
-    position: 'absolute',
-    bottom: moderateScale(4),
-    width: moderateScale(20),
-    height: moderateScale(2),
-    borderRadius: moderateScale(1),
-    zIndex: 2,
+  statItem: {
+    alignItems: 'center',
   },
 
-  // Content Styles
+  // Bio Section
+  bioSection: {
+    paddingHorizontal: moderateScale(20),
+    paddingLeft: moderateScale(23),
+    marginTop: moderateScale(16),
+    borderRadius: moderateScale(4),
+  },
+  bioText: {
+    lineHeight: moderateScale(20),
+    marginTop: moderateScale(6),
+  },
+
+  // Action Buttons
+  actionButtonsContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: moderateScale(16),
+    marginTop: moderateScale(18),
+    marginBottom: moderateScale(14),
+    gap: moderateScale(8),
+  },
+  gradientButtonWrapper: {
+    flex: 1,
+    borderRadius: moderateScale(10),
+    overflow: 'hidden',
+    shadowColor: '#FF4D67',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  gradientButton: {
+    flexDirection: 'row',
+    height: moderateScale(38),
+    borderRadius: moderateScale(10),
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  secondaryButton: {
+    flex: 1,
+    flexDirection: 'row',
+    height: moderateScale(38),
+    borderRadius: moderateScale(10),
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1.5,
+  },
+  actionButton: {
+    flex: 1,
+    height: moderateScale(34),
+    borderRadius: moderateScale(8),
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 0,
+  },
+
+  // Grid
   gridItem: {
-    width: '31%',
-    marginHorizontal: moderateScale(2),
+    width: '33.33%',
+    height: moderateScale(200),
+    borderWidth: 0.5,
   },
   emptyContainer: {
     alignItems: 'center',

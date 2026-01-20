@@ -55,76 +55,123 @@ export const LocationProvider = ({ children }) => {
         console.log('[LocationContext] Permission result:', result);
 
         if (result === 'granted') {
-          console.log('[LocationContext] Permission granted, calling getCurrentPosition...');
-          // Helper function to get location with retries and fallback
-          const getLocation = async () => {
-            console.log('[LocationContext] Attempting to get location...');
+          console.log('[LocationContext] Permission granted, getting location...');
 
-            const getCurrentPositionPromise = (options) => {
-              return new Promise((resolve, reject) => {
-                Geolocation.getCurrentPosition(resolve, reject, options);
-              });
-            };
+          const getCurrentPositionPromise = (options) => {
+            return new Promise((resolve, reject) => {
+              Geolocation.getCurrentPosition(resolve, reject, options);
+            });
+          };
+
+          const reverseGeocodeAsync = async (latitude, longitude) => {
+            try {
+              const geocodeResult = await GoogleMapsService.reverseGeocode(latitude, longitude);
+              if (geocodeResult?.address) {
+                return geocodeResult.address;
+              }
+            } catch (e) {
+              console.warn('Reverse geocoding failed:', e.message);
+            }
+            return null;
+          };
+
+          // Strategy: Get FAST location first (cached/network), then refine with GPS
+          const getLocationFast = async () => {
+            console.log('[LocationContext] Getting fast location (low accuracy)...');
 
             try {
-              // Attempt 1: High Accuracy with shorter timeout
-              console.log('[LocationContext] Attempt 1: High Accuracy');
-              let position = await getCurrentPositionPromise({ enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 });
-              processPosition(position);
-            } catch (error) {
-              console.warn('[LocationContext] High accuracy failed:', error.message);
+              // Step 1: Try LOW accuracy first - this uses cached/network location (INSTANT)
+              const position = await getCurrentPositionPromise({
+                enableHighAccuracy: false,
+                timeout: 5000,
+                maximumAge: 60000 // Accept 1 minute old cache
+              });
 
-              try {
-                // Attempt 2: Low Accuracy (Network/Wifi)
-                console.log('[LocationContext] Attempt 2: Low Accuracy (Fallback)');
-                let position = await getCurrentPositionPromise({ enableHighAccuracy: false, timeout: 15000, maximumAge: 10000 });
-                processPosition(position);
-              } catch (secondError) {
-                console.error('[LocationContext] All location attempts failed:', secondError.message);
-                handleRequestPermission(); // Treat as permission/location failure
-              }
-            }
-          };
+              const { latitude, longitude } = position.coords;
+              console.log('[LocationContext] Fast location obtained:', latitude, longitude);
 
-          const processPosition = async (position) => {
-            const { latitude, longitude } = position.coords;
-            console.log('Got GPS coordinates:', latitude, longitude);
+              // Set location IMMEDIATELY with coordinates (before geocoding)
+              setLocation({
+                latitude,
+                longitude,
+                address: null // Will update after geocoding
+              });
 
-            let addressDetails = null;
-
-            // Retry mechanism for reverse geocoding
-            const maxRetries = 3;
-            for (let attempt = 1; attempt <= maxRetries; attempt++) {
-              try {
-                console.log(`Reverse geocoding attempt ${attempt}/${maxRetries}...`);
-                const geocodeResult = await GoogleMapsService.reverseGeocode(latitude, longitude);
-                console.log('Geocode result:', geocodeResult);
-
-                if (geocodeResult && geocodeResult.address) {
-                  addressDetails = geocodeResult.address;
-                  console.log('Address resolved:', addressDetails);
-                  break; // Success, exit retry loop
-                } else {
-                  console.warn('Geocode response missing address:', geocodeResult);
+              // Geocode in parallel (don't block)
+              reverseGeocodeAsync(latitude, longitude).then(address => {
+                if (address) {
+                  setLocation(prev => prev ? { ...prev, address } : { latitude, longitude, address });
                 }
+              });
+
+              // Step 2: Get HIGH accuracy in background for better precision
+              setTimeout(async () => {
+                try {
+                  const precisePosition = await getCurrentPositionPromise({
+                    enableHighAccuracy: true,
+                    timeout: 15000,
+                    maximumAge: 10000
+                  });
+
+                  const preciseLat = precisePosition.coords.latitude;
+                  const preciseLng = precisePosition.coords.longitude;
+
+                  // Only update if significantly different (> 50 meters)
+                  const distance = Math.sqrt(
+                    Math.pow(preciseLat - latitude, 2) +
+                    Math.pow(preciseLng - longitude, 2)
+                  ) * 111000; // rough meters conversion
+
+                  if (distance > 50) {
+                    console.log('[LocationContext] Updating with precise location, distance:', distance);
+                    setLocation(prev => ({
+                      ...prev,
+                      latitude: preciseLat,
+                      longitude: preciseLng
+                    }));
+
+                    // Re-geocode with precise location
+                    const preciseAddress = await reverseGeocodeAsync(preciseLat, preciseLng);
+                    if (preciseAddress) {
+                      setLocation(prev => prev ? { ...prev, address: preciseAddress } : null);
+                    }
+                  }
+                } catch (e) {
+                  console.log('[LocationContext] High accuracy update skipped:', e.message);
+                }
+              }, 100); // Start high accuracy fetch immediately but don't block
+
+              handleRequestPermission();
+              return true;
+
+            } catch (fastError) {
+              console.warn('[LocationContext] Fast location failed:', fastError.message);
+
+              // Fallback: Try high accuracy directly
+              try {
+                const position = await getCurrentPositionPromise({
+                  enableHighAccuracy: true,
+                  timeout: 15000,
+                  maximumAge: 10000
+                });
+
+                const { latitude, longitude } = position.coords;
+                setLocation({ latitude, longitude, address: null });
+
+                const address = await reverseGeocodeAsync(latitude, longitude);
+                setLocation({ latitude, longitude, address });
+
+                handleRequestPermission();
+                return true;
               } catch (e) {
-                console.error(`Reverse geocoding attempt ${attempt} failed:`, e.message || e);
-                if (attempt < maxRetries) {
-                  // Wait a bit before retrying
-                  await new Promise(resolve => setTimeout(resolve, 1000));
-                }
+                console.error('[LocationContext] All location attempts failed');
+                handleRequestPermission();
+                return false;
               }
             }
-
-            setLocation({
-              latitude,
-              longitude,
-              address: addressDetails
-            });
-            handleRequestPermission();
           };
 
-          getLocation();
+          getLocationFast();
         } else {
           console.log('[LocationContext] Permission NOT granted, result was:', result);
           handleRequestPermission();

@@ -1,12 +1,12 @@
-import {ActivityIndicator, FlatList} from 'react-native';
-import React, {useEffect, useState} from 'react';
+import { ActivityIndicator, FlatList } from 'react-native';
+import React, { useEffect, useState } from 'react';
 import UserDetailComponent from '../../../../components/UserDetailComponent';
-import {styles} from '../../../../themes';
+import { styles } from '../../../../themes';
 import ZText from '../../../../components/common/ZText';
-import {useQuery} from 'react-query';
+import { useQuery } from 'react-query';
 import request from '../../../../api/request';
 import strings from '../../../../i18n/strings';
-import {useSelector} from 'react-redux';
+import { useSelector } from 'react-redux';
 import Spinner from 'react-native-loading-spinner-overlay';
 
 export default function Following({
@@ -20,14 +20,14 @@ export default function Following({
 
   const colors = useSelector(state => state.theme.theme);
   const [isAdding, setIsAdding] = useState(false);
-  const {data: currentUserQuery} = useQuery(
+  const { data: currentUserQuery } = useQuery(
     'user',
     () => request.get('/user'),
-    {retry: 1},
+    { retry: 1 },
   );
   const currentUser = currentUserQuery?.data?.user;
 
-  const renderItem = ({item}) => {
+  const renderItem = ({ item }) => {
     return (
       <UserDetailComponent
         userName={item?.following_id?.fullName}
@@ -37,6 +37,8 @@ export default function Following({
         id={item?.following_id?._id}
         currentUserId={currentUser?._id}
         setIsAdding={setIsAdding}
+        userType={item?.following_id?.type}
+        currentUserType={currentUser?.type}
       />
     );
   };

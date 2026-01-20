@@ -27,6 +27,8 @@ export default function UserDetailComponent({
   currentUserId,
   isSearch,
   setIsAdding = () => { },
+  userType,
+  currentUserType,
 }) {
   const navigation = useNavigation();
   const colors = useSelector(state => state.theme.theme);
@@ -103,11 +105,18 @@ export default function UserDetailComponent({
     if (currentUserId === id) {
       navigation.navigate(TabNav.Profile);
     } else {
-      navigation.navigate(StackNav.ProfileDetail, {
-        userName: userName,
-        userImage: userImage,
-        id,
-      });
+      if (userType === 'chef') {
+        navigation.navigate(StackNav.ChefMenu, {
+          chefId: id,
+          chefName: userName,
+        });
+      } else {
+        navigation.navigate(StackNav.ProfileDetail, {
+          userName: userName,
+          userImage: userImage,
+          id,
+        });
+      }
     }
   };
   return (
@@ -138,7 +147,7 @@ export default function UserDetailComponent({
           )}
         </View>
       </TouchableOpacity>
-      {id !== currentUserId && (
+      {id !== currentUserId && currentUserType !== 'chef' && (
         <ZButton
           title={!isFollow ? strings.follow : strings.following}
           color={!isFollow ? colors.white : colors.primary}

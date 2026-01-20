@@ -85,4 +85,5 @@ export const StackNav = {
   SavedAddresses: 'SavedAddresses',
   EditAddress: 'EditAddress',
   MapLocationPicker: 'MapLocationPicker',
+  ChefBranchesScreen: 'ChefBranchesScreen',
 };

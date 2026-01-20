@@ -15,7 +15,6 @@ import { useSelector } from 'react-redux';
 import strings from '../i18n/strings';
 import branchService from '../api/branchService';
 import ZText from '../components/common/ZText';
-import { moderateScale } from '../common/constants';
 import BranchCard from '../components/BranchCard';
 import AddBranchModal from '../components/AddBranchModal';
 import { colors } from '../themes/colors';

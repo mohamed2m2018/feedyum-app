@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import Locations from '../../../../components/models/Locations';
 import React, { useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
@@ -169,137 +171,187 @@ export default function ProfileDetail({ navigation, route }) {
     setselectedGov(data?.data?.user?.locations);
     locationSheetRef.current?.show();
   };
-  const renderHeader = () => (
-    <View>
-      <ZHeader />
-      <View style={styles.itemsCenter}>
-        <TouchableOpacity
-          onPress={() => user?.avatar && setIsProfileImageVisible(true)}
-          activeOpacity={user?.avatar ? 0.8 : 1}>
-          <Image
-            source={
-              user?.avatar
-                ? { uri: user?.avatar }
-                : colors.dark
-                  ? images.userDark
-                  : images.userLight
-            }
-            style={localStyles.userImage}
-          />
-        </TouchableOpacity>
-        <View style={styles.mv20}>
-          <ZText type="b24" align={'center'}>
+  const renderHeader = () => {
+    // Colorful stat accents
+    const accentColors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4'];
+
+    return (
+      <View style={[localStyles.headerContent, { backgroundColor: colors.backgroundColor }]}>
+        <ZHeader title={user?.username || user?.fullName} />
+
+        {/* Gradient Accent Bar */}
+        <LinearGradient
+          colors={['#FF4D67', '#FF8E53', '#FFCD38']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={localStyles.accentBar}
+        />
+
+        {/* Profile Section: Avatar + Stats */}
+        <View style={localStyles.profileTopSection}>
+          {/* Avatar with Gradient Ring */}
+          <TouchableOpacity
+            onPress={() => user?.avatar && setIsProfileImageVisible(true)}
+            activeOpacity={user?.avatar ? 0.8 : 1}
+            style={localStyles.avatarWrapper}
+          >
+            <LinearGradient
+              colors={['#FF4D67', '#FF8E53', '#FFCD38', '#4ECDC4']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={localStyles.avatarGradientRing}
+            >
+              <View style={[localStyles.avatarInnerRing, { backgroundColor: colors.backgroundColor }]}>
+                <Image
+                  source={
+                    user?.avatar
+                      ? { uri: user?.avatar }
+                      : colors.dark
+                        ? images.userDark
+                        : images.userLight
+                  }
+                  style={localStyles.userImage}
+                />
+              </View>
+            </LinearGradient>
+          </TouchableOpacity>
+
+          {/* Stats (Right) - Colorful Cards */}
+          <View style={localStyles.statsContainer}>
+            {UserDetailCategory(
+              user?.postsNo || 0,
+              followStatistics?.data?.followersCount || 0,
+              followStatistics?.data?.followingCount || 0,
+              views?.data?.viewsCount || 0,
+              () => navigation.navigate(StackNav.UserNetwork, { userId: user?._id }),
+            ).map((item, index) => (
+              <TouchableOpacity
+                key={index}
+                onPress={item?.onPress}
+                style={[
+                  localStyles.statItem,
+                  {
+                    backgroundColor: colors.dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
+                  }
+                ]}
+              >
+                <ZText type="b20" align={'center'} color={accentColors[index % accentColors.length]} style={{ fontWeight: '800' }}>
+                  {item.value}
+                </ZText>
+                <ZText type="m11" align={'center'} color={colors.grayScale5}>
+                  {item.title}
+                </ZText>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        {/* Bio Section with accent border */}
+        <View style={[localStyles.bioSection, { borderLeftColor: colors.primary, borderLeftWidth: 3 }]}>
+          <ZText type="b18" color={colors.textColor}>
             {user?.fullName}
           </ZText>
-          {user?.profileCompleted && (
-            <ZText align={'center'} type="m10">
-              {strings?.unofficial}
-            </ZText>
-          )}
-          {/* <ZText type="m14" align={'center'} style={styles.mt10}>
-                {user?.email}
-            </ZText>
-            {user?.bio && (
-              <ZText
-                type={'m16'}
-                style={localStyles.bioIcon}
-                color={colors.textColor}
-                numberOfLines={2}>
-                {user?.bio}
-              </ZText>
-            )} */}
-        </View>
-      </View>
-      {user?.type === 'chef' && (
-        <ZButton
-          containerStyle={{
-            height: 40,
-            paddingHorizontal: 10,
-            alignSelf: 'center',
-            borderColor: colors.primary,
-            borderWidth: 1,
-            borderRadius: 10,
-            marginBottom: 10,
-          }}
-          bgColor={colors.tranparent}
-          textType={'m14'}
-          color={colors.primary}
-          onPress={onPressAvailableLocation}
-          title={strings.branches}
-        />
-      )}
-      <View style={localStyles.headerContainer}>
-        {UserDetailCategory(
-          user?.postsNo || 0,
-          followStatistics?.data?.followersCount || 0,
-          followStatistics?.data?.followingCount || 0,
-          views?.data?.viewsCount || 0,
-          () =>
-            navigation.navigate(StackNav.UserNetwork, { userId: user?._id }),
-        ).map((item, index) => (
-          <TouchableOpacity
-            key={index}
-            onPress={item?.onPress}
-            style={[styles.itemsCenter, localStyles.statsContainer]}>
-            <ZText type="b24" align={'center'} style={localStyles.statsNumber}>
-              {item.value}
-            </ZText>
-            <ZText type="m16" align={'center'} style={[styles.mt10, localStyles.statsLabel]}>
-              {item.title}
-            </ZText>
-          </TouchableOpacity>
-        ))}
-      </View>
-      <View style={localStyles.editProfileContainer}>
-        <ZButton
-          title={!isFollow ? strings.follow : strings.unfollow}
-          onPress={onPressFollow}
-          containerStyle={[
-            localStyles.buttonContainer,
-            { borderColor: colors.primary },
-          ]}
-          textType="b14"
-          color={colors.white}
-          disabled={isLoading}
-          bgColor={colors.primary}
-        />
-        {/* Menu Button - Show for all users for now, can add chef condition later */}
-        <TouchableOpacity
-          style={[
-            localStyles.stunningMenuButton,
-            { backgroundColor: colors.primary },
-          ]}
-          onPress={() => {
-            navigation.navigate(StackNav.ChefMenu, {
-              chefId: user?._id,
-              chefName: user?.fullName || user?.username || 'Chef',
-            });
-          }}
-          activeOpacity={0.8}>
-          <View style={localStyles.menuButtonContent}>
-            <View style={localStyles.menuIconContainer}>
-              <ZText type="b16" color={colors.white}>
-                🍽️
+
+          {user?.type === 'chef' && (
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: moderateScale(2) }}>
+              <Ionicons name="restaurant-outline" size={moderateScale(14)} color={colors.primary} />
+              <ZText type="m13" color={colors.primary} style={{ marginLeft: moderateScale(4) }}>
+                {strings.kitchen || 'Kitchen'}
               </ZText>
             </View>
+          )}
+
+          {/* Bio Text */}
+          {user?.bio && (
             <ZText
-              type="b14"
-              color={colors.white}
-              style={localStyles.menuButtonText}>
-              {strings.viewMenu}
+              type={'m14'}
+              color={colors.dark ? colors.grayScale4 : colors.grayScale6}
+              style={localStyles.bioText}
+              numberOfLines={4}
+            >
+              {user?.bio}
+            </ZText>
+          )}
+        </View>
+
+        {/* Premium Action Buttons */}
+        <View style={localStyles.actionButtonsContainer}>
+          {/* Follow/Unfollow Button - Hide if current user is chef */}
+          {currentUser?.type !== 'chef' && (
+            <TouchableOpacity
+              onPress={onPressFollow}
+              disabled={isLoading}
+              activeOpacity={0.8}
+              style={localStyles.gradientButtonWrapper}
+            >
+              <LinearGradient
+                colors={!isFollow ? ['#FF4D67', '#FF8E53'] : [colors.dark ? '#333' : '#E8E8E8', colors.dark ? '#444' : '#F5F5F5']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={localStyles.gradientButton}
+              >
+                <Ionicons
+                  name={!isFollow ? "person-add" : "checkmark"}
+                  size={moderateScale(14)}
+                  color={!isFollow ? colors.white : colors.textColor}
+                  style={{ marginRight: moderateScale(4) }}
+                />
+                <ZText type="b13" color={!isFollow ? colors.white : colors.textColor}>
+                  {!isFollow ? strings.follow : strings.following}
+                </ZText>
+              </LinearGradient>
+            </TouchableOpacity>
+          )}
+
+          {/* View Menu Button (if chef) */}
+          {(user?.type === 'chef' || user?.hasMenu) && (
+            <TouchableOpacity
+              style={[localStyles.secondaryButton, {
+                backgroundColor: colors.dark ? 'rgba(78,205,196,0.15)' : 'rgba(78,205,196,0.1)',
+                borderColor: '#4ECDC4',
+              }]}
+              onPress={() => {
+                navigation.navigate(StackNav.ChefMenu, {
+                  chefId: user?._id,
+                  chefName: user?.fullName || user?.username || 'Chef',
+                });
+              }}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="restaurant" size={moderateScale(14)} color="#4ECDC4" style={{ marginRight: moderateScale(4) }} />
+              <ZText type="b13" color="#4ECDC4">
+                {strings.viewMenu || 'View Menu'}
+              </ZText>
+            </TouchableOpacity>
+          )}
+
+          {/* Message Button */}
+          <TouchableOpacity
+            style={[localStyles.secondaryButton, {
+              backgroundColor: colors.dark ? 'rgba(255,77,103,0.15)' : 'rgba(255,77,103,0.1)',
+              borderColor: colors.primary,
+            }]}
+            onPress={() => { }}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="chatbubble-outline" size={moderateScale(14)} color={colors.primary} style={{ marginRight: moderateScale(4) }} />
+            <ZText type="b13" color={colors.primary}>
+              {strings.message || 'Message'}
+            </ZText>
+          </TouchableOpacity>
+        </View>
+
+        {user?.type === 'chef' && (
+          <View style={localStyles.clarificationContainer}>
+            <ZText style={[localStyles.clarificationText, { color: colors.primary }]} type={'m12'}>
+              {strings.foodReelsHint}
             </ZText>
           </View>
-        </TouchableOpacity>
+        )}
+
       </View>
-      <View style={localStyles.clarificationContainer}>
-        <ZText style={localStyles.clarificationText} type={'m14'}>
-          {user?.type === 'chef'
-            ? strings.foodReelsHint
-            : strings.foodReelsAndPosts}
-        </ZText>
-      </View>
-    </View>
-  );
+    );
+  };
 
   return (
     <ZSafeAreaView style={[localStyles.screenContainer, { backgroundColor: colors.backgroundColor }]}>
@@ -358,7 +410,6 @@ export default function ProfileDetail({ navigation, route }) {
 const localStyles = StyleSheet.create({
   screenContainer: {
     flex: 1,
-    paddingHorizontal: moderateScale(16),
   },
   flatListContent: {
     paddingBottom: moderateScale(20),
@@ -369,74 +420,130 @@ const localStyles = StyleSheet.create({
     marginHorizontal: moderateScale(20),
     lineHeight: moderateScale(28),
   },
-  root: {
-    ...styles.flex,
-    ...styles.ph20,
-    ...styles.mb20,
+
+  // Header Styles
+  headerContent: {
+    width: '100%',
+    marginBottom: moderateScale(10),
   },
-  headerContainer: {
-    ...styles.flex,
-    ...styles.flexRow,
-    ...styles.alignCenter,
-    ...styles.justifyBetween,
-    ...styles.mt20,
+
+  // Gradient Accent Bar
+  accentBar: {
+    height: moderateScale(4),
+    width: '100%',
   },
-  bioIcon: {
-    maxWidth: 260,
-    marginRight: 5,
+
+  // Profile Top Section (Avatar + Stats)
+  profileTopSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: moderateScale(20),
+    marginTop: moderateScale(16),
   },
-  userImage: {
+
+  // Avatar with Gradient Ring
+  avatarWrapper: {
+    position: 'relative',
+    marginRight: moderateScale(20),
+  },
+  avatarGradientRing: {
     width: moderateScale(100),
     height: moderateScale(100),
     borderRadius: moderateScale(50),
+    padding: moderateScale(3),
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  editProfileContainer: {
-    ...styles.flexRow,
-    ...styles.justifyEvenly,
-    ...styles.mt25,
-    marginBottom: 20,
+  avatarInnerRing: {
+    width: moderateScale(94),
+    height: moderateScale(94),
+    borderRadius: moderateScale(47),
+    padding: moderateScale(3),
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  buttonContainer: {
-    ...styles.ph15,
-    height: getHeight(40),
-    borderRadius: moderateScale(20),
-    borderWidth: moderateScale(1),
-    width: '40%',
-    marginHorizontal: moderateScale(5),
+  userImage: {
+    width: moderateScale(88),
+    height: moderateScale(88),
+    borderRadius: moderateScale(44),
   },
-  stunningMenuButton: {
-    height: getHeight(40),
-    borderRadius: moderateScale(20),
-    width: '40%',
-    backgroundColor: '#FF4D67',
-    marginHorizontal: moderateScale(5),
-    shadowColor: '#FF4D67',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
-    overflow: 'hidden',
-  },
-  menuButtonContent: {
+
+  // Stats
+  statsContainer: {
     flex: 1,
     flexDirection: 'row',
+    justifyContent: 'space-around',
     alignItems: 'center',
+    marginLeft: moderateScale(8),
+    gap: moderateScale(4),
+  },
+  statItem: {
+    alignItems: 'center',
+    minWidth: moderateScale(58),
+    paddingVertical: moderateScale(10),
+    paddingHorizontal: moderateScale(6),
+    borderRadius: moderateScale(12),
+  },
+
+  // Bio Section
+  bioSection: {
+    paddingHorizontal: moderateScale(20),
+    paddingLeft: moderateScale(23),
+    marginTop: moderateScale(16),
+    borderRadius: moderateScale(4),
+  },
+  bioText: {
+    lineHeight: moderateScale(20),
+    marginTop: moderateScale(6),
+  },
+
+  // Action Buttons
+  actionButtonsContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: moderateScale(16),
+    marginTop: moderateScale(18),
+    marginBottom: moderateScale(14),
+    gap: moderateScale(8),
+  },
+  gradientButtonWrapper: {
+    flex: 1,
+    borderRadius: moderateScale(10),
+    overflow: 'hidden',
+    shadowColor: '#FF4D67',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  gradientButton: {
+    flexDirection: 'row',
+    height: moderateScale(38),
+    borderRadius: moderateScale(10),
     justifyContent: 'center',
-    paddingHorizontal: moderateScale(12),
+    alignItems: 'center',
   },
-  menuIconContainer: {
-    marginRight: moderateScale(6),
+  secondaryButton: {
+    flex: 1,
+    flexDirection: 'row',
+    height: moderateScale(38),
+    borderRadius: moderateScale(10),
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1.5,
   },
-  menuButtonText: {
-    letterSpacing: 0.5,
+  actionButton: {
+    flex: 1,
+    height: moderateScale(34),
+    borderRadius: moderateScale(8),
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 0,
   },
+
   clarificationContainer: {
     backgroundColor: 'rgba(255, 77, 103, 0.05)',
-    marginHorizontal: moderateScale(16),
-    marginVertical: moderateScale(12),
+    marginHorizontal: moderateScale(20),
+    marginBottom: moderateScale(12),
     paddingVertical: moderateScale(8),
     paddingHorizontal: moderateScale(12),
     borderRadius: moderateScale(8),
@@ -446,42 +553,18 @@ const localStyles = StyleSheet.create({
   clarificationText: {
     lineHeight: moderateScale(18),
     fontStyle: 'italic',
+    textAlign: 'center',
   },
-  mainContainer: {
-    ...styles.flexRow,
-    width: '100%',
-    ...styles.mt15,
-  },
-  tabItemStyle: {
-    borderBottomWidth: moderateScale(2),
-    width: '33%',
-    ...styles.itemsCenter,
-    ...styles.pv15,
-  },
+
+  // Dish Grid Styles
   dishItemContainer: {
-    flex: 1,
-    marginHorizontal: moderateScale(4),
-    marginBottom: moderateScale(12),
+    width: '33%',
+    height: moderateScale(150),
+    marginHorizontal: moderateScale(1),
+    marginBottom: moderateScale(1),
   },
-  dishRowContainer: {
-    justifyContent: 'space-between',
-    paddingHorizontal: moderateScale(8),
-  },
+  dishRowContainer: {},
   dishRowSeparator: {
-    height: moderateScale(8),
-  },
-  statsContainer: {
-    paddingVertical: moderateScale(15),
-    paddingHorizontal: moderateScale(12),
-    marginHorizontal: moderateScale(2),
-    borderRadius: moderateScale(8),
-    minWidth: moderateScale(70),
-  },
-  statsNumber: {
-    paddingHorizontal: moderateScale(8),
-    paddingVertical: moderateScale(4),
-  },
-  statsLabel: {
-    paddingHorizontal: moderateScale(4),
+    height: 0,
   },
 });

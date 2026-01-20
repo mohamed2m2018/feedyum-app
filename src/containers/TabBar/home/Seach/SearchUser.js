@@ -39,6 +39,8 @@ export default function SearchUser({ users, currentUserId, refreshing, onRefresh
               id={item?._id}
               currentUserId={currentUserId}
               isSearch
+              userType={item?.type}
+              currentUserType={props.currentUserType}
             />
           );
         }}

@@ -88,6 +88,14 @@ const ReelComponent = ({
 }) => {
   const colors = useSelector(state => state.theme.theme);
 
+  // Get current user to prevent self-following in feed
+  const { data: currentUserData } = useQuery(
+    'user',
+    () => request.get('/user'),
+    { retry: 1, staleTime: 60000 },
+  );
+  const currentUserId = currentUserData?.data?.user?._id;
+
   // Ref for tracking video progress (used by handleOnLoad for seek position)
   const seekProgressRef = useRef(0);
   const [indexState] = useState(index);
@@ -631,7 +639,8 @@ const ReelComponent = ({
 
                         {/* Follow Button for chef posts AND review posts - UNDER the name */}
                         {/* Show for: 1) Chef authors, OR 2) Review posts (to follow the reviewer) */}
-                        {item?.author?._id && item?.author?._id !== data?.data?.user?._id && (
+                        {/* Hide if this is the current user's own post */}
+                        {item?.author?._id && item?.author?._id !== currentUserId && (
                           <FollowButton
                             userId={item?.author?._id}
                             isFollowed={item?.author?.currentUserFollowed}
@@ -694,7 +703,8 @@ const ReelComponent = ({
                               </View>
                             </View>
                             {/* Follow Button - under the restaurant name */}
-                            {item?.reviewedChef?._id && (
+                            {/* Hide if this is the current user's own kitchen */}
+                            {item?.reviewedChef?._id && item?.reviewedChef?._id !== currentUserId && (
                               <FollowButton
                                 userId={item?.reviewedChef?._id}
                                 isFollowed={item?.reviewedChef?.currentUserFollowed}

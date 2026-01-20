@@ -350,6 +350,10 @@ export default function StackNavigation() {
         name={StackNav.MapLocationPicker}
         component={StackRoute.MapLocationPicker}
       />
+      <Stack.Screen
+        name={StackNav.ChefBranchesScreen}
+        component={StackRoute.ChefBranchesScreen}
+      />
     </Stack.Navigator>
   );
 }
