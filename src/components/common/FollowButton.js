@@ -1,6 +1,6 @@
 // Library import
-import React, { useState, useEffect } from 'react';
-import { TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import React, { useState } from 'react';
+import { TouchableOpacity, StyleSheet } from 'react-native';
 import { useSelector } from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
@@ -13,9 +13,14 @@ import strings from '../../i18n/strings';
 import { useHandleAuth } from '../../utils/useHandleAuth';
 
 /**
- * A compact, inline follow/unfollow button
+ * A compact, inline follow/unfollow button with optimistic updates
+ * 
+ * IMPORTANT: This component uses local state for optimistic UI.
+ * The isFollowed prop is ONLY used for initial state on mount.
+ * After mount, prop changes are ignored to prevent flickering.
+ * 
  * @param {string} userId - The ID of the user to follow/unfollow
- * @param {boolean} isFollowed - Initial follow state
+ * @param {boolean} isFollowed - Initial follow state (only used on mount)
  * @param {boolean} compact - If true, shows only icon (no text)
  * @param {string} size - 'small' | 'medium' - button size variant
  * @param {object} style - Additional container styles
@@ -30,14 +35,12 @@ export default function FollowButton({
   onFollowChange,
 }) {
   const colors = useSelector(state => state.theme.theme);
-  const [isFollow, setIsFollow] = useState(isFollowed);
-  const [isLoading, setIsLoading] = useState(false);
   const queryClient = useQueryClient();
   const { handleAuthToast } = useHandleAuth();
 
-  useEffect(() => {
-    setIsFollow(isFollowed);
-  }, [isFollowed]);
+  // Local state - initialized from prop on mount, then never synced again
+  // Using a function initializer ensures the prop is only read once
+  const [isFollow, setIsFollow] = useState(() => isFollowed);
 
   // Invalidate all relevant queries to reflect changes app-wide
   const invalidateAllFollowQueries = () => {
@@ -54,8 +57,7 @@ export default function FollowButton({
     queryClient.invalidateQueries({ queryKey: 'profile' });
     // Invalidate search results
     queryClient.invalidateQueries({ queryKey: 'search_user' });
-    // Invalidate chef info (for ChefMenu screen)
-    queryClient.invalidateQueries({ queryKey: 'chefInfo' });
+    // Note: NOT invalidating chefInfo to prevent this component from re-rendering
   };
 
   const followMutation = useMutation(
@@ -63,11 +65,10 @@ export default function FollowButton({
     {
       onSuccess: () => {
         invalidateAllFollowQueries();
-        setIsLoading(false);
       },
       onError: () => {
-        setIsFollow(false); // Revert on error
-        setIsLoading(false);
+        // Revert on error
+        setIsFollow(false);
       },
     },
   );
@@ -77,11 +78,10 @@ export default function FollowButton({
     {
       onSuccess: () => {
         invalidateAllFollowQueries();
-        setIsLoading(false);
       },
       onError: () => {
-        setIsFollow(true); // Revert on error
-        setIsLoading(false);
+        // Revert on error
+        setIsFollow(true);
       },
     },
   );
@@ -93,7 +93,7 @@ export default function FollowButton({
 
     if (!userId) return;
 
-    setIsLoading(true);
+    // Optimistic update - change state immediately
     const newFollowState = !isFollow;
     setIsFollow(newFollowState);
 
@@ -106,6 +106,7 @@ export default function FollowButton({
     onFollowChange?.(newFollowState);
   };
 
+  const isLoading = followMutation.isLoading || unfollowMutation.isLoading;
   const sizeStyles = size === 'small' ? localStyles.small : localStyles.medium;
   const iconSize = size === 'small' ? moderateScale(12) : moderateScale(14);
   const textType = size === 'small' ? 'B10' : 'B12';
@@ -113,35 +114,30 @@ export default function FollowButton({
   return (
     <TouchableOpacity
       onPress={handlePress}
-      disabled={isLoading}
       style={[
         localStyles.container,
         sizeStyles,
         {
           backgroundColor: isFollow ? 'rgba(255, 255, 255, 0.15)' : colors.primary,
           borderColor: isFollow ? 'rgba(255, 255, 255, 0.3)' : colors.primary,
+          // Subtle opacity reduction during pending state
+          opacity: isLoading ? 0.7 : 1,
         },
         style,
       ]}
       activeOpacity={0.7}
     >
-      {isLoading ? (
-        <ActivityIndicator size="small" color="#FFFFFF" />
-      ) : (
-        <>
-          {!compact && (
-            <Ionicons
-              name={isFollow ? 'checkmark' : 'add'}
-              size={iconSize}
-              color="#FFFFFF"
-              style={localStyles.icon}
-            />
-          )}
-          <ZText type={textType} color="#FFFFFF" style={localStyles.text}>
-            {isFollow ? strings.following : strings.follow}
-          </ZText>
-        </>
+      {!compact && (
+        <Ionicons
+          name={isFollow ? 'checkmark' : 'add'}
+          size={iconSize}
+          color="#FFFFFF"
+          style={localStyles.icon}
+        />
       )}
+      <ZText type={textType} color="#FFFFFF" style={localStyles.text}>
+        {isFollow ? strings.following : strings.follow}
+      </ZText>
     </TouchableOpacity>
   );
 }
