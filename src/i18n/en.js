@@ -373,6 +373,7 @@ export default {
   noDishesYetForYou: 'No Dishes yet! Stay tuned.',
   noDishesYetProfileOther: ' No Dishes yet!..',
   noDishesYetCurrentProfile: 'No Dishes yet! Post Something first..',
+  noPosts: 'No posts yet!',
   notFollowing:
     'You are not Following anyone. Watch more videos and decide who to follow.',
   notFollowingUser: 'This user is not Following anyone',
@@ -1637,5 +1638,9 @@ export default {
   featuredReviews: 'Featured Reviews',
   viewAllReviews: 'View All Reviews',
   noReelsYet: 'No reels yet',
+
+  // Dish Selector Search
+  searchDishPlaceholder: 'Search dishes...',
+  noMatchingDishes: 'No matching dishes found',
 
 };

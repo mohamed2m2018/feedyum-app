@@ -48,6 +48,7 @@ export default function ReelsComponentOne() {
   // Custom title support for Reviews view
   const customTitle = route.params?.customTitle;
   const reviewsOnly = route.params?.reviewsOnly;
+  const receivedReviews = route.params?.receivedReviews;
 
   const [userProfile, setUserProfile] = useState(route.params?.profile);
   const [activeVideoIndex, setActiveVideoIndex] = useState(0);
@@ -79,6 +80,10 @@ export default function ReelsComponentOne() {
     // Add reviewsOnly filter if specified
     if (reviewsOnly) {
       url += `&reviewsOnly=true`;
+    }
+    // Add receivedReviews filter if specified (for customer reviews about chef's dishes)
+    if (receivedReviews) {
+      url += `&receivedReviews=true`;
     }
     return request.get(url);
   };
@@ -291,7 +296,7 @@ export default function ReelsComponentOne() {
               (filteredDataNotSeen.length > 0 && !filteredData.length)
             }
             onSetLayout={onSetLayout}
-            emptylistMessage={strings.noDishesYetForYou}
+            emptylistMessage={strings.noPosts}
             flatListRef={flatListRef}
             isFetchingNextPage={isFetchingNextPage}
             hasNextPage={hasNextPage}

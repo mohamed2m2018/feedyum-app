@@ -358,6 +358,7 @@ export default {
   noDishesYetForYou: 'لا يوجد أطباق حتى الآن! تابعنا للمزيد.',
   noDishesYetProfileOther: 'لا يوجد أطباق حتى الآن! قم بنشر شيء أولاً...',
   noDishesYetCurrentProfile: 'لا يوجد أطباق حتى الآن! قم بنشر شيء أولاً...',
+  noPosts: 'لا توجد منشورات حتى الآن!',
   notFollowing:
     'أنت لا تتابع أي شخص. شاهد المزيد من الفيديوهات وقرر من ستتابع.',
   notFollowingUser: 'هذا المستخدم لا يقوم بمتابعة أحد',
@@ -1620,5 +1621,9 @@ export default {
   featuredReviews: 'تقييمات مميزة',
   viewAllReviews: 'عرض كل التقييمات',
   noReelsYet: 'لا توجد فيديوهات بعد',
+
+  // Dish Selector Search
+  searchDishPlaceholder: 'ابحث في الأطباق...',
+  noMatchingDishes: 'لا توجد أطباق مطابقة',
 
 };

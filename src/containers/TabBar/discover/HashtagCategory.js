@@ -365,7 +365,14 @@ export default function HashtagCategory({ selectedTag, isLocationChanging }) {
         <View key={index} style={localStyles.kitchenContainer}>
           {/* Kitchen Header */}
           <TouchableOpacity
-            onPress={() => onPressUser(item?._id, item?.fullName, item?.avatar)}
+            onPress={() => {
+              navigation.navigate(StackNav.ChefMenu, {
+                chefId: item._id,
+                chefName: item.fullName,
+                averageDishRating: item.averageDishRating || 0,
+                ratedDishesCount: item.ratedDishesCount || 0,
+              });
+            }}
             style={localStyles.kitchenHeader}>
             <View
               style={[

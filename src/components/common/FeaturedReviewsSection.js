@@ -35,7 +35,7 @@ const FeaturedReviewsSection = ({ chefId, chefProfile, limit = 5 }) => {
     const { data: reviewsData, isLoading, error } = useQuery(
         ['chefFeaturedReviews', chefId],
         async () => {
-            const response = await request.get(`/story/author?limit=${limit}&page=1&id=${chefId}&reviewsOnly=true`);
+            const response = await request.get(`/story/author?limit=${limit}&page=1&id=${chefId}&receivedReviews=true`);
             return response.data?.stories || [];
         },
         {
@@ -49,7 +49,7 @@ const FeaturedReviewsSection = ({ chefId, chefProfile, limit = 5 }) => {
             profile: chefProfile,
             storyId: null,
             customTitle: `${chefProfile?.fullName || ''} ${strings.reviewsTab || 'Reviews'}`,
-            reviewsOnly: true,
+            receivedReviews: true,
         });
     }, [navigation, chefProfile]);
 
@@ -58,7 +58,7 @@ const FeaturedReviewsSection = ({ chefId, chefProfile, limit = 5 }) => {
             profile: chefProfile,
             storyId: review._id,
             customTitle: `${chefProfile?.fullName || ''} ${strings.reviewsTab || 'Reviews'}`,
-            reviewsOnly: true,
+            receivedReviews: true,
         });
     }, [navigation, chefProfile]);
 

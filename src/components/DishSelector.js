@@ -17,6 +17,7 @@ import { moderateScale } from '../common/constants';
 import ZText from './common/ZText';
 import request from '../api/request';
 import images from '../assets/images';
+import strings from '../i18n/strings';
 
 const DishSelector = ({
     restaurant,
@@ -27,6 +28,7 @@ const DishSelector = ({
     const colors = useSelector(state => state.theme.theme);
     const [dishName, setDishName] = useState(selectedDish?.name || '');
     const [showMenu, setShowMenu] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
 
     const isPartner = restaurant?.type === 'partner';
 
@@ -52,9 +54,18 @@ const DishSelector = ({
 
     const dishes = menuData || [];
 
+    // Filter dishes based on search query
+    const filteredDishes = searchQuery.trim()
+        ? dishes.filter(dish => {
+            const name = (dish.title || dish.name || '').toLowerCase();
+            return name.includes(searchQuery.toLowerCase().trim());
+        })
+        : dishes;
+
     const handleDishPress = (dish) => {
         setDishName(dish.title || dish.name);
         setShowMenu(false);
+        setSearchQuery(''); // Clear search when dish is selected
         onDishSelect({
             id: dish._id,
             name: dish.title || dish.name,
@@ -140,6 +151,37 @@ const DishSelector = ({
 
                     {showMenu && (
                         <View style={[localStyles.menuContainer, { backgroundColor: colors.backgroundColor, borderColor: colors.bColor }]}>
+                            {/* Search Input */}
+                            <View style={[localStyles.searchContainer, { backgroundColor: colors.inputBg, borderBottomColor: colors.bColor }]}>
+                                <Ionicons name="search" size={18} color={colors.grayScale5} style={localStyles.searchIcon} />
+                                <TextInput
+                                    style={[localStyles.searchInput, { color: colors.textColor }]}
+                                    value={searchQuery}
+                                    onChangeText={setSearchQuery}
+                                    placeholder={strings.searchDishPlaceholder || 'Search dishes...'}
+                                    placeholderTextColor={colors.grayScale5}
+                                    textAlign={I18nManager.isRTL ? 'right' : 'left'}
+                                    autoFocus={dishes.length > 5}
+                                />
+                                {searchQuery.length > 0 && (
+                                    <TouchableOpacity onPress={() => setSearchQuery('')} style={localStyles.clearSearchButton}>
+                                        <Ionicons name="close-circle" size={18} color={colors.grayScale5} />
+                                    </TouchableOpacity>
+                                )}
+                            </View>
+
+                            {/* Dish count indicator */}
+                            {dishes.length > 0 && (
+                                <View style={[localStyles.countContainer, { borderBottomColor: colors.bColor }]}>
+                                    <ZText type="M11" color={colors.grayScale5}>
+                                        {searchQuery.trim()
+                                            ? `${filteredDishes.length} / ${dishes.length} ${strings.dishes || 'dishes'}`
+                                            : `${dishes.length} ${strings.dishes || 'dishes'}`
+                                        }
+                                    </ZText>
+                                </View>
+                            )}
+
                             {menuLoading ? (
                                 <View style={localStyles.loaderContainer}>
                                     <ActivityIndicator size="small" color={colors.primary} />
@@ -147,9 +189,9 @@ const DishSelector = ({
                                         Loading menu...
                                     </ZText>
                                 </View>
-                            ) : dishes.length > 0 ? (
+                            ) : filteredDishes.length > 0 ? (
                                 <FlatList
-                                    data={dishes}
+                                    data={filteredDishes}
                                     renderItem={({ item }) => (
                                         <TouchableOpacity
                                             style={[localStyles.menuItem, { borderBottomColor: colors.bColor }]}
@@ -177,6 +219,12 @@ const DishSelector = ({
                                     keyboardShouldPersistTaps="handled"
                                     nestedScrollEnabled={true}
                                 />
+                            ) : dishes.length > 0 ? (
+                                <View style={localStyles.emptyContainer}>
+                                    <ZText type="M14" color={colors.grayScale5}>
+                                        {strings.noMatchingDishes || 'No matching dishes found'}
+                                    </ZText>
+                                </View>
                             ) : (
                                 <View style={localStyles.emptyContainer}>
                                     <ZText type="M14" color={colors.grayScale5}>
@@ -258,8 +306,31 @@ const localStyles = StyleSheet.create({
         marginTop: moderateScale(8),
         borderRadius: moderateScale(12),
         borderWidth: 1,
-        maxHeight: moderateScale(200),
+        maxHeight: moderateScale(320),
         overflow: 'hidden',
+    },
+    searchContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: moderateScale(12),
+        paddingVertical: moderateScale(8),
+        borderBottomWidth: 1,
+    },
+    searchIcon: {
+        marginRight: moderateScale(8),
+    },
+    searchInput: {
+        flex: 1,
+        fontSize: moderateScale(14),
+        paddingVertical: moderateScale(6),
+    },
+    clearSearchButton: {
+        padding: moderateScale(4),
+    },
+    countContainer: {
+        paddingHorizontal: moderateScale(12),
+        paddingVertical: moderateScale(6),
+        borderBottomWidth: StyleSheet.hairlineWidth,
     },
     menuList: {
         maxHeight: moderateScale(200),

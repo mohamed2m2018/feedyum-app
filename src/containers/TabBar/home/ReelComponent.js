@@ -545,26 +545,29 @@ const ReelComponent = ({
             </View>
 
             {/* Attached Dishes Display - positioned above the action icons */}
-            {isOverlayVisible && ((item?.dishes && item.dishes.length > 0) || item?.dishName) && (
-              <AttachedDishesDisplay
-                attachedDishes={
-                  item?.dishes && item.dishes.length > 0
-                    ? item.dishes
-                    : [{
-                      name: item.dishName,
-                      price: item.price,
-                      type: 'manual',
-                      image: item.poster || item.avatarUri // Use post's image for manual dish entries
-                    }]
-                }
-                showPrices={true}
-                compact={true}
-                chefId={item?.author?._id}
-                chefName={item?.author?.fullName}
-                restaurantName={item?.restaurantName}
-                containerStyle={localStyles.dishesDisplayContainer}
-              />
-            )}
+            {/* Hide for external (Google Maps) restaurants - only show for internal chefs */}
+            {isOverlayVisible &&
+              ((item?.dishes && item.dishes.length > 0) || item?.dishName) &&
+              !(item?.googlePlaceId && !item?.reviewedChef) && (
+                <AttachedDishesDisplay
+                  attachedDishes={
+                    item?.dishes && item.dishes.length > 0
+                      ? item.dishes
+                      : [{
+                        name: item.dishName,
+                        price: item.price,
+                        type: 'manual',
+                        image: item.poster || item.avatarUri // Use post's image for manual dish entries
+                      }]
+                  }
+                  showPrices={true}
+                  compact={true}
+                  chefId={item?.author?._id}
+                  chefName={item?.author?.fullName}
+                  restaurantName={item?.restaurantName}
+                  containerStyle={localStyles.dishesDisplayContainer}
+                />
+              )}
 
             {/* Debug: Log item data to see if dishes are present */}
 

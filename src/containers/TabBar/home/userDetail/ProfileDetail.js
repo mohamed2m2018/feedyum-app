@@ -559,7 +559,7 @@ const localStyles = StyleSheet.create({
   // Dish Grid Styles
   dishItemContainer: {
     width: '33%',
-    height: moderateScale(150),
+    height: moderateScale(220),
     marginHorizontal: moderateScale(1),
     marginBottom: moderateScale(1),
   },

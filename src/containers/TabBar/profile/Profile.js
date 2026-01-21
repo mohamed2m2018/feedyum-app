@@ -675,7 +675,7 @@ const localStyles = StyleSheet.create({
   // Grid
   gridItem: {
     width: '33.33%',
-    height: moderateScale(200),
+    height: moderateScale(220),
     borderWidth: 0.5,
   },
   emptyContainer: {

@@ -73,7 +73,7 @@ const RestaurantSearch = ({
                 },
             });
 
-            const partnerChefs = partnerResponse?.data?.users || [];
+            const partnerChefs = partnerResponse?.data?.data?.users || [];
 
             if (partnerChefs.length > 0) {
                 // Found partners - show them
