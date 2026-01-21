@@ -14,7 +14,7 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { useQuery } from 'react-query';
+import { useQuery, useQueryClient } from 'react-query';
 
 import ZSafeAreaView from '../components/common/ZSafeAreaView';
 import ZText from '../components/common/ZText';
@@ -22,41 +22,45 @@ import ZHeader from '../components/common/ZHeader';
 import { moderateScale, getHeight } from '../common/constants';
 import { StackNav } from '../navigation/NavigationKeys';
 import strings from '../i18n/strings';
-import request from '../api/request';
+import branchService from '../api/branchService';
 import { showSuccessToast, showErrorToast, showActionDialog } from '../utils/toast';
 import { ALERT_TYPE } from 'react-native-alert-notification';
 
 const ChefBranchesScreen = () => {
     const colors = useSelector(state => state.theme.theme);
     const navigation = useNavigation();
+    const queryClient = useQueryClient();
     const [refreshing, setRefreshing] = useState(false);
 
-    // Fetch user data to get branches
-    const { data: userData, refetch, isLoading } = useQuery(
-        'user',
-        () => request.get('/user'),
+    // Fetch branches using branch API (not user.locations)
+    const { data: branchesData, refetch, isLoading } = useQuery(
+        'myBranches',
+        () => branchService.getBranches(), // No chefId = gets current user's branches
         { retry: 1 }
     );
 
-    const branches = userData?.data?.user?.locations || [];
+    const branches = branchesData?.branches || [];
 
     // Extract a meaningful branch name from the address
     const getBranchName = (branch) => {
-        const address = branch.description || branch.formattedAddress || '';
+        // Use branchName if available (new ChefBranch model)
+        if (branch.branchName) {
+            return branch.branchName.length > 25
+                ? branch.branchName.substring(0, 22) + '...'
+                : branch.branchName;
+        }
+
+        const address = branch.addressDetails?.formattedAddress || branch.description || '';
         if (!address) return strings.branch || 'Branch';
 
-        // Split by comma and get meaningful parts
         const parts = address.split(',').map(p => p.trim()).filter(Boolean);
         if (parts.length === 0) return strings.branch || 'Branch';
 
-        // Try to get the first meaningful part (usually street/area name)
-        // Skip if it's just numbers (like building number)
         let branchName = parts[0];
         if (parts.length > 1 && /^\d+$/.test(branchName)) {
             branchName = parts[1];
         }
 
-        // Limit length
         return branchName.length > 25 ? branchName.substring(0, 22) + '...' : branchName;
     };
 
@@ -77,16 +81,24 @@ const ChefBranchesScreen = () => {
             isChefBranch: true,
             onLocationSelect: async (locationData) => {
                 try {
-                    // Build new location with correct field names (lat/long, not latitude/longitude)
-                    const newLocation = {
-                        description: locationData.formattedAddress || locationData.address || locationData.description,
+                    // Use branch API to add new branch
+                    await branchService.addBranch({
+                        branchName: locationData.branchName || `${locationData.city || 'New'} Branch`,
+                        streetName: locationData.streetName || locationData.formattedAddress?.split(',')[0] || 'Street',
+                        buildingNumber: locationData.buildingNumber || '1',
+                        area: locationData.area || locationData.city || 'Area',
+                        city: locationData.city || 'City',
+                        state: locationData.state || 'State',
+                        country: locationData.country || 'Egypt',
+                        postalCode: locationData.postalCode || '00000',
                         lat: parseFloat(locationData.lat || locationData.latitude),
                         long: parseFloat(locationData.long || locationData.longitude),
-                    };
+                        phoneNumber: locationData.phoneNumber || '0000000000',
+                        countryCode: locationData.countryCode || '+20',
+                    });
 
-                    // Add to existing locations and send full array
-                    const updatedLocations = [...branches, newLocation];
-                    await request.patch('/user', { locations: updatedLocations });
+                    // Invalidate and refetch
+                    queryClient.invalidateQueries('myBranches');
                     refetch();
                     showSuccessToast(strings.success, strings.branchAddedSuccess || 'Branch added successfully');
                 } catch (error) {
@@ -101,19 +113,28 @@ const ChefBranchesScreen = () => {
         navigation.navigate(StackNav.MapLocationPicker, {
             isChefBranch: true,
             initialLocation: {
-                latitude: parseFloat(branch.lat || branch.latitude),
-                longitude: parseFloat(branch.long || branch.longitude),
-                address: branch.description
+                latitude: parseFloat(branch.location?.lat || branch.lat),
+                longitude: parseFloat(branch.location?.long || branch.long),
+                address: branch.addressDetails?.formattedAddress || branch.description
             },
             onLocationSelect: async (locationData) => {
                 try {
-                    const updatedLocations = [...branches];
-                    updatedLocations[index] = {
-                        description: locationData.formattedAddress || locationData.address || locationData.description,
+                    await branchService.editBranch(branch._id, {
+                        branchName: locationData.branchName || branch.branchName,
+                        streetName: locationData.streetName || locationData.formattedAddress?.split(',')[0] || 'Street',
+                        buildingNumber: locationData.buildingNumber || '1',
+                        area: locationData.area || locationData.city || 'Area',
+                        city: locationData.city || 'City',
+                        state: locationData.state || 'State',
+                        country: locationData.country || 'Egypt',
+                        postalCode: locationData.postalCode || '00000',
                         lat: parseFloat(locationData.lat || locationData.latitude),
                         long: parseFloat(locationData.long || locationData.longitude),
-                    };
-                    await request.patch('/user', { locations: updatedLocations });
+                        phoneNumber: locationData.phoneNumber || branch.contactInfo?.phoneNumber || '0000000000',
+                        countryCode: locationData.countryCode || branch.contactInfo?.countryCode || '+20',
+                    });
+
+                    queryClient.invalidateQueries('myBranches');
                     refetch();
                     showSuccessToast(strings.success, strings.branchUpdatedSuccess || 'Branch updated successfully');
                 } catch (error) {
@@ -124,7 +145,7 @@ const ChefBranchesScreen = () => {
         });
     };
 
-    const handleDeleteBranch = (index) => {
+    const handleDeleteBranch = (branch) => {
         showActionDialog({
             type: ALERT_TYPE.WARNING,
             title: strings.deleteBranch || 'Delete Branch',
@@ -133,8 +154,8 @@ const ChefBranchesScreen = () => {
             cancelText: strings.cancel,
             onConfirm: async () => {
                 try {
-                    const updatedLocations = branches.filter((_, i) => i !== index);
-                    await request.patch('/user', { locations: updatedLocations });
+                    await branchService.deleteBranch(branch._id);
+                    queryClient.invalidateQueries('myBranches');
                     refetch();
                     showSuccessToast(strings.success, strings.branchDeletedSuccess || 'Branch deleted successfully');
                 } catch (error) {
@@ -165,7 +186,7 @@ const ChefBranchesScreen = () => {
                     {getBranchName(item)}
                 </ZText>
                 <ZText type="m14" color={colors.grayScale5} numberOfLines={2} style={localStyles.addressText}>
-                    {item.description || item.formattedAddress || strings.noAddressProvided || 'No address provided'}
+                    {item.addressDetails?.formattedAddress || item.description || strings.noAddressProvided || 'No address provided'}
                 </ZText>
             </View>
 
@@ -178,7 +199,7 @@ const ChefBranchesScreen = () => {
                     <MaterialIcon name="pencil" size={moderateScale(16)} color={colors.primary} />
                 </TouchableOpacity>
                 <TouchableOpacity
-                    onPress={() => handleDeleteBranch(index)}
+                    onPress={() => handleDeleteBranch(item)}
                     style={[localStyles.actionBtn, localStyles.deleteBtn]}
                 >
                     <MaterialIcon name="delete-outline" size={moderateScale(16)} color={colors.redColor} />

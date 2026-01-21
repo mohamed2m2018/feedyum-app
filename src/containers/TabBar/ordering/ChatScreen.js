@@ -25,7 +25,7 @@ import io from 'socket.io-client';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Feather from 'react-native-vector-icons/Feather';
 import { useSelector } from 'react-redux';
-import { useQuery } from 'react-query';
+import { useQuery, useQueryClient } from 'react-query';
 import strings from '../../../i18n/strings';
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
 import ZHeader from '../../../components/common/ZHeader';
@@ -110,6 +110,7 @@ const RightIcon = ({ colors }) => {
 export default function ChatScreen({ route }) {
   const { chefId, orderId } = route.params;
   const navigation = useNavigation();
+  const queryClient = useQueryClient();
   const colors = useSelector(state => state.theme.theme);
   const language = useSelector(state => state.profile?.language);
   // Check if Arabic is selected
@@ -306,6 +307,34 @@ export default function ChatScreen({ route }) {
     {
       enabled: !!(currentUser?._id && chefId),
       refetchInterval: false, // Polling disabled - manual refresh only
+      onSuccess: async () => {
+        // Mark chat as read when messages are loaded (filter by orderId to only mark THIS order's messages)
+        if (chefId) {
+          try {
+            const readUrl = orderId
+              ? `/chat/chats/${chefId}/read?orderId=${orderId}`
+              : `/chat/chats/${chefId}/read`;
+            await request.put(readUrl);
+            console.log('[ChatScreen] Marked chat as read for order:', orderId);
+            // Immediately invalidate all badge-related caches
+            queryClient.invalidateQueries(['unreadOrderChatsCount']);
+            queryClient.invalidateQueries(['orderChats']);
+            queryClient.invalidateQueries(['chatList']);
+            // Trigger a direct refetch of badge counts to update header immediately
+            // The socket event from backend should handle this, but as a backup:
+            try {
+              await Promise.all([
+                request.get('/orders/unseen/count'),
+                request.get('/chat/unread-counts'),
+              ]);
+            } catch (e) {
+              // Badge refetch failed, socket will handle it
+            }
+          } catch (error) {
+            console.warn('[ChatScreen] Failed to mark chat as read:', error.message);
+          }
+        }
+      }
     }
   );
 

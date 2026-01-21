@@ -378,20 +378,36 @@ export default function Profile({ navigation }) {
             </TouchableOpacity>
           </>
         ) : (
-          /* Chats Button for regular users */
-          <TouchableOpacity
-            style={[localStyles.secondaryButton, {
-              backgroundColor: colors.dark ? 'rgba(78,205,196,0.15)' : 'rgba(78,205,196,0.1)',
-              borderColor: '#4ECDC4',
-            }]}
-            onPress={() => navigation.navigate(StackNav.ChatList)}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="chatbubbles" size={moderateScale(14)} color="#4ECDC4" style={{ marginRight: moderateScale(4) }} />
-            <ZText type="b13" color="#4ECDC4">
-              {strings.chats || 'Chats'}
-            </ZText>
-          </TouchableOpacity>
+          /* Orders and Chats Buttons for regular users */
+          <>
+            <TouchableOpacity
+              style={[localStyles.secondaryButton, {
+                backgroundColor: colors.dark ? 'rgba(255,142,83,0.15)' : 'rgba(255,142,83,0.1)',
+                borderColor: '#FF8E53',
+              }]}
+              onPress={() => navigation.navigate(StackNav.Orders)}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="receipt" size={moderateScale(14)} color="#FF8E53" style={{ marginRight: moderateScale(4) }} />
+              <ZText type="b13" color="#FF8E53">
+                {strings.orders || 'Orders'}
+              </ZText>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[localStyles.secondaryButton, {
+                backgroundColor: colors.dark ? 'rgba(78,205,196,0.15)' : 'rgba(78,205,196,0.1)',
+                borderColor: '#4ECDC4',
+              }]}
+              onPress={() => navigation.navigate(StackNav.ChatList)}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="chatbubbles" size={moderateScale(14)} color="#4ECDC4" style={{ marginRight: moderateScale(4) }} />
+              <ZText type="b13" color="#4ECDC4">
+                {strings.chats || 'Chats'}
+              </ZText>
+            </TouchableOpacity>
+          </>
         )}
       </View>
 

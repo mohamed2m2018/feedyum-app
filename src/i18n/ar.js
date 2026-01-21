@@ -19,6 +19,7 @@ export default {
   or: 'أو',
   yourBranches: 'فروعك',
   branches: 'الفروع',
+  branch: 'فرع',
   nearestBranch: 'اقرب الفروع ',
   clickbranches: 'الفروع',
   nobranchesFound: 'لا يوجد فروع',
@@ -736,6 +737,9 @@ export default {
   // Error Messages
   failedToLoadSavedCart: 'فشل في تحميل العربة المحفوظة',
   failedToPlaceOrder: 'فشل في تأكيد الطلب',
+  addressMissingCoordinates: 'يرجى إعادة اختيار عنوان التوصيل مع تفعيل الموقع',
+  kitchenTooFar: 'هذا المطبخ يبعد {distance} كم. الحد الأقصى لمسافة التوصيل هو {max} كم.',
+  noActiveBranches: 'هذا المطبخ ليس لديه مواقع توصيل نشطة',
   failedToFetchOrderHistory: 'فشل في جلب تاريخ الطلبات',
   failedToFetchOrderDetails: 'فشل في جلب تفاصيل الطلب',
   failedToUpdateOrderStatus: 'فشل في تحديث حالة الطلب',
@@ -1625,5 +1629,11 @@ export default {
   // Dish Selector Search
   searchDishPlaceholder: 'ابحث في الأطباق...',
   noMatchingDishes: 'لا توجد أطباق مطابقة',
+
+  // Search Suggestion Examples
+  discoverSearchExamples: ['نفسي في حاجة دسمة', 'حلويات شرقية', 'وجبة سريعة'],
+  kitchensSearchExamples: ['فراخ مشوية', 'أكل بيتي', 'حلويات'],
+  reviewsSearchExamples: ['أكل بيتي لذيذ', 'تجربة جديدة', 'مطعم شعبي'],
+  defaultSearchExamples: ['برجر', 'بيتزا', 'سلطة'],
 
 };

@@ -18,6 +18,8 @@ import {routes} from './utils/routes';
 import strings from '../../../i18n/strings';
 import AddressDropdown from '../../../components/AddressDropdown';
 import { useLocation } from '../../../navigation/locationContext';
+import HeaderIconWithBadge from '../../../components/common/HeaderIconWithBadge';
+import { useNotificationCounts } from '../../../hooks/useNotificationCounts';
 
 const HeaderCetegoryItem = React.memo(({ title, index, isSelected, onPress, colors }) => {
   return (
@@ -104,6 +106,7 @@ export default function Discover({navigation}) {
   const colors = useSelector(state => state.theme.theme);
   const location = useLocation();
   const [isLocationChanging, setIsLocationChanging] = useState(false);
+  const { unseenOrdersCount, unreadChatsCount } = useNotificationCounts();
 
   const [isSelect, setIsSelect] = useState({
     index: 0,
@@ -164,13 +167,16 @@ export default function Discover({navigation}) {
               }}
             />
           </View>
-          <TouchableOpacity onPress={onPressSearch} style={localStyles.searchButton}>
-            <Ionicons
-              name="search-outline"
-              size={moderateScale(30)}
-              color={colors.dark ? colors.white : colors.darkColor}
-            />
-          </TouchableOpacity>
+          <HeaderIconWithBadge
+            name="bag-handle-outline"
+            count={unseenOrdersCount}
+            onPress={() => navigation.navigate(StackNav.Orders)}
+          />
+          <HeaderIconWithBadge
+            name="chatbubbles-outline"
+            count={unreadChatsCount}
+            onPress={() => navigation.navigate(StackNav.ChatList)}
+          />
         </View>
       </View>
       

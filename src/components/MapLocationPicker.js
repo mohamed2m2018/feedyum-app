@@ -621,7 +621,7 @@ const localStyles = StyleSheet.create({
     flexShrink: 0,
   },
   mapWrapper: {
-    flex: 1,
+    height: height * 0.55,
     marginHorizontal: moderateScale(16),
     marginVertical: moderateScale(8),
     borderRadius: moderateScale(16),
@@ -723,6 +723,7 @@ const localStyles = StyleSheet.create({
   saveButtonContainer: {
     paddingHorizontal: moderateScale(16),
     paddingTop: moderateScale(16),
+    paddingBottom: moderateScale(24),
   },
   saveLocationButton: {
     flexDirection: 'row',

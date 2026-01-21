@@ -18,7 +18,8 @@ export const showSuccessToast = (title, message) => {
             type: ALERT_TYPE.SUCCESS,
             title: title,
             textBody: message || '',
-            autoClose: 3000,
+            autoClose: true,
+            autoCloseDelay: 3000,
         });
     }
 };
@@ -66,7 +67,8 @@ export const showClickableToast = (title, message, onPress) => {
         type: ALERT_TYPE.SUCCESS,
         title: title,
         textBody: message || '',
-        autoClose: 5000,
+        autoClose: true,
+        autoCloseDelay: 5000,
         onPress: () => {
             // Close toast first
             if (Toast.hide) Toast.hide();
@@ -111,7 +113,8 @@ export const showErrorToast = (title, message) => {
             type: ALERT_TYPE.DANGER,
             title: title,
             textBody: message || '',
-            autoClose: 4000,
+            autoClose: true,
+            autoCloseDelay: 4000,
         });
     }
 };
@@ -127,7 +130,8 @@ export const showWarningToast = (title, message) => {
             type: ALERT_TYPE.WARNING,
             title: title,
             textBody: message || '',
-            autoClose: 3500,
+            autoClose: true,
+            autoCloseDelay: 3500,
         });
     }
 };
@@ -143,7 +147,8 @@ export const showInfoToast = (title, message) => {
             type: ALERT_TYPE.INFO,
             title: title,
             textBody: message || '',
-            autoClose: 3000,
+            autoClose: true,
+            autoCloseDelay: 3000,
         });
     }
 };
@@ -161,7 +166,8 @@ export const showToast = (type, title, message, duration = 3000) => {
             type: type,
             title: title,
             textBody: message || '',
-            autoClose: duration,
+            autoClose: true,
+            autoCloseDelay: duration,
         });
     }
 };
@@ -187,6 +193,7 @@ export const showConfirmDialog = ({
         title: title,
         textBody: message || '',
         button: buttonText,
+        autoClose: 5000,
         onPressButton: () => {
             Dialog.hide();
             onPress?.();
@@ -230,7 +237,7 @@ export const showActionDialog = ({
         buttonOneColor: confirmButtonColor,
         buttonTwoColor: cancelButtonColor,
         closeOnOverlayTap: true,
-        autoClose: false,
+        autoClose: 8000,
         onPressButtonOne: () => {
             Dialog.hide();
             onConfirm?.();
@@ -258,6 +265,7 @@ export const showSuccessDialog = (title, message, buttonText = 'Great!', onPress
         title: title,
         textBody: message || '',
         button: buttonText,
+        autoClose: 5000,
         onPressButton: () => {
             Dialog.hide();
             onPress?.();
@@ -277,6 +285,7 @@ export const showErrorDialog = (title, message, onPress) => {
         title: title,
         textBody: message || '',
         button: 'OK',
+        autoClose: 5000,
         onPressButton: () => {
             Dialog.hide();
             onPress?.();
@@ -297,6 +306,7 @@ export const showWarningDialog = (title, message, buttonText = 'OK', onPress) =>
         title: title,
         textBody: message || '',
         button: buttonText,
+        autoClose: 5000,
         onPressButton: () => {
             Dialog.hide();
             onPress?.();
@@ -317,6 +327,7 @@ export const showInfoDialog = (title, message, buttonText = 'Got it', onPress) =
         title: title,
         textBody: message || '',
         button: buttonText,
+        autoClose: 5000,
         onPressButton: () => {
             Dialog.hide();
             onPress?.();

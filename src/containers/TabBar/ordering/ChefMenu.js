@@ -28,6 +28,7 @@ import CartFloatingButton from '../../../components/common/CartFloatingButton';
 import { moderateScale, getHeight } from '../../../common/constants';
 import { styles } from '../../../themes';
 import request from '../../../api/request';
+import branchService from '../../../api/branchService';
 import images from '../../../assets/images';
 import { StackNav } from '../../../navigation/NavigationKeys';
 import strings from '../../../i18n/strings';
@@ -41,6 +42,7 @@ import { useStorage } from '../../../utils/useStorage';
 import FeaturedReelsSection from '../../../components/common/FeaturedReelsSection';
 import FeaturedReviewsSection from '../../../components/common/FeaturedReviewsSection';
 import FollowButton from '../../../components/common/FollowButton';
+import Locations from '../../../components/models/Locations';
 
 const ChefMenu = () => {
   const colors = useSelector(state => state.theme.theme);
@@ -54,6 +56,7 @@ const ChefMenu = () => {
 
   const flatListRef = useRef(null);
   const searchInputRef = useRef(null);
+  const locationsSheetRef = useRef(null);
   const hasAttemptedScrollRef = useRef(false);
   const [scrollRetryCount, setScrollRetryCount] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
@@ -109,6 +112,16 @@ const ChefMenu = () => {
     enabled: !!chefId,
     staleTime: 1000 * 60 * 5,
   });
+
+  // Fetch branches for this kitchen
+  const { data: branchesData } = useQuery(
+    ['chefBranches', chefId],
+    () => branchService.getBranches(chefId),
+    {
+      enabled: !!chefId,
+      staleTime: 1000 * 60 * 10, // 10 minutes
+    }
+  );
 
   // Fetch dishes (Infinite Scroll)
   const {
@@ -687,6 +700,35 @@ const ChefMenu = () => {
                   </ZText>
                 </View>
               </View>
+              {/* Branches Section */}
+              {(() => {
+                // Prepare locations data for the modal
+                const branchLocations = (branchesData?.branches || [])
+                  .filter(b => b.isActive)
+                  .map(b => ({
+                    description: b.addressDetails?.formattedAddress || b.branchName,
+                    lat: b.location?.lat,
+                    long: b.location?.long,
+                  }));
+
+                if (branchLocations.length === 0) return null;
+
+                return (
+                  <TouchableOpacity
+                    style={localStyles.branchesRow}
+                    onPress={() => locationsSheetRef.current?.show()}
+                    activeOpacity={0.7}
+                  >
+                    <View style={[localStyles.branchBadge, { backgroundColor: colors.primary + '15' }]}>
+                      <Ionicons name="location" size={14} color={colors.primary} />
+                      <ZText type="B12" color={colors.primary} style={{ marginLeft: 4 }}>
+                        {branchLocations.length} {branchLocations.length === 1 ? strings.branch || 'Branch' : strings.branches || 'Branches'}
+                      </ZText>
+                      <Ionicons name="chevron-forward" size={14} color={colors.primary} style={{ marginLeft: 2 }} />
+                    </View>
+                  </TouchableOpacity>
+                );
+              })()}
               {/* Follow Button - Only show if not current user's profile */}
               {chefId && user?._id?.toString() !== chefId?.toString() && (
                 <FollowButton
@@ -889,6 +931,21 @@ const ChefMenu = () => {
       />
 
       <CartFloatingButton onPress={handleCartPress} />
+
+      {/* Branches Modal */}
+      <Locations
+        SheetRef={locationsSheetRef}
+        selectedGov={
+          (branchesData?.branches || [])
+            .filter(b => b.isActive)
+            .map(b => ({
+              description: b.addressDetails?.formattedAddress || b.branchName,
+              lat: b.location?.lat,
+              long: b.location?.long,
+            }))
+        }
+        onClose={() => { }}
+      />
     </ZSafeAreaView>
   );
 };
@@ -948,6 +1005,19 @@ const localStyles = StyleSheet.create({
   statBadge: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  branchesRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: moderateScale(6),
+    gap: moderateScale(4),
+  },
+  branchBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: moderateScale(10),
+    paddingVertical: moderateScale(6),
+    borderRadius: moderateScale(16),
   },
   // Legacy styles (keeping for compatibility)
   premiumHeader: {

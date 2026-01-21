@@ -50,6 +50,7 @@ import RestaurantSearch from '../../../components/RestaurantSearch';
 import DishSelector from '../../../components/DishSelector';
 import RatingInput from '../../../components/RatingInput';
 import ZPhoneInput from '../../../components/common/ZPhoneInput';
+import branchService from '../../../api/branchService';
 
 export default function PostDetail() {
 
@@ -95,20 +96,27 @@ export default function PostDetail() {
 
   const user = queryResult?.data?.user;
 
-  const { data: locationsData } = useQuery(
-    'location' + user?._id,
-    () =>
-      request.get('/user/location', {
-        params: {
-          id: user?._id,
-        },
-      }),
+  // Fetch chef branches using ChefBranch API (not legacy User.locations)
+  const { data: branchesData } = useQuery(
+    ['chefBranches', user?._id],
+    () => branchService.getBranches(user?._id),
     {
       retry: 0,
-      enabled: !!user?._id,
+      enabled: !!user?._id && user?.type === 'chef',
       refetchOnMount: true,
       onSuccess: res => {
-        setLocations(res?.data?.locations);
+        // Adapt ChefBranch format to the local locations state format
+        const adaptedLocations = (res?.branches || []).map(branch => ({
+          _id: branch._id,
+          description: branch.addressDetails?.formattedAddress || branch.branchName,
+          lat: branch.location?.lat,
+          long: branch.location?.long,
+          latitude: branch.location?.lat,
+          longitude: branch.location?.long,
+          city: branch.addressDetails?.city,
+          country: branch.addressDetails?.country,
+        }));
+        setLocations(adaptedLocations);
       },
       onError: () => { },
     },
@@ -117,7 +125,7 @@ export default function PostDetail() {
   const [isPhotoUploading, setisPhotoUploading] = useState(false);
   const [localUri, setlocalUri] = useState('');
   const [phone, setPhone] = useState();
-  const [locations, setLocations] = useState(locationsData?.data?.locations);
+  const [locations, setLocations] = useState([]);
   const [modalState, setModalState] = useState({ visible: false, title: '', message: '' });
 
   // Review-specific state for regular users
@@ -633,7 +641,7 @@ export default function PostDetail() {
 
 
             {user?.type === 'chef' &&
-              !locationsData?.data?.locations?.length && (
+              !branchesData?.branches?.length && (
                 <>
                   <ZText style={{ marginVertical: 10 }} type={'B20'}>
                     {strings.branches}

@@ -149,63 +149,89 @@ export default function Orders({ navigation }) {
     }
   };
 
-  const renderOrderItem = React.useCallback(({ item }) => (
-    <TouchableOpacity
-      style={[localStyles.orderItem, { backgroundColor: colors.inputBg }]}
-      onPress={() => handleOrderPress(item)}
-      activeOpacity={0.7}>
-      <Image
-        source={{
-          uri: optimizeImageUri(
-            item.chef?.avatar ||
-            'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?w=200',
-            50,
-            50
-          ),
-        }}
-        style={localStyles.avatar}
-      />
+  const renderOrderItem = React.useCallback(({ item }) => {
+    // Check if this order has unread messages
+    const unreadCount = item.unreadMessageCount || 0;
 
-      <View style={localStyles.orderInfo}>
-        <View style={localStyles.orderHeader}>
-          <View style={localStyles.chefInfo}>
-            <ZText type="B16" color={colors.textColor} numberOfLines={1}>
-              {item.chef?.fullName || item.chef?.username || 'Chef'}
-            </ZText>
-            <ZText type="M12" color={colors.grayScale7} numberOfLines={1}>
-              Order #{item._id?.slice(-6) || item._id}
-            </ZText>
-          </View>
-          <View style={localStyles.orderStatus}>
-            <View
-              style={[
-                localStyles.statusBadge,
-                { backgroundColor: getOrderStatusColor(item.status) }
-              ]}>
-              <ZText type="M10" color={colors.white}>
-                {getOrderStatusText(item.status)}
+    // Check if this order has an unseen status change (only if lastUpdated exists)
+    const hasUnseenStatus = item.lastUpdated && (
+      !item.userLastSeenAt ||
+      new Date(item.lastUpdated) > new Date(item.userLastSeenAt)
+    );
+
+    // Show badge if there are unread messages OR unseen status
+    const showBadge = unreadCount > 0 || hasUnseenStatus;
+
+    return (
+      <TouchableOpacity
+        style={[localStyles.orderItem, { backgroundColor: colors.inputBg }]}
+        onPress={() => handleOrderPress(item)}
+        activeOpacity={0.7}>
+        {/* Badge: show message count if messages, or dot if just status change */}
+        {showBadge && (
+          unreadCount > 0 ? (
+            <View style={[localStyles.unreadBadge, { backgroundColor: colors.primary }]}>
+              <ZText type="s10" color={colors.white} style={localStyles.unreadBadgeText}>
+                {unreadCount > 99 ? '99+' : unreadCount}
               </ZText>
             </View>
-            <ZText type="M12" color={colors.grayScale7}>
-              {formatTime(item.created_at)}
+          ) : (
+            <View style={[localStyles.unseenDot, { backgroundColor: colors.primary }]} />
+          )
+        )}
+        <Image
+          source={{
+            uri: optimizeImageUri(
+              item.chef?.avatar ||
+              'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?w=200',
+              50,
+              50
+            ),
+          }}
+          style={localStyles.avatar}
+        />
+
+        <View style={localStyles.orderInfo}>
+          <View style={localStyles.orderHeader}>
+            <View style={localStyles.chefInfo}>
+              <ZText type="B16" color={colors.textColor} numberOfLines={1}>
+                {item.chef?.fullName || item.chef?.username || 'Chef'}
+              </ZText>
+              <ZText type="M12" color={colors.grayScale7} numberOfLines={1}>
+                Order #{item._id?.slice(-6) || item._id}
+              </ZText>
+            </View>
+            <View style={localStyles.orderStatus}>
+              <View
+                style={[
+                  localStyles.statusBadge,
+                  { backgroundColor: getOrderStatusColor(item.status) }
+                ]}>
+                <ZText type="M10" color={colors.white}>
+                  {getOrderStatusText(item.status)}
+                </ZText>
+              </View>
+              <ZText type="M12" color={colors.grayScale7}>
+                {formatTime(item.created_at)}
+              </ZText>
+            </View>
+          </View>
+
+          <View style={localStyles.orderDetails}>
+            <ZText type="M14" color={colors.grayScale7} numberOfLines={1}>
+              {item.items?.length || 0} items • {item.totalPrice?.toFixed(2) || '0.00'}
             </ZText>
           </View>
         </View>
 
-        <View style={localStyles.orderDetails}>
-          <ZText type="M14" color={colors.grayScale7} numberOfLines={1}>
-            {item.items?.length || 0} items • {item.totalPrice?.toFixed(2) || '0.00'}
-          </ZText>
-        </View>
-      </View>
-
-      <Ionicons
-        name="chevron-forward"
-        size={moderateScale(20)}
-        color={colors.grayScale7}
-      />
-    </TouchableOpacity>
-  ), [colors.inputBg, colors.textColor, colors.grayScale7, colors.white, handleOrderPress]);
+        <Ionicons
+          name="chevron-forward"
+          size={moderateScale(20)}
+          color={colors.grayScale7}
+        />
+      </TouchableOpacity>
+    );
+  }, [colors.inputBg, colors.textColor, colors.grayScale7, colors.white, colors.primary, handleOrderPress]);
 
   const renderEmptyState = () => (
     <View style={localStyles.emptyContainer}>
@@ -282,7 +308,34 @@ export default function Orders({ navigation }) {
 
   return (
     <ZSafeAreaView>
-      <ZHeader title={strings.myOrders} />
+      {/* Custom Header with Back/Chat Icons */}
+      <View style={localStyles.customHeader}>
+        <View style={localStyles.headerLeft}>
+          {navigation.canGoBack() && (
+            <TouchableOpacity
+              onPress={() => navigation.goBack()}
+              style={localStyles.backButton}
+            >
+              <Ionicons
+                name="chevron-back"
+                size={moderateScale(24)}
+                color={colors.textColor}
+              />
+            </TouchableOpacity>
+          )}
+          <ZText type="b20" color={colors.textColor}>{strings.myOrders}</ZText>
+        </View>
+        <TouchableOpacity
+          onPress={() => navigation.navigate(StackNav.ChatList)}
+          style={localStyles.headerIcon}
+        >
+          <Ionicons
+            name="chatbubbles-outline"
+            size={moderateScale(24)}
+            color={colors.textColor}
+          />
+        </TouchableOpacity>
+      </View>
       <FlatList
         data={orders}
         renderItem={renderOrderItem}
@@ -377,5 +430,52 @@ const localStyles = StyleSheet.create({
   emptySubtitle: {
     textAlign: 'center',
     lineHeight: moderateScale(20),
+  },
+  customHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: moderateScale(20),
+    paddingVertical: moderateScale(16),
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  backButton: {
+    marginRight: moderateScale(8),
+  },
+  headerIcon: {
+    padding: moderateScale(5),
+  },
+  unseenDot: {
+    position: 'absolute',
+    top: moderateScale(8),
+    left: moderateScale(8),
+    width: moderateScale(10),
+    height: moderateScale(10),
+    borderRadius: moderateScale(5),
+    zIndex: 1,
+  },
+  unreadBadge: {
+    position: 'absolute',
+    top: moderateScale(8),
+    left: moderateScale(8),
+    minWidth: moderateScale(20),
+    height: moderateScale(20),
+    borderRadius: moderateScale(10),
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: moderateScale(6),
+    zIndex: 1,
+    // Premium shadow
+    shadowColor: '#FF4D67',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  unreadBadgeText: {
+    fontWeight: 'bold',
   },
 });

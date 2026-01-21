@@ -39,6 +39,7 @@ import { StackNav, TabNav } from '../../navigation/NavigationKeys';
 import ProfilePicture from '../../components/models/ProfilePicture';
 import ZButton from '../../components/common/ZButton';
 import request from '../../api/request';
+import branchService from '../../api/branchService';
 import { showErrorToast } from '../../utils/toast';
 import { useQuery, useQueryClient } from 'react-query';
 import { OneSignal } from 'react-native-onesignal';
@@ -77,19 +78,33 @@ const SetUpProfile = props => {
     },
   });
 
-  const { data: locationsData } = useQuery(
-    'location' + editUser?.data?.user?._id,
-    () =>
-      request.get('/user/location', {
-        params: {
-          id: editUser?.data?.user?._id,
-        },
-      }),
+  // Fetch existing branches for edit mode (using ChefBranch API instead of legacy User.locations)
+  // Store original branches for diff computation during updates
+  const originalBranchesRef = useRef([]);
+
+  const { data: branchesResponse } = useQuery(
+    ['chefBranches', editUser?.data?.user?._id],
+    () => branchService.getBranches(editUser?.data?.user?._id),
     {
       retry: 0,
-      enabled: !!editUser?.data?.user?._id,
+      enabled: !!editUser?.data?.user?._id && isEdit,
       refetchOnMount: true,
-      onSuccess: res => setLocations(res?.data?.locations),
+      onSuccess: res => {
+        // Adapt ChefBranch format to the local locations state format
+        const adaptedLocations = (res?.branches || []).map(branch => ({
+          _id: branch._id, // Keep branch ID for edits
+          description: branch.addressDetails?.formattedAddress || branch.branchName,
+          latitude: branch.location?.lat,
+          longitude: branch.location?.long,
+          city: branch.addressDetails?.city,
+          country: branch.addressDetails?.country,
+          branchName: branch.branchName,
+          contactPhone: branch.contactInfo?.phone,
+        }));
+        setLocations(adaptedLocations);
+        // Store original state for diff computation
+        originalBranchesRef.current = adaptedLocations.map(loc => ({ ...loc }));
+      },
       onError: () => { },
     },
   );
@@ -107,9 +122,7 @@ const SetUpProfile = props => {
     editUser?.data?.user?.fullName || '',
   );
 
-  const [locations, setLocations] = useState(
-    locationsData?.data?.locations || [],
-  );
+  const [locations, setLocations] = useState([]);
 
   const [phoneNo, setPhoneNo] = useState(editUser?.data?.user?.phone || '');
   const [isPhoneValid, setIsPhoneValid] = useState(false);
@@ -181,8 +194,9 @@ const SetUpProfile = props => {
       // Phone check failed, proceed anyway
     }
 
-    request
-      .post('/user', {
+    try {
+      // Create user account (without locations - we'll add branches separately)
+      const res = await request.post('/user', {
         fullName,
         phone: phoneNo,
         gender,
@@ -191,20 +205,48 @@ const SetUpProfile = props => {
         type,
         avatar: selectImage,
         bio,
-        locations,
-      })
-      .then(async res => {
-        setAccessToken(res?.data?.token);
-        OneSignal.login(String(res?.data?.user?._id));
-        await queryClient.clear();
-        navigation.reset({
-          index: 0,
-          routes: [{ name: StackNav.TabBar }],
-        });
-      })
-      .catch(err => {
-        showErrorToast(strings.error, err[Object.keys(err)?.[0]]);
+        // Don't send locations here - use ChefBranch API instead
       });
+
+      setAccessToken(res?.data?.token);
+      OneSignal.login(String(res?.data?.user?._id));
+
+      // If chef with locations, create branches using ChefBranch API
+      if (type === 'chef' && locations.length > 0) {
+        for (let i = 0; i < locations.length; i++) {
+          const loc = locations[i];
+          try {
+            await branchService.addBranch({
+              branchName: loc.branchName || `Branch ${i + 1}`,
+              addressDetails: {
+                city: loc.city || '',
+                country: loc.country || 'Egypt',
+                formattedAddress: loc.description,
+              },
+              location: {
+                lat: loc.latitude,
+                long: loc.longitude,
+              },
+              contactInfo: {
+                phone: loc.contactPhone || phoneNo,
+              },
+              isPrimary: i === 0, // First branch is primary
+            });
+          } catch (branchError) {
+            console.log('Failed to create branch:', branchError);
+            // Continue with other branches
+          }
+        }
+      }
+
+      await queryClient.clear();
+      navigation.reset({
+        index: 0,
+        routes: [{ name: StackNav.TabBar }],
+      });
+    } catch (err) {
+      showErrorToast(strings.error, err[Object.keys(err)?.[0]]);
+    }
   };
 
   // Helper function to upload image via backend API
@@ -283,7 +325,7 @@ const SetUpProfile = props => {
     });
   };
 
-  const onPressUpdate = () => {
+  const onPressUpdate = async () => {
     const data = {};
 
     if (fullName) data.fullName = fullName;
@@ -294,28 +336,116 @@ const SetUpProfile = props => {
     if (password) data.password = password;
     if (type) data.type = type;
     if (selectImage) data.avatar = selectImage;
-    if (locations) data.locations = locations;
+
     setisUpdating(true);
 
-    request
-      .patch('/user', {
-        ...data,
-      })
-      .then(async () => {
-        await queryClient.invalidateQueries({ queryKey: 'user' });
-        await queryClient.invalidateQueries({
-          queryKey: 'location' + editUser?.data?.user?._id,
-        });
-        queryClient.invalidateQueries({ queryKey: 'stories_following' });
-        queryClient.invalidateQueries({ queryKey: 'stories' });
+    try {
+      // 1. Update user profile data
+      await request.patch('/user', { ...data });
 
-        navigation.navigate(TabNav.Profile);
-        setisUpdating(false);
-      })
-      .catch(err => {
-        setisUpdating(false);
-        showErrorToast(strings.error, err[Object.keys(err)?.[0]]);
+      // 2. Handle branch operations for chefs (diff-based CRUD)
+      const userType = editUser?.data?.user?.type;
+      if (userType === 'chef') {
+        const originalBranches = originalBranchesRef.current;
+        const currentBranches = locations;
+        const originalIds = new Set(originalBranches.map(b => b._id).filter(Boolean));
+        const currentIds = new Set(currentBranches.map(b => b._id).filter(Boolean));
+
+        // Compute deleted branches (in original but not in current)
+        const deletedBranchIds = [...originalIds].filter(id => !currentIds.has(id));
+
+        // Compute new branches (no _id means newly added)
+        const newBranches = currentBranches.filter(b => !b._id);
+
+        // Compute edited branches (has _id and fields changed)
+        const editedBranches = currentBranches.filter(b => {
+          if (!b._id) return false;
+          const original = originalBranches.find(o => o._id === b._id);
+          if (!original) return false;
+          // Check if any field changed
+          return (
+            b.description !== original.description ||
+            b.latitude !== original.latitude ||
+            b.longitude !== original.longitude ||
+            b.city !== original.city ||
+            b.country !== original.country ||
+            b.branchName !== original.branchName ||
+            b.contactPhone !== original.contactPhone
+          );
+        });
+
+        // Execute delete operations
+        for (const branchId of deletedBranchIds) {
+          try {
+            await branchService.deleteBranch(branchId);
+          } catch (error) {
+            console.log('Failed to delete branch:', branchId, error);
+          }
+        }
+
+        // Execute add operations
+        for (let i = 0; i < newBranches.length; i++) {
+          const loc = newBranches[i];
+          try {
+            await branchService.addBranch({
+              branchName: loc.branchName || `Branch ${currentBranches.length - newBranches.length + i + 1}`,
+              addressDetails: {
+                city: loc.city || '',
+                country: loc.country || 'Egypt',
+                formattedAddress: loc.description,
+              },
+              location: {
+                lat: loc.latitude,
+                long: loc.longitude,
+              },
+              contactInfo: {
+                phone: loc.contactPhone || phoneNo,
+              },
+              isPrimary: currentBranches.length === 1 && i === 0, // Primary if only branch
+            });
+          } catch (error) {
+            console.log('Failed to add branch:', error);
+          }
+        }
+
+        // Execute edit operations
+        for (const loc of editedBranches) {
+          try {
+            await branchService.editBranch(loc._id, {
+              branchName: loc.branchName,
+              addressDetails: {
+                city: loc.city || '',
+                country: loc.country || 'Egypt',
+                formattedAddress: loc.description,
+              },
+              location: {
+                lat: loc.latitude,
+                long: loc.longitude,
+              },
+              contactInfo: {
+                phone: loc.contactPhone,
+              },
+            });
+          } catch (error) {
+            console.log('Failed to edit branch:', loc._id, error);
+          }
+        }
+      }
+
+      // 3. Invalidate queries and navigate
+      await queryClient.invalidateQueries({ queryKey: 'user' });
+      await queryClient.invalidateQueries({
+        queryKey: ['chefBranches', editUser?.data?.user?._id],
       });
+      queryClient.invalidateQueries({ queryKey: 'stories_following' });
+      queryClient.invalidateQueries({ queryKey: 'stories' });
+
+      navigation.navigate(TabNav.Profile);
+    } catch (err) {
+      showErrorToast(strings.error, err[Object.keys(err)?.[0]]);
+    } finally {
+      setisUpdating(false);
+    }
   };
 
   const onPressContinue = () => {

@@ -4,6 +4,7 @@ import React, { memo, useCallback, useEffect, useState, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { TabView, TabBar } from 'react-native-tab-view';
 import LinearGradient from 'react-native-linear-gradient';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 // Local import
 import ZSafeAreaView from '../../../../components/common/ZSafeAreaView';
@@ -11,11 +12,12 @@ import strings from '../../../../i18n/strings';
 import { moderateScale } from '../../../../common/constants';
 import { styles } from '../../../../themes';
 import ZText from '../../../../components/common/ZText';
-import { useIsFocused } from '@react-navigation/native';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
 import { useScreen } from '../../../../navigation/screenContext';
-import { TabNav } from '../../../../navigation/NavigationKeys';
+import { TabNav, StackNav } from '../../../../navigation/NavigationKeys';
 import ZLoader from '../../../../components/common/ZLoader';
 import SearchHeader from '../../../../components/SearchHeader';
+import CartFloatingButton from '../../../../components/common/CartFloatingButton';
 
 // Tab components
 import DishSearchTab from './DishSearchTab';
@@ -27,6 +29,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 export default function Search() {
   const colors = useSelector(state => state.theme.theme);
   const { selectedAddress } = useSelector(state => state.address);
+  const navigation = useNavigation();
 
   // User location for location-based search
   const userLocation = selectedAddress?.coordinates ? {
@@ -69,9 +72,15 @@ export default function Search() {
 
   const handleIndexChange = useCallback((index) => {
     setTabState(prev => ({ ...prev, index }));
+    // Reset search query when changing tabs
+    setSearchQuery('');
   }, []);
 
   const getActiveTabKey = () => tabState.routes[tabState.index]?.key || 'discover';
+
+  const handleCartPress = useCallback(() => {
+    navigation.navigate(StackNav.ShoppingCart);
+  }, [navigation]);
 
   // Simple tab bar with per-tab gradient backgrounds (works in RTL)
   const renderTabBar = useCallback(() => (
@@ -150,14 +159,34 @@ export default function Search() {
   return (
     <ZSafeAreaView>
       <View style={localStyles.container}>
-        {/* Premium Unified Search Header */}
-        <SearchHeader
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          activeTab={getActiveTabKey()}
-          useSemanticSearch={useSemanticSearch}
-          onToggleSemantic={() => setUseSemanticSearch(!useSemanticSearch)}
-        />
+        {/* Premium Unified Search Header with Orders & Chat Icons */}
+        <View style={localStyles.headerWithIcon}>
+          <View style={localStyles.searchHeaderWrapper}>
+            <SearchHeader
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              activeTab={getActiveTabKey()}
+              useSemanticSearch={useSemanticSearch}
+              onToggleSemantic={() => setUseSemanticSearch(!useSemanticSearch)}
+            />
+          </View>
+          <View style={localStyles.headerIconsContainer}>
+            <TouchableOpacity onPress={() => navigation.navigate(StackNav.Orders)} style={localStyles.headerIcon}>
+              <Ionicons
+                name="bag-handle-outline"
+                size={moderateScale(24)}
+                color={colors.dark ? colors.white : colors.darkColor}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => navigation.navigate(StackNav.ChatList)} style={localStyles.headerIcon}>
+              <Ionicons
+                name="chatbubbles-outline"
+                size={moderateScale(24)}
+                color={colors.dark ? colors.white : colors.darkColor}
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
 
         {/* Tab View */}
         <TabView
@@ -174,6 +203,9 @@ export default function Search() {
           pagerStyle={I18nManager.isRTL ? { transform: [{ scaleX: -1 }] } : {}}
         />
       </View>
+
+      {/* Floating Cart Button */}
+      <CartFloatingButton onPress={handleCartPress} />
     </ZSafeAreaView>
   );
 }
@@ -181,6 +213,19 @@ export default function Search() {
 const localStyles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  headerWithIcon: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingRight: moderateScale(10),
+  },
+  searchHeaderWrapper: {
+    flex: 1,
+  },
+  headerIconsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: moderateScale(15),
   },
   tabBarWrapper: {
     paddingHorizontal: moderateScale(20),
@@ -200,5 +245,8 @@ const localStyles = StyleSheet.create({
   },
   tabItemSelected: {
     // gradient applied via LinearGradient child
+  },
+  headerIcon: {
+    padding: moderateScale(6),
   },
 });

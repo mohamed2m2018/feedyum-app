@@ -18,7 +18,7 @@ import { moderateScale, getHeight } from '../common/constants';
 import { styles } from '../themes';
 import strings from '../i18n/strings';
 import images from '../assets/images';
-import { addToCart } from '../redux/reducer/cartSlice';
+import { addToCart, selectCartItems } from '../redux/reducer/cartSlice';
 
 /**
  * DishCardCompact - Compact dish card for horizontal lists
@@ -31,10 +31,13 @@ function DishCardCompact({
     style,
 }) {
     const colors = useSelector(state => state.theme.theme);
+    const cartItems = useSelector(selectCartItems);
     const dispatch = useDispatch();
     const isRTL = I18nManager.isRTL;
-    const [quantity, setQuantity] = useState(0);
     const [scaleAnim] = useState(new Animated.Value(1));
+
+    // Get quantity from Redux cart state (synced with actual cart)
+    const quantity = cartItems.find(item => item.dishId === dish?._id)?.quantity || 0;
 
     const handleAddPress = () => {
         // Animate button
@@ -51,16 +54,12 @@ function DishCardCompact({
             }),
         ]).start();
 
-        setQuantity(prev => prev + 1);
-
-        // Dispatch to Redux cart
+        // Dispatch to Redux cart - pass full dish object and extract chef info
+        const chef = dish.user || dish.chef;
         dispatch(addToCart({
-            _id: dish._id,
-            name: dish.name,
-            price: dish.price,
-            image: dish.poster || dish.image,
-            chef: dish.user || dish.chef,
-            chefId: dish.user?._id || dish.userId || dish.chefId,
+            dish: dish,
+            chefId: chef?._id || dish.userId || dish.chefId,
+            chefName: chef?.fullName || chef?.username || 'Unknown Kitchen',
             quantity: 1,
         }));
 
@@ -72,7 +71,7 @@ function DishCardCompact({
     };
 
     const price = dish?.price || 0;
-    const rating = dish?.averageRating || dish?.rating || 0;
+    const rating = dish?.averageRating || 0;
     const imageUri = dish?.poster || dish?.image || dish?.avatarUri;
 
     return (
@@ -109,6 +108,22 @@ function DishCardCompact({
                     <ZText type="b14" color={colors.primary}>
                         {price} {strings.EGP}
                     </ZText>
+
+                    {/* Rating display */}
+                    <View style={[localStyles.ratingDisplay, isRTL && styles.flexRowReverse]}>
+                        <Ionicons
+                            name="star"
+                            size={12}
+                            color={rating > 0 ? colors.yellow : colors.grayScale6}
+                        />
+                        <ZText
+                            type="m12"
+                            color={rating > 0 ? colors.textColor : colors.grayScale6}
+                            style={styles.ml5}
+                        >
+                            {rating > 0 ? rating.toFixed(1) : '-'}
+                        </ZText>
+                    </View>
                 </View>
             </View>
 
@@ -176,6 +191,12 @@ const localStyles = StyleSheet.create({
         marginBottom: moderateScale(4),
     },
     priceRow: {
+        ...styles.flexRow,
+        ...styles.itemsCenter,
+        ...styles.justifyBetween,
+        paddingRight: moderateScale(36), // Space for add button
+    },
+    ratingDisplay: {
         ...styles.flexRow,
         ...styles.itemsCenter,
     },

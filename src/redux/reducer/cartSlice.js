@@ -1,11 +1,11 @@
-import {useStorage} from '../../utils/useStorage';
+import { useStorage } from '../../utils/useStorage';
 import strings from '../../i18n/strings';
 
 // Utility function to properly convert ObjectId to string
 const objectIdToString = (obj) => {
   if (!obj) return obj;
   if (typeof obj === 'string') return obj;
-  
+
   // Since we've fixed the backend to return strings, this should be simple now
   if (typeof obj === 'object') {
     // Handle MongoDB ObjectId objects that might still come through
@@ -15,13 +15,13 @@ const objectIdToString = (obj) => {
         return stringified;
       }
     }
-    
+
     // Handle serialized ObjectId formats
     if (obj.$oid) return obj.$oid;
     if (obj._id) return objectIdToString(obj._id);
     if (obj.id && typeof obj.id === 'string') return obj.id;
   }
-  
+
   return String(obj);
 };
 
@@ -53,42 +53,48 @@ const calculateTotals = (items) => {
   const subtotal = items.reduce((total, item) => {
     return total + (item.dish.price * item.quantity);
   }, 0);
-  
+
   const itemCount = items.reduce((total, item) => {
     return total + item.quantity;
   }, 0);
-  
+
   return { subtotal, itemCount };
 };
 
 export default function cartReducer(state = initialState, action) {
   switch (action.type) {
     case ADD_TO_CART: {
-      const {dish, quantity = 1, chefId, chefName} = action.payload;
-      
+      const { dish, quantity = 1, chefId, chefName } = action.payload;
+
       // Ensure chefId is a string (handle ObjectId objects)
       const normalizedChefId = objectIdToString(chefId);
-      
+
       // If chefId is not provided, try to extract it from dish data
       let finalChefId = normalizedChefId;
-      if (!finalChefId && dish.chef) {
+      if (!finalChefId && dish.chef?._id) {
         finalChefId = objectIdToString(dish.chef._id);
+      } else if (!finalChefId && dish.user?._id) {
+        finalChefId = objectIdToString(dish.user._id);
+      } else if (!finalChefId && dish.userId) {
+        finalChefId = objectIdToString(dish.userId);
+      } else if (!finalChefId && dish.chefId) {
+        finalChefId = objectIdToString(dish.chefId);
       }
 
       // Ensure dishId is a string (handle ObjectId objects)
       const dishId = objectIdToString(dish._id);
-      
+
       // Debug logging
-// If cart is empty or same chef, proceed
+      // If cart is empty or same chef, proceed
       if (!state.chefId || state.chefId === finalChefId) {
-        
+
         const existingItem = state.items.find(item => item.dishId === dishId);
         let newItems;
-        
+
         if (existingItem) {
           newItems = state.items.map(item =>
             item.dishId === dishId
-              ? {...item, quantity: item.quantity + quantity}
+              ? { ...item, quantity: item.quantity + quantity }
               : item
           );
         } else {
@@ -102,9 +108,9 @@ export default function cartReducer(state = initialState, action) {
             }
           ];
         }
-        
+
         const totals = calculateTotals(newItems);
-        
+
         return {
           ...state,
           items: newItems,
@@ -124,23 +130,23 @@ export default function cartReducer(state = initialState, action) {
     }
 
     case UPDATE_QUANTITY: {
-      const {dishId, quantity} = action.payload;
+      const { dishId, quantity } = action.payload;
       // Ensure dishId is a string
       const normalizedDishId = objectIdToString(dishId);
       let newItems;
-      
+
       if (quantity <= 0) {
         newItems = state.items.filter(item => item.dishId !== normalizedDishId);
       } else {
         newItems = state.items.map(item =>
           item.dishId === normalizedDishId
-            ? {...item, quantity: quantity}
+            ? { ...item, quantity: quantity }
             : item
         );
       }
-      
+
       const totals = calculateTotals(newItems);
-      
+
       return {
         ...state,
         items: newItems,
@@ -152,12 +158,12 @@ export default function cartReducer(state = initialState, action) {
     }
 
     case REMOVE_FROM_CART: {
-      const {dishId} = action.payload;
+      const { dishId } = action.payload;
       // Ensure dishId is a string
       const normalizedDishId = objectIdToString(dishId);
       const newItems = state.items.filter(item => item.dishId !== normalizedDishId);
       const totals = calculateTotals(newItems);
-      
+
       return {
         ...state,
         items: newItems,
@@ -283,7 +289,7 @@ export const removePromocode = () => ({
 // Async thunks for cart persistence
 export const saveCartToStorage = () => async (dispatch, getState) => {
   try {
-    const {cart} = getState();
+    const { cart } = getState();
     const cartData = {
       items: cart.items,
       chefId: cart.chefId,
@@ -291,7 +297,7 @@ export const saveCartToStorage = () => async (dispatch, getState) => {
     };
     useStorage.setItem('cart', JSON.stringify(cartData));
   } catch (error) {
-}
+  }
 };
 
 export const loadCartFromStorageAsync = () => async (dispatch) => {
@@ -302,7 +308,7 @@ export const loadCartFromStorageAsync = () => async (dispatch) => {
       dispatch(loadCartFromStorage(JSON.parse(savedCart)));
     }
   } catch (error) {
-dispatch(setError('Failed to load saved cart'));
+    dispatch(setError('Failed to load saved cart'));
   } finally {
     dispatch(setLoading(false));
   }
@@ -313,7 +319,7 @@ export const clearCartFromStorage = () => async (dispatch) => {
     useStorage.removeItem('cart');
     dispatch(clearCart());
   } catch (error) {
-}
+  }
 };
 
 // Selectors

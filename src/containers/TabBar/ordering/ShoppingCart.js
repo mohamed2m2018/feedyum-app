@@ -198,15 +198,26 @@ const ShoppingCart = () => {
                 }
               }
 
+              // Build location object with coordinates - check multiple possible sources
+              const location = {
+                lat: selectedAddress.location?.lat || selectedAddress.lat || selectedAddress.coordinates?.lat || null,
+                long: selectedAddress.location?.long || selectedAddress.long || selectedAddress.coordinates?.lng || selectedAddress.coordinates?.long || null
+              };
+
               return {
                 street: selectedAddress.streetDetails?.streetName || selectedAddress.formattedAddress || selectedAddress.nameLine || 'Address not specified',
                 city: city || 'Cairo',
                 state: selectedAddress.streetDetails?.state || '',
                 zipCode: selectedAddress.streetDetails?.postalCode || '',
                 nameLine: selectedAddress.formattedAddress || selectedAddress.nameLine || '',
+                formattedAddress: selectedAddress.formattedAddress || selectedAddress.nameLine || '',
                 streetDetails: selectedAddress.streetDetails,
                 buildingDetails: selectedAddress.buildingDetails,
-                coordinates: selectedAddress.coordinates
+                // Include location in the format the backend expects
+                location: location,
+                // Also include direct lat/long as fallback
+                lat: location.lat,
+                long: location.long
               };
             })(),
             notes: specialInstructions || '', // Backend expects 'notes' not 'specialInstructions'
@@ -221,10 +232,8 @@ const ShoppingCart = () => {
             queryClient.invalidateQueries(['orderChats']);
             queryClient.invalidateQueries(['chatList']);
 
-            // Navigate to Orders tab to show history
-            navigation.navigate(StackNav.TabBar, {
-              screen: TabNav.Orders
-            });
+            // Navigate to Orders screen directly
+            navigation.navigate(StackNav.Orders);
           } else {
             throw new Error(strings.orderNotCreatedProperly || 'Order creation failed');
           }
@@ -235,28 +244,34 @@ const ShoppingCart = () => {
           let errorMessage = strings.failedToPlaceOrder;
           let errorData = error?.response?.data || error;
 
-          if (errorData?.error === 'delivery_area_not_supported') {
-            // Try to get data from errorData
+          // Handle new distance-based delivery errors
+          if (errorData?.error === 'missing_coordinates') {
+            // Coordinates are required - tell user to reselect address
+            errorMessage = strings.addressMissingCoordinates;
+          } else if (errorData?.error === 'delivery_distance_exceeded') {
+            // Too far from kitchen
+            const { nearestDistance, maxDistance } = errorData;
+            if (nearestDistance && maxDistance) {
+              errorMessage = strings.kitchenTooFar
+                .replace('{distance}', nearestDistance)
+                .replace('{max}', maxDistance);
+            } else {
+              errorMessage = errorData.message || strings.failedToPlaceOrder;
+            }
+          } else if (errorData?.error === 'no_active_branches') {
+            // Kitchen has no delivery locations
+            errorMessage = strings.noActiveBranches;
+          } else if (errorData?.error === 'delivery_area_not_supported') {
+            // Legacy error handling (for backward compatibility)
             const { deliveryCity, supportedCities } = errorData;
             const validCitiesList = supportedCities && supportedCities.length > 0
               ? supportedCities.join(', ')
               : '';
 
-            // Ensure we have expected data before showing custom message
-            if (supportedCities) { // Removed `loading` as it's not defined here and likely a typo
-              errorMessage = `${strings.chefDoesNotDeliverTo} ${deliveryCity || ''}. ${strings.theyDeliverTo}: ${validCitiesList}`;
-            } else {
-              // Fallback if supportedCities is missing (backend old code case)
-              errorMessage = errorData.message || strings.failedToPlaceOrder;
-            }
-
-            // If we have the specific error code, try to construct the message
-            // Even if supportedCities is missing, we might want to try parsing the old message or just showing it
             if (validCitiesList) {
               errorMessage = `${strings.chefDoesNotDeliverTo} ${deliveryCity || ''}. ${strings.theyDeliverTo}: ${validCitiesList}`;
             } else {
-              // Use the message from backend if we can't construct ours
-              errorMessage = errorData.message;
+              errorMessage = errorData.message || strings.failedToPlaceOrder;
             }
           } else if (errorData?.message) {
             errorMessage = errorData.message;

@@ -65,7 +65,8 @@ function KitchenWithDishesCard({
         });
     };
 
-    const rating = kitchen?.averageRating || kitchen?.rating || 0;
+    // Data is normalized at source - use standardized 'rating' field
+    const rating = kitchen?.rating || 0;
     const dishCount = dishes?.length || kitchen?.dishCount || 0;
 
     return (

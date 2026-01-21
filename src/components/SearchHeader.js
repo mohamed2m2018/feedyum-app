@@ -233,13 +233,15 @@ function SearchHeader({
     function getSearchExamples() {
         switch (activeTab) {
             case 'discover':
-                return ['نفسي في حاجة دسمة', 'حلويات شرقية', 'وجبة سريعة'];
+            case 'dishes':
+                return strings.discoverSearchExamples || ['Something filling', 'Middle Eastern sweets', 'Quick meal'];
             case 'kitchens':
-                return ['فراخ مشوية', 'أكل بيتي', 'حلويات'];
+                return strings.kitchensSearchExamples || ['Grilled chicken', 'Homemade food', 'Desserts'];
             case 'reviews':
-                return ['أكل بيتي لذيذ', 'تجربة جديدة', 'مطعم شعبي'];
+            case 'reels':
+                return strings.reviewsSearchExamples || ['Delicious homemade', 'New experience', 'Popular restaurant'];
             default:
-                return ['برجر', 'بيتزا', 'سلطة'];
+                return strings.defaultSearchExamples || ['Burger', 'Pizza', 'Salad'];
         }
     }
 }

@@ -238,23 +238,6 @@ export default function TabBarNavigation({ route, navigation }) {
           />
         )}
 
-        {/* Search Tab - only for regular users */}
-        {!isChef && (
-          <Tab.Screen
-            name={TabNav.Search}
-            component={TabRoute.Search}
-            options={{
-              tabBarIcon: ({ focused }) => (
-                <TabText
-                  text={strings.search}
-                  focused={focused}
-                  icon={focused ? <Search_Dark /> : <Search_Light />}
-                />
-              ),
-            }}
-          />
-        )}
-
         {/* Add Post Tab - always visible */}
         <Tab.Screen
           name={'AddPost'}
@@ -296,37 +279,41 @@ export default function TabBarNavigation({ route, navigation }) {
           }}
         />
 
-        {/* Orders Tab - shown after plus for regular users */}
+        {/* Search Tab - only for regular users (after plus button) */}
         {!isChef && (
           <Tab.Screen
-            name={TabNav.Orders}
-            component={OrdersTabComponent}
+            name={TabNav.Search}
+            component={TabRoute.Search}
             options={{
               tabBarIcon: ({ focused }) => (
                 <TabText
-                  text={strings.orders}
+                  text={strings.search}
                   focused={focused}
-                  icon={focused ? <Orders_Dark /> : <Orders_Light />}
+                  icon={focused ? <Search_Dark /> : <Search_Light />}
                 />
               ),
             }}
           />
         )}
 
-        {/* Chat Tab - always visible */}
-        <Tab.Screen
-          name={TabNav.Chat}
-          component={TabRoute.Chat}
-          options={{
-            tabBarIcon: ({ focused }) => (
-              <TabText
-                text={strings.chat}
-                focused={focused}
-                icon={focused ? <Inbox_Dark /> : <Inbox_Light />}
-              />
-            ),
-          }}
-        />
+        {/* Orders Tab removed for regular users - access via Profile/Headers */}
+
+        {/* Chat Tab - only for chefs (regular users access via Profile) */}
+        {isChef && (
+          <Tab.Screen
+            name={TabNav.Chat}
+            component={TabRoute.Chat}
+            options={{
+              tabBarIcon: ({ focused }) => (
+                <TabText
+                  text={strings.chat}
+                  focused={focused}
+                  icon={focused ? <Inbox_Dark /> : <Inbox_Light />}
+                />
+              ),
+            }}
+          />
+        )}
 
         {/* Profile Tab - always visible */}
         <Tab.Screen

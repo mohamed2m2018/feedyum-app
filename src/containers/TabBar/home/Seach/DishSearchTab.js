@@ -80,7 +80,7 @@ export default function DishSearchTab({
         },
     );
 
-    // Group dishes by chef/kitchen
+    // Group dishes by chef/kitchen and normalize data
     const groupedResults = useMemo(() => {
         if (!data?.pages) return [];
 
@@ -91,16 +91,23 @@ export default function DishSearchTab({
         const kitchenMap = new Map();
 
         allDishes.forEach(dish => {
-            const kitchen = dish.user || dish.chef;
-            if (!kitchen?._id) return;
+            // Backend returns kitchen data in different fields depending on API path
+            // dish.chef is preferred as it always includes full data with averageRating
+            const rawKitchen = dish.chef || dish.user || (typeof dish.user_id === 'object' ? dish.user_id : null);
+            if (!rawKitchen?._id) return;
 
-            if (!kitchenMap.has(kitchen._id)) {
-                kitchenMap.set(kitchen._id, {
-                    kitchen,
+            if (!kitchenMap.has(rawKitchen._id)) {
+                // Normalize kitchen data - use backend's averageRating field
+                const normalizedKitchen = {
+                    ...rawKitchen,
+                    rating: rawKitchen.averageRating || 0,
+                };
+                kitchenMap.set(rawKitchen._id, {
+                    kitchen: normalizedKitchen,
                     dishes: [],
                 });
             }
-            kitchenMap.get(kitchen._id).dishes.push(dish);
+            kitchenMap.get(rawKitchen._id).dishes.push(dish);
         });
 
         return Array.from(kitchenMap.values());

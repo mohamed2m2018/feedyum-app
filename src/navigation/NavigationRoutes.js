@@ -164,4 +164,5 @@ export const StackRoute = {
   EditAddress,
   MapLocationPicker,
   ChefBranchesScreen,
+  Orders,
 };

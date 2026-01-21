@@ -354,6 +354,10 @@ export default function StackNavigation() {
         name={StackNav.ChefBranchesScreen}
         component={StackRoute.ChefBranchesScreen}
       />
+      <Stack.Screen
+        name={StackNav.Orders}
+        component={StackRoute.Orders}
+      />
     </Stack.Navigator>
   );
 }

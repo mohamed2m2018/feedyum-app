@@ -186,6 +186,14 @@ export default function ChatList({ navigation }) {
       style={[localStyles.chatItem, { backgroundColor: colors.inputBg }]}
       onPress={() => handleChatPress(item)}
       activeOpacity={0.7}>
+      {/* Unread badge indicator */}
+      {item.unreadCount > 0 && (
+        <View style={[localStyles.unreadBadge, { backgroundColor: colors.primary }]}>
+          <ZText type="s10" color={colors.white} style={localStyles.unreadBadgeText}>
+            {item.unreadCount > 99 ? '99+' : item.unreadCount}
+          </ZText>
+        </View>
+      )}
       <Image
         source={{
           uri: item.chef.avatar || 'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?w=200',
@@ -346,5 +354,27 @@ const localStyles = StyleSheet.create({
   emptySubtitle: {
     textAlign: 'center',
     lineHeight: moderateScale(20),
+  },
+  unreadBadge: {
+    position: 'absolute',
+    top: moderateScale(8),
+    left: moderateScale(8),
+    minWidth: moderateScale(20),
+    height: moderateScale(20),
+    borderRadius: moderateScale(10),
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: moderateScale(6),
+    zIndex: 1,
+    // Premium shadow
+    shadowColor: '#FF4D67',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  unreadBadgeText: {
+    fontSize: moderateScale(10),
+    fontWeight: '700',
   },
 });

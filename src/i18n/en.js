@@ -103,6 +103,7 @@ export default {
   editProfileAndBranches: 'Edit Profile and Branches',
   yourBranches: 'Your Branches',
   branches: 'Branches',
+  branch: 'Branch',
   nearestBranch: 'Nearest branch ',
   clickbranches: 'Branches',
   kmAway: ' KM away',
@@ -745,6 +746,9 @@ export default {
   // Error Messages
   failedToLoadSavedCart: 'Failed to load saved cart',
   failedToPlaceOrder: 'Failed to place order',
+  addressMissingCoordinates: 'Please reselect your delivery address with location enabled',
+  kitchenTooFar: 'This kitchen is {distance} km away. Maximum delivery distance is {max} km.',
+  noActiveBranches: 'This kitchen has no active delivery locations',
   failedToFetchOrderHistory: 'Failed to fetch order history',
   failedToFetchOrderDetails: 'Failed to fetch order details',
   failedToUpdateOrderStatus: 'Failed to update order status',
@@ -1642,5 +1646,11 @@ export default {
   // Dish Selector Search
   searchDishPlaceholder: 'Search dishes...',
   noMatchingDishes: 'No matching dishes found',
+
+  // Search Suggestion Examples
+  discoverSearchExamples: ['Something filling', 'Middle Eastern sweets', 'Quick meal'],
+  kitchensSearchExamples: ['Grilled chicken', 'Homemade food', 'Desserts'],
+  reviewsSearchExamples: ['Delicious homemade', 'New experience', 'Popular restaurant'],
+  defaultSearchExamples: ['Burger', 'Pizza', 'Salad'],
 
 };

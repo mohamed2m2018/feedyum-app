@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { useQueryClient } from 'react-query';
 import {
   View,
   StyleSheet,
@@ -32,6 +33,7 @@ import {
   cancelOrderByUser,
 } from '../../../redux/reducer/orderSlice';
 import { StackNav } from '../../../navigation/NavigationKeys';
+import request from '../../../api/request';
 
 const OrderTracking = () => {
   const colors = useSelector(state => state.theme.theme);
@@ -39,6 +41,7 @@ const OrderTracking = () => {
   const dispatch = useDispatch();
   const navigation = useNavigation();
   const route = useRoute();
+  const queryClient = useQueryClient();
   const { orderId } = route.params || {};
 
   const currentOrder = useSelector(selectCurrentOrder);
@@ -62,9 +65,19 @@ const OrderTracking = () => {
     if (testOrderId) {
 
       dispatch(fetchOrderById(testOrderId))
-        .then(orderData => {
+        .then(async orderData => {
 
           setLastUpdated(new Date());
+
+          // Mark order as seen to update the unseen badge count
+          try {
+            await request.put(`/orders/${testOrderId}/seen`);
+            console.log('[OrderTracking] Marked order as seen');
+            // Immediately invalidate badge cache so header updates instantly
+            queryClient.invalidateQueries(['unseenOrdersCount']);
+          } catch (error) {
+            console.warn('[OrderTracking] Failed to mark order as seen:', error.message);
+          }
         })
         .catch(error => {
           console.error('OrderTracking: Failed to fetch order:', error);
