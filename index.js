@@ -2,8 +2,14 @@ import 'react-native-gesture-handler';
 import { LogBox } from 'react-native';
 import { registerRootComponent } from 'expo';
 
-// Suppress console.warn
-console.warn = () => { };
+// Disable console logging in production
+if (!__DEV__) {
+  console.log = () => { };
+  console.info = () => { };
+  console.debug = () => { };
+  console.warn = () => { };
+  // Keep console.error for critical error reporting
+}
 LogBox.ignoreAllLogs(true);
 import { Provider } from 'react-redux';
 import { QueryClientProvider } from 'react-query';
