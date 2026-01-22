@@ -8,7 +8,6 @@ import {
   Platform,
   Keyboard,
   ActivityIndicator,
-  Alert,
   Modal,
   Dimensions,
   StatusBar,
@@ -30,17 +29,16 @@ import strings from '../../../i18n/strings';
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
 import ZHeader from '../../../components/common/ZHeader';
 import ZText from '../../../components/common/ZText';
-import { styles } from '../../../themes';
 import { moderateScale } from '../../../common/constants';
 import request from '../../../api/request';
 import ImageMessageComposer from './components/ImageMessageComposer';
+import VoiceRecorder from './components/VoiceRecorder';
 import CustomMessageBubble from './components/CustomMessageBubble';
 import OrderSummaryCard from './components/OrderSummaryCard';
 import RejectReasonModal from './components/RejectReasonModal';
 import OrderReviewModal from '../chef/components/OrderReviewModal';
-import { updateOrderStatusAsync } from '../../../redux/reducer/orderSlice';
-import { useNavigation, useIsFocused } from '@react-navigation/native';
-import { StackNav, TabNav } from '../../../navigation/NavigationKeys';
+import { useNavigation } from '@react-navigation/native';
+import { StackNav } from '../../../navigation/NavigationKeys';
 import { formatTime, formatDate } from '../../../utils/helpers';
 
 // Move component definitions outside of render
@@ -93,19 +91,7 @@ const ChefProfile = ({ chef, orderId, colors, onPress }) => {
   );
 };
 
-const RightIcon = ({ colors }) => {
-  return (
-    <View style={styles.rowCenter}>
-      <TouchableOpacity style={{ padding: moderateScale(8) }}>
-        <Ionicons
-          name="ellipsis-horizontal-circle-outline"
-          size={moderateScale(24)}
-          color={colors.textColor}
-        />
-      </TouchableOpacity>
-    </View>
-  );
-};
+
 
 export default function ChatScreen({ route }) {
   const { chefId, orderId } = route.params;
@@ -122,6 +108,7 @@ export default function ChatScreen({ route }) {
 
   const [hideOrderSummary, setHideOrderSummary] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
   const socketRef = useRef(null);
   const textInputRef = useRef(null);
   const messageContainerRef = useRef(null);
@@ -137,17 +124,6 @@ export default function ChatScreen({ route }) {
     // Manually set text since we are using uncontrolled input
     if (textInputRef.current) {
       textInputRef.current.setNativeProps({ text: message.text || '' });
-    }
-  }, []);
-
-  // Modify handleCancelEdit
-  const handleCancelEdit = useCallback(() => {
-    setEditingMessage(null);
-    setText('');
-
-    // Manually clear text
-    if (textInputRef.current) {
-      textInputRef.current.clear();
     }
   }, []);
 
@@ -204,26 +180,35 @@ export default function ChatScreen({ route }) {
 
         console.log('New message received via socket:', message);
 
-        // 2. Format the new message - parse content for images
+        // 2. Format the new message - parse content for images and audio
         let text = message.content;
         let image = message.image || undefined;
+        let audio = message.audio || undefined;
+        let duration = message.duration || undefined;
 
-        // Try to parse content as JSON for image_with_text messages
-        try {
-          const parsedContent = JSON.parse(message.content);
-          if (parsedContent.type === 'image_with_text') {
-            text = parsedContent.text || '';
-            image = parsedContent.image;
-          }
-        } catch (e) {
-          // Not JSON, check if it's an image path
-          const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
-          const isImagePath = imageExtensions.some(ext =>
-            message.content?.toLowerCase().includes(ext)
-          );
-          if (isImagePath) {
-            text = '';
-            image = message.content;
+        // Handle audio messages
+        if (message.messageType === 'audio' || message.audio) {
+          text = '';
+          audio = message.audio;
+          duration = message.duration;
+        } else {
+          // Try to parse content as JSON for image_with_text messages
+          try {
+            const parsedContent = JSON.parse(message.content);
+            if (parsedContent.type === 'image_with_text') {
+              text = parsedContent.text || '';
+              image = parsedContent.image;
+            }
+          } catch (e) {
+            // Not JSON, check if it's an image path
+            const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+            const isImagePath = imageExtensions.some(ext =>
+              message.content?.toLowerCase().includes(ext)
+            );
+            if (isImagePath) {
+              text = '';
+              image = message.content;
+            }
           }
         }
 
@@ -237,6 +222,8 @@ export default function ChatScreen({ route }) {
             avatar: toUriString(message.sender.avatar),
           },
           image: image,
+          audio: audio,
+          duration: duration,
         };
 
         // 3. Append to state with deduplication check
@@ -355,6 +342,16 @@ export default function ChatScreen({ route }) {
               avatar: toUriString(msg.sender.avatar),
             },
           };
+
+          // Check if it's an audio message
+          if (msg.messageType === 'audio' || msg.audio) {
+            return {
+              ...baseMessage,
+              text: '',
+              audio: msg.audio,
+              duration: msg.duration,
+            };
+          }
 
           // Try to parse content as JSON first (for structured messages)
           try {
@@ -503,42 +500,56 @@ export default function ChatScreen({ route }) {
       // Normal send flow
       for (const message of newMessages) {
         let content = '';
+        let messageData = {
+          chatUserId: chefId,
+          orderId: orderId,
+        };
 
         // Handle different message types
-        if (message.image && message.text && message.text.trim()) {
+        if (message.audio) {
+          // Audio message
+          messageData.audio = message.audio;
+          messageData.duration = message.duration;
+          messageData.messageType = 'audio';
+          messageData.content = ''; // No text for audio messages
+        } else if (message.image && message.text && message.text.trim()) {
           content = JSON.stringify({
             type: 'image_with_text',
             image: message.image,
             text: message.text.trim()
           });
+          messageData.content = content;
         } else if (message.image) {
-          content = message.image;
+          messageData.content = message.image;
         } else {
-          content = message.text;
+          messageData.content = message.text;
         }
 
         // Send message via HTTP
-        const response = await request.post('/chat/message', {
-          chatUserId: chefId,
-          content: content,
-          orderId: orderId,
-        });
+        const response = await request.post('/chat/message', messageData);
 
         // Add the saved message to state immediately
         if (response.data?.message) {
           const savedMsg = response.data.message;
           const displayImage = message.image || undefined;
+          const displayAudio = message.audio || savedMsg.audio || undefined;
+          const displayDuration = message.duration || savedMsg.duration || undefined;
           let displayText = savedMsg.content;
 
-          try {
-            const parsedContent = JSON.parse(savedMsg.content);
-            if (parsedContent.type === 'image_with_text') {
-              displayText = parsedContent.text || '';
-            }
-          } catch (e) {
-            const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
-            if (imageExtensions.some(ext => savedMsg.content?.toLowerCase().includes(ext))) {
-              displayText = '';
+          // Handle audio messages
+          if (savedMsg.messageType === 'audio' || savedMsg.audio) {
+            displayText = '';
+          } else {
+            try {
+              const parsedContent = JSON.parse(savedMsg.content);
+              if (parsedContent.type === 'image_with_text') {
+                displayText = parsedContent.text || '';
+              }
+            } catch (e) {
+              const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+              if (imageExtensions.some(ext => savedMsg.content?.toLowerCase().includes(ext))) {
+                displayText = '';
+              }
             }
           }
 
@@ -552,6 +563,8 @@ export default function ChatScreen({ route }) {
               avatar: toUriString(currentUser?.avatar),
             },
             image: displayImage,
+            audio: displayAudio,
+            duration: displayDuration,
           };
           setMessages(prev => GiftedChat.append(prev, formattedMsg));
         }
@@ -577,6 +590,20 @@ export default function ChatScreen({ route }) {
     };
 
     onSend([fullImageMessage]);
+  }, [currentUser, onSend]);
+
+  const handleVoiceMessage = useCallback((audioMessage) => {
+    const fullAudioMessage = {
+      ...audioMessage,
+      user: {
+        _id: currentUser._id,
+        name: currentUser.fullName,
+        avatar: currentUser.avatar,
+      },
+    };
+
+    onSend([fullAudioMessage]);
+    setShowVoiceRecorder(false);
   }, [currentUser, onSend]);
 
   const handleDeleteMessage = useCallback(async (messageId) => {
@@ -608,56 +635,6 @@ export default function ChatScreen({ route }) {
       navigation.navigate(StackNav.OrderTracking, { orderId });
     }
   }, [orderId, navigation]);
-
-  const scrollToMessage = useCallback((messageId) => {
-    if (!messageId) return;
-    // Find the message in the messages array
-    const targetMessageIndex = messages.findIndex(msg => msg._id === messageId);
-    if (targetMessageIndex !== -1) {
-      const originalMessages = [...messages];
-
-      // Step 1: Highlight the target message
-      setMessages(prevMessages =>
-        prevMessages.map((msg, index) =>
-          index === targetMessageIndex
-            ? { ...msg, highlighted: true }
-            : { ...msg, highlighted: false }
-        )
-      );
-
-      // Step 2: Create scroll effect by temporarily showing filtered messages
-      setTimeout(() => {
-        // Show messages from target onwards (this creates the scroll effect)
-        const messagesToShow = messages.slice(0, targetMessageIndex + 6); // Target + 5 more recent
-
-        const highlightedMessages = messagesToShow.map((msg) =>
-          msg._id === messageId ? { ...msg, highlighted: true } : msg
-        );
-
-        setMessages(highlightedMessages);
-
-        // Step 3: After 2 seconds, restore all messages but keep highlight
-        setTimeout(() => {
-          const restoredMessages = originalMessages.map(msg =>
-            msg._id === messageId ? { ...msg, highlighted: true } : msg
-          );
-          setMessages(restoredMessages);
-
-          // Step 4: Remove highlight after another 3 seconds
-          setTimeout(() => {
-            setMessages(originalMessages);
-          }, 3000);
-        }, 2000);
-      }, 500);
-
-    } else {
-      const { showInfoToast } = require('../../../utils/toast');
-      showInfoToast(
-        strings.messageNotFound,
-        strings.messageNotVisible
-      );
-    }
-  }, [messages]);
 
   const onPressProfile = () => {
     // Navigate based on user type
@@ -716,21 +693,36 @@ export default function ChatScreen({ route }) {
   ), [colors, currentUser, handleDeleteMessage, handleEditMessage, isRTL, language]);
 
 
-  const renderInputToolbar = useCallback((props) => (
-    <InputToolbar
-      {...props}
-      containerStyle={[
-        localStyles.inputToolbar,
-        {
-          backgroundColor: colors.inputBg,
-          borderTopColor: colors.bColor,
-          paddingTop: moderateScale(4),
-          paddingBottom: moderateScale(4),
-          marginBottom: moderateScale(8),
-        }
-      ]}
-    />
-  ), [colors]);
+  const renderInputToolbar = useCallback((props) => {
+    // When recording, show the VoiceRecorder instead of normal input
+    if (showVoiceRecorder) {
+      return (
+        <View style={localStyles.voiceRecorderContainer}>
+          <VoiceRecorder
+            onSend={handleVoiceMessage}
+            onCancel={() => setShowVoiceRecorder(false)}
+            autoStart={true}
+          />
+        </View>
+      );
+    }
+
+    return (
+      <InputToolbar
+        {...props}
+        containerStyle={[
+          localStyles.inputToolbar,
+          {
+            backgroundColor: colors.inputBg,
+            borderTopColor: colors.bColor,
+            paddingTop: moderateScale(4),
+            paddingBottom: moderateScale(4),
+            marginBottom: moderateScale(8),
+          }
+        ]}
+      />
+    );
+  }, [colors, showVoiceRecorder, handleVoiceMessage]);
 
   const renderComposer = useCallback((props) => (
     <Composer
@@ -747,14 +739,26 @@ export default function ChatScreen({ route }) {
     />
   ), [colors]);
 
-  const renderActions = useCallback((props) => (
-    <View style={localStyles.actionsContainer}>
-      <ImageMessageComposer
-        onSend={handleImageMessage}
-        onCancel={() => { }}
-      />
-    </View>
-  ), [handleImageMessage]);
+  const renderActions = useCallback((props) => {
+    if (showVoiceRecorder) {
+      return null; // Hide actions when recording
+    }
+    return (
+      <View style={localStyles.actionsContainer}>
+        <ImageMessageComposer
+          onSend={handleImageMessage}
+          onCancel={() => { }}
+        />
+        {/* Mic button to activate voice recorder */}
+        <TouchableOpacity
+          style={[localStyles.micButton, { backgroundColor: colors.primary }]}
+          onPress={() => setShowVoiceRecorder(true)}
+        >
+          <Ionicons name="mic" size={moderateScale(20)} color={colors.white} />
+        </TouchableOpacity>
+      </View>
+    );
+  }, [handleImageMessage, showVoiceRecorder, colors]);
 
   const renderMessageImage = useCallback((props) => (
     <TouchableOpacity
@@ -819,18 +823,7 @@ export default function ChatScreen({ route }) {
     );
   }, [currentUser, currentUserId, onPressProfile]);
 
-  const textInputStyle = useMemo(() => ({
-    color: '#000000',
-    backgroundColor: '#FFFFFF',
-    paddingTop: Platform.OS === 'ios' ? moderateScale(8) : 0,
-    borderRadius: moderateScale(20),
-    paddingHorizontal: moderateScale(10),
-    marginRight: moderateScale(10),
-  }), []);
 
-  const textInputProps = useMemo(() => ({
-    placeholderTextColor: '#808080'
-  }), []);
 
   // Show loading only if we're still loading and haven't encountered errors
   if ((userLoading || chefLoading) && !userError && !chefError) {
@@ -1056,6 +1049,18 @@ const localStyles = StyleSheet.create({
     marginRight: moderateScale(4),
     marginBottom: moderateScale(0),
     gap: moderateScale(8),
+  },
+  voiceRecorderContainer: {
+    paddingHorizontal: moderateScale(10),
+    paddingVertical: moderateScale(5),
+    backgroundColor: 'transparent',
+  },
+  micButton: {
+    width: moderateScale(44),
+    height: moderateScale(44),
+    borderRadius: moderateScale(22),
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   messageImage: {
     width: moderateScale(150),

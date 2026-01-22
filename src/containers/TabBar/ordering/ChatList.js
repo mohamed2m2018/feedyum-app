@@ -120,14 +120,25 @@ export default function ChatList({ navigation }) {
     }
   };
 
-  const formatMessagePreview = (content) => {
-    if (!content) return strings.noMessagesYet;
+  const formatMessagePreview = (message) => {
+    // Handle message object with audio/messageType fields
+    if (message?.audio || message?.messageType === 'audio') {
+      return `🎤 ${strings.audioMessage || 'Voice message'}`;
+    }
+
+    // Handle image messages
+    if (message?.image) {
+      return `📷 ${strings.imageMessage || 'Image'}`;
+    }
+
+    const content = message?.content || message;
+    if (!content || typeof content !== 'string') return strings.noMessagesYet;
 
     // Try to parse as JSON first (for structured messages like audio, images, etc.)
     try {
       const parsedContent = JSON.parse(content);
       if (parsedContent.type === 'audio_with_duration') {
-        return strings.audioMessage;
+        return `🎤 ${strings.audioMessage || 'Voice message'}`;
       }
       if (parsedContent.type === 'image_with_text') {
         return parsedContent.text ? `📷 ${parsedContent.text}` : strings.imageMessage;
@@ -141,7 +152,7 @@ export default function ChatList({ navigation }) {
 
       const audioExtensions = ['.mp3', '.wav', '.m4a', '.aac'];
       const isAudioPath = audioExtensions.some(ext => content.toLowerCase().includes(ext));
-      if (isAudioPath) return strings.audioMessage;
+      if (isAudioPath) return `🎤 ${strings.audioMessage || 'Voice message'}`;
 
       if (content.includes('🍽️ ORDER #')) {
         const orderMatch = content.match(/🍽️ ORDER #(\w+)/);
@@ -222,7 +233,7 @@ export default function ChatList({ navigation }) {
           </View>
         </View>
         <ZText type="M14" color={colors.grayScale7} numberOfLines={2} style={localStyles.lastMessage}>
-          {formatMessagePreview(item.latestMessage?.content) || strings.orderPlacedStartChatting}
+          {formatMessagePreview(item.latestMessage) || strings.orderPlacedStartChatting}
         </ZText>
       </View>
       <Ionicons name="chevron-forward" size={moderateScale(20)} color={colors.grayScale7} />

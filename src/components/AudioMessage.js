@@ -3,9 +3,9 @@ import {
   View,
   TouchableOpacity,
   StyleSheet,
-  Slider,
   ActivityIndicator,
 } from 'react-native';
+import Slider from '@react-native-community/slider';
 import { showErrorToast } from '../utils/toast';
 import { useSelector } from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -47,6 +47,10 @@ const AudioMessage = ({
     } else {
       setIsLoading(true);
       setIsPlaying(true);
+      // Fallback timeout to clear loading if onLoad doesn't fire
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 2000);
     }
   };
 
@@ -57,16 +61,30 @@ const AudioMessage = ({
     setHasError(false);
   };
 
+  const handleReadyForDisplay = () => {
+    // Alternative callback when audio is ready
+    setIsLoading(false);
+  };
+
   const handleProgress = (data) => {
     setCurrentTime(data.currentTime);
+    // Also clear loading when we start getting progress
+    if (isLoading) {
+      setIsLoading(false);
+    }
   };
 
   const handleEnd = () => {
     setIsPlaying(false);
     setCurrentTime(0);
+    // Seek back to start so next play works
+    if (videoRef.current) {
+      videoRef.current.seek(0);
+    }
   };
 
   const handleError = (error) => {
+    console.log('[AudioMessage] Playback error:', error);
     setIsLoading(false);
     setIsPlaying(false);
     setHasError(true);
@@ -103,6 +121,7 @@ const AudioMessage = ({
           source={{ uri: audioUrl }}
           paused={!isPlaying}
           onLoad={handleLoad}
+          onReadyForDisplay={handleReadyForDisplay}
           onProgress={handleProgress}
           onEnd={handleEnd}
           onError={handleError}

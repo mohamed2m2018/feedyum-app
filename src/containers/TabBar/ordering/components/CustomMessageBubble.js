@@ -12,6 +12,7 @@ import { showActionDialog } from '../../../../utils/toast';
 import { ALERT_TYPE } from 'react-native-alert-notification';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import ZText from '../../../../components/common/ZText';
+import AudioMessage from '../../../../components/AudioMessage';
 import { moderateScale } from '../../../../common/constants';
 import strings from '../../../../i18n/strings';
 import { formatTime } from '../../../../utils/helpers';
@@ -32,6 +33,7 @@ const CustomMessageBubble = ({
   const showOnRight = isCurrentUser;
   const isDeleted = props.currentMessage.isDeleted;
   const hasImage = !!props.currentMessage.image;
+  const hasAudio = !!props.currentMessage.audio;
   const hasText = !!props.currentMessage.text;
 
   const handleOptionsPress = () => {
@@ -66,6 +68,26 @@ const CustomMessageBubble = ({
 
     // Bubble validation to prevent crashes
     if (!message) return null;
+
+    // For audio messages, render AudioMessage directly without bubble wrapper
+    if (message.audio) {
+      return (
+        <View style={[styles.bubbleWrapper, showOnRight ? styles.wrapperRight : styles.wrapperLeft, { width: '100%' }]}>
+          {/* Options button for audio messages */}
+          {isCurrentUser && !isDeleted && showOnRight && (
+            <TouchableOpacity onPress={handleOptionsPress} style={styles.optionsButtonTrigger}>
+              <Ionicons name="ellipsis-vertical" size={moderateScale(16)} color={colors.grayScale5 || '#808080'} />
+            </TouchableOpacity>
+          )}
+          <AudioMessage
+            audioUrl={message.audio}
+            duration={message.duration}
+            messageId={message._id}
+            isOwn={isCurrentUser}
+          />
+        </View>
+      );
+    }
 
     const bubbleStyle = [
       styles.bubble,
@@ -170,7 +192,7 @@ const CustomMessageBubble = ({
             <View style={[styles.optionsContainer, { backgroundColor: colors.backgroundColor || '#FFFFFF' }]}>
               {isCurrentUser && (
                 <>
-                  {hasText && !hasImage && (
+                  {hasText && !hasImage && !hasAudio && (
                     <TouchableOpacity
                       style={styles.optionButton}
                       onPress={handleEdit}

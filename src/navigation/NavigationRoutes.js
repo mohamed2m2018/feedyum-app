@@ -1,6 +1,5 @@
 // Tab Routes
 import Discover from '../containers/TabBar/discover/Discover';
-import Inbox from '../containers/TabBar/inbox/Inbox';
 import Profile from '../containers/TabBar/profile/Profile';
 
 // // Screens Route
@@ -26,9 +25,6 @@ import Security from '../containers/TabBar/profile/Security';
 import Language from '../containers/TabBar/profile/Language';
 import Setting from '../containers/TabBar/profile/Setting';
 import EditProfile from '../containers/TabBar/profile/EditProfile';
-import Message from '../containers/TabBar/inbox/Message';
-import Chat from '../containers/TabBar/inbox/Chat';
-import Call from '../containers/TabBar/inbox/Call';
 import Sound from '../containers/TabBar/home/Sound';
 import Report from '../containers/TabBar/home/Report';
 import ProfileDetail from '../containers/TabBar/home/userDetail/ProfileDetail';
@@ -114,9 +110,6 @@ export const StackRoute = {
   Security,
   Language,
   EditProfile,
-  Message,
-  Chat,
-  Call,
   Sound,
   Location,
   Report,

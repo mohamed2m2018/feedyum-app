@@ -86,9 +86,7 @@ const ImageMessageComposer = ({ onSend, onCancel }) => {
   const openCamera = () => {
     ImageCropPicker.openCamera({
       mediaType: 'photo',
-      width: 1024,
-      height: 1024,
-      cropping: true,
+      cropping: false,
       compressImageQuality: 0.8,
     }).then(processImage).catch(error => {
       setIsVisible(false);
@@ -98,9 +96,7 @@ const ImageMessageComposer = ({ onSend, onCancel }) => {
   const openGallery = () => {
     ImageCropPicker.openPicker({
       mediaType: 'photo',
-      width: 1024,
-      height: 1024,
-      cropping: true,
+      cropping: false,
       compressImageQuality: 0.8,
     }).then(processImage).catch(error => {
       setIsVisible(false);

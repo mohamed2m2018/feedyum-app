@@ -122,36 +122,43 @@ export const convertWavToMp3 = async inputPath => {
 
 export const uploadAudioToS3 = async (audioPath, onProgress, duration) => {
   try {
-
+    console.log('[uploadAudioToS3] Starting upload...');
+    console.log('[uploadAudioToS3] Input path:', audioPath);
+    console.log('[uploadAudioToS3] Duration:', duration);
 
     // Convert WAV to MP3 for better compatibility
     const convertedAudioPath = await convertWavToMp3(audioPath);
+    console.log('[uploadAudioToS3] Converted path:', convertedAudioPath);
 
     // Validate audio file
-
     const isValid = validateAudioFile(convertedAudioPath);
-
+    console.log('[uploadAudioToS3] Validation result:', isValid);
 
     if (!isValid) {
-      console.error('Audio file validation failed for:', convertedAudioPath);
+      console.error('[uploadAudioToS3] Audio file validation failed for:', convertedAudioPath);
       throw new Error(strings.invalidAudioFormat);
     }
-
-
 
     // Get file stats from original path (without file:// prefix)
     const originalPath = audioPath.startsWith('file://')
       ? audioPath.replace('file://', '')
       : audioPath;
+
+    console.log('[uploadAudioToS3] Checking file at:', originalPath);
+
+    const fileExists = await RNFS.exists(originalPath);
+    console.log('[uploadAudioToS3] File exists:', fileExists);
+
+    if (!fileExists) {
+      throw new Error('Audio file does not exist at path: ' + originalPath);
+    }
+
     const fileStats = await RNFS.stat(originalPath);
     const fileSize = fileStats.size;
-
-
+    console.log('[uploadAudioToS3] File size:', fileSize, 'bytes');
 
     // Create FormData for upload
-
     const formData = new FormData();
-
 
     // Add the audio file (M4A format)
     const isM4A = convertedAudioPath.includes('.m4a');
@@ -168,6 +175,12 @@ export const uploadAudioToS3 = async (audioPath, onProgress, duration) => {
       fileName = `voice_message_${Date.now()}.mp3`;
     }
 
+    console.log('[uploadAudioToS3] FormData file info:', {
+      uri: convertedAudioPath,
+      type: audioType,
+      name: fileName,
+    });
+
     formData.append('audio', {
       uri: convertedAudioPath,
       type: audioType,
@@ -177,54 +190,82 @@ export const uploadAudioToS3 = async (audioPath, onProgress, duration) => {
     // Add metadata (duration will be passed from VoiceRecorder)
     formData.append('duration', duration ? duration.toString() : '10');
 
-    // Upload to backend using the correct endpoint
+    console.log('[uploadAudioToS3] Sending request via XMLHttpRequest...');
 
+    // Get auth token
+    const { MMKVLoader } = require('react-native-mmkv-storage');
+    const { ACCESS_TOKEN, API_BASE_URL } = require('../common/constants');
+    const MMKV = new MMKVLoader().initialize();
+    const token = MMKV.getString(ACCESS_TOKEN);
 
+    const uploadUrl = `${API_BASE_URL}/messages/upload-audio`;
+    console.log('[uploadAudioToS3] API URL:', uploadUrl);
+    console.log('[uploadAudioToS3] Has token:', !!token);
 
-    const response = await request.post('/messages/upload-audio', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-      timeout: 30000, // 30 second timeout
-      onUploadProgress: progressEvent => {
-        const progress = Math.round(
-          (progressEvent.loaded * 100) / progressEvent.total,
-        );
+    // Use XMLHttpRequest - more reliable for file uploads on React Native
+    const data = await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
 
-        if (onProgress) {
-          onProgress(progress);
+      xhr.open('POST', uploadUrl, true);
+      xhr.setRequestHeader('Authorization', token || '');
+
+      xhr.onload = () => {
+        console.log('[uploadAudioToS3] XHR status:', xhr.status);
+        console.log('[uploadAudioToS3] XHR response:', xhr.responseText);
+
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const response = JSON.parse(xhr.responseText);
+            resolve(response);
+          } catch (e) {
+            reject(new Error('Failed to parse response: ' + xhr.responseText));
+          }
+        } else {
+          reject(new Error(`Upload failed with status ${xhr.status}: ${xhr.responseText}`));
         }
-      },
+      };
+
+      xhr.onerror = (e) => {
+        console.error('[uploadAudioToS3] XHR error:', e);
+        reject(new Error('Network request failed'));
+      };
+
+      xhr.ontimeout = () => {
+        reject(new Error('Request timed out'));
+      };
+
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const progress = Math.round((event.loaded * 100) / event.total);
+          console.log('[uploadAudioToS3] Upload progress:', progress + '%');
+          if (onProgress) {
+            onProgress(progress);
+          }
+        }
+      };
+
+      xhr.timeout = 60000; // 60 second timeout
+      xhr.send(formData);
     });
 
+    console.log('[uploadAudioToS3] Response data:', data);
 
-
-    if (response.data && response.data.success && response.data.url) {
+    if (data && data.success && data.url) {
       return {
         success: true,
-        url: response.data.url,
-        duration: response.data.duration || 0,
+        url: data.url,
+        duration: data.duration || 0,
         size: fileSize,
         localPath: convertedAudioPath,
       };
     } else {
-      throw new Error(response.data?.message || 'Invalid response from server');
+      throw new Error(data?.message || 'Invalid response from server');
     }
   } catch (error) {
-    console.error('Audio upload error:', error);
+    console.error('[uploadAudioToS3] Error:', error);
+    console.error('[uploadAudioToS3] Error message:', error.message);
 
-    // Return more specific error information
-    if (error.response) {
-      const errorMessage =
-        error.response.data?.message ||
-        error.response.statusText ||
-        'Upload failed';
-      throw new Error(`Upload failed: ${errorMessage}`);
-    } else if (error.request) {
-      throw new Error(strings.networkErrorServer);
-    } else {
-      throw new Error(`Upload error: ${error.message}`);
-    }
+    throw new Error(`Upload error: ${error.message}`);
   }
 };
 

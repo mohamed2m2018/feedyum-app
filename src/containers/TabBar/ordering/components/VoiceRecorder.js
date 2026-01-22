@@ -6,6 +6,7 @@ import {
   Animated,
   Platform,
   PermissionsAndroid,
+  ActivityIndicator,
 } from 'react-native';
 import { showErrorToast, showWarningToast, showActionDialog } from '../../../../utils/toast';
 import { ALERT_TYPE } from 'react-native-alert-notification';
@@ -21,7 +22,7 @@ import {
 } from '../../../../utils/UploadUtils';
 import strings from '../../../../i18n/strings';
 
-const VoiceRecorder = ({ onSend, onCancel }) => {
+const VoiceRecorder = ({ onSend, onCancel, autoStart = false }) => {
   const colors = useSelector(state => state.theme.theme);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
@@ -32,6 +33,7 @@ const VoiceRecorder = ({ onSend, onCancel }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [compatibleAudioPath, setCompatibleAudioPath] = useState(null);
+  const [isAutoStarting, setIsAutoStarting] = useState(autoStart);
 
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const waveAnim = useRef(new Animated.Value(0)).current;
@@ -40,6 +42,16 @@ const VoiceRecorder = ({ onSend, onCancel }) => {
   const requestMicrophonePermission = async () => {
     try {
       if (Platform.OS === 'android') {
+        // First check if permission is already granted
+        const hasPermission = await PermissionsAndroid.check(
+          PermissionsAndroid.PERMISSIONS.RECORD_AUDIO
+        );
+
+        if (hasPermission) {
+          return true;
+        }
+
+        // Only request if not already granted
         const granted = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
           {
@@ -69,8 +81,8 @@ const VoiceRecorder = ({ onSend, onCancel }) => {
       setHasPermission(permissionGranted);
 
       if (!permissionGranted) {
-
-        return;
+        console.log('[VoiceRecorder] Permission not granted');
+        return { success: false, hasPermission: false };
       }
 
       // Initialize audio recorder with basic settings that work reliably
@@ -85,6 +97,9 @@ const VoiceRecorder = ({ onSend, onCancel }) => {
       AudioRecord.init(options);
       setIsInitialized(true);
 
+      console.log('[VoiceRecorder] Initialized successfully');
+      return { success: true, hasPermission: true, isInitialized: true };
+
     } catch (error) {
       console.error('Audio recorder initialization error:', error);
       setIsInitialized(false);
@@ -92,6 +107,7 @@ const VoiceRecorder = ({ onSend, onCancel }) => {
         'Initialization Error',
         'Failed to initialize audio recorder. Please restart the app and try again.'
       );
+      return { success: false, error };
     }
   };
 
@@ -114,7 +130,26 @@ const VoiceRecorder = ({ onSend, onCancel }) => {
 
   // Initialize permissions and audio recorder
   useEffect(() => {
-    initializeRecorder();
+    const init = async () => {
+      const result = await initializeRecorder();
+
+      // Auto-start recording if autoStart prop is true AND initialization succeeded
+      if (autoStart && result.success) {
+        console.log('[VoiceRecorder] Auto-starting recording...');
+        // Start recording directly since we know we have permission and are initialized
+        try {
+          AudioRecord.start();
+          setIsRecording(true);
+          setRecordingTime(0);
+          setAudioPath(null);
+          console.log('[VoiceRecorder] Auto-start: Recording started');
+        } catch (err) {
+          console.error('[VoiceRecorder] Auto-start failed:', err);
+        }
+      }
+      setIsAutoStarting(false);
+    };
+    init();
     return cleanup;
   }, []); // Empty dependency array to run only once
 
@@ -172,7 +207,7 @@ const VoiceRecorder = ({ onSend, onCancel }) => {
 
   const startRecording = async () => {
     try {
-      // Check if we have permission and are initialized
+      // Check if we have permission
       if (!hasPermission) {
         showActionDialog({
           type: ALERT_TYPE.WARNING,
@@ -185,12 +220,19 @@ const VoiceRecorder = ({ onSend, onCancel }) => {
         return;
       }
 
-      if (!isInitialized) {
-        showWarningToast('Not Ready', 'Audio recorder is not ready. Please wait a moment and try again.');
-        // Retry init if user taps ok logic handled by just letting them try again
-        initializeRecorder();
-        return;
-      }
+      // Reinitialize with a unique filename for each recording to prevent conflicts
+      const uniqueFilename = `voice_message_${Date.now()}.wav`;
+      console.log('[VoiceRecorder] Starting recording with filename:', uniqueFilename);
+
+      const options = {
+        sampleRate: 16000,
+        channels: 1,
+        bitsPerSample: 16,
+        audioSource: 6,
+        wavFile: uniqueFilename,
+      };
+
+      AudioRecord.init(options);
 
       // Reset any previous state first
       if (audioPath) {
@@ -201,6 +243,7 @@ const VoiceRecorder = ({ onSend, onCancel }) => {
       setIsRecording(true);
       setRecordingTime(0);
       AudioRecord.start();
+      console.log('[VoiceRecorder] Recording started');
 
     } catch (error) {
       console.error('Recording error:', error);
@@ -221,26 +264,50 @@ const VoiceRecorder = ({ onSend, onCancel }) => {
       const audioFile = await AudioRecord.stop();
       setIsRecording(false);
 
-
+      console.log('[VoiceRecorder] AudioRecord.stop() returned:', audioFile);
 
       if (audioFile && audioFile.length > 0) {
-        setAudioPath(audioFile);
+        // AudioRecord returns just the filename on iOS, need to construct full path
+        const RNFS = require('react-native-fs');
+        let fullPath = audioFile;
 
+        // If it's just a filename (no path separators), construct full path
+        if (!audioFile.includes('/')) {
+          fullPath = `${RNFS.DocumentDirectoryPath}/${audioFile}`;
+          console.log('[VoiceRecorder] Constructed full path:', fullPath);
+        }
 
         // Check if file actually exists
         try {
-          const RNFS = require('react-native-fs');
-          const exists = await RNFS.exists(audioFile);
+          const exists = await RNFS.exists(fullPath);
+          console.log('[VoiceRecorder] File exists at', fullPath, ':', exists);
 
           if (exists) {
-            const stats = await RNFS.stat(audioFile);
+            const stats = await RNFS.stat(fullPath);
+            console.log('[VoiceRecorder] File stats:', { size: stats.size, path: fullPath });
+            setAudioPath(fullPath);
+          } else {
+            // Try with CachesDirectory as fallback
+            const cachePath = `${RNFS.CachesDirectoryPath}/${audioFile.split('/').pop()}`;
+            console.log('[VoiceRecorder] Trying cache path:', cachePath);
+            const cacheExists = await RNFS.exists(cachePath);
 
+            if (cacheExists) {
+              console.log('[VoiceRecorder] File found in cache');
+              setAudioPath(cachePath);
+            } else {
+              console.error('[VoiceRecorder] Audio file not found at:', fullPath, 'or', cachePath);
+              showErrorToast(strings.recordingError, strings.noAudioRecorded);
+              cancelRecording();
+            }
           }
         } catch (fsError) {
-          console.error('Error checking file:', fsError);
+          console.error('[VoiceRecorder] Error checking file:', fsError);
+          // Still try to use the path if we could not check
+          setAudioPath(fullPath);
         }
       } else {
-        console.error('No audio file received from recording');
+        console.error('[VoiceRecorder] No audio file received from recording');
         showErrorToast(
           strings.recordingError,
           strings.noAudioRecorded
@@ -248,7 +315,7 @@ const VoiceRecorder = ({ onSend, onCancel }) => {
         cancelRecording();
       }
     } catch (error) {
-      console.error('Stop recording error:', error);
+      console.error('[VoiceRecorder] Stop recording error:', error);
       setIsRecording(false);
       showActionDialog({
         type: ALERT_TYPE.DANGER,
@@ -592,6 +659,15 @@ const VoiceRecorder = ({ onSend, onCancel }) => {
             )}
           </TouchableOpacity>
         </View>
+      </View>
+    );
+  }
+
+  // Show loading state when auto-starting
+  if (isAutoStarting) {
+    return (
+      <View style={[styles.recordButton, { backgroundColor: colors.primary }]}>
+        <ActivityIndicator size="small" color={colors.white} />
       </View>
     );
   }
