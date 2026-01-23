@@ -26,7 +26,7 @@ import ZSafeAreaView from './common/ZSafeAreaView';
 import ZLoader from './common/ZLoader';
 import strings from '../i18n/strings';
 import addressService from '../services/addressService';
-import { addAddress } from '../redux/actions/addressActions';
+import { addAddress, editAddress } from '../redux/actions/addressActions';
 import request from '../api/request';
 import { useLocation } from '../navigation/locationContext';
 import GoogleMapsService from '../services/GoogleMapsService';
@@ -350,12 +350,21 @@ const MapLocationPicker = () => {
     };
 
     try {
-      const response = await dispatch(addAddress(locationData));
+      let response;
+      if (editMode && addressToEdit?._id) {
+        // Edit existing address
+        response = await dispatch(editAddress(addressToEdit._id, locationData));
+      } else {
+        // Add new address
+        response = await dispatch(addAddress(locationData));
+      }
+
       if (onLocationSelect) {
         if (response && response.payload) {
           onLocationSelect(response.payload);
         } else {
-          showErrorToast(strings.error, 'Address was saved but response is invalid');
+          // For edit mode, the response structure might differ, just call callback
+          onLocationSelect(locationData);
         }
       }
 

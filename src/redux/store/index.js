@@ -27,7 +27,7 @@ const mmkvStorage = {
 const persistConfig = {
     key: 'root',
     storage: mmkvStorage,
-    whitelist: ['cart'], // Only persist the cart reducer
+    whitelist: ['cart', 'address'], // Persist cart and address reducers
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

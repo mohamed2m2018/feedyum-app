@@ -9,8 +9,6 @@ import {
   InteractionManager,
   ActivityIndicator,
   I18nManager,
-  TextInput,
-  Keyboard,
 } from 'react-native';
 import { showErrorToast, showActionDialog, showSuccessToast, ALERT_TYPE } from '../../../utils/toast';
 import { useSelector, useDispatch } from 'react-redux';
