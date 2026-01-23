@@ -10,7 +10,6 @@ import {
 import React, { createRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import ZLoader from '../../../components/common/ZLoader';
 // Local import
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';

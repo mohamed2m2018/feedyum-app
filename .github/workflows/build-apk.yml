@@ -74,3 +74,17 @@ jobs:
           name: FeedYum ${{ github.ref_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload to Transfer.sh (Public Link)
+        id: transfer
+        run: |
+          DOWNLOAD_URL=$(curl --upload-file android/app/build/outputs/apk/release/FeedYum-${{ github.ref_name }}.apk https://transfer.sh/FeedYum-${{ github.ref_name }}.apk)
+          echo "download_url=$DOWNLOAD_URL" >> $GITHUB_OUTPUT
+          echo "## 📱 APK Download Link" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🔗 **Public Download URL (valid for 14 days):**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "[\`$DOWNLOAD_URL\`]($DOWNLOAD_URL)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "Version: \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY

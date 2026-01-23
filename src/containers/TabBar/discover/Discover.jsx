@@ -1,10 +1,8 @@
 // Library import
-import {StyleSheet, TouchableOpacity, View, ScrollView, I18nManager, FlatList, Dimensions} from 'react-native';
+import {StyleSheet, TouchableOpacity, View, I18nManager, FlatList, Dimensions} from 'react-native';
 import React, {useState, useRef, useEffect, useCallback} from 'react';
-import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useSelector} from 'react-redux';
 import {TabView} from 'react-native-tab-view';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 // Local import
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
