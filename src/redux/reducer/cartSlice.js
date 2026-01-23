@@ -1,5 +1,3 @@
-import { useStorage } from '../../utils/useStorage';
-import strings from '../../i18n/strings';
 
 // Utility function to properly convert ObjectId to string
 const objectIdToString = (obj) => {
@@ -37,6 +35,8 @@ export const CLEAR_CART_ERROR = 'CLEAR_CART_ERROR';
 export const LOAD_CART_FROM_STORAGE = 'LOAD_CART_FROM_STORAGE';
 export const APPLY_PROMOCODE = 'APPLY_PROMOCODE';
 export const REMOVE_PROMOCODE = 'REMOVE_PROMOCODE';
+export const SET_PENDING_CONFLICT_ITEM = 'SET_PENDING_CONFLICT_ITEM';
+export const CLEAR_PENDING_CONFLICT_ITEM = 'CLEAR_PENDING_CONFLICT_ITEM';
 
 const initialState = {
   items: [],
@@ -47,6 +47,7 @@ const initialState = {
   isLoading: false,
   error: null,
   promocode: null, // { code, discountAmount, discountType }
+  pendingConflictItem: null, // { dish, quantity, chefId, chefName } - set when user tries to add from different chef
 };
 
 const calculateTotals = (items) => {
@@ -121,10 +122,15 @@ export default function cartReducer(state = initialState, action) {
           error: null,
         };
       } else {
-        // Different chef - show error
+        // Different chef - store pending item for conflict resolution modal
         return {
           ...state,
-          error: strings.canOnlyOrderFromOneChef,
+          pendingConflictItem: {
+            dish,
+            quantity,
+            chefId: finalChefId,
+            chefName: chefName || (dish.chef && dish.chef.fullName) || 'Unknown Chef',
+          },
         };
       }
     }
@@ -217,6 +223,18 @@ export default function cartReducer(state = initialState, action) {
         error: null,
       };
 
+    case SET_PENDING_CONFLICT_ITEM:
+      return {
+        ...state,
+        pendingConflictItem: action.payload,
+      };
+
+    case CLEAR_PENDING_CONFLICT_ITEM:
+      return {
+        ...state,
+        pendingConflictItem: null,
+      };
+
     case LOAD_CART_FROM_STORAGE: {
       const savedCart = action.payload;
       if (savedCart) {
@@ -286,40 +304,36 @@ export const removePromocode = () => ({
   type: REMOVE_PROMOCODE,
 });
 
-// Async thunks for cart persistence
-export const saveCartToStorage = () => async (dispatch, getState) => {
-  try {
-    const { cart } = getState();
-    const cartData = {
-      items: cart.items,
-      chefId: cart.chefId,
-      chefName: cart.chefName,
-    };
-    useStorage.setItem('cart', JSON.stringify(cartData));
-  } catch (error) {
-  }
-};
+export const setPendingConflictItem = (payload) => ({
+  type: SET_PENDING_CONFLICT_ITEM,
+  payload,
+});
 
-export const loadCartFromStorageAsync = () => async (dispatch) => {
-  try {
-    dispatch(setLoading(true));
-    const savedCart = useStorage.getItem('cart');
-    if (savedCart) {
-      dispatch(loadCartFromStorage(JSON.parse(savedCart)));
-    }
-  } catch (error) {
-    dispatch(setError('Failed to load saved cart'));
-  } finally {
-    dispatch(setLoading(false));
-  }
-};
+export const clearPendingConflictItem = () => ({
+  type: CLEAR_PENDING_CONFLICT_ITEM,
+});
 
-export const clearCartFromStorage = () => async (dispatch) => {
-  try {
-    useStorage.removeItem('cart');
-    dispatch(clearCart());
-  } catch (error) {
-  }
+// Thunk: Clear cart, add pending item, then clear pending state
+export const clearCartAndAddPending = () => (dispatch, getState) => {
+  const { cart } = getState();
+  const pendingItem = cart.pendingConflictItem;
+
+  if (!pendingItem) return;
+
+  // Clear the current cart
+  dispatch(clearCart());
+
+  // Add the pending item
+  dispatch(addToCart({
+    dish: pendingItem.dish,
+    quantity: pendingItem.quantity,
+    chefId: pendingItem.chefId,
+    chefName: pendingItem.chefName,
+  }));
+
+  // Clear pending state
+  dispatch(clearPendingConflictItem());
+  // Note: Cart is automatically persisted via redux-persist
 };
 
 // Selectors
@@ -333,3 +347,4 @@ export const selectCartChef = (state) => ({
 export const selectCartError = (state) => state.cart.error;
 export const selectCartLoading = (state) => state.cart.isLoading;
 export const selectCartPromocode = (state) => state.cart.promocode;
+export const selectPendingConflictItem = (state) => state.cart.pendingConflictItem;

@@ -12,9 +12,10 @@ if (!__DEV__) {
 }
 LogBox.ignoreAllLogs(true);
 import { Provider } from 'react-redux';
+import { PersistGate } from 'redux-persist/integration/react';
 import { QueryClientProvider } from 'react-query';
 import App from './src';
-import store from './src/redux/store';
+import { store, persistor } from './src/redux/store';
 import { createClient, AnalyticsProvider } from '@segment/analytics-react-native';
 import { createOptimizedQueryClient } from './src/config/queryClient';
 
@@ -33,9 +34,11 @@ const RNRoot = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <Provider store={store}>
-        <AnalyticsProvider client={segmentClient}>
-          <App />
-        </AnalyticsProvider>
+        <PersistGate loading={null} persistor={persistor}>
+          <AnalyticsProvider client={segmentClient}>
+            <App />
+          </AnalyticsProvider>
+        </PersistGate>
       </Provider>
     </QueryClientProvider>
   );

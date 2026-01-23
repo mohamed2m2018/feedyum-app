@@ -28,7 +28,7 @@ export const useOptimizedReels = (categoryIds = []) => {
   const [user] = useStorage('user');
 
   return useInfiniteQuery(
-    ['stories', user?._id, categoryIds?.join(',') || 'all'],
+    ['stories', user?._id, categoryIds?.join(',') || 'all', location?.stableLatitude, location?.stableLongitude],
     async ({ pageParam = 1 }) => {
       // Smaller initial page size for faster loading
       const limit = pageParam === 1 ? 8 : 15;
@@ -70,7 +70,7 @@ export const useOptimizedDiscoverData = (selectedTag) => {
 
   // First, load users with stories/reels for the tag
   const usersQuery = useInfiniteQuery(
-    ['discover-users', selectedTag, location?.latitude, location?.longitude],
+    ['discover-users', selectedTag, location?.stableLatitude, location?.stableLongitude],
     async ({ pageParam = 1 }) => {
       // Try to get stories/reels by tag which includes user data
       const response = await request.get(`/story/stories`, {
@@ -96,7 +96,7 @@ export const useOptimizedDiscoverData = (selectedTag) => {
 
   // Then load dishes, but only after users query has some data
   const dishesQuery = useQuery(
-    ['discover-dishes', selectedTag, location?.latitude, location?.longitude],
+    ['discover-dishes', selectedTag, location?.stableLatitude, location?.stableLongitude],
     async () => {
       const response = await request.get(`/dishes/category/${selectedTag}`, {
         params: {
@@ -134,7 +134,7 @@ export const useOptimizedFollowingReels = () => {
   const [user] = useStorage('user');
 
   return useInfiniteQuery(
-    ['stories-following', user?._id, location?.latitude, location?.longitude],
+    ['stories-following', user?._id, location?.stableLatitude, location?.stableLongitude],
     async ({ pageParam = 1 }) => {
       const limit = pageParam === 1 ? 6 : 12; // Even smaller initial load for following
       const response = await request.get('/story/following', {

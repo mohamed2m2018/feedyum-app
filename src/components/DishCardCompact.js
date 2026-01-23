@@ -1,5 +1,5 @@
 // Library import
-import React, { memo, useState } from 'react';
+import React, { memo, useState, useEffect } from 'react';
 import {
     View,
     StyleSheet,
@@ -9,16 +9,25 @@ import {
     Animated,
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
+import { useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import LinearGradient from 'react-native-linear-gradient';
 
 // Local imports
 import ZText from './common/ZText';
-import { moderateScale, getHeight } from '../common/constants';
+import { moderateScale } from '../common/constants';
 import { styles } from '../themes';
 import strings from '../i18n/strings';
 import images from '../assets/images';
-import { addToCart, selectCartItems } from '../redux/reducer/cartSlice';
+import {
+    addToCart,
+    selectCartItems,
+    selectPendingConflictItem,
+    clearCartAndAddPending,
+    clearPendingConflictItem,
+} from '../redux/reducer/cartSlice';
+import { showActionDialog, showSuccessToast, ALERT_TYPE } from '../utils/toast';
+import { StackNav } from '../navigation/NavigationKeys';
 
 /**
  * DishCardCompact - Compact dish card for horizontal lists
@@ -32,12 +41,35 @@ function DishCardCompact({
 }) {
     const colors = useSelector(state => state.theme.theme);
     const cartItems = useSelector(selectCartItems);
+    const pendingConflictItem = useSelector(selectPendingConflictItem);
     const dispatch = useDispatch();
+    const navigation = useNavigation();
     const isRTL = I18nManager.isRTL;
     const [scaleAnim] = useState(new Animated.Value(1));
 
     // Get quantity from Redux cart state (synced with actual cart)
     const quantity = cartItems.find(item => item.dishId === dish?._id)?.quantity || 0;
+
+    // Handle cart conflict - show modal when user tries to add from different chef
+    useEffect(() => {
+        if (pendingConflictItem) {
+            showActionDialog({
+                type: ALERT_TYPE.WARNING,
+                title: strings.differentChefTitle,
+                message: strings.differentChefMessage,
+                confirmText: strings.clearCart,
+                cancelText: strings.viewCart,
+                onConfirm: () => {
+                    dispatch(clearCartAndAddPending());
+                    showSuccessToast(strings.dishAddedTitle, strings.formatString(strings.dishAddedMessage, pendingConflictItem.dish?.name));
+                },
+                onCancel: () => {
+                    dispatch(clearPendingConflictItem());
+                    navigation.navigate(StackNav.ShoppingCart);
+                },
+            });
+        }
+    }, [pendingConflictItem, dispatch, navigation]);
 
     const handleAddPress = () => {
         // Animate button

@@ -8,8 +8,7 @@ import {
   Animated,
   Dimensions,
 } from 'react-native';
-import { showSuccessToast, showErrorToast, showSuccessDialog, showActionDialog } from '../../../utils/toast';
-import { ALERT_TYPE } from 'react-native-alert-notification';
+import { showSuccessToast, showErrorToast, showSuccessDialog, showActionDialog, ALERT_TYPE } from '../../../utils/toast';
 import { useSelector, useDispatch } from 'react-redux';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { useNavigation, useRoute, CommonActions } from '@react-navigation/native';
@@ -31,8 +30,9 @@ import { StackNav } from '../../../navigation/NavigationKeys';
 import request from '../../../api/request';
 import images from '../../../assets/images';
 import {
-  selectCartError,
-  clearError,
+  selectPendingConflictItem,
+  clearPendingConflictItem,
+  clearCartAndAddPending,
   selectCartItemCount,
   addToCart,
 } from '../../../redux/reducer/cartSlice';
@@ -56,7 +56,7 @@ const DishDetailScreen = () => {
 
   // Cart selectors
   const cartItemCount = useSelector(selectCartItemCount);
-  const cartError = useSelector(selectCartError);
+  const pendingConflictItem = useSelector(selectPendingConflictItem);
 
   // Fetch dish details
   const {
@@ -267,13 +267,26 @@ const DishDetailScreen = () => {
     }
   };
 
-  // Handle cart errors
+  // Handle cart conflict - show modal when user tries to add from different chef
   useEffect(() => {
-    if (cartError) {
-      showErrorToast(strings.cartError, cartError);
-      dispatch(clearError());
+    if (pendingConflictItem) {
+      showActionDialog({
+        type: ALERT_TYPE.WARNING,
+        title: strings.differentChefTitle,
+        message: strings.differentChefMessage,
+        confirmText: strings.clearCart,
+        cancelText: strings.viewCart,
+        onConfirm: () => {
+          dispatch(clearCartAndAddPending());
+          showSuccessToast(strings.dishAddedTitle, strings.formatString(strings.dishAddedMessage, pendingConflictItem.dish?.name));
+        },
+        onCancel: () => {
+          dispatch(clearPendingConflictItem());
+          navigation.navigate(StackNav.ShoppingCart);
+        },
+      });
     }
-  }, [cartError, dispatch]);
+  }, [pendingConflictItem, dispatch, navigation]);
 
   const renderHeader = () => {
     const headerOpacity = scrollY.interpolate({

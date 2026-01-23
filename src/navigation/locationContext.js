@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
 import Geolocation from '@react-native-community/geolocation';
 import { Linking, Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   PERMISSIONS,
   request,
@@ -8,6 +9,10 @@ import {
 } from 'react-native-permissions'; // Import react-native-permissions
 import { showInfoToast } from '../utils/toast';
 import GoogleMapsService from '../services/GoogleMapsService';
+import { haversineDistance } from '../utils/haversineDistance';
+
+const STABLE_LOCATION_KEY = '@stable_location';
+const LOCATION_THRESHOLD_KM = 1.0; // 1km threshold for refetch
 
 const LocationContext = createContext();
 
@@ -19,6 +24,75 @@ export const LocationProvider = ({ children }) => {
   const [location, setLocation] = useState(null);
   const [deliveryLocation, setDeliveryLocation] = useState(null);
   const [useDeliveryAddress, setUseDeliveryAddress] = useState(false);
+
+  // Stable location - only updates when location changes by > 1km
+  // This is what query hooks should use for their query keys
+  const [stableLocation, setStableLocation] = useState(null);
+  const isInitialized = useRef(false);
+
+  // Load persisted stable location on mount
+  useEffect(() => {
+    const loadStableLocation = async () => {
+      try {
+        const stored = await AsyncStorage.getItem(STABLE_LOCATION_KEY);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          console.log('[LocationContext] Loaded persisted stable location:', parsed);
+          setStableLocation(parsed);
+        }
+        isInitialized.current = true;
+      } catch (error) {
+        console.warn('[LocationContext] Failed to load stable location:', error);
+        isInitialized.current = true;
+      }
+    };
+    loadStableLocation();
+  }, []);
+
+  // Update stable location only if distance exceeds threshold
+  const updateStableLocationIfSignificant = useCallback(async (newCoords) => {
+    if (!newCoords?.latitude || !newCoords?.longitude) return;
+
+    const newLocation = {
+      latitude: parseFloat(newCoords.latitude),
+      longitude: parseFloat(newCoords.longitude),
+    };
+
+    // First time or no stable location - set immediately
+    if (!stableLocation) {
+      console.log('[LocationContext] Setting initial stable location:', newLocation);
+      setStableLocation(newLocation);
+      try {
+        await AsyncStorage.setItem(STABLE_LOCATION_KEY, JSON.stringify(newLocation));
+      } catch (error) {
+        console.warn('[LocationContext] Failed to persist stable location:', error);
+      }
+      return;
+    }
+
+    // Calculate distance from current stable location
+    const distance = haversineDistance(
+      stableLocation.latitude,
+      stableLocation.longitude,
+      newLocation.latitude,
+      newLocation.longitude
+    );
+
+    console.log('[LocationContext] Distance from stable location:', distance.toFixed(2), 'km');
+
+    // Only update if distance exceeds threshold
+    if (distance >= LOCATION_THRESHOLD_KM) {
+      console.log('[LocationContext] Location changed significantly (>', LOCATION_THRESHOLD_KM, 'km), updating stable location');
+      setStableLocation(newLocation);
+      try {
+        await AsyncStorage.setItem(STABLE_LOCATION_KEY, JSON.stringify(newLocation));
+      } catch (error) {
+        console.warn('[LocationContext] Failed to persist stable location:', error);
+      }
+    } else {
+      console.log('[LocationContext] Location change insignificant (<', LOCATION_THRESHOLD_KM, 'km), keeping stable location');
+    }
+  }, [stableLocation]);
 
   const handleRequestPermission = () => {
     if (Platform.OS === 'android') {
@@ -209,12 +283,22 @@ export const LocationProvider = ({ children }) => {
   // Determine which location to return
   const currentLocation = useDeliveryAddress && deliveryLocation ? deliveryLocation : location;
 
+  // Trigger stable location update when currentLocation changes
+  useEffect(() => {
+    if (currentLocation?.latitude && currentLocation?.longitude) {
+      updateStableLocationIfSignificant(currentLocation);
+    }
+  }, [currentLocation?.latitude, currentLocation?.longitude, updateStableLocationIfSignificant]);
+
   const contextValue = {
     ...currentLocation,
     updateDeliveryLocation,
     useDeviceLocation,
     isUsingDeliveryAddress: useDeliveryAddress,
-    deliveryAddress: deliveryLocation?.address
+    deliveryAddress: deliveryLocation?.address,
+    // Stable coordinates for query hooks - only change on significant movement
+    stableLatitude: stableLocation?.latitude ?? currentLocation?.latitude,
+    stableLongitude: stableLocation?.longitude ?? currentLocation?.longitude,
   };
 
   return (

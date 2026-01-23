@@ -12,7 +12,7 @@ import {
   TextInput,
   Keyboard,
 } from 'react-native';
-import { showErrorToast } from '../../../utils/toast';
+import { showErrorToast, showActionDialog, showSuccessToast, ALERT_TYPE } from '../../../utils/toast';
 import { useSelector, useDispatch } from 'react-redux';
 import { useQuery, useInfiniteQuery } from 'react-query';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -35,8 +35,9 @@ import strings from '../../../i18n/strings';
 import {
   addToCart,
   selectCartItemCount,
-  selectCartError,
-  clearError,
+  selectPendingConflictItem,
+  clearCartAndAddPending,
+  clearPendingConflictItem,
 } from '../../../redux/reducer/cartSlice';
 import { useStorage } from '../../../utils/useStorage';
 import FeaturedReelsSection from '../../../components/common/FeaturedReelsSection';
@@ -62,9 +63,8 @@ const ChefMenu = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [quantities, setQuantities] = useState({}); // Track quantities for each dish
 
-  // Cart selectors
   const cartItemCount = useSelector(selectCartItemCount);
-  const cartError = useSelector(selectCartError);
+  const pendingConflictItem = useSelector(selectPendingConflictItem);
 
   // Fetch chef/menu info (Static)
   const fetchChefInfo = async (chefId) => {
@@ -308,13 +308,26 @@ const ChefMenu = () => {
     navigation.navigate(StackNav.ShoppingCart);
   };
 
-  // Handle cart errors
+  // Handle cart conflict - show modal when user tries to add from different chef
   useEffect(() => {
-    if (cartError) {
-      showErrorToast(strings.cartError, cartError);
-      dispatch(clearError());
+    if (pendingConflictItem) {
+      showActionDialog({
+        type: ALERT_TYPE.WARNING,
+        title: strings.differentChefTitle,
+        message: strings.differentChefMessage,
+        confirmText: strings.clearCart,
+        cancelText: strings.viewCart,
+        onConfirm: () => {
+          dispatch(clearCartAndAddPending());
+          showSuccessToast(strings.dishAddedTitle, strings.formatString(strings.dishAddedMessage, pendingConflictItem.dish?.name));
+        },
+        onCancel: () => {
+          dispatch(clearPendingConflictItem());
+          navigation.navigate(StackNav.ShoppingCart);
+        },
+      });
     }
-  }, [cartError, dispatch]);
+  }, [pendingConflictItem, dispatch, navigation]);
 
   // Helper function to generate color gradients for categories
   const getCategoryGradient = index => {
