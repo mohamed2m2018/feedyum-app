@@ -42,12 +42,9 @@ export default function FollowButton({
   // Using a function initializer ensures the prop is only read once
   const [isFollow, setIsFollow] = useState(() => isFollowed);
 
-  // Invalidate all relevant queries to reflect changes app-wide
-  const invalidateAllFollowQueries = () => {
-    // Invalidate Following feed - critical for updating the following tab
-    queryClient.invalidateQueries({ queryKey: 'stories_following' });
-    // Invalidate For You feed in case it needs refresh
-    queryClient.invalidateQueries({ queryKey: 'stories' });
+  // Invalidate queries that reflect follow relationship changes
+  // NOTE: stories/stories_following are NOT invalidated here to prevent feed resets
+  const invalidateFollowQueries = () => {
     // Invalidate follow statistics (profile counts)
     queryClient.invalidateQueries({ queryKey: 'followStatistics' });
     // Invalidate user following lists
@@ -64,7 +61,10 @@ export default function FollowButton({
     userToFollow => request.post('/follow', { userToFollow }),
     {
       onSuccess: () => {
-        invalidateAllFollowQueries();
+        invalidateFollowQueries();
+        // Invalidate Following feed ONLY on follow (not unfollow)
+        // This allows the Following tab to show the newly followed user's content
+        queryClient.invalidateQueries({ queryKey: 'stories_following' });
       },
       onError: () => {
         // Revert on error
@@ -77,7 +77,9 @@ export default function FollowButton({
     userToUnfollow => request.delete('/follow', { data: { userToUnfollow } }),
     {
       onSuccess: () => {
-        invalidateAllFollowQueries();
+        invalidateFollowQueries();
+        // NOTE: Do NOT invalidate stories_following on unfollow
+        // This prevents the Following feed from resetting position
       },
       onError: () => {
         // Revert on error

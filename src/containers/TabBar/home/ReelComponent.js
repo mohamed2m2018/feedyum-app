@@ -147,10 +147,7 @@ const ReelComponent = ({
     } else {
       removeLikeMutation.mutate(id);
     }
-    if (isFromReelsOne) {
-      queryClient.invalidateQueries({ queryKey: 'stories' });
-      queryClient.invalidateQueries({ queryKey: 'stories_following' });
-    }
+    // NOTE: Removed story invalidations - likes are optimistic and don't need feed refetch
   };
   const navigation = useNavigation();
 
@@ -285,6 +282,34 @@ const ReelComponent = ({
     // Navigate to author's profile, not the current user's profile unless they match
     // Correctly using author._id from the item
     onPressProfile(item?.channelName, item?.avatarUri, item?.author?._id, item?.author?.type);
+  };
+
+  // Handle click on the reviewed restaurant/place badge in review reels
+  // If registered chef -> navigate to ChefMenu
+  // If external restaurant (Google place) -> open in Google Maps app
+  const handleReviewedPlacePress = () => {
+    if (item?.reviewedChef?._id) {
+      // Registered chef - navigate to their menu
+      navigation.navigate(StackNav.ChefMenu, {
+        chefId: item.reviewedChef._id,
+        chefName: item.reviewedChef.fullName || item.restaurantName,
+      });
+    } else if (item?.googlePlaceId) {
+      // External restaurant with Google Place ID - open in Google Maps
+      // Use query_place_id param with restaurant name as the query
+      const restaurantName = encodeURIComponent(item?.restaurantName || 'Restaurant');
+      const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${restaurantName}&query_place_id=${item.googlePlaceId}`;
+      Linking.openURL(mapsUrl).catch(err => {
+        console.log('Failed to open Google Maps:', err);
+      });
+    } else if (item?.restaurantAddress) {
+      // Fallback: open address in Google Maps
+      const encodedAddress = encodeURIComponent(item.restaurantAddress);
+      const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
+      Linking.openURL(mapsUrl).catch(err => {
+        console.log('Failed to open Google Maps:', err);
+      });
+    }
   };
 
   const imageStyles = useMemo(
@@ -654,33 +679,37 @@ const ReelComponent = ({
                         )}
 
                         {/* Restaurant Name for Reviews - Premium Badge Design - Moved BELOW Name */}
+                        {/* Clickable: navigates to ChefMenu for registered chefs, or Google Maps for external restaurants */}
                         {((item?.reviewMode || item?.isReview || item?.author?.type !== 'chef') && (item?.restaurantName || item?.reviewedChef?.fullName)) && (
-                          <View style={[localStyles.glassContainer, {
-                            borderRadius: moderateScale(12),
-                            paddingVertical: moderateScale(6),
-                            paddingHorizontal: moderateScale(10),
-                            marginTop: moderateScale(6),
-                            alignSelf: 'flex-start',
-                            backgroundColor: 'rgba(0, 0, 0, 0.4)',
-                            borderWidth: 1,
-                            borderColor: 'rgba(255, 255, 255, 0.3)',
-                            flexDirection: 'column',
-                            alignItems: 'flex-start',
-                            shadowColor: '#000',
-                            shadowOffset: { width: 0, height: 2 },
-                            shadowOpacity: 0.2,
-                            shadowRadius: 4,
-                            elevation: 3
-                          }]}>
-                            {/* Restaurant info row */}
-                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                          <>
+                            <TouchableOpacity
+                              onPress={handleReviewedPlacePress}
+                              activeOpacity={0.7}
+                              style={[localStyles.glassContainer, {
+                                borderRadius: moderateScale(12),
+                                paddingVertical: moderateScale(6),
+                                paddingHorizontal: moderateScale(10),
+                                marginTop: moderateScale(6),
+                                alignSelf: 'flex-start',
+                                backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                                borderWidth: 1,
+                                borderColor: 'rgba(255, 255, 255, 0.3)',
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                shadowColor: '#000',
+                                shadowOffset: { width: 0, height: 2 },
+                                shadowOpacity: 0.2,
+                                shadowRadius: 4,
+                                elevation: 3
+                              }]}>
+                              {/* Restaurant info row */}
                               <Ionicons
                                 name="location"
                                 size={moderateScale(12)}
                                 color="#FF4B4B"
                                 style={{ marginRight: moderateScale(4) }}
                               />
-                              <View style={{ flex: 1 }}>
+                              <View style={{ flexShrink: 1 }}>
                                 <ZText style={{
                                   fontSize: moderateScale(12),
                                   color: '#FFFFFF',
@@ -704,8 +733,15 @@ const ReelComponent = ({
                                   </ZText>
                                 )}
                               </View>
-                            </View>
-                            {/* Follow Button - under the restaurant name */}
+                              {/* Arrow indicator to show it's clickable */}
+                              <Ionicons
+                                name={item?.reviewedChef?._id ? 'chevron-forward' : 'open-outline'}
+                                size={moderateScale(14)}
+                                color="rgba(255,255,255,0.7)"
+                                style={{ marginLeft: moderateScale(6) }}
+                              />
+                            </TouchableOpacity>
+                            {/* Follow Button - OUTSIDE the glass container for cleaner appearance */}
                             {/* Hide if this is the current user's own kitchen */}
                             {item?.reviewedChef?._id && item?.reviewedChef?._id !== currentUserId && (
                               <FollowButton
@@ -713,10 +749,10 @@ const ReelComponent = ({
                                 isFollowed={item?.reviewedChef?.currentUserFollowed}
                                 compact={true}
                                 size="small"
-                                style={{ marginTop: moderateScale(6) }}
+                                style={{ marginTop: moderateScale(6), alignSelf: 'flex-start' }}
                               />
                             )}
-                          </View>
+                          </>
                         )}
                       </TouchableOpacity>
                     </View>
