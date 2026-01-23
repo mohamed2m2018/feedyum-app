@@ -75,16 +75,25 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload to Transfer.sh (Public Link)
-        id: transfer
+      - name: Upload to Gofile (Public Link)
+        id: gofile
         run: |
-          DOWNLOAD_URL=$(curl --upload-file android/app/build/outputs/apk/release/FeedYum-${{ github.ref_name }}.apk https://transfer.sh/FeedYum-${{ github.ref_name }}.apk)
+          # Get the best server
+          SERVER=$(curl -s https://api.gofile.io/servers | jq -r '.data.servers[0].name')
+          
+          # Upload the file
+          RESPONSE=$(curl -F "file=@android/app/build/outputs/apk/release/FeedYum-${{ github.ref_name }}.apk" "https://${SERVER}.gofile.io/uploadFile")
+          
+          DOWNLOAD_URL=$(echo $RESPONSE | jq -r '.data.downloadPage')
+          DIRECT_URL=$(echo $RESPONSE | jq -r '.data.directLink // empty')
+          
           echo "download_url=$DOWNLOAD_URL" >> $GITHUB_OUTPUT
           echo "## 📱 APK Download Link" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "🔗 **Public Download URL (valid for 14 days):**" >> $GITHUB_STEP_SUMMARY
+          echo "🔗 **Public Download Page:**" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "[\`$DOWNLOAD_URL\`]($DOWNLOAD_URL)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "---" >> $GITHUB_STEP_SUMMARY
           echo "Version: \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+
