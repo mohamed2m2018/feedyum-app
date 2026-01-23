@@ -27,9 +27,9 @@ import request from '../../../api/request';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { useHandleAuth } from '../../../utils/useHandleAuth';
 import { OneSignal } from 'react-native-onesignal';
-import { showErrorToast } from '../../../utils/toast';
 import { useStorage } from '../../../utils/useStorage';
 import AppInitializer from '../../../services/AppInitializer';
+import { persistor } from '../../../redux/store';
 
 export default Setting = ({ navigation }) => {
   const { data: user } = useQuery('user', () => request.get('/user'));
@@ -199,6 +199,8 @@ export default Setting = ({ navigation }) => {
       // Clear query cache and auth header
       await queryClient.removeQueries();
       delete request.defaults.headers.common.Authorization;
+      // Clear redux-persist storage (cart, address)
+      await persistor.purge();
       // Clear AsyncStorage-stored session/notification data
       await AppInitializer.handleUserLogout();
       await googleSignOut();
