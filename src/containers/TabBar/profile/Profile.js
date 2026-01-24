@@ -172,14 +172,7 @@ export default function Profile({ navigation }) {
   };
 
   const onPressEditProfile = isEditBio => {
-    const editProfileTitle = user?.type === 'chef'
-      ? strings.editProfileAndBranches
-      : strings.editProfile;
-    navigation.navigate(StackNav.SetUpProfile, {
-      title: editProfileTitle,
-      isEditBio,
-      type: user?.type,
-    });
+    navigation.navigate(StackNav.EditProfileScreen);
   };
 
   const onPressSetting = () => navigation.navigate(StackNav.Setting);

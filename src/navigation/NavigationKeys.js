@@ -33,6 +33,7 @@ export const StackNav = {
   Gender: 'Gender',
   Setting: 'Setting',
   EditProfile: 'EditProfile',
+  EditProfileScreen: 'EditProfileScreen',
   Sound: 'Sound',
   Report: 'Report',
   ProfileDetail: 'ProfileDetail',

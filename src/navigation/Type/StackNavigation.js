@@ -200,6 +200,10 @@ export default function StackNavigation() {
         name={StackNav.EditProfile}
         component={StackRoute.EditProfile}
       />
+      <Stack.Screen
+        name={StackNav.EditProfileScreen}
+        component={StackRoute.EditProfileScreen}
+      />
       <Stack.Screen name={StackNav.Privacy} component={StackRoute.Privacy} />
       <Stack.Screen
         name={StackNav.PrivacyPolicy}

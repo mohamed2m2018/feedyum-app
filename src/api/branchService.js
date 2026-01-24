@@ -48,6 +48,18 @@ class BranchService {
     }
   }
 
+  // Get coverage areas within a delivery radius
+  async getCoverageAreas(lat, long, radiusKm) {
+    try {
+      const response = await request.get('/branches/coverage-areas', {
+        params: { lat, long, radius: radiusKm }
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   // Validate order location
   async validateOrderLocation(chefId, deliveryAddress) {
     try {
@@ -99,67 +111,67 @@ class BranchService {
   // Validate branch data
   validateBranchData(data) {
     const errors = {};
-    
+
     if (!data.branchName?.trim()) {
       errors.branchName = 'Branch name is required';
     }
-    
+
     if (!data.streetName?.trim()) {
       errors.streetName = 'Street name is required';
     }
-    
+
     if (!data.buildingNumber?.trim()) {
       errors.buildingNumber = 'Building number is required';
     }
-    
+
     if (!data.area?.trim()) {
       errors.area = 'Area is required';
     }
-    
+
     if (!data.city?.trim()) {
       errors.city = 'City is required';
     }
-    
+
     if (!data.state?.trim()) {
       errors.state = 'State/Province is required';
     }
-    
+
     if (!data.country?.trim()) {
       errors.country = 'Country is required';
     }
-    
+
     if (!data.postalCode?.trim()) {
       errors.postalCode = 'Postal code is required';
     }
-    
+
     if (!data.phoneNumber?.trim()) {
       errors.phoneNumber = 'Phone number is required';
     }
-    
+
     if (!data.countryCode?.trim()) {
       errors.countryCode = 'Country code is required';
     }
-    
+
     if (!data.lat || isNaN(Number(data.lat))) {
       errors.location = 'Valid coordinates are required';
     }
-    
+
     if (!data.long || isNaN(Number(data.long))) {
       errors.location = 'Valid coordinates are required';
     }
-    
+
     if (data.deliveryRadius && (isNaN(Number(data.deliveryRadius)) || Number(data.deliveryRadius) < 0)) {
       errors.deliveryRadius = 'Delivery radius must be a positive number';
     }
-    
+
     if (data.deliveryFee && (isNaN(Number(data.deliveryFee)) || Number(data.deliveryFee) < 0)) {
       errors.deliveryFee = 'Delivery fee must be a positive number';
     }
-    
+
     if (data.minimumOrderAmount && (isNaN(Number(data.minimumOrderAmount)) || Number(data.minimumOrderAmount) < 0)) {
       errors.minimumOrderAmount = 'Minimum order amount must be a positive number';
     }
-    
+
     return {
       isValid: Object.keys(errors).length === 0,
       errors

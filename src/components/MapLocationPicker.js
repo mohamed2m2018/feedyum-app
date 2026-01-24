@@ -6,6 +6,7 @@ import {
   Dimensions,
   Platform,
   ActivityIndicator,
+  ScrollView,
 } from 'react-native';
 import { showErrorToast } from '../utils/toast';
 import { useSelector, useDispatch } from 'react-redux';
@@ -13,12 +14,14 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { useQuery } from 'react-query';
 import FreeAddressSearch from './FreeAddressSearch';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import MapView, { Marker, Circle, PROVIDER_GOOGLE } from 'react-native-maps';
+import Slider from '@react-native-community/slider';
 
 import ZInput from './common/ZInput';
 import ZPhoneInput from './common/ZPhoneInput';
 import Feather from 'react-native-vector-icons/Feather';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { moderateScale } from '../common/constants';
 import { styles } from '../themes';
 import ZText from './common/ZText';
@@ -30,6 +33,7 @@ import { addAddress, editAddress } from '../redux/actions/addressActions';
 import request from '../api/request';
 import { useLocation } from '../navigation/locationContext';
 import GoogleMapsService from '../services/GoogleMapsService';
+import branchService from '../api/branchService';
 
 const { width, height } = Dimensions.get('window');
 
@@ -80,6 +84,13 @@ const MapLocationPicker = () => {
     additionalInstructions: ''
   });
   const [isPhoneValid, setIsPhoneValid] = useState(editMode ? true : false);
+
+  // Chef branch specific state
+  const [deliveryRadius, setDeliveryRadius] = useState(20); // Default 20km
+  const [branchName, setBranchName] = useState('');
+  const [coverageAreas, setCoverageAreas] = useState([]);
+  const [loadingAreas, setLoadingAreas] = useState(false);
+  const [showBranchForm, setShowBranchForm] = useState(false);
 
   // Initialize state for edit mode - show form instantly with existing data
   useEffect(() => {
@@ -258,31 +269,82 @@ const MapLocationPicker = () => {
     }
   }, [location, reverseGeocodePositionSilent]);
 
+  // Fetch coverage areas when radius changes
+  const fetchCoverageAreas = useCallback(async (lat, lng, radius) => {
+    if (!lat || !lng) return;
+
+    setLoadingAreas(true);
+    try {
+      const response = await branchService.getCoverageAreas(lat, lng, radius);
+      if (response?.success && response.areas) {
+        setCoverageAreas(response.areas);
+      }
+    } catch (error) {
+      console.error('Error fetching coverage areas:', error);
+      setCoverageAreas([]);
+    } finally {
+      setLoadingAreas(false);
+    }
+  }, []);
+
+  // Debounced radius change handler
+  const handleRadiusChange = useCallback((value) => {
+    setDeliveryRadius(value);
+  }, []);
+
+  // Fetch areas when radius changes (with debounce effect)
+  useEffect(() => {
+    if (showBranchForm && selectedLocation?.lat && selectedLocation?.lng) {
+      const timeoutId = setTimeout(() => {
+        fetchCoverageAreas(selectedLocation.lat, selectedLocation.lng, deliveryRadius);
+      }, 500); // Debounce 500ms
+      return () => clearTimeout(timeoutId);
+    }
+  }, [deliveryRadius, showBranchForm, selectedLocation, fetchCoverageAreas]);
+
   // Handle Save Location button press
   const handleSaveLocation = useCallback(() => {
     if (selectedLocation) {
-      // For chef branches, skip form and return location immediately
+      // For chef branches, show the branch form
       if (isChefBranch) {
-        const locationData = {
-          lat: selectedLocation.lat,
-          latitude: selectedLocation.lat,
-          long: selectedLocation.lng,
-          longitude: selectedLocation.lng,
-          formattedAddress: selectedLocation.formattedAddress,
-          address: selectedLocation.formattedAddress,
-          description: selectedLocation.formattedAddress,
-        };
-        if (onLocationSelect) {
-          onLocationSelect(locationData);
-        }
-        navigation.goBack();
+        setShowBranchForm(true);
+        setLocationSaved(true);
+        // Fetch initial coverage areas
+        fetchCoverageAreas(selectedLocation.lat, selectedLocation.lng, deliveryRadius);
         return;
       }
       // For regular users, show address form
       setLocationSaved(true);
       setShowAddressForm(true);
     }
-  }, [selectedLocation, isChefBranch, onLocationSelect, navigation]);
+  }, [selectedLocation, isChefBranch, fetchCoverageAreas, deliveryRadius]);
+
+  // Handle branch confirmation
+  const handleConfirmBranch = useCallback(() => {
+    if (!selectedLocation) {
+      showErrorToast(strings.error, strings.pleaseSelectLocation);
+      return;
+    }
+
+    const locationData = {
+      lat: selectedLocation.lat,
+      latitude: selectedLocation.lat,
+      long: selectedLocation.lng,
+      longitude: selectedLocation.lng,
+      formattedAddress: selectedLocation.formattedAddress,
+      address: selectedLocation.formattedAddress,
+      description: selectedLocation.formattedAddress,
+      branchName: branchName.trim() || `${selectedLocation.area || 'New'} Branch`,
+      deliveryRadius: deliveryRadius,
+      area: selectedLocation.area,
+      city: selectedLocation.city,
+    };
+
+    if (onLocationSelect) {
+      onLocationSelect(locationData);
+    }
+    navigation.goBack();
+  }, [selectedLocation, branchName, deliveryRadius, onLocationSelect, navigation]);
 
   const handleAddressDetailChange = (field, value) => {
     setAddressDetails(prev => ({
@@ -415,43 +477,70 @@ const MapLocationPicker = () => {
           />
         </View>
 
-        {/* Interactive Map - shown by default, hidden when address form is visible */}
+        {/* Interactive Map - Full size when selecting, mini preview when form is visible */}
         {!showAddressForm && (
-          <View style={localStyles.mapWrapper}>
+          <View style={showBranchForm ? localStyles.miniMapWrapper : localStyles.mapWrapper}>
             <MapView
               ref={mapRef}
               provider={PROVIDER_GOOGLE}
-              style={localStyles.map}
+              style={showBranchForm ? localStyles.miniMap : localStyles.map}
               initialRegion={initialRegion}
-              onPress={handleMapPress}
-              showsUserLocation={true}
+              onPress={showBranchForm ? undefined : handleMapPress}
+              showsUserLocation={!showBranchForm}
               showsMyLocationButton={false}
               loadingEnabled={false}
               moveOnMarkerPress={false}
               pitchEnabled={false}
               rotateEnabled={false}
               toolbarEnabled={false}
+              scrollEnabled={!showBranchForm}
+              zoomEnabled={!showBranchForm}
             >
               <Marker
                 coordinate={markerPosition}
-                draggable
+                draggable={!showBranchForm}
                 onDragEnd={handleMapDragEnd}
                 pinColor={colors.primary}
               />
+              {/* Delivery Radius Circle - only shown for chef branches */}
+              {isChefBranch && selectedLocation && (
+                <Circle
+                  center={markerPosition}
+                  radius={deliveryRadius * 1000} // Convert km to meters
+                  fillColor="rgba(40, 167, 69, 0.15)"
+                  strokeColor="rgba(40, 167, 69, 0.6)"
+                  strokeWidth={2}
+                />
+              )}
             </MapView>
 
-            {/* Center on GPS button */}
-            <TouchableOpacity
-              style={[localStyles.gpsButton, { backgroundColor: colors.white }]}
-              onPress={handleCenterOnCurrentLocation}
-            >
-              <MaterialIcons name="my-location" size={moderateScale(22)} color={colors.primary} />
-            </TouchableOpacity>
+            {/* Expand map button - shown on mini map */}
+            {showBranchForm && (
+              <TouchableOpacity
+                style={[localStyles.expandMapButton, { backgroundColor: colors.backgroundColor + 'DD' }]}
+                onPress={() => setShowBranchForm(false)}
+              >
+                <MaterialIcons name="fullscreen" size={moderateScale(20)} color={colors.primary} />
+                <ZText type="s12" color={colors.primary} style={{ marginLeft: moderateScale(4) }}>
+                  {strings.editLocation || 'Edit Location'}
+                </ZText>
+              </TouchableOpacity>
+            )}
+
+            {/* Center on GPS button - only shown on full map */}
+            {!showBranchForm && (
+              <TouchableOpacity
+                style={[localStyles.gpsButton, { backgroundColor: colors.white }]}
+                onPress={handleCenterOnCurrentLocation}
+              >
+                <MaterialIcons name="my-location" size={moderateScale(22)} color={colors.primary} />
+              </TouchableOpacity>
+            )}
           </View>
         )}
 
-        {/* Selected Location Display */}
-        {selectedLocation && (
+        {/* Selected Location Display - hidden when branch form is visible (mini map shows location) */}
+        {selectedLocation && !showBranchForm && (
           <View style={[localStyles.selectedLocationContainer, { backgroundColor: colors.inputBg }]}>
             <View style={localStyles.selectedLocationContent}>
               <Feather
@@ -480,7 +569,7 @@ const MapLocationPicker = () => {
         )}
 
         {/* Save Location Button - shown when location selected but form not yet visible */}
-        {selectedLocation && !showAddressForm && (
+        {selectedLocation && !showAddressForm && !showBranchForm && (
           <View style={localStyles.saveButtonContainer}>
             <TouchableOpacity
               style={[
@@ -502,6 +591,114 @@ const MapLocationPicker = () => {
               )}
             </TouchableOpacity>
           </View>
+        )}
+
+        {/* Chef Branch Form - shown when adding a branch location */}
+        {showBranchForm && (
+          <KeyboardAwareScrollView
+            style={localStyles.formContainer}
+            contentContainerStyle={localStyles.formContent}
+            showsVerticalScrollIndicator={false}
+            enableOnAndroid={true}
+            extraScrollHeight={20}
+          >
+            {/* Branch Name */}
+            <View style={localStyles.section}>
+              <ZText type="B16" color={colors.textColor} style={localStyles.sectionTitle}>
+                {strings.branchNameLabel}
+              </ZText>
+              <ZInput
+                placeHolder={strings.branchNamePlaceholder}
+                _value={branchName}
+                toGetTextFieldValue={(value) => setBranchName(value)}
+                inputContainerStyle={[localStyles.inputContainer, { backgroundColor: colors.inputBg }]}
+              />
+            </View>
+
+            {/* Delivery Radius Slider */}
+            <View style={localStyles.section}>
+              <View style={localStyles.radiusHeader}>
+                <ZText type="B16" color={colors.textColor}>
+                  {strings.deliveryRadius}
+                </ZText>
+                <View style={[localStyles.radiusBadge, { backgroundColor: colors.primary + '20' }]}>
+                  <ZText type="B18" color={colors.primary}>
+                    {deliveryRadius} {strings.deliveryRadiusKm}
+                  </ZText>
+                </View>
+              </View>
+              <ZText type="s12" color={colors.grayScale6} style={{ marginBottom: moderateScale(12) }}>
+                {strings.deliveryRadiusHint}
+              </ZText>
+              <View style={localStyles.sliderContainer}>
+                <ZText type="s12" color={colors.grayScale6}>1km</ZText>
+                <Slider
+                  style={localStyles.slider}
+                  minimumValue={1}
+                  maximumValue={50}
+                  step={1}
+                  value={deliveryRadius}
+                  onValueChange={handleRadiusChange}
+                  minimumTrackTintColor={colors.primary}
+                  maximumTrackTintColor={colors.grayScale4}
+                  thumbTintColor={colors.primary}
+                />
+                <ZText type="s12" color={colors.grayScale6}>50km</ZText>
+              </View>
+            </View>
+
+            {/* Coverage Areas */}
+            <View style={localStyles.section}>
+              <ZText type="B16" color={colors.textColor} style={localStyles.sectionTitle}>
+                {strings.areasYouCanDeliverTo}
+              </ZText>
+              {loadingAreas ? (
+                <View style={localStyles.loadingAreasContainer}>
+                  <ActivityIndicator size="small" color={colors.primary} />
+                  <ZText type="s14" color={colors.grayScale6} style={{ marginLeft: moderateScale(8) }}>
+                    {strings.loadingAreas}
+                  </ZText>
+                </View>
+              ) : coverageAreas.length > 0 ? (
+                <View style={localStyles.areasContainer}>
+                  {coverageAreas.map((area, index) => (
+                    <View
+                      key={index}
+                      style={[localStyles.areaTag, { backgroundColor: colors.primary + '15', borderColor: colors.primary + '40' }]}
+                    >
+                      <Ionicons name="location-outline" size={moderateScale(14)} color={colors.primary} />
+                      <ZText type="s14" color={colors.primary} style={{ marginLeft: moderateScale(4) }}>
+                        {area}
+                      </ZText>
+                    </View>
+                  ))}
+                </View>
+              ) : (
+                <ZText type="s14" color={colors.grayScale6}>
+                  {strings.noAreasFound}
+                </ZText>
+              )}
+            </View>
+
+            {/* Selected Address Display */}
+            <View style={[localStyles.selectedAddressCard, { backgroundColor: colors.inputBg, borderColor: colors.grayScale4 }]}>
+              <Feather name="map-pin" size={moderateScale(18)} color={colors.primary} />
+              <ZText type="s14" color={colors.textColor} style={{ marginLeft: moderateScale(8), flex: 1 }} numberOfLines={2}>
+                {selectedLocation?.formattedAddress || strings.gettingAddress}
+              </ZText>
+            </View>
+
+            {/* Confirm Branch Button */}
+            <TouchableOpacity
+              style={[localStyles.confirmButton, { backgroundColor: colors.primary }]}
+              onPress={handleConfirmBranch}
+            >
+              <Ionicons name="checkmark-circle" size={moderateScale(22)} color={colors.white} />
+              <ZText type="B16" color={colors.white} style={{ marginLeft: moderateScale(8) }}>
+                {strings.confirm}
+              </ZText>
+            </TouchableOpacity>
+          </KeyboardAwareScrollView>
         )}
 
         {/* Address Details Form */}
@@ -698,12 +895,6 @@ const localStyles = StyleSheet.create({
     paddingTop: moderateScale(12),
     paddingBottom: moderateScale(24),
   },
-  confirmButton: {
-    paddingVertical: moderateScale(16),
-    borderRadius: moderateScale(12),
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   formContainer: {
     flex: 1,
     marginHorizontal: moderateScale(16),
@@ -745,6 +936,91 @@ const localStyles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 3,
+  },
+  // Chef Branch Form Styles
+  radiusHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: moderateScale(4),
+  },
+  radiusBadge: {
+    paddingHorizontal: moderateScale(16),
+    paddingVertical: moderateScale(6),
+    borderRadius: moderateScale(20),
+  },
+  sliderContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: moderateScale(8),
+  },
+  slider: {
+    flex: 1,
+    height: moderateScale(40),
+    marginHorizontal: moderateScale(8),
+  },
+  areasContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: moderateScale(8),
+    gap: moderateScale(8),
+  },
+  areaTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: moderateScale(12),
+    paddingVertical: moderateScale(8),
+    borderRadius: moderateScale(20),
+    borderWidth: 1,
+  },
+  loadingAreasContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: moderateScale(8),
+  },
+  selectedAddressCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: moderateScale(14),
+    borderRadius: moderateScale(12),
+    marginVertical: moderateScale(16),
+    borderWidth: 1,
+  },
+  confirmButton: {
+    flexDirection: 'row',
+    paddingVertical: moderateScale(16),
+    borderRadius: moderateScale(12),
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: moderateScale(20),
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+  },
+  // Mini Map Styles (collapsed view when branch form is visible)
+  miniMapWrapper: {
+    height: moderateScale(120),
+    marginHorizontal: moderateScale(16),
+    marginTop: moderateScale(8),
+    borderRadius: moderateScale(12),
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  miniMap: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: moderateScale(12),
+  },
+  expandMapButton: {
+    position: 'absolute',
+    bottom: moderateScale(8),
+    right: moderateScale(8),
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: moderateScale(10),
+    paddingVertical: moderateScale(6),
+    borderRadius: moderateScale(8),
   },
 });
 

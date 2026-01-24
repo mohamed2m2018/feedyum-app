@@ -35,7 +35,7 @@ import {
 import ZInput from '../../components/common/ZInput';
 import ZPhoneInput from '../../components/common/ZPhoneInput';
 import ZKeyBoardAvoidWrapper from '../../components/common/ZKeyBoardAvoidWrapper';
-import { StackNav, TabNav } from '../../navigation/NavigationKeys';
+import { StackNav } from '../../navigation/NavigationKeys';
 import ProfilePicture from '../../components/models/ProfilePicture';
 import ZButton from '../../components/common/ZButton';
 import request from '../../api/request';
@@ -51,7 +51,6 @@ const SetUpProfile = props => {
   const { navigation } = props;
   const headerTitle = props.route.params.title;
   const { email, password, type } = props.route.params;
-  const [isUpdating, setisUpdating] = useState(false);
 
   const colors = useSelector(state => state.theme.theme);
   const ProfilePictureSheetRef = createRef();
@@ -65,74 +64,22 @@ const SetUpProfile = props => {
     borderColor: colors.primary,
   };
 
-  // Check if this is edit mode - handle both editProfile and editProfileAndBranches
-  const isEdit = headerTitle === strings.editProfile || headerTitle === strings.editProfileAndBranches;
-  const isChef = props.route.params?.type === 'chef' || type === 'chef';
+  // This screen is now registration-only
+  const isChef = type === 'chef';
 
-  const { data: editUser } = useQuery('user', () => request.get('/user'), {
-    retry: 0,
-    refetchOnMount: true,
-    enabled: isEdit,
-    onError: err => {
-      showErrorToast(strings.error, err[Object.keys(err)?.[0]] || strings.errorOccured);
-    },
-  });
-
-  // Fetch existing branches for edit mode (using ChefBranch API instead of legacy User.locations)
-  // Store original branches for diff computation during updates
-  const originalBranchesRef = useRef([]);
-
-  const { data: branchesResponse } = useQuery(
-    ['chefBranches', editUser?.data?.user?._id],
-    () => branchService.getBranches(editUser?.data?.user?._id),
-    {
-      retry: 0,
-      enabled: !!editUser?.data?.user?._id && isEdit,
-      refetchOnMount: true,
-      onSuccess: res => {
-        // Adapt ChefBranch format to the local locations state format
-        const adaptedLocations = (res?.branches || []).map(branch => ({
-          _id: branch._id, // Keep branch ID for edits
-          description: branch.addressDetails?.formattedAddress || branch.branchName,
-          latitude: branch.location?.lat,
-          longitude: branch.location?.long,
-          city: branch.addressDetails?.city,
-          country: branch.addressDetails?.country,
-          branchName: branch.branchName,
-          contactPhone: branch.contactInfo?.phone,
-        }));
-        setLocations(adaptedLocations);
-        // Store original state for diff computation
-        originalBranchesRef.current = adaptedLocations.map(loc => ({ ...loc }));
-      },
-      onError: () => { },
-    },
-  );
-
-  useEffect(() => {
-    if (!isEdit) {
-      setFullName(undefined);
-      setGender(undefined);
-      setPhoneNo(undefined);
-      setBio(undefined);
-    }
-  }, [isEdit]);
-
-  const [fullName, setFullName] = useState(
-    editUser?.data?.user?.fullName || '',
-  );
-
+  // State for locations (branches for chefs)
   const [locations, setLocations] = useState([]);
 
-  const [phoneNo, setPhoneNo] = useState(editUser?.data?.user?.phone || '');
+  const [fullName, setFullName] = useState('');
   const [isPhoneValid, setIsPhoneValid] = useState(false);
   const phoneInputRef = useRef(null);
-  const [gender, setGender] = useState(editUser?.data?.user?.gender || '');
-  const [bio, setBio] = useState(editUser?.data?.user?.bio || '');
+  const [phoneNo, setPhoneNo] = useState('');
+  const [gender, setGender] = useState('');
+  const [bio, setBio] = useState('');
   const [fullNameInputStyle, setFullNameInputStyle] = useState(BlurredStyle);
   const [phoneNoInputStyle, setPhoneNoInputStyle] = useState(BlurredStyle);
   const [bioStyle, setBioStyle] = useState(BlurredStyle);
-  const [selectImage, setSelectImage] = useState(editUser?.data?.user?.avatar);
+  const [selectImage, setSelectImage] = useState(null);
   const [isPhotoUploading, setisPhotoUploading] = useState(false);
   const [phoneError, setPhoneError] = useState('');
 
@@ -258,8 +205,8 @@ const SetUpProfile = props => {
       name: 'profile_' + Date.now() + '.jpg',
     });
 
-    // Use public endpoint for registration, authenticated endpoint for edit
-    const uploadEndpoint = isEdit ? '/messages/upload-image' : '/user/upload-profile-picture';
+    // Use public endpoint for registration
+    const uploadEndpoint = '/user/upload-profile-picture';
 
     const response = await request.post(uploadEndpoint, formData, {
       headers: {
@@ -325,128 +272,7 @@ const SetUpProfile = props => {
     });
   };
 
-  const onPressUpdate = async () => {
-    const data = {};
 
-    if (fullName) data.fullName = fullName;
-    if (phoneNo) data.phone = phoneNo;
-    if (bio) data.bio = bio;
-    if (gender) data.gender = gender;
-    if (email) data.email = email;
-    if (password) data.password = password;
-    if (type) data.type = type;
-    if (selectImage) data.avatar = selectImage;
-
-    setisUpdating(true);
-
-    try {
-      // 1. Update user profile data
-      await request.patch('/user', { ...data });
-
-      // 2. Handle branch operations for chefs (diff-based CRUD)
-      const userType = editUser?.data?.user?.type;
-      if (userType === 'chef') {
-        const originalBranches = originalBranchesRef.current;
-        const currentBranches = locations;
-        const originalIds = new Set(originalBranches.map(b => b._id).filter(Boolean));
-        const currentIds = new Set(currentBranches.map(b => b._id).filter(Boolean));
-
-        // Compute deleted branches (in original but not in current)
-        const deletedBranchIds = [...originalIds].filter(id => !currentIds.has(id));
-
-        // Compute new branches (no _id means newly added)
-        const newBranches = currentBranches.filter(b => !b._id);
-
-        // Compute edited branches (has _id and fields changed)
-        const editedBranches = currentBranches.filter(b => {
-          if (!b._id) return false;
-          const original = originalBranches.find(o => o._id === b._id);
-          if (!original) return false;
-          // Check if any field changed
-          return (
-            b.description !== original.description ||
-            b.latitude !== original.latitude ||
-            b.longitude !== original.longitude ||
-            b.city !== original.city ||
-            b.country !== original.country ||
-            b.branchName !== original.branchName ||
-            b.contactPhone !== original.contactPhone
-          );
-        });
-
-        // Execute delete operations
-        for (const branchId of deletedBranchIds) {
-          try {
-            await branchService.deleteBranch(branchId);
-          } catch (error) {
-            console.log('Failed to delete branch:', branchId, error);
-          }
-        }
-
-        // Execute add operations
-        for (let i = 0; i < newBranches.length; i++) {
-          const loc = newBranches[i];
-          try {
-            await branchService.addBranch({
-              branchName: loc.branchName || `Branch ${currentBranches.length - newBranches.length + i + 1}`,
-              addressDetails: {
-                city: loc.city || '',
-                country: loc.country || 'Egypt',
-                formattedAddress: loc.description,
-              },
-              location: {
-                lat: loc.latitude,
-                long: loc.longitude,
-              },
-              contactInfo: {
-                phone: loc.contactPhone || phoneNo,
-              },
-              isPrimary: currentBranches.length === 1 && i === 0, // Primary if only branch
-            });
-          } catch (error) {
-            console.log('Failed to add branch:', error);
-          }
-        }
-
-        // Execute edit operations
-        for (const loc of editedBranches) {
-          try {
-            await branchService.editBranch(loc._id, {
-              branchName: loc.branchName,
-              addressDetails: {
-                city: loc.city || '',
-                country: loc.country || 'Egypt',
-                formattedAddress: loc.description,
-              },
-              location: {
-                lat: loc.latitude,
-                long: loc.longitude,
-              },
-              contactInfo: {
-                phone: loc.contactPhone,
-              },
-            });
-          } catch (error) {
-            console.log('Failed to edit branch:', loc._id, error);
-          }
-        }
-      }
-
-      // 3. Invalidate queries and navigate
-      await queryClient.invalidateQueries({ queryKey: 'user' });
-      await queryClient.invalidateQueries({
-        queryKey: ['chefBranches', editUser?.data?.user?._id],
-      });
-      queryClient.invalidateQueries({ queryKey: 'stories_following' });
-      queryClient.invalidateQueries({ queryKey: 'stories' });
-
-      navigation.navigate(TabNav.Profile);
-    } catch (err) {
-      showErrorToast(strings.error, err[Object.keys(err)?.[0]]);
-    } finally {
-      setisUpdating(false);
-    }
-  };
 
   const onPressContinue = () => {
     handleSubmit();
@@ -503,9 +329,8 @@ const SetUpProfile = props => {
     setLocations(l => l.filter((_, index) => index !== indexToDelete));
   };
 
-  // Get user type for display
-  const userType = editUser?.data?.user?.type || type;
-  const showBranches = userType === 'chef' || type !== 'user';
+  // Get user type for display (registration only - type from params)
+  const showBranches = type === 'chef';
 
   return (
     <ZSafeAreaView>
@@ -565,7 +390,7 @@ const SetUpProfile = props => {
             </View>
 
             <ZInput
-              placeHolder={userType === 'user' ? strings.fullName : (strings.fullNameChef || strings.fullName)}
+              placeHolder={type === 'user' ? strings.fullName : (strings.fullNameChef || strings.fullName)}
               keyboard
               insideLeftIcon={() => (
                 <EntypoIcon
@@ -724,40 +549,28 @@ const SetUpProfile = props => {
         </View>
       </ZKeyBoardAvoidWrapper>
 
-      {/* Action Button */}
-      {isEdit ? (
+      {/* Action Button - Registration only */}
+      <View style={localStyles.btnContainer}>
         <ZButton
+          title={strings.continue}
           textType={'b18'}
-          disabled={isPhotoUploading}
+          disabled={
+            !fullName ||
+            !phoneNo ||
+            (!gender && type === 'user') ||
+            (!bio && type !== 'user') ||
+            !email ||
+            !password ||
+            !type ||
+            (!locations.length && type !== 'user') ||
+            isPhotoUploading
+          }
           color={colors.white}
-          isLoading={isPhotoUploading || isUpdating}
-          title={strings.update}
-          onPress={onPressUpdate}
-          containerStyle={localStyles.updateButton}
+          isLoading={isPhotoUploading}
+          containerStyle={localStyles.continueButton}
+          onPress={onPressContinue}
         />
-      ) : (
-        <View style={localStyles.btnContainer}>
-          <ZButton
-            title={strings.continue}
-            textType={'b18'}
-            disabled={
-              !fullName ||
-              !phoneNo ||
-              (!gender && type === 'user') ||
-              (!bio && type !== 'user') ||
-              !email ||
-              !password ||
-              !type ||
-              (!locations.length && type !== 'user') ||
-              isPhotoUploading
-            }
-            color={colors.white}
-            isLoading={isPhotoUploading}
-            containerStyle={localStyles.continueButton}
-            onPress={onPressContinue}
-          />
-        </View>
-      )}
+      </View>
       <ProfilePicture
         onPressCamera={onPressCamera}
         onPressGallery={onPressGallery}

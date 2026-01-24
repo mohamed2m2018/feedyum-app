@@ -25,6 +25,7 @@ import Security from '../containers/TabBar/profile/Security';
 import Language from '../containers/TabBar/profile/Language';
 import Setting from '../containers/TabBar/profile/Setting';
 import EditProfile from '../containers/TabBar/profile/EditProfile';
+import EditProfileScreen from '../containers/TabBar/profile/EditProfileScreen';
 import Sound from '../containers/TabBar/home/Sound';
 import Report from '../containers/TabBar/home/Report';
 import ProfileDetail from '../containers/TabBar/home/userDetail/ProfileDetail';
@@ -110,6 +111,7 @@ export const StackRoute = {
   Security,
   Language,
   EditProfile,
+  EditProfileScreen,
   Sound,
   Location,
   Report,

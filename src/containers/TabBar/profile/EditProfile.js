@@ -40,7 +40,7 @@ export default function EditProfile({ navigation }) {
   };
 
   const onPressEditProfile = () =>
-    navigation.navigate(StackNav.SetUpProfile, { title: getEditProfileTitle() });
+    navigation.navigate(StackNav.EditProfileScreen);
 
   // Premium card for info item
   const RenderInfoItem = memo(({ item }) => {

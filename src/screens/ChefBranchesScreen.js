@@ -95,6 +95,7 @@ const ChefBranchesScreen = () => {
                         long: parseFloat(locationData.long || locationData.longitude),
                         phoneNumber: locationData.phoneNumber || '0000000000',
                         countryCode: locationData.countryCode || '+20',
+                        deliveryRadius: locationData.deliveryRadius || 20,
                     });
 
                     // Invalidate and refetch
@@ -132,6 +133,7 @@ const ChefBranchesScreen = () => {
                         long: parseFloat(locationData.long || locationData.longitude),
                         phoneNumber: locationData.phoneNumber || branch.contactInfo?.phoneNumber || '0000000000',
                         countryCode: locationData.countryCode || branch.contactInfo?.countryCode || '+20',
+                        deliveryRadius: locationData.deliveryRadius || branch.deliveryRadius || 20,
                     });
 
                     queryClient.invalidateQueries('myBranches');

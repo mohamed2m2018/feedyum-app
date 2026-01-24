@@ -48,7 +48,7 @@ export default Setting = ({ navigation }) => {
       title: getEditProfileTitle(),
       header: getEditProfileTitle(),
       icon: 'person-outline',
-      route: StackNav.SetUpProfile,
+      route: StackNav.EditProfileScreen,
     },
     {
       id: 2,
