@@ -43,6 +43,7 @@ import FeaturedReelsSection from '../../../components/common/FeaturedReelsSectio
 import FeaturedReviewsSection from '../../../components/common/FeaturedReviewsSection';
 import FollowButton from '../../../components/common/FollowButton';
 import Locations from '../../../components/models/Locations';
+import ShareOptionsSheet from '../../../components/models/ShareOptionsSheet';
 
 const ChefMenu = () => {
   const colors = useSelector(state => state.theme.theme);
@@ -57,6 +58,7 @@ const ChefMenu = () => {
   const flatListRef = useRef(null);
   const searchInputRef = useRef(null);
   const locationsSheetRef = useRef(null);
+  const shareSheetRef = useRef(null);
   const hasAttemptedScrollRef = useRef(false);
   const [scrollRetryCount, setScrollRetryCount] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
@@ -949,7 +951,23 @@ const ChefMenu = () => {
 
   return (
     <ZSafeAreaView>
-      <ZHeader title={menuData?.chef?.fullName || chefName || strings.menu} showBack />
+      <ZHeader
+        title={menuData?.chef?.fullName || chefName || strings.menu}
+        showBack
+        rightIcon={
+          <TouchableOpacity
+            onPress={() => shareSheetRef.current?.show()}
+            style={{ padding: moderateScale(8) }}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Ionicons
+              name="share-social-outline"
+              size={moderateScale(24)}
+              color={colors.textColor}
+            />
+          </TouchableOpacity>
+        }
+      />
 
       {/* Search Bar - Outside FlatList to prevent keyboard dismissal */}
       {menuData?.dishes?.length > 0 && (
@@ -1058,6 +1076,19 @@ const ChefMenu = () => {
             }))
         }
         onClose={() => { }}
+      />
+
+      {/* Share Menu Sheet */}
+      <ShareOptionsSheet
+        SheetRef={shareSheetRef}
+        contentType="chefMenu"
+        contentId={chefId}
+        contentData={{
+          title: menuData?.chef?.fullName || chefName,
+          name: menuData?.chef?.fullName || chefName,
+          avatar: menuData?.chef?.avatar,
+          description: menuData?.chef?.bio,
+        }}
       />
     </ZSafeAreaView>
   );
