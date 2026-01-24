@@ -85,47 +85,82 @@ const AttachedDishesDisplay = ({
 
 
 
-      {/* Dish Info Overlay */}
-      <View style={localStyles.dishInfoOverlay}>
-        <View style={localStyles.dishInfo}>
+      {/* Dish Info Overlay - compact shows glassmorphism overlay with name & price */}
+      {compact ? (
+        // Premium glassmorphism overlay for compact cards
+        <View style={localStyles.compactOverlay}>
+          {/* Gradient background effect */}
+          <View style={localStyles.compactGradientBg} />
+
+          {/* Dish name with elegant truncation */}
           <ZText
-            type={compact ? "B12" : "B14"}
+            type="B10"
             color={colors.white}
             numberOfLines={1}
-            style={localStyles.dishName}>
+            style={localStyles.compactDishName}>
             {dish.name}
           </ZText>
-          <StarRating
-            rating={Number.isFinite(dish?.average_rating)
-              ? dish.average_rating
-              : (Number.isFinite(dish?.rating) ? dish.rating : 0)}
-            size={compact ? 'small' : 'medium'}
-            showText={false}
-            showCount={false}
-            showWhenNoRating={true}
-            style={{ marginBottom: moderateScale(2) }}
-          />
 
+          {/* Price badge */}
           {showPrices && (
-            <View style={localStyles.priceContainer}>
+            <View style={localStyles.compactPriceBadge}>
               <Ionicons
                 name="pricetag"
-                size={moderateScale(compact ? 10 : 12)}
-                color={colors.white}
+                size={moderateScale(8)}
+                color="#FFD700"
               />
               <ZText
-                type={compact ? "B10" : "B12"}
+                type="B10"
                 color={colors.white}
-                style={localStyles.priceText}>
-                {strings.currency} {dish.price}
+                style={localStyles.compactPriceText}>
+                {dish.price}
               </ZText>
             </View>
           )}
         </View>
-      </View>
+      ) : (
+        // Full overlay for non-compact cards
+        <View style={localStyles.dishInfoOverlay}>
+          <View style={localStyles.dishInfo}>
+            <ZText
+              type="B14"
+              color={colors.white}
+              numberOfLines={1}
+              style={localStyles.dishName}>
+              {dish.name}
+            </ZText>
+            <StarRating
+              rating={Number.isFinite(dish?.average_rating)
+                ? dish.average_rating
+                : (Number.isFinite(dish?.rating) ? dish.rating : 0)}
+              size="medium"
+              showText={false}
+              showCount={false}
+              showWhenNoRating={true}
+              style={{ marginBottom: moderateScale(2) }}
+            />
 
-      {/* Shine Effect */}
-      <View style={localStyles.shineEffect} />
+            {showPrices && (
+              <View style={localStyles.priceContainer}>
+                <Ionicons
+                  name="pricetag"
+                  size={moderateScale(12)}
+                  color={colors.white}
+                />
+                <ZText
+                  type="B12"
+                  color={colors.white}
+                  style={localStyles.priceText}>
+                  {strings.currency} {dish.price}
+                </ZText>
+              </View>
+            )}
+          </View>
+        </View>
+      )}
+
+      {/* Shine Effect - premium glow for compact */}
+      <View style={compact ? localStyles.compactShineEffect : localStyles.shineEffect} />
     </TouchableOpacity>
   );
 
@@ -133,10 +168,14 @@ const AttachedDishesDisplay = ({
     <View style={[localStyles.container, containerStyle]}>
       {/* Dishes Display */}
       {compact ? (
-        // Vertical column for compact mode (reels) - no header to save space
-        <View style={localStyles.verticalDishesContainer}>
+        // Vertical scrollable column for compact mode (reels) - smaller cards
+        <ScrollView
+          style={localStyles.compactScrollContainer}
+          contentContainerStyle={localStyles.verticalDishesContainer}
+          showsVerticalScrollIndicator={false}
+          nestedScrollEnabled={true}>
           {attachedDishes.slice(0, 3).map((dish, index) => renderDish(dish, index))}
-        </View>
+        </ScrollView>
       ) : (
         // Horizontal scroll for full mode with header
         <>
@@ -199,8 +238,12 @@ const localStyles = StyleSheet.create({
   dishesContainer: {
     paddingRight: moderateScale(16),
   },
+  compactScrollContainer: {
+    maxHeight: moderateScale(260),
+  },
   verticalDishesContainer: {
     alignItems: 'flex-end',
+    paddingVertical: moderateScale(4),
   },
   dishCard: {
     width: moderateScale(120),
@@ -222,21 +265,22 @@ const localStyles = StyleSheet.create({
     elevation: 10,
   },
   compactDishCard: {
-    width: moderateScale(80),
-    height: moderateScale(90),
-    borderRadius: moderateScale(14),
+    width: moderateScale(75),
+    height: moderateScale(85),
+    borderRadius: moderateScale(12),
     backgroundColor: '#1a1a1a',
-    marginBottom: moderateScale(8),
+    marginBottom: moderateScale(6),
     borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.25)',
+    borderColor: 'rgba(255, 255, 255, 0.35)',
     overflow: 'hidden',
     position: 'relative',
+    // Premium shadow with warm glow
     shadowColor: '#FF6B6B',
     shadowOffset: {
       width: 0,
       height: 4,
     },
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.35,
     shadowRadius: 8,
     elevation: 8,
   },
@@ -299,6 +343,67 @@ const localStyles = StyleSheet.create({
     height: moderateScale(8),
     borderRadius: moderateScale(4),
     backgroundColor: 'rgba(255, 255, 255, 0.6)',
+  },
+  // ===== COMPACT CARD STYLES - Premium Glassmorphism Design =====
+  compactOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingVertical: moderateScale(4),
+    paddingHorizontal: moderateScale(5),
+    borderBottomLeftRadius: moderateScale(10),
+    borderBottomRightRadius: moderateScale(10),
+    overflow: 'hidden',
+  },
+  compactGradientBg: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    // Glassmorphism effect simulation
+    borderTopWidth: 0.5,
+    borderTopColor: 'rgba(255, 255, 255, 0.15)',
+  },
+  compactDishName: {
+    fontWeight: '700',
+    textShadowColor: 'rgba(0, 0, 0, 0.9)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+    marginBottom: moderateScale(2),
+    zIndex: 1,
+  },
+  compactPriceBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 107, 107, 0.25)',
+    paddingHorizontal: moderateScale(4),
+    paddingVertical: moderateScale(2),
+    borderRadius: moderateScale(6),
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 215, 0, 0.4)',
+    zIndex: 1,
+  },
+  compactPriceText: {
+    marginLeft: moderateScale(3),
+    fontWeight: '700',
+    color: '#FFD700',
+    textShadowColor: 'rgba(0, 0, 0, 0.7)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 1,
+  },
+  compactShineEffect: {
+    position: 'absolute',
+    top: moderateScale(5),
+    right: moderateScale(5),
+    width: moderateScale(6),
+    height: moderateScale(6),
+    borderRadius: moderateScale(3),
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    // Premium glow effect
+    shadowColor: '#FFFFFF',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 3,
   },
 });
 

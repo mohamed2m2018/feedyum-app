@@ -64,6 +64,7 @@ export default function PostDetail() {
   const { currentScreen: previousScreen } = useScreen();
   const postDataToBeEdited = route?.params?.postDataToBeEdited;
   const isImage = route.params?.isImage;
+  const mediaData = route.params?.mediaData; // Pre-captured media from modal
   const [mediaIsEdited, setmediaIsEdited] = useState(false);
   const {
     handleDataToBeSent,
@@ -74,19 +75,44 @@ export default function PostDetail() {
   } = useBackgroundUpload();
   useEffect(() => {
     if (postDataToBeEdited) {
-      setpostedData(postDataToBeEdited);
-      handleEditedData({
+      // Map backend 'dishes' field to frontend 'attachedDishes'
+      const editData = {
         ...postDataToBeEdited,
-        isImage: isImage || postDataToBeEdited.avatarUri,
+        attachedDishes: postDataToBeEdited.dishes || postDataToBeEdited.attachedDishes || [],
+      };
+      setpostedData(editData);
+      handleEditedData({
+        ...editData,
+        isImage: isImage || editData.avatarUri,
         isEdit: true,
         mediaIsEdited,
       });
 
       setlocalUri(
-        postDataToBeEdited?.poster || postDataToBeEdited?.avatarUri || '',
+        editData?.poster || editData?.avatarUri || '',
       );
     }
   }, [postDataToBeEdited, mediaIsEdited]);
+
+  // Handle pre-captured media from modal (mediaData passed via navigation)
+  useEffect(() => {
+    if (mediaData && mediaData.path) {
+      // Process the media
+      if (mediaData.duration && mediaData.duration > 60000) {
+        showErrorToast(strings.error, strings.maxDuration);
+        return;
+      }
+      setlocalUri(mediaData.path);
+      const isMediaImage = !mediaData.duration;
+      uploadData(
+        mediaData,
+        setisPhotoUploading,
+        setlocalUri,
+        isMediaImage,
+        false,
+      );
+    }
+  }, [mediaData]);
   const { data: queryResult } = useQuery('user', () => request.get('/user'), {
     retry: 1,
     onError: err => {
@@ -190,11 +216,13 @@ export default function PostDetail() {
       }
     }
 
+    // For chef users: require title, caption, phone, locations (skip locations check in edit mode)
+    const isEditMode = !!postDataToBeEdited;
     const validationChef =
       !postedData?.title ||
       !postedData?.caption ||
       (!user?.phone && !phone) ||
-      !locations.length;
+      (!isEditMode && !locations.length); // Skip locations check in edit mode
 
     // For regular users: require restaurant and dish, but not phone/locations
     const validationUser =
@@ -221,14 +249,23 @@ export default function PostDetail() {
 
 
     // Derive categories from attached dishes (fallback to backend default if none)
+    // Extract category IDs, handling both ObjectId and object references
     const derivedCategories = Array.from(
       new Set(
         (postedData?.attachedDishes || [])
-          .flatMap(dish =>
-            Array.isArray(dish?.categories) && dish.categories.length
+          .flatMap(dish => {
+            const cats = Array.isArray(dish?.categories) && dish.categories.length
               ? dish.categories
-              : [dish?.category],
-          )
+              : [dish?.category];
+            // Extract _id if it's an object, or use value if it looks like ObjectId
+            return cats.map(cat => {
+              if (!cat) return null;
+              if (typeof cat === 'object' && cat._id) return cat._id;
+              // Check if it's a valid ObjectId string (24 hex chars)
+              if (typeof cat === 'string' && /^[a-fA-F0-9]{24}$/.test(cat)) return cat;
+              return null; // Skip plain string names like "Burger"
+            });
+          })
           .filter(Boolean),
       ),
     );
@@ -285,7 +322,12 @@ export default function PostDetail() {
     setisFormFilled(true);
 
     setTimeout(() => {
-      navigation.navigate(StackNav.TabBar, { screen: TabNav.ForYou });
+      // Navigate chefs to their profile, regular users to ForYou
+      if (user?.type === 'chef') {
+        navigation.navigate(StackNav.TabBar, { screen: TabNav.ProfileTab });
+      } else {
+        navigation.navigate(StackNav.TabBar, { screen: TabNav.ForYou });
+      }
     }, 100);
   };
 
@@ -424,6 +466,31 @@ export default function PostDetail() {
         mediaType: 'image',
         cropping: true,
         compressImageQuality: 1,
+      });
+      handleMedia(res);
+    } catch (err) {
+      const message = String(err?.message || err?.toString?.() || '');
+      const code = err?.code;
+      const permissionError =
+        code === 'E_PERMISSION_MISSING' ||
+        message.includes('permission') ||
+        message.includes('denied') ||
+        message.includes('not authorized');
+      if (permissionError) {
+        showPermissionAlert('Photo Library');
+      } else if (code !== 'E_PICKER_CANCELLED') {
+
+      }
+    }
+  };
+
+  // Pick any media type (photos or videos) from gallery
+  const handlePickAny = async () => {
+    try {
+      const res = await ImagePicker.openPicker({
+        mediaType: 'any',
+        compressImageQuality: 1,
+        compressVideoPreset: 'MediumQuality',
       });
       handleMedia(res);
     } catch (err) {
@@ -641,6 +708,7 @@ export default function PostDetail() {
 
 
             {user?.type === 'chef' &&
+              !postDataToBeEdited &&
               !branchesData?.branches?.length && (
                 <>
                   <ZText style={{ marginVertical: 10 }} type={'B20'}>

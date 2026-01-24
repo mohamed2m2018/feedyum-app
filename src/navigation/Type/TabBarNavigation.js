@@ -1,9 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, View, Alert, Linking, Platform } from 'react-native';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as SplashScreen from 'expo-splash-screen';
+import ImagePicker from 'react-native-image-crop-picker';
+import { PERMISSIONS, request as requestPermission, check as checkPermission, RESULTS } from 'react-native-permissions';
 
 // Local import
 import { TabRoute } from '../NavigationRoutes';
@@ -32,7 +34,7 @@ import {
   ChefDashboard_Light,
 } from '../../assets/svgs';
 import { styles } from '../../themes';
-import ProfilePicture from '../../components/models/ProfilePicture';
+import MediaSelectionModal from '../../components/modals/MediaSelectionModal';
 import request from '../../api/request';
 import { useQuery } from 'react-query';
 import { useHandleAuth } from '../../utils/useHandleAuth';
@@ -46,7 +48,7 @@ export default function TabBarNavigation({ route, navigation }) {
   const colors = useSelector(state => state.theme.theme);
   const insets = useSafeAreaInsets();
   const Tab = createMaterialTopTabNavigator();
-  const ProfilePictureSheetRef = useRef();
+  const [showAddPostModal, setShowAddPostModal] = useState(false);
   const { data, isLoading } = useQuery('user', () => request.get('/user'), { retry: 1 });
   const { handleAuthToast } = useHandleAuth();
   const { currentScreen: previousScreen } = useScreen();
@@ -165,17 +167,84 @@ export default function TabBarNavigation({ route, navigation }) {
     }
     const ok = await verifyChefCanPost();
     if (!ok) return;
-    ProfilePictureSheetRef?.current?.show();
+    setShowAddPostModal(true);
   };
 
-  const onPressPost = async isImage => {
-    const ok = await verifyChefCanPost();
-    if (!ok) {
-      ProfilePictureSheetRef?.current?.hide();
+  // Permission helpers
+  const requestCameraPermission = async () => {
+    try {
+      const permission = Platform.OS === 'ios' ? PERMISSIONS.IOS.CAMERA : PERMISSIONS.ANDROID.CAMERA;
+      const currentStatus = await checkPermission(permission);
+      if (currentStatus === RESULTS.GRANTED) return true;
+      if (currentStatus === RESULTS.DENIED) {
+        const result = await requestPermission(permission);
+        return result === RESULTS.GRANTED;
+      }
+      return false;
+    } catch { return false; }
+  };
+
+  const showPermissionAlert = (type) => {
+    Alert.alert(
+      strings.permissionRequired || 'Permission Required',
+      `${type} access is required. Please enable it in Settings.`,
+      [
+        { text: strings.cancel || 'Cancel', style: 'cancel' },
+        { text: strings.settings || 'Settings', onPress: () => Linking.openSettings() },
+      ]
+    );
+  };
+
+  // Callbacks for MediaSelectionModal - open picker first, navigate with media
+  const handleRecordVideo = async () => {
+    setShowAddPostModal(false);
+    const hasPermission = await requestCameraPermission();
+    if (!hasPermission) {
+      showPermissionAlert('Camera');
       return;
     }
-    ProfilePictureSheetRef?.current?.hide();
-    navigation.navigate(StackNav.PostDetail, { isImage });
+    try {
+      const result = await ImagePicker.openCamera({
+        mediaType: 'video',
+        compressVideoPreset: 'MediumQuality',
+      });
+      navigation.navigate({ name: StackNav.PostDetail, params: { isImage: false, mediaData: result }, merge: true });
+    } catch (err) {
+      // User cancelled or error - do nothing
+    }
+  };
+
+  const handleTakePhoto = async () => {
+    setShowAddPostModal(false);
+    const hasPermission = await requestCameraPermission();
+    if (!hasPermission) {
+      showPermissionAlert('Camera');
+      return;
+    }
+    try {
+      const result = await ImagePicker.openCamera({
+        cropping: true,
+        compressImageQuality: 1,
+      });
+      navigation.navigate({ name: StackNav.PostDetail, params: { isImage: true, mediaData: result }, merge: true });
+    } catch (err) {
+      // User cancelled or error - do nothing
+    }
+  };
+
+  const handlePickFromGallery = async () => {
+    setShowAddPostModal(false);
+    try {
+      const result = await ImagePicker.openPicker({
+        mediaType: 'any',
+        compressImageQuality: 1,
+        compressVideoPreset: 'MediumQuality',
+      });
+      const isImage = !result.duration;
+      navigation.navigate({ name: StackNav.PostDetail, params: { isImage, mediaData: result }, merge: true });
+    } catch (err) {
+      // User cancelled or error - do nothing
+    }
   };
 
   return (
@@ -285,17 +354,6 @@ export default function TabBarNavigation({ route, navigation }) {
                 onPress={onPressAdd}
                 style={localStyles.tabViewContainer}>
                 <Add_Icon />
-                <ProfilePicture
-                  SheetRef={ProfilePictureSheetRef}
-                  post={true}
-                  live={false}
-                  title={
-                    data?.data?.user?.type === 'user'
-                      ? strings.chooseUser
-                      : strings.choose
-                  }
-                  onPressCamera={onPressPost}
-                />
               </TouchableOpacity>
             ),
           }}
@@ -373,6 +431,15 @@ export default function TabBarNavigation({ route, navigation }) {
           onClose={() => setModalState({ visible: false, title: '', message: '' })}
         />
       )}
+      <MediaSelectionModal
+        visible={showAddPostModal}
+        onClose={() => setShowAddPostModal(false)}
+        onRecordVideo={handleRecordVideo}
+        onTakePhoto={handleTakePhoto}
+        onPickFromGallery={handlePickFromGallery}
+        title={strings.createNewPost}
+        subtitle={strings.chooseHowToCreatePost}
+      />
     </>
   );
 }

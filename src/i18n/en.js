@@ -249,6 +249,8 @@ export default {
   live: 'Live',
   choose: 'Add New Post',
   chooseUser: 'Add New Post',
+  createNewPost: 'Create New Post',
+  chooseHowToCreatePost: 'Choose how you want to create your post',
   doPost: 'Post',
   checkLocations: 'Click to check Delivery Locations',
   selectCover: 'Select Cover',

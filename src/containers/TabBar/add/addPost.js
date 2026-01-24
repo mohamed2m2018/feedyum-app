@@ -1,8 +1,11 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { Alert, Linking, Platform } from 'react-native';
 import strings from '../../../i18n/strings';
 import { useQuery } from 'react-query';
 import request from '../../../api/request';
-import ProfilePicture from '../../../components/models/ProfilePicture';
+import MediaSelectionModal from '../../../components/modals/MediaSelectionModal';
+import ImagePicker from 'react-native-image-crop-picker';
+import { PERMISSIONS, request as requestPermission, check as checkPermission, RESULTS } from 'react-native-permissions';
 import {
   useFocusEffect,
   useIsFocused,
@@ -18,27 +21,97 @@ export default function AddPost() {
   const navigation = useNavigation();
   const isFocused = useIsFocused();
   const color = useSelector(state => state.theme.theme);
-  const ProfilePictureSheetRef = React.createRef();
   const { data } = useQuery('user', () => request.get('/user'));
   const user = data?.data?.user;
-  const [canShowSheet, setCanShowSheet] = React.useState(false);
-  const [modalState, setModalState] = React.useState({ visible: false, title: '', message: '' });
-  const onPressPost = isImage => {
-    ProfilePictureSheetRef?.current?.hide();
-    navigation.navigate(StackNav.PostDetail, { isImage });
-  };
+  const [showModal, setShowModal] = useState(false);
+  const [modalState, setModalState] = useState({ visible: false, title: '', message: '' });
 
   const { handleAuthToast, isGuest } = useHandleAuth();
+
+  // Permission helpers
+  const requestCameraPermission = async () => {
+    try {
+      const permission = Platform.OS === 'ios' ? PERMISSIONS.IOS.CAMERA : PERMISSIONS.ANDROID.CAMERA;
+      const currentStatus = await checkPermission(permission);
+      if (currentStatus === RESULTS.GRANTED) return true;
+      if (currentStatus === RESULTS.DENIED) {
+        const result = await requestPermission(permission);
+        return result === RESULTS.GRANTED;
+      }
+      return false;
+    } catch { return false; }
+  };
+
+  const showPermissionAlert = (type) => {
+    Alert.alert(
+      strings.permissionRequired || 'Permission Required',
+      `${type} access is required. Please enable it in Settings.`,
+      [
+        { text: strings.cancel || 'Cancel', style: 'cancel' },
+        { text: strings.settings || 'Settings', onPress: () => Linking.openSettings() },
+      ]
+    );
+  };
+
+  // Callbacks for MediaSelectionModal - open picker first, navigate with media
+  const handleRecordVideo = async () => {
+    setShowModal(false);
+    const hasPermission = await requestCameraPermission();
+    if (!hasPermission) {
+      showPermissionAlert('Camera');
+      return;
+    }
+    try {
+      const result = await ImagePicker.openCamera({
+        mediaType: 'video',
+        compressVideoPreset: 'MediumQuality',
+      });
+      navigation.navigate({ name: StackNav.PostDetail, params: { isImage: false, mediaData: result }, merge: true });
+    } catch (err) {
+      // User cancelled or error - do nothing
+    }
+  };
+
+  const handleTakePhoto = async () => {
+    setShowModal(false);
+    const hasPermission = await requestCameraPermission();
+    if (!hasPermission) {
+      showPermissionAlert('Camera');
+      return;
+    }
+    try {
+      const result = await ImagePicker.openCamera({
+        cropping: true,
+        compressImageQuality: 1,
+      });
+      navigation.navigate({ name: StackNav.PostDetail, params: { isImage: true, mediaData: result }, merge: true });
+    } catch (err) {
+      // User cancelled or error - do nothing
+    }
+  };
+
+  const handlePickFromGallery = async () => {
+    setShowModal(false);
+    try {
+      const result = await ImagePicker.openPicker({
+        mediaType: 'any',
+        compressImageQuality: 1,
+        compressVideoPreset: 'MediumQuality',
+      });
+      const isImage = !result.duration;
+      navigation.navigate({ name: StackNav.PostDetail, params: { isImage, mediaData: result }, merge: true });
+    } catch (err) {
+      // User cancelled or error - do nothing
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
     async function verifyChefCanPost() {
-      // Guests handled separately
       if (!isFocused || isGuest) return;
 
-      // Non-chef users can proceed
       if (user?.type !== 'chef') {
-        if (!cancelled) setCanShowSheet(true);
+        if (!cancelled) setShowModal(true);
         return;
       }
 
@@ -46,7 +119,7 @@ export default function AddPost() {
         const menuResponse = await request.get(`/menus/chef/${user?._id}`);
         const menuId = menuResponse?.data?._id;
         if (!menuId) {
-          if (!cancelled) setCanShowSheet(false);
+          if (!cancelled) setShowModal(false);
           setModalState({
             visible: true,
             title: strings.createMenuFirst,
@@ -58,7 +131,7 @@ export default function AddPost() {
         const dishesResponse = await request.get(`/dishes/menu/${menuId}`);
         const dishes = dishesResponse?.data || [];
         if (!Array.isArray(dishes) || dishes.length === 0) {
-          if (!cancelled) setCanShowSheet(false);
+          if (!cancelled) setShowModal(false);
           setModalState({
             visible: true,
             title: strings.noDishesFoundTitle,
@@ -67,9 +140,9 @@ export default function AddPost() {
           return;
         }
 
-        if (!cancelled) setCanShowSheet(true);
+        if (!cancelled) setShowModal(true);
       } catch (e) {
-        if (!cancelled) setCanShowSheet(false);
+        if (!cancelled) setShowModal(false);
         setModalState({
           visible: true,
           title: strings.noDishesFoundTitle,
@@ -83,12 +156,6 @@ export default function AddPost() {
       cancelled = true;
     };
   }, [isFocused, isGuest, user?._id, user?.type]);
-
-  useEffect(() => {
-    if (ProfilePictureSheetRef.current && isFocused && !isGuest && canShowSheet) {
-      ProfilePictureSheetRef?.current?.show?.();
-    }
-  }, [isFocused, isGuest, canShowSheet]);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -104,17 +171,14 @@ export default function AddPost() {
         color={color.primary}
       />
       {!isGuest && (
-        <ProfilePicture
-          SheetRef={ProfilePictureSheetRef}
-          post={true}
-          live={false}
-          isFromSwipe
-          title={
-            data?.data?.user?.type === 'user'
-              ? strings.chooseUser
-              : strings.choose
-          }
-          onPressCamera={onPressPost}
+        <MediaSelectionModal
+          visible={showModal}
+          onClose={() => setShowModal(false)}
+          onRecordVideo={handleRecordVideo}
+          onTakePhoto={handleTakePhoto}
+          onPickFromGallery={handlePickFromGallery}
+          title={strings.createNewPost}
+          subtitle={strings.chooseHowToCreatePost}
         />
       )}
       {modalState.visible && (

@@ -247,6 +247,8 @@ export default {
   live: 'مباشر',
   choose: 'إضافة منشور جديد',
   chooseUser: 'إضافة منشور جديد',
+  createNewPost: 'إنشاء منشور جديد',
+  chooseHowToCreatePost: 'اختر كيف تريد إنشاء منشورك',
   selectCover: 'اختر غلاف',
   mention: 'إشارة',
   tagPeople: 'وضع وسم على الأشخاص',

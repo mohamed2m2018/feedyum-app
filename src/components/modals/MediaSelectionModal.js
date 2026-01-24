@@ -7,6 +7,7 @@ import {
     Animated,
     Dimensions,
     Platform,
+    ActivityIndicator,
 } from 'react-native';
 import { useSelector } from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -22,12 +23,16 @@ const MediaSelectionModal = ({
     onRecordVideo,
     onTakePhoto,
     onPickFromGallery,
+    title,
+    subtitle,
 }) => {
     const colors = useSelector(state => state.theme.theme);
     const [slideAnim] = useState(new Animated.Value(screenHeight));
+    const [isProcessing, setIsProcessing] = useState(false);
 
     useEffect(() => {
         if (visible) {
+            setIsProcessing(false);
             Animated.spring(slideAnim, {
                 toValue: 0,
                 useNativeDriver: true,
@@ -43,20 +48,22 @@ const MediaSelectionModal = ({
         }
     }, [visible]);
 
-    const handleAction = (action) => {
-        // Close modal first then trigger action to prevent modal stuck issues
+    const handleAction = async (action) => {
+        if (isProcessing) return;
+        setIsProcessing(true);
         onClose();
-        // Small delay to allow modal to close smoothly
-        setTimeout(() => {
-            action && action();
-        }, 300);
+        if (action) {
+            await action();
+        }
+        setIsProcessing(false);
     };
 
-    const renderOption = (icon, title, subtitle, onPress, color) => (
+    const renderOption = (icon, optionTitle, optionSubtitle, onPress, color) => (
         <TouchableOpacity
             style={[styles.optionItem, { backgroundColor: colors.inputBg }]}
             onPress={() => handleAction(onPress)}
-            activeOpacity={0.7}>
+            activeOpacity={0.7}
+            disabled={isProcessing}>
             <View style={[styles.iconContainer, { backgroundColor: (color || colors.primary) + '15' }]}>
                 <Ionicons
                     name={icon}
@@ -66,11 +73,11 @@ const MediaSelectionModal = ({
             </View>
             <View style={styles.textContainer}>
                 <ZText type="B16" color={colors.textColor}>
-                    {title}
+                    {optionTitle}
                 </ZText>
-                {subtitle && (
+                {optionSubtitle && (
                     <ZText type="M12" color={colors.grayScale5} style={styles.subtitle}>
-                        {subtitle}
+                        {optionSubtitle}
                     </ZText>
                 )}
             </View>
@@ -83,77 +90,92 @@ const MediaSelectionModal = ({
     );
 
     return (
-        <Modal
-            visible={visible}
-            transparent
-            animationType="none"
-            onRequestClose={onClose}>
-            <View style={[styles.overlay, { backgroundColor: colors.black + '50' }]}>
-                <TouchableOpacity style={styles.backdrop} onPress={onClose} activeOpacity={1} />
+        <>
+            <Modal
+                visible={visible}
+                transparent
+                animationType="none"
+                onRequestClose={onClose}>
+                <View style={[styles.overlay, { backgroundColor: colors.black + '50' }]}>
+                    <TouchableOpacity style={styles.backdrop} onPress={onClose} activeOpacity={1} />
 
-                <Animated.View
-                    style={[
-                        styles.modalContainer,
-                        {
-                            backgroundColor: colors.backgroundColor,
-                            transform: [{ translateY: slideAnim }],
-                            paddingBottom: Platform.OS === 'ios' ? moderateScale(30) : moderateScale(10),
-                        },
-                    ]}>
+                    <Animated.View
+                        style={[
+                            styles.modalContainer,
+                            {
+                                backgroundColor: colors.backgroundColor,
+                                transform: [{ translateY: slideAnim }],
+                                paddingBottom: Platform.OS === 'ios' ? moderateScale(30) : moderateScale(10),
+                            },
+                        ]}>
 
-                    {/* Handle Bar */}
-                    <View style={styles.handleContainer}>
-                        <View style={[styles.handle, { backgroundColor: colors.grayScale3 }]} />
-                    </View>
+                        {/* Handle Bar */}
+                        <View style={styles.handleContainer}>
+                            <View style={[styles.handle, { backgroundColor: colors.grayScale3 }]} />
+                        </View>
 
-                    {/* Header */}
-                    <View style={styles.header}>
-                        <ZText type="B20" color={colors.textColor} style={styles.title}>
-                            {strings.createReviewPost}
+                        {/* Header */}
+                        <View style={styles.header}>
+                            <ZText type="B20" color={colors.textColor} style={styles.title}>
+                                {title || strings.createReviewPost}
+                            </ZText>
+                            <ZText type="R14" color={colors.grayScale5} style={styles.headerSubtitle}>
+                                {subtitle || strings.chooseHowToCreateReview}
+                            </ZText>
+                        </View>
+
+                        {/* Options */}
+                        <View style={styles.optionsContainer}>
+                            {renderOption(
+                                'videocam',
+                                strings.recordVideo,
+                                strings.recordVideoSubtitle,
+                                onRecordVideo,
+                                '#FF4D67'
+                            )}
+
+                            {renderOption(
+                                'camera',
+                                strings.takePhoto,
+                                strings.takePhotoSubtitle,
+                                onTakePhoto,
+                                '#4CAF50'
+                            )}
+
+                            {renderOption(
+                                'images',
+                                strings.chooseFromGalleryTitle,
+                                strings.chooseFromGallerySubtitle,
+                                onPickFromGallery,
+                                '#2196F3'
+                            )}
+                        </View>
+
+                        {/* Cancel Button */}
+                        <TouchableOpacity
+                            style={[styles.cancelButton, { borderColor: colors.bColor }]}
+                            onPress={onClose}
+                            disabled={isProcessing}>
+                            <ZText type="B16" color={colors.textColor}>
+                                {strings.cancel}
+                            </ZText>
+                        </TouchableOpacity>
+                    </Animated.View>
+                </View>
+            </Modal>
+
+            {/* Processing overlay - shows loading during picker and navigation */}
+            <Modal visible={isProcessing} transparent animationType="fade">
+                <View style={styles.processingOverlay}>
+                    <View style={[styles.processingCard, { backgroundColor: colors.backgroundColor }]}>
+                        <ActivityIndicator size="large" color={colors.primary} />
+                        <ZText type="B16" color={colors.textColor} style={styles.processingText}>
+                            {strings.loading || 'Loading...'}
                         </ZText>
-                        <ZText type="R14" color={colors.grayScale5} style={styles.headerSubtitle}>
-                            {strings.chooseHowToCreateReview}
-                        </ZText>
                     </View>
-
-                    {/* Options */}
-                    <View style={styles.optionsContainer}>
-                        {renderOption(
-                            'videocam',
-                            strings.recordVideo,
-                            strings.recordVideoSubtitle,
-                            onRecordVideo,
-                            '#FF4D67'
-                        )}
-
-                        {renderOption(
-                            'camera',
-                            strings.takePhoto,
-                            strings.takePhotoSubtitle,
-                            onTakePhoto,
-                            '#4CAF50'
-                        )}
-
-                        {renderOption(
-                            'images',
-                            strings.chooseFromGalleryTitle,
-                            strings.chooseFromGallerySubtitle,
-                            onPickFromGallery,
-                            '#2196F3'
-                        )}
-                    </View>
-
-                    {/* Cancel Button */}
-                    <TouchableOpacity
-                        style={[styles.cancelButton, { borderColor: colors.bColor }]}
-                        onPress={onClose}>
-                        <ZText type="B16" color={colors.textColor}>
-                            {strings.cancel}
-                        </ZText>
-                    </TouchableOpacity>
-                </Animated.View>
-            </View>
-        </Modal>
+                </View>
+            </Modal>
+        </>
     );
 };
 
@@ -221,6 +243,21 @@ const styles = StyleSheet.create({
         borderRadius: moderateScale(30),
         borderWidth: 1,
         marginBottom: moderateScale(10),
+    },
+    processingOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    processingCard: {
+        paddingHorizontal: moderateScale(40),
+        paddingVertical: moderateScale(30),
+        borderRadius: moderateScale(16),
+        alignItems: 'center',
+    },
+    processingText: {
+        marginTop: moderateScale(16),
     },
 });
 
