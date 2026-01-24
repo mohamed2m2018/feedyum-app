@@ -51,24 +51,17 @@ export default function TabBarNavigation({ route, navigation }) {
   const { handleAuthToast } = useHandleAuth();
   const { currentScreen: previousScreen } = useScreen();
   const [modalState, setModalState] = useState({ visible: false, title: '', message: '' });
+  const hasHandledInitialNav = useRef(false); // Track if initial navigation was handled
 
-  // Extract initialTab from route params or default to Discover
-  const { initialTab = TabNav.Discover } = route.params || {};
+  // Extract initialTab from route params - check for storyId/postId to go to FollowingTab
+  const routeParams = route.params || {};
+  const hasReelDeepLink = routeParams.storyId || routeParams.postId;
+  const initialTab = hasReelDeepLink ? TabNav.FollowingTab : (routeParams.initialTab || TabNav.Discover);
 
   // Hide splash screen when component mounts
   useEffect(() => {
     SplashScreen.hideAsync();
   }, []);
-
-  // Handle deep linking navigation
-  useEffect(() => {
-    if (route.params?.initialTab) {
-      const targetTab = route.params.initialTab;
-      const targetParams = route.params.params;
-      console.log('🐞 [TabBar] Navigating to:', targetTab, 'Params:', targetParams);
-      navigation.navigate(targetTab, targetParams);
-    }
-  }, [route.params]);
 
   // Determine which component to use for Orders tab based on user type
   const user = data?.data?.user;
@@ -77,6 +70,35 @@ export default function TabBarNavigation({ route, navigation }) {
     ? TabRoute.OrderManagement
     : TabRoute.Orders;
   const DiscoverTabComponent = isChef ? ChefDashboard : TabRoute.Discover;
+
+  // Handle deep linking navigation - navigate to correct tab with params
+  // Must be after user data is loaded to know which tabs exist
+  // Only runs ONCE on initial mount to prevent re-navigation when dependencies change
+  useEffect(() => {
+    // Don't navigate while loading
+    if (isLoading && !data) return;
+
+    // Only handle initial navigation once
+    if (hasHandledInitialNav.current) return;
+    hasHandledInitialNav.current = true;
+
+    if (hasReelDeepLink && !isChef) {
+      // Navigate to FollowingTab with the storyId (only for non-chef users)
+      console.log('🐞 [TabBar] Deep link detected, navigating to FollowingTab with storyId:', routeParams.storyId || routeParams.postId);
+      setTimeout(() => {
+        navigation.navigate(TabNav.FollowingTab, {
+          storyId: routeParams.storyId || routeParams.postId,
+          postId: routeParams.postId || routeParams.storyId,
+        });
+      }, 50);
+    } else if (route.params?.initialTab && route.params.initialTab !== TabNav.Discover) {
+      // Only navigate if it's not the default tab (Discover)
+      const targetTab = route.params.initialTab;
+      const targetParams = route.params.params;
+      console.log('🐞 [TabBar] Navigating to:', targetTab, 'Params:', targetParams);
+      navigation.navigate(targetTab, targetParams);
+    }
+  }, [route.params, hasReelDeepLink, isLoading, data, isChef]);
 
   // Show loading AFTER all hooks have been called
   if (isLoading && !data) {

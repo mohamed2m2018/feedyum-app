@@ -47,19 +47,9 @@ export default function pAppNavigator() {
     config: {
       screens: {
         TabBar: {
+          // Pass params directly to TabBar which handles navigation internally
+          path: '',
           screens: {
-            Home: {
-              path: '/home',
-              screens: {
-                HomeScreen: 'home',
-                ReelsComponent: {
-                  path: '/reel/:postId',
-                  parse: {
-                    postId: (postId) => postId,
-                  },
-                },
-              },
-            },
             Discover: {
               path: '/discover',
               screens: {

@@ -23,6 +23,7 @@ const ReelsList = ({
   isFetching,
   refetch,
   isFetchingStory,
+  isWaitingForDeepLinkStory,
   isCommentOpen,
 }) => {
   const containerStyle = layoutHeight > 0
@@ -59,7 +60,7 @@ const ReelsList = ({
           }
           disableIntervalMomentum={true}
           ListEmptyComponent={
-            (isLoading || isFetching || isRefetching || !user) && !isFetchingStory ? (
+            ((isLoading || isFetching || isRefetching || !user) && !isFetchingStory) || isWaitingForDeepLinkStory ? (
               <ZLoader height={150} top={300} />
             ) : (
               <ZText

@@ -165,9 +165,12 @@ export const useOptimizedStory = (storyId) => {
   const location = useLocation();
   const [user] = useStorage('user');
 
+  console.log('🐞 [useOptimizedStory] storyId:', storyId, 'userId:', user?._id, 'enabled:', !!storyId && !!user?._id);
+
   return useQuery(
     ['story', storyId],
     async () => {
+      console.log('🐞 [useOptimizedStory] Fetching story:', storyId);
       const response = await request.get(`/story/${storyId}`, {
         params: {
           userId: user?._id,
@@ -175,6 +178,7 @@ export const useOptimizedStory = (storyId) => {
           long: location?.longitude,
         }
       });
+      console.log('🐞 [useOptimizedStory] Got story:', response.data?.story?._id);
       return response.data;
     },
     {

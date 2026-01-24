@@ -4,6 +4,8 @@ import { CommonActions } from '@react-navigation/native';
 class DeepLinkingService {
   static instance = null;
   static navigationRef = null;
+  static pendingDeepLink = null;
+  static isNavigationReady = false;
 
   static getInstance() {
     if (!DeepLinkingService.instance) {
@@ -14,24 +16,60 @@ class DeepLinkingService {
 
   static setNavigationRef(ref) {
     DeepLinkingService.navigationRef = ref;
+    DeepLinkingService.isNavigationReady = true;
+
+    // Process pending deep link if exists
+    // Note: Reel deep links are handled by Splash.js via handlePendingDeepLink
+    // so we should NOT process them here - just leave pendingDeepLink for Splash to handle
+    if (DeepLinkingService.pendingDeepLink) {
+      const pending = DeepLinkingService.pendingDeepLink;
+
+      // Check if this is a reel type - if so, leave it for Splash to handle
+      const parsed = DeepLinkingService.getInstance().parseDeepLink(pending);
+      if (parsed && ['reel', 'video', 'story', 'reels'].includes(parsed.type)) {
+        console.log('🐞 [DeepLinkingService] setNavigationRef: Reel deep link will be handled by Splash, leaving pendingDeepLink intact');
+        // DO NOT clear pendingDeepLink - Splash will handle it
+        return;
+      }
+
+      // For non-reel deep links, handle them here
+      DeepLinkingService.pendingDeepLink = null;
+      // Small delay to ensure navigation is fully ready
+      setTimeout(() => {
+        DeepLinkingService.getInstance().handleDeepLink(pending);
+      }, 100);
+    }
   }
 
   // Initialize deep linking listeners
   initialize() {
-    // Handle app launch from deep link
-    this.getInitialURL();
-
-    // Handle deep links when app is running
-    this.addEventListeners();
+    // Only handle deep links when app is running (not initial launch)
+    // Initial launch is handled by React Navigation's linking config
+    return this.addEventListeners();
   }
 
   async getInitialURL() {
     try {
       const url = await Linking.getInitialURL();
+      console.log('🐞 [DeepLinkingService] getInitialURL called, url:', url);
       if (url) {
-        this.handleDeepLink(url);
+        // Check if this is a reel/story URL that we handle manually
+        const parsed = this.parseDeepLink(url);
+        console.log('🐞 [DeepLinkingService] getInitialURL parsed:', JSON.stringify(parsed));
+        if (parsed && ['reel', 'video', 'story', 'reels'].includes(parsed.type)) {
+          // Store for later processing when navigation is ready
+          DeepLinkingService.pendingDeepLink = url;
+          console.log('🐞 [DeepLinkingService] Reel deep link stored for manual handling:', url);
+          // Return null so React Navigation doesn't try to handle it
+          return null;
+        }
+        // For other URLs, let React Navigation handle them
+        return url;
       }
+      return null;
     } catch (error) {
+      console.log('🐞 [DeepLinkingService] getInitialURL error:', error);
+      return null;
     }
   }
 
@@ -63,13 +101,23 @@ class DeepLinkingService {
     const urlObj = new URL(url);
     // For custom schemes like feedyum://, pathname may not have leading slash
     let path = urlObj.pathname;
-    // Also check hostname - for feedyum://reset-password, path might be empty and hostname is reset-password
-    if (!path || path === '') {
+
+    // IMPORTANT: For custom URL schemes like feedyum://reel/123:
+    // - hostname = 'reel'
+    // - pathname = '/123'
+    // We need to combine them to get the full path '/reel/123'
+    // For https://feedyum.com/reel/123, hostname is 'feedyum.com' so we don't want to include it
+    const isCustomScheme = urlObj.protocol && !urlObj.protocol.startsWith('http');
+
+    if (isCustomScheme && urlObj.hostname) {
+      // Custom scheme - combine hostname and pathname
+      path = '/' + urlObj.hostname + (urlObj.pathname || '');
+    } else if (!path || path === '') {
       path = '/' + urlObj.hostname;
     } else if (!path.startsWith('/')) {
       path = '/' + path;
     }
-    console.log('🐞 [DeepLinkingService] Parsed path:', path, 'hostname:', urlObj.hostname);
+    console.log('🐞 [DeepLinkingService] Parsed path:', path, 'hostname:', urlObj.hostname, 'isCustomScheme:', isCustomScheme);
     const params = Object.fromEntries(urlObj.searchParams);
 
     // Define supported deep link patterns
@@ -322,16 +370,20 @@ class DeepLinkingService {
 
   // Reel/Video navigation
   navigateToReel(reelId, params) {
-    // Navigate to TabBar > Home with storyId so user sees full TabBar experience
-    // and can browse other videos after viewing the shared one (like TikTok)
+    // Navigate directly to FollowingTab within TabBar with the storyId
+    // This works for both cold start (via Splash) and foreground deep links
+    console.log('🐞 [DeepLinkingService] navigateToReel:', reelId);
     DeepLinkingService.navigationRef?.dispatch(
-      CommonActions.navigate('TabBar', {
-        screen: 'Home',
+      CommonActions.navigate({
+        name: 'TabBar',
         params: {
-          storyId: reelId,
-          postId: reelId,
-          startIndex: params.index ? parseInt(params.index) : 0,
-          ...params
+          screen: 'FollowingTab',
+          params: {
+            storyId: reelId,
+            postId: reelId,
+            startIndex: params?.index ? parseInt(params.index) : 0,
+            ...params
+          }
         }
       })
     );
@@ -349,10 +401,8 @@ class DeepLinkingService {
   navigateToReels(params) {
     DeepLinkingService.navigationRef?.dispatch(
       CommonActions.navigate('TabBar', {
-        screen: 'Home',
-        params: {
-          ...params
-        }
+        initialTab: 'FollowingTab',
+        ...params
       })
     );
   }
@@ -436,6 +486,49 @@ class DeepLinkingService {
         orderId
       })
     );
+  }
+
+  /**
+   * Handle pending deep link URL after app cold start.
+   * Call this from Splash.js before handlePendingNotification.
+   * Returns navigation info for reel deep links.
+   */
+  handlePendingDeepLink() {
+    const pendingUrl = DeepLinkingService.pendingDeepLink;
+    if (!pendingUrl) {
+      return { handled: false };
+    }
+
+    console.log('🐞 [DeepLinkingService] Processing pending deep link:', pendingUrl);
+
+    const parsed = this.parseDeepLink(pendingUrl);
+    if (!parsed) {
+      DeepLinkingService.pendingDeepLink = null;
+      return { handled: false };
+    }
+
+    // Handle reel/video/story deep links - navigate to FollowingTab with storyId
+    if (['reel', 'video', 'story', 'reels'].includes(parsed.type)) {
+      const reelId = parsed.id;
+      // Clear the pending deep link
+      DeepLinkingService.pendingDeepLink = null;
+
+      console.log('🐞 [DeepLinkingService] Reel deep link handled, storyId:', reelId);
+
+      return {
+        handled: true,
+        targetTab: 'FollowingTab',
+        params: {
+          storyId: reelId,
+          postId: reelId,
+          ...parsed.params
+        }
+      };
+    }
+
+    // For other deep link types, let the normal flow handle them
+    // But don't clear pendingDeepLink - setNavigationRef will process it
+    return { handled: false };
   }
 
   /**

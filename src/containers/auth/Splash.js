@@ -63,13 +63,26 @@ const Splash = ({ navigation }) => {
       // Delay to allow DeepLinkingService to receive the unique event
       await new Promise(resolve => setTimeout(resolve, 2000));
 
-      // Check if DeepLinkingService captured a notification
-      // Check if DeepLinkingService captured a notification
+      // Use DeepLinkingService to handle pending deep links and notifications (unified logic)
+      const deepLinkingService = DeepLinkingService.getInstance();
+
+      // First, check for pending deep link URLs (e.g., feedyum://reel/123)
+      const deepLinkResult = deepLinkingService.handlePendingDeepLink();
+      console.log('🐞 [Splash] Checking pending deep link:', deepLinkResult);
+
+      if (deepLinkResult.handled) {
+        // Deep link wants us to navigate to a specific tab with params
+        if (deepLinkResult.targetTab) {
+          targetTab = deepLinkResult.targetTab;
+          targetParams = deepLinkResult.params;
+          console.log('🐞 [Splash] Deep link handled, navigating to:', targetTab, targetParams);
+        }
+      }
+
+      // Check if DeepLinkingService captured a notification (only if deep link didn't handle it)
       const lastNotif = DeepLinkingService.lastNotification;
       console.log('🐞 [Splash] Checking DeepLinkingService.lastNotification:', lastNotif);
 
-      // Use DeepLinkingService to handle pending notifications (unified logic)
-      const deepLinkingService = DeepLinkingService.getInstance();
       const notifResult = deepLinkingService.handlePendingNotification();
 
       if (notifResult.handled) {
@@ -104,14 +117,18 @@ const Splash = ({ navigation }) => {
 
       console.log('🐞 [Splash] Resetting navigation. Tab:', targetTab, 'Params:', targetParams);
 
+      // Merge targetParams at top level for deep links (storyId, postId need to be at top level)
+      const routeParams = {
+        initialTab: targetTab,
+        ...targetParams, // Spread storyId, postId at top level
+        params: targetParams
+      };
+
       navigation.reset({
         index: 0,
         routes: [{
           name: StackNav.TabBar,
-          params: {
-            initialTab: targetTab,
-            params: targetParams
-          }
+          params: routeParams
         }],
       });
     } else {
