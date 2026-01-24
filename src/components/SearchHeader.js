@@ -110,11 +110,6 @@ function SearchHeader({
         outputRange: [colors.bColor || '#333', colors.primary],
     });
 
-    // Animated shadow
-    const shadowOpacity = focusAnim.interpolate({
-        inputRange: [0, 1],
-        outputRange: [0.1, 0.3],
-    });
 
     return (
         <View style={localStyles.container}>
@@ -264,6 +259,7 @@ const localStyles = StyleSheet.create({
         borderWidth: 2,
         overflow: 'hidden',
         // Glassmorphism shadow
+        width: moderateScale(365),
         shadowColor: '#FF4D67',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.15,
