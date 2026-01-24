@@ -323,6 +323,7 @@ export default function PostDetail() {
 
     setTimeout(() => {
       // Navigate chefs to their profile, regular users to ForYou
+      console.log('[PostDetail] User type:', user?.type, 'Navigating to:', user?.type === 'chef' ? 'ProfileTab' : 'ForYou');
       if (user?.type === 'chef') {
         navigation.navigate(StackNav.TabBar, { screen: TabNav.ProfileTab });
       } else {

@@ -17,6 +17,7 @@ import App from './src';
 import { store } from './src/redux/store';
 import { createClient, AnalyticsProvider } from '@segment/analytics-react-native';
 import { createOptimizedQueryClient } from './src/config/queryClient';
+import { FollowStateProvider } from './src/context/FollowStateContext';
 
 const queryClient = createOptimizedQueryClient();
 
@@ -34,7 +35,9 @@ const RNRoot = () => {
     <QueryClientProvider client={queryClient}>
       <Provider store={store}>
         <AnalyticsProvider client={segmentClient}>
-          <App />
+          <FollowStateProvider>
+            <App />
+          </FollowStateProvider>
         </AnalyticsProvider>
       </Provider>
     </QueryClientProvider>

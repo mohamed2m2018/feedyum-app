@@ -79,13 +79,13 @@ const ReelRestaurantBadge = React.memo(({
                 />
             </TouchableOpacity>
 
-            {/* Follow Button - INLINE with badge */}
+            {/* Follow Button - Heart icon for restaurant */}
             {showFollowButton && (
                 <FollowButton
                     userId={item.reviewedChef._id}
                     isFollowed={item.reviewedChef.currentUserFollowed}
                     compact={true}
-                    size="small"
+                    size="icon"
                 />
             )}
         </View>

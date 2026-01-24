@@ -16,6 +16,7 @@ import request from '../api/request';
 import { useMutation, useQueryClient } from 'react-query';
 import strings from '../i18n/strings';
 import { useHandleAuth } from '../utils/useHandleAuth';
+import { useFollowState } from '../context/FollowStateContext';
 
 export default function UserDetailComponent({
   id,
@@ -32,11 +33,12 @@ export default function UserDetailComponent({
 }) {
   const navigation = useNavigation();
   const colors = useSelector(state => state.theme.theme);
-  const [isFollow, setIsFollow] = useState(isFollowed);
   const queryClient = useQueryClient();
-  useEffect(() => {
-    setIsFollow(isFollowed);
-  }, [isFollowed]);
+  const { getFollowStatus, setFollowStatus } = useFollowState();
+
+  // Use global override if available, otherwise use prop value
+  const globalOverride = getFollowStatus(id);
+  const isFollow = globalOverride !== undefined ? globalOverride : isFollowed;
 
   const followMutation = useMutation(
     userToFollow => request.post('/follow', { userToFollow }),
@@ -57,6 +59,8 @@ export default function UserDetailComponent({
         }, 100);
       },
       onError: () => {
+        // Revert on error
+        setFollowStatus(id, false);
         setTimeout(() => {
           setIsAdding?.(false);
         }, 100);
@@ -83,6 +87,8 @@ export default function UserDetailComponent({
         }, 100);
       },
       onError: () => {
+        // Revert on error
+        setFollowStatus(id, true);
         setIsAdding?.(false);
       },
     },
@@ -94,12 +100,16 @@ export default function UserDetailComponent({
       return;
     }
     setIsAdding?.(true);
+
+    // Optimistic update - change global state immediately
+    const newFollowState = !isFollow;
+    setFollowStatus(id, newFollowState);
+
     if (isFollow) {
       unfollowMutation.mutate({ _id: id });
     } else {
       followMutation.mutate({ _id: id });
     }
-    setIsFollow(!isFollow);
   };
   const onPressUser = () => {
     if (currentUserId === id) {
