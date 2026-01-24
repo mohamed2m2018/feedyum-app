@@ -12,7 +12,6 @@ if (!__DEV__) {
 }
 LogBox.ignoreAllLogs(true);
 import { Provider } from 'react-redux';
-import { PersistGate } from 'redux-persist/integration/react';
 import { QueryClientProvider } from 'react-query';
 import App from './src';
 import { store, persistor } from './src/redux/store';
@@ -34,11 +33,9 @@ const RNRoot = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <Provider store={store}>
-        <PersistGate loading={null} persistor={persistor}>
-          <AnalyticsProvider client={segmentClient}>
-            <App />
-          </AnalyticsProvider>
-        </PersistGate>
+        <AnalyticsProvider client={segmentClient}>
+          <App />
+        </AnalyticsProvider>
       </Provider>
     </QueryClientProvider>
   );
