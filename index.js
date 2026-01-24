@@ -14,7 +14,7 @@ LogBox.ignoreAllLogs(true);
 import { Provider } from 'react-redux';
 import { QueryClientProvider } from 'react-query';
 import App from './src';
-import { store, persistor } from './src/redux/store';
+import { store } from './src/redux/store';
 import { createClient, AnalyticsProvider } from '@segment/analytics-react-native';
 import { createOptimizedQueryClient } from './src/config/queryClient';
 
