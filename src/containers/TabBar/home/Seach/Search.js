@@ -228,7 +228,7 @@ const localStyles = StyleSheet.create({
   headerWithIcon: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    paddingRight: moderateScale(10),
+    paddingRight: moderateScale(4),
   },
   searchHeaderWrapper: {
     flex: 1,
@@ -237,6 +237,7 @@ const localStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: moderateScale(15),
+    gap: moderateScale(2),
   },
   tabBarWrapper: {
     paddingHorizontal: moderateScale(20),
@@ -258,10 +259,10 @@ const localStyles = StyleSheet.create({
     // gradient applied via LinearGradient child
   },
   headerIcon: {
-    padding: moderateScale(6),
+    padding: moderateScale(4),
   },
   headerIconBadge: {
-    marginLeft: moderateScale(2),
-    padding: moderateScale(3),
+    marginLeft: 0,
+    padding: moderateScale(4),
   },
 });
