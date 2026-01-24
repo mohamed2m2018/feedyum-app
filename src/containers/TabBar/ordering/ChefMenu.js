@@ -693,16 +693,6 @@ const ChefMenu = () => {
               )}
               {/* Stats Row */}
               <View style={localStyles.restaurantStats}>
-                {/* Rating */}
-                {((Number.isFinite(menuData?.chef?.averageDishRating) && menuData.chef.averageDishRating > 0) ||
-                  (headerAvg > 0)) && (
-                    <View style={localStyles.statBadge}>
-                      <Ionicons name="star" size={14} color="#FFD700" />
-                      <ZText type="B13" color={colors.textColor} style={{ marginLeft: 4 }}>
-                        {(Number.isFinite(menuData?.chef?.averageDishRating) ? menuData.chef.averageDishRating : headerAvg).toFixed(1)}
-                      </ZText>
-                    </View>
-                  )}
                 {/* Dish count */}
                 <View style={localStyles.statBadge}>
                   <Ionicons name="restaurant-outline" size={14} color={colors.primary} />
@@ -711,6 +701,53 @@ const ChefMenu = () => {
                   </ZText>
                 </View>
               </View>
+
+              {/* Prominent Overall Rating Card - Calculate from dishes */}
+              {(() => {
+                // Calculate rating from dishes data since menuData.chef doesn't have it
+                const dishes = menuData?.dishes || [];
+                const ratedDishes = dishes.filter(d =>
+                  typeof d.average_rating === 'number' && d.average_rating >= 1
+                );
+                const ratedCount = ratedDishes.length;
+
+                let rating = 0;
+                if (ratedCount > 0) {
+                  const total = ratedDishes.reduce((sum, d) => sum + d.average_rating, 0);
+                  rating = Math.round((total / ratedCount) * 10) / 10;
+                }
+
+                // Only show if we have a valid rating
+                if (rating < 1) return null;
+
+                return (
+                  <View style={[localStyles.overallRatingCard, { backgroundColor: colors.dark ? '#1F1F1F' : '#FFF9E6', borderColor: '#FFD700' }]}>
+                    <View style={localStyles.ratingBigNumber}>
+                      <ZText type="B24" color="#FFD700" style={{ fontWeight: '800' }}>
+                        {rating.toFixed(1)}
+                      </ZText>
+                      <Ionicons name="star" size={20} color="#FFD700" style={{ marginLeft: 4 }} />
+                    </View>
+                    <View style={localStyles.ratingDetails}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Ionicons
+                            key={star}
+                            name={star <= Math.round(rating) ? 'star' : 'star-outline'}
+                            size={14}
+                            color="#FFD700"
+                            style={{ marginRight: 2 }}
+                          />
+                        ))}
+                      </View>
+                      <ZText type="M11" color={colors.grayScale6} style={{ marginTop: 2 }}>
+                        {strings.overallRating || 'Overall Rating'}
+                        {ratedCount > 0 ? ` (${ratedCount} ${ratedCount === 1 ? strings.dish || 'dish' : strings.dishes || 'dishes'})` : ''}
+                      </ZText>
+                    </View>
+                  </View>
+                );
+              })()}
               {/* Branches Section */}
               {(() => {
                 // Prepare locations data for the modal
@@ -1029,6 +1066,25 @@ const localStyles = StyleSheet.create({
     paddingHorizontal: moderateScale(10),
     paddingVertical: moderateScale(6),
     borderRadius: moderateScale(16),
+  },
+  // Prominent Overall Rating Card
+  overallRatingCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: moderateScale(12),
+    paddingHorizontal: moderateScale(14),
+    paddingVertical: moderateScale(10),
+    borderRadius: moderateScale(12),
+    borderWidth: 1.5,
+    alignSelf: 'flex-start',
+  },
+  ratingBigNumber: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: moderateScale(12),
+  },
+  ratingDetails: {
+    flexDirection: 'column',
   },
   // Legacy styles (keeping for compatibility)
   premiumHeader: {

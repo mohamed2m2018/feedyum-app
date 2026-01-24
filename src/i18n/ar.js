@@ -1600,6 +1600,7 @@ export default {
   addToCart: 'أضف للعربة',
   viewKitchen: 'عرض المطبخ',
   dishes: 'أطباق',
+  overallRating: 'التقييم العام',
   trySearching: 'جرب البحث عن:',
 
   // Translation & Bilingual Support

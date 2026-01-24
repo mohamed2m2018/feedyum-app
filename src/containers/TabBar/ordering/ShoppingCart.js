@@ -19,6 +19,7 @@ import ZText from '../../../components/common/ZText';
 import ZHeader from '../../../components/common/ZHeader';
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
 import ZButton from '../../../components/common/ZButton';
+import AddressSelectionModal from '../../../components/AddressSelectionModal';
 
 import { moderateScale } from '../../../common/constants';
 import images from '../../../assets/images';
@@ -55,10 +56,11 @@ const ShoppingCart = () => {
   const chef = useSelector(selectCartChef);
   const isPlacingOrder = useSelector(selectOrderPlacing);
   const orderError = useSelector(selectOrderError);
-  const { selectedAddress, addressList } = useSelector(state => state.address);
+  const { selectedAddress, addresses } = useSelector(state => state.address);
 
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [specialInstructions, setSpecialInstructions] = useState('');
+  const [showAddressModal, setShowAddressModal] = useState(false);
 
   // Load addresses when component mounts and set default if needed
   useEffect(() => {
@@ -67,12 +69,12 @@ const ShoppingCart = () => {
 
   // Set default address if none selected but addresses exist
   useEffect(() => {
-    if (!selectedAddress && addressList && addressList.length > 0) {
+    if (!selectedAddress && addresses && addresses.length > 0) {
       // Find primary address or default to first
-      const primary = addressList.find(addr => addr.isPrimary);
-      dispatch(setSelectedAddress(primary || addressList[0]));
+      const primary = addresses.find(addr => addr.isPrimary);
+      dispatch(setSelectedAddress(primary || addresses[0]));
     }
-  }, [addressList, selectedAddress, dispatch]);
+  }, [addresses, selectedAddress, dispatch]);
 
   // Memoize expensive calculations
   const cartSummary = useMemo(() => ({
@@ -387,7 +389,7 @@ const ShoppingCart = () => {
               borderColor: colors.borderColor || colors.grayScale3
             }
           ]}
-          onPress={() => navigation.navigate(StackNav.SavedAddresses)}
+          onPress={() => setShowAddressModal(true)}
         >
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <ZText type="M14" color={colors.textColor} style={{ flex: 1 }}>
@@ -525,6 +527,19 @@ const ShoppingCart = () => {
           getItemLayout={getItemLayout}
         />
       </KeyboardAvoidingView>
+
+      {/* Address Selection Modal */}
+      <AddressSelectionModal
+        visible={showAddressModal}
+        onClose={() => setShowAddressModal(false)}
+        onAddressSelect={(address) => {
+          dispatch(setSelectedAddress(address));
+          setShowAddressModal(false);
+        }}
+        addresses={addresses || []}
+        selectedAddress={selectedAddress}
+        onAddressUpdated={() => dispatch(getAddresses())}
+      />
     </ZSafeAreaView>
   );
 };

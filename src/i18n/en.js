@@ -1617,6 +1617,7 @@ export default {
   addToCart: 'Add to Cart',
   viewKitchen: 'View Kitchen',
   dishes: 'dishes',
+  overallRating: 'Overall Rating',
   trySearching: 'Try searching:',
 
   // Translation & Bilingual Support

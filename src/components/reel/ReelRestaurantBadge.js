@@ -44,7 +44,7 @@ const ReelRestaurantBadge = React.memo(({
     const showFollowButton = item?.reviewedChef?._id && item?.reviewedChef?._id !== currentUserId;
 
     return (
-        <>
+        <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: moderateScale(6) }}>
             <TouchableOpacity
                 onPress={onPress}
                 activeOpacity={0.7}
@@ -79,17 +79,16 @@ const ReelRestaurantBadge = React.memo(({
                 />
             </TouchableOpacity>
 
-            {/* Follow Button - Outside container for cleaner appearance */}
+            {/* Follow Button - INLINE with badge */}
             {showFollowButton && (
                 <FollowButton
                     userId={item.reviewedChef._id}
                     isFollowed={item.reviewedChef.currentUserFollowed}
                     compact={true}
                     size="small"
-                    style={{ marginTop: moderateScale(6), alignSelf: 'flex-start' }}
                 />
             )}
-        </>
+        </View>
     );
 });
 

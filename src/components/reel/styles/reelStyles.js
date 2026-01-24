@@ -89,14 +89,18 @@ export const mediaPlayerStyles = StyleSheet.create({
         width: '100%',
         backgroundColor: 'transparent',
     },
+    // Media type badge - LEFT side, BELOW review badge (at top:90)
     zoomIndicator: {
         position: 'absolute',
-        top: 80,
-        left: 15,
-        backgroundColor: reelColors.overlay,
-        borderRadius: 15,
-        padding: 5,
-        zIndex: 1,
+        top: moderateScale(130),
+        left: moderateScale(14),
+        backgroundColor: 'rgba(0, 0, 0, 0.65)',
+        borderRadius: moderateScale(14),
+        paddingHorizontal: moderateScale(6),
+        paddingVertical: moderateScale(4),
+        zIndex: 15,
+        flexDirection: 'row',
+        alignItems: 'center',
     },
 });
 
@@ -109,8 +113,8 @@ export const overlayStyles = StyleSheet.create({
         bottom: 0,
         left: 0,
         right: 0,
-        paddingVertical: 15,
-        paddingHorizontal: 8,
+        paddingVertical: 6,
+        paddingHorizontal: 6,
         ...themeStyles.flexRow,
         ...themeStyles.itemsEnd,
     },
@@ -119,7 +123,7 @@ export const overlayStyles = StyleSheet.create({
         bottom: 0,
         left: 0,
         right: 0,
-        height: 250,
+        height: 150,
     },
     contentContainer: {
         flex: 1,
@@ -132,28 +136,28 @@ export const overlayStyles = StyleSheet.create({
 export const authorInfoStyles = StyleSheet.create({
     container: {
         position: 'absolute',
-        bottom: moderateScale(20),
-        left: 16,
-        right: 16,
+        bottom: moderateScale(30),
+        left: 8,
+        right: 8,
     },
     innerContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 16,
+        marginBottom: 4,
     },
     avatarRing: {
-        width: moderateScale(48),
-        height: moderateScale(48),
-        borderRadius: moderateScale(24),
+        width: moderateScale(40),
+        height: moderateScale(40),
+        borderRadius: moderateScale(20),
         borderWidth: 2,
         borderColor: reelColors.primary,
-        padding: 2,
+        padding: 1,
         ...shadows.glow,
     },
     avatarImage: {
         width: '100%',
         height: '100%',
-        borderRadius: moderateScale(22),
+        borderRadius: moderateScale(18),
     },
     userInfoContainer: {
         marginLeft: moderateScale(10),
@@ -190,8 +194,7 @@ export const authorInfoStyles = StyleSheet.create({
         marginLeft: moderateScale(2),
     },
     followButton: {
-        marginTop: moderateScale(6),
-        alignSelf: 'flex-start',
+        marginLeft: moderateScale(8),
     },
 });
 
@@ -226,10 +229,10 @@ export const reviewBadgeStyles = StyleSheet.create({
  */
 export const restaurantBadgeStyles = StyleSheet.create({
     container: {
-        borderRadius: moderateScale(12),
-        paddingVertical: moderateScale(6),
-        paddingHorizontal: moderateScale(10),
-        marginTop: moderateScale(6),
+        borderRadius: moderateScale(10),
+        paddingVertical: moderateScale(4),
+        paddingHorizontal: moderateScale(8),
+        marginTop: moderateScale(3),
         alignSelf: 'flex-start',
         backgroundColor: reelColors.glassBackground,
         borderWidth: 1,
@@ -282,7 +285,7 @@ export const captionStyles = StyleSheet.create({
         fontWeight: 'bold',
     },
     caption: {
-        marginVertical: 10,
+        marginVertical: 2,
     },
     duration: {
         fontSize: 12,
@@ -355,8 +358,8 @@ export const kmAwayStyles = StyleSheet.create({
  */
 export const reviewStyles = StyleSheet.create({
     infoContainer: {
-        marginTop: moderateScale(8),
-        marginBottom: moderateScale(8),
+        marginTop: moderateScale(2),
+        marginBottom: moderateScale(2),
     },
     ratingContainer: {
         flexDirection: 'row',

@@ -64,28 +64,30 @@ const ReelAuthorInfo = React.memo(({
                 </View>
             </TouchableOpacity>
 
-            {/* User Info */}
-            <TouchableOpacity style={styles.userInfoContainer} onPress={onPressProfile}>
+            {/* User Info + Follow Button in same row */}
+            <View style={styles.userInfoContainer}>
                 <View style={styles.userNameRow}>
-                    <ZText style={styles.userName} numberOfLines={1}>
-                        {displayName}
-                    </ZText>
+                    <TouchableOpacity onPress={onPressProfile} style={{ flexShrink: 1 }}>
+                        <ZText style={styles.userName} numberOfLines={1}>
+                            {displayName}
+                        </ZText>
+                    </TouchableOpacity>
 
-                    {/* Rating Pill */}
-                    {rating > 0 && <RatingPill rating={rating} />}
+                    {/* Rating Pill - Only show valid ratings (1-5) */}
+                    {rating >= 1 && <RatingPill rating={rating} />}
+
+                    {/* Follow Button INLINE - Hidden for own posts */}
+                    {author?._id && !isOwnPost && (
+                        <FollowButton
+                            userId={author._id}
+                            isFollowed={author.currentUserFollowed}
+                            compact={true}
+                            size="small"
+                            style={styles.followButton}
+                        />
+                    )}
                 </View>
-
-                {/* Follow Button - Hidden for own posts */}
-                {author?._id && !isOwnPost && (
-                    <FollowButton
-                        userId={author._id}
-                        isFollowed={author.currentUserFollowed}
-                        compact={true}
-                        size="small"
-                        style={styles.followButton}
-                    />
-                )}
-            </TouchableOpacity>
+            </View>
         </View>
     );
 });

@@ -103,16 +103,6 @@ const ReelMediaPlayer = React.memo(({
                         resizeMode={isVideo ? 'cover' : 'contain'}
                         style={imageStyles}
                     />
-                    {/* Zoom indicator - Only show for actual images, not video thumbnails */}
-                    {!isVideo && (
-                        <View style={styles.zoomIndicator}>
-                            <Ionicons
-                                name="expand-outline"
-                                size={moderateScale(20)}
-                                color="rgba(255, 255, 255, 0.8)"
-                            />
-                        </View>
-                    )}
                 </View>
             ) : (
                 <Image
@@ -157,6 +147,15 @@ const ReelMediaPlayer = React.memo(({
                     />
                 </View>
             )}
+
+            {/* Media type indicator badge - ALWAYS visible on top */}
+            <View style={styles.zoomIndicator} pointerEvents="none">
+                <Ionicons
+                    name={isVideo ? 'videocam' : 'image'}
+                    size={moderateScale(16)}
+                    color="#FFFFFF"
+                />
+            </View>
         </View>
     );
 });

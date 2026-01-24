@@ -108,13 +108,17 @@ const ReelComponent = ({
         style={localStyles.postImgStyle}
         resizeMode="cover"
         imageStyle={{ borderRadius: moderateScale(10) }}>
-        {!!isPlay && (
-          <View style={localStyles.playIconStyle}>
-            <Ionicons
-              name="play-circle"
-              size={moderateScale(28)}
-              color={colors.white}
-            />
+        {/* Video Play Button - Show for videos (uri contains story_videos) */}
+        {item?.uri?.includes('story_videos') && (
+          <View style={localStyles.videoPlayOverlay}>
+            <View style={localStyles.playButtonCircle}>
+              <Ionicons
+                name="play"
+                size={moderateScale(20)}
+                color={colors.white}
+                style={{ marginLeft: moderateScale(2) }}
+              />
+            </View>
           </View>
         )}
         {!!data && (
@@ -271,6 +275,21 @@ const localStyles = StyleSheet.create({
     position: 'absolute',
     bottom: getHeight(10),
     left: moderateScale(10),
+  },
+  videoPlayOverlay: {
+    position: 'absolute',
+    bottom: moderateScale(8),
+    right: moderateScale(8),
+  },
+  playButtonCircle: {
+    width: moderateScale(32),
+    height: moderateScale(32),
+    borderRadius: moderateScale(16),
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   playIconStyle: {
     ...styles.rowCenter,

@@ -196,7 +196,8 @@ export default function ReelsComponent({ amIFocused, initialStoryId }) {
   // Handle new deep link storyId from route params (for foreground deep links)
   useEffect(() => {
     const newStoryId = route.params?.storyId || initialStoryId;
-    if (newStoryId && newStoryId !== deepLinkStoryId && !deepLinkStory) {
+    // Allow new story fetch if ID is different from both pending and current story
+    if (newStoryId && newStoryId !== deepLinkStoryId && newStoryId !== deepLinkStory?._id) {
       console.log('🐞 [ReelsComponent] New storyId from route:', newStoryId);
       setDeepLinkStoryId(newStoryId);
     }

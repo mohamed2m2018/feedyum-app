@@ -21,12 +21,13 @@ import { reviewStyles as styles } from './styles';
 const ReelReviewRating = React.memo(({ rating, isReview }) => {
     const colors = useSelector((state) => state.theme.theme);
 
-    // Only show for reviews
-    if (!isReview) {
+    // Only show for reviews that have a valid rating
+    const hasRating = rating && rating > 0;
+
+    // Don't render anything if not a review OR if no rating was provided
+    if (!isReview || !hasRating) {
         return null;
     }
-
-    const hasRating = rating && rating > 0;
 
     return (
         <View style={styles.infoContainer}>
@@ -34,14 +35,14 @@ const ReelReviewRating = React.memo(({ rating, isReview }) => {
                 {[1, 2, 3, 4, 5].map((star) => (
                     <Ionicons
                         key={star}
-                        name={hasRating ? (star <= rating ? 'star' : 'star-outline') : 'star-outline'}
+                        name={star <= rating ? 'star' : 'star-outline'}
                         size={moderateScale(12)}
-                        color={hasRating ? (star <= rating ? '#FFD700' : 'rgba(255, 255, 255, 0.5)') : 'rgba(255, 255, 255, 0.8)'}
-                        style={[styles.starIcon, { opacity: hasRating ? 1 : 0.8 }]}
+                        color={star <= rating ? '#FFD700' : 'rgba(255, 255, 255, 0.5)'}
+                        style={styles.starIcon}
                     />
                 ))}
                 <ZText type="B14" color={colors.white} style={{ marginLeft: 4, fontWeight: '800' }}>
-                    {rating || 0}/5
+                    {rating}/5
                 </ZText>
             </View>
         </View>
