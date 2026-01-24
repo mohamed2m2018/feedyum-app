@@ -174,7 +174,7 @@ const AttachedDishesDisplay = ({
           contentContainerStyle={localStyles.verticalDishesContainer}
           showsVerticalScrollIndicator={false}
           nestedScrollEnabled={true}>
-          {attachedDishes.slice(0, 3).map((dish, index) => renderDish(dish, index))}
+          {attachedDishes.map((dish, index) => renderDish(dish, index))}
         </ScrollView>
       ) : (
         // Horizontal scroll for full mode with header
@@ -239,11 +239,11 @@ const localStyles = StyleSheet.create({
     paddingRight: moderateScale(16),
   },
   compactScrollContainer: {
-    maxHeight: moderateScale(260),
+    maxHeight: moderateScale(175),
   },
   verticalDishesContainer: {
     alignItems: 'flex-end',
-    paddingVertical: moderateScale(4),
+    paddingVertical: moderateScale(2),
   },
   dishCard: {
     width: moderateScale(120),
@@ -265,12 +265,12 @@ const localStyles = StyleSheet.create({
     elevation: 10,
   },
   compactDishCard: {
-    width: moderateScale(75),
-    height: moderateScale(85),
-    borderRadius: moderateScale(12),
+    width: moderateScale(65),
+    height: moderateScale(70),
+    borderRadius: moderateScale(10),
     backgroundColor: '#1a1a1a',
-    marginBottom: moderateScale(6),
-    borderWidth: 1.5,
+    marginBottom: moderateScale(4),
+    borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.35)',
     overflow: 'hidden',
     position: 'relative',
@@ -278,11 +278,11 @@ const localStyles = StyleSheet.create({
     shadowColor: '#FF6B6B',
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 3,
     },
-    shadowOpacity: 0.35,
-    shadowRadius: 8,
-    elevation: 8,
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 6,
   },
   dishImage: {
     width: '100%',
@@ -350,10 +350,10 @@ const localStyles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    paddingVertical: moderateScale(4),
-    paddingHorizontal: moderateScale(5),
-    borderBottomLeftRadius: moderateScale(10),
-    borderBottomRightRadius: moderateScale(10),
+    paddingVertical: moderateScale(3),
+    paddingHorizontal: moderateScale(4),
+    borderBottomLeftRadius: moderateScale(8),
+    borderBottomRightRadius: moderateScale(8),
     overflow: 'hidden',
   },
   compactGradientBg: {
@@ -375,9 +375,9 @@ const localStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(255, 107, 107, 0.25)',
-    paddingHorizontal: moderateScale(4),
-    paddingVertical: moderateScale(2),
-    borderRadius: moderateScale(6),
+    paddingHorizontal: moderateScale(3),
+    paddingVertical: moderateScale(1),
+    borderRadius: moderateScale(5),
     alignSelf: 'flex-start',
     borderWidth: 1,
     borderColor: 'rgba(255, 215, 0, 0.4)',
@@ -393,11 +393,11 @@ const localStyles = StyleSheet.create({
   },
   compactShineEffect: {
     position: 'absolute',
-    top: moderateScale(5),
-    right: moderateScale(5),
-    width: moderateScale(6),
-    height: moderateScale(6),
-    borderRadius: moderateScale(3),
+    top: moderateScale(4),
+    right: moderateScale(4),
+    width: moderateScale(5),
+    height: moderateScale(5),
+    borderRadius: moderateScale(2.5),
     backgroundColor: 'rgba(255, 255, 255, 0.7)',
     // Premium glow effect
     shadowColor: '#FFFFFF',

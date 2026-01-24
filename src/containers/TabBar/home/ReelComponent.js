@@ -1212,7 +1212,7 @@ const localStyles = StyleSheet.create({
   },
   dishesDisplayContainer: {
     position: 'absolute',
-    bottom: moderateScale(450), // Positioned much much higher above the action icons
+    bottom: moderateScale(100), // Near action buttons, far from filter icon at top
     right: moderateScale(16), // Aligned with action icons on the right
     zIndex: 5, // Lower z-index to ensure it doesn't interfere with other UI
   },

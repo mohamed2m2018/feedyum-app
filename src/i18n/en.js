@@ -435,7 +435,7 @@ export default {
   howToDownloadApp: 'How can I download the FeedYum app?',
   howToUnsubscribeFromPremium: 'How do I unsubscribe from premium on FeedYum?',
   foodTokDescription:
-    'FeedYum is an app designed for chefs, restaurants, and food enthusiasts to share their passion for food through videos and photos. It provides a platform for users to showcase their culinary creations, discover new recipes, and connect with others in the food community.',
+    'FeedYum is an app designed for chefs, restaurants, and food enthusiasts to share their passion for food through videos and photos. It provides a platform for users to showcase their culinary creations, discover new dishes, and connect with others in the food community.',
   signUpDescription:
     'To sign up for FeedYum, simply download the app from the Google Play Store. The app is currently available exclusively for Android users. Once downloaded, you can create an account by providing your basic information and setting up a profile. Stay tuned for updates on availability for other platforms.',
   submitVideosAndPhotosDescription:

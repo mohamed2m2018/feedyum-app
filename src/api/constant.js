@@ -1,4 +1,4 @@
-import {Linking} from 'react-native';
+import { Linking } from 'react-native';
 import strings from '../i18n/strings';
 
 const renderChips = [
@@ -214,7 +214,7 @@ const helperData = [
   {
     title: 'What is FoodTok?',
     description:
-      'FoodTok is an app designed for chefs, restaurants, and food enthusiasts to share their passion for food through videos and photos. It provides a platform for users to showcase their culinary creations, discover new recipes, and connect with others in the food community.',
+      'FoodTok is an app designed for chefs, restaurants, and food enthusiasts to share their passion for food through videos and photos. It provides a platform for users to showcase their culinary creations, discover new dishes, and connect with others in the food community.',
   },
   {
     title: 'How can I sign up for FoodTok?',
@@ -333,7 +333,7 @@ const privacyPolicyData = [
   {
     title: '5. Third-Party Links',
     description:
-      'The FoodTok app may contain links to third-party websites or services, such as recipes, restaurants, or cooking-related resources. Please note that we are not responsible for the privacy practices or the content of these third-party websites or services. We encourage you to review the privacy policies and terms of service of these third parties before interacting with them or providing any personal information.',
+      'The FoodTok app may contain links to third-party websites or services, such as dishes, restaurants, or cooking-related resources. Please note that we are not responsible for the privacy practices or the content of these third-party websites or services. We encourage you to review the privacy policies and terms of service of these third parties before interacting with them or providing any personal information.',
   },
   {
     title: "6. Children's Privacy",
@@ -371,7 +371,7 @@ const privacyPolicyDataArabic = [
   {
     title: '5. روابط الأطراف الثالثة',
     description:
-      'قد يحتوي تطبيق FoodTok على روابط إلى مواقع وخدمات طرف ثالث، مثل وصفات، مطاعم، أو موارد تتعلق بالطهي. يُرجى ملاحظة أننا غير مسؤولين عن ممارسات الخصوصية أو محتوى هذه المواقع والخدمات من الأطراف الثالثة. نشجعك على مراجعة سياسات الخصوصية وشروط الخدمة لهذه الأطراف الثالثة قبل التفاعل معها أو تقديم أي معلومات شخصية.',
+      'قد يحتوي تطبيق FoodTok على روابط إلى مواقع وخدمات طرف ثالث، مثل اطباق، مطاعم، أو موارد تتعلق بالطهي. يُرجى ملاحظة أننا غير مسؤولين عن ممارسات الخصوصية أو محتوى هذه المواقع والخدمات من الأطراف الثالثة. نشجعك على مراجعة سياسات الخصوصية وشروط الخدمة لهذه الأطراف الثالثة قبل التفاعل معها أو تقديم أي معلومات شخصية.',
   },
   {
     title: '6. خصوصية الأطفال',
@@ -1390,25 +1390,25 @@ const UserDetailCategory = (
   viewsNo,
   onPress,
 ) => [
-  {
-    title: strings.post,
-    value: postsNo,
-  },
-  {
-    title: strings.followers,
-    value: followersNo,
-    onPress: () => onPress(strings.followers),
-  },
-  {
-    title: strings.hefollowing,
-    value: followingNo,
-    onPress,
-  },
-  {
-    title: strings.Views,
-    value: viewsNo,
-  },
-];
+    {
+      title: strings.post,
+      value: postsNo,
+    },
+    {
+      title: strings.followers,
+      value: followersNo,
+      onPress: () => onPress(strings.followers),
+    },
+    {
+      title: strings.hefollowing,
+      value: followingNo,
+      onPress,
+    },
+    {
+      title: strings.Views,
+      value: viewsNo,
+    },
+  ];
 
 const commentData = [
   {
