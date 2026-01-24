@@ -1,7 +1,7 @@
 // Libraries import
 import { StyleSheet, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Description from '../../../components/models/Descriptions';
 import Locations from '../../../components/models/Locations';
 import Comment from '../../../components/models/Comment';
@@ -9,7 +9,6 @@ import { useSelector } from 'react-redux';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { useIsFocused, useNavigation, useRoute } from '@react-navigation/native';
-import DeepLinkingService from '../../../services/DeepLinkingService';
 
 // Local import
 import { styles } from '../../../themes';
@@ -28,6 +27,7 @@ import {
   useQuery,
 } from 'react-query';
 import ReelComponent from './ReelComponent';
+import { ReelItem } from '../../../components/reel';
 import request from '../../../api/request';
 import ReelsList from './ReelsList';
 import strings from '../../../i18n/strings';
@@ -43,70 +43,55 @@ import { prefetchVideosAroundIndex } from '../../../services/VideoPrefetchServic
 // let GLOBAL_LOCKED_HEIGHT = 0;
 
 export default function ReelsComponent({ amIFocused, initialStoryId }) {
-  // Debug: Log what initialStoryId we receive
-  console.log('🐞 [ReelsComponent] Mounting with initialStoryId:', initialStoryId);
+  // Debug logging (can be removed in production)
+  if (__DEV__) {
+    console.log('🐞 [ReelsComponent] Mounting with initialStoryId:', initialStoryId);
+  }
 
-  const [storyId, setStoryId] = useState(initialStoryId);
-  const [deepLinkStoryReady, setDeepLinkStoryReady] = useState(!initialStoryId); // true if no deep link, false if waiting
-  const deepLinkStoryRef = useRef(null); // Store deep link story to preserve it when main stories load
   const colors = useSelector(state => state.theme.theme);
   const isFocused = useIsFocused() && amIFocused;
   const commentSheetRef = useRef(null);
   const descriptionSheetRef = useRef(null);
-
   const locationSheetRef = useRef(null);
   const navigation = useNavigation();
   const route = useRoute();
+  const flatListRef = useRef(null);
+  const likeRef = useRef([]);
 
-  // Dynamic Height Calculation
-  const { height: windowHeight } = useWindowDimensions();
-  const insets = useSafeAreaInsets();
+  // Deep link state - simplified
+  const [deepLinkStoryId, setDeepLinkStoryId] = useState(initialStoryId);
+  const [deepLinkStory, setDeepLinkStory] = useState(null);
 
-  // Constants based on navigation structure
-  // BOTTOM_TAB_HEIGHT and TOP_TAB_HEIGHT are imported from constants.js
-
-  // Calculate exact available space
-  const calculatedHeight = Math.floor(windowHeight - insets.top - insets.bottom - BOTTOM_TAB_HEIGHT - TOP_TAB_HEIGHT);
-
-  const [layoutHeight, setLayoutHeight] = useState(calculatedHeight);
-  const layoutHeightRef = useRef(calculatedHeight);
-
-  // Update if dimensions or insets change
-  useEffect(() => {
-    const newHeight = Math.floor(windowHeight - insets.top - insets.bottom - BOTTOM_TAB_HEIGHT - TOP_TAB_HEIGHT);
-    if (newHeight !== layoutHeightRef.current) {
-      layoutHeightRef.current = newHeight;
-      setLayoutHeight(newHeight);
-    }
-  }, [windowHeight, insets]);
+  // UI state
   const [activeVideoIndex, setActiveVideoIndex] = useState(0);
   const [selectedPostId, setSelectedPostId] = useState();
   const [extraData, setExtraData] = useState(true);
-  const [filteredData, setFilteredData] = useState([]);
-  const flatListRef = useRef(null);
-  const likeRef = useRef([]);
   const [selectedDescription, setselectedDescription] = useState('');
   const [selectedGov, setselectedGov] = useState('');
   const [categoryIds, setcategoryIds] = useState([]);
   const [isFilterLoading, setIsFilterLoading] = useState(false);
-  const [user] = useStorage('user');
   const [isCommentOpen, setIsCommentOpen] = useState(false);
   const [isLocationOpen, setIsLocationOpen] = useState(false);
 
+  const [user] = useStorage('user');
   const location = useLocation();
+
+  // Dynamic Height Calculation
+  const { height: windowHeight } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const layoutHeight = useMemo(() =>
+    Math.floor(windowHeight - insets.top - insets.bottom - BOTTOM_TAB_HEIGHT - TOP_TAB_HEIGHT),
+    [windowHeight, insets.top, insets.bottom]
+  );
 
   // When categoryIds change, show loading indicator
   useEffect(() => {
-    // Skip initial render (when categoryIds is empty array)
-    if (categoryIds.length > 0 || filteredData.length > 0) {
+    if (categoryIds.length > 0) {
       setIsFilterLoading(true);
-      setFilteredData([]); // Clear data to show loader
     }
   }, [categoryIds]);
 
-
-
-  // Use optimized reels hook
+  // Use optimized reels hook - fetches main feed
   const {
     hasNextPage,
     fetchNextPage,
@@ -118,70 +103,25 @@ export default function ReelsComponent({ amIFocused, initialStoryId }) {
     data: reelsData,
   } = useOptimizedReels(categoryIds);
 
-  // Process data and add ads
-  useEffect(() => {
-    if (!reelsData?.pages?.[0]?.stories) {
-      // Only clear if we're not in the middle of a fetch (and not filter loading)
-      if (!isFetching && !isLoading && !isFilterLoading) {
-        // Preserve deep link story even when clearing
-        if (deepLinkStoryRef.current) {
-          setFilteredData([deepLinkStoryRef.current]);
-        } else {
-          setFilteredData([]);
-        }
-      }
-      return;
-    }
+  // Views mutation - defined early as it's used in multiple places
+  const updateViews = async storyId =>
+    request.post('/views', { storyId, userId: user?._id });
+  const updateViewsMutation = useMutation(updateViews);
 
-    const allStoriesWithAds = [];
-
-    // If we have a deep link story, add it first
-    if (deepLinkStoryRef.current) {
-      allStoriesWithAds.push(deepLinkStoryRef.current);
-    }
-
-    for (const page of reelsData.pages) {
-      for (const story of page.stories) {
-        // Don't add the deep link story again if it's already in the list
-        if (!deepLinkStoryRef.current || story._id !== deepLinkStoryRef.current._id) {
-          allStoriesWithAds.push(story);
-        }
-      }
-    }
-
-    setFilteredData(allStoriesWithAds);
-    setIsFilterLoading(false); // Data arrived, stop filter loading
-
-    // Prefetch images for next few items
-    if (allStoriesWithAds.length > 0) {
-      const imagesToPrefetch = allStoriesWithAds
-        .slice(0, 5) // Prefetch first 5 items
-        .filter(item => item.type !== 'ad')
-        .map(story => story.poster || story.avatarUri)
-        .filter(Boolean);
-
-      prefetchImages(imagesToPrefetch, { concurrent: 2 });
-
-      // PREFETCH FIRST 5 VIDEOS immediately for instant playback
-      prefetchVideosAroundIndex(allStoriesWithAds, 0, 5);
-    }
-  }, [reelsData, isFetching, isLoading, isFilterLoading]);
-
-  // Use optimized story hook
+  // Use optimized story hook - fetches single story for deep links
   const {
     data: storyData,
-    refetch: refetchStory,
     isLoading: isLoadingStory,
     isFetching: isFetchingStory,
-  } = useOptimizedStory(storyId);
+  } = useOptimizedStory(deepLinkStoryId);
 
-  // Handle story data when it arrives (for deep links)
+  // Handle deep link story when it arrives
   useEffect(() => {
     if (storyData?.story) {
       console.log('🐞 [ReelsComponent] Deep link story received:', storyData.story._id);
-      // Store the deep link story in ref so it's preserved when main stories load
-      deepLinkStoryRef.current = storyData.story;
-      // Add the deep link story to the beginning of filteredData
+      setDeepLinkStory(storyData.story);
+      setDeepLinkStoryId(null); // Clear to prevent re-fetching
+      // Prepend deep link story to existing data (preserves any manually added posts)
       setFilteredData(prevData => {
         const filtered = (prevData || []).filter(item => storyData.story._id !== item._id);
         return [storyData.story, ...filtered];
@@ -189,49 +129,76 @@ export default function ReelsComponent({ amIFocused, initialStoryId }) {
       flatListRef.current?.scrollToOffset({ offset: 0 });
       updateViewsMutation.mutate(storyData.story._id);
       setActiveVideoIndex(0);
-      setStoryId(null);
-      setDeepLinkStoryReady(true); // Mark deep link story as ready
     }
   }, [storyData]);
+
+  // filteredData state - can be updated externally (e.g., when user adds a post)
+  const [filteredData, setFilteredData] = useState([]);
+
+  // Process main stories data - only updates when reelsData changes
+  useEffect(() => {
+    if (!reelsData?.pages?.[0]?.stories) {
+      if (!isFetching && !isLoading && !isFilterLoading) {
+        // Only clear if we don't have a deep link story
+        if (!deepLinkStory) {
+          setFilteredData([]);
+        }
+      }
+      return;
+    }
+
+    const allStories = [];
+    for (const page of reelsData.pages) {
+      for (const story of page.stories) {
+        allStories.push(story);
+      }
+    }
+
+    // If we have a deep link story, ensure it stays at the front
+    if (deepLinkStory) {
+      const withoutDeepLink = allStories.filter(s => s._id !== deepLinkStory._id);
+      setFilteredData([deepLinkStory, ...withoutDeepLink]);
+    } else {
+      setFilteredData(allStories);
+    }
+    setIsFilterLoading(false);
+  }, [reelsData]);
+
+  // Prefetch images when data changes
+  useEffect(() => {
+    if (filteredData.length > 0) {
+      const imagesToPrefetch = filteredData
+        .slice(0, 5)
+        .filter(item => item.type !== 'ad')
+        .map(story => story.poster || story.avatarUri)
+        .filter(Boolean);
+
+      prefetchImages(imagesToPrefetch, { concurrent: 2 });
+      prefetchVideosAroundIndex(filteredData, 0, 5);
+    }
+  }, [filteredData]);
+
+  // Determine if we're waiting for deep link content
+  const isWaitingForDeepLink = !!deepLinkStoryId && (isLoadingStory || isFetchingStory);
+
+  // Update extraData to trigger re-renders when needed
   useEffect(() => {
     setExtraData(e => !e);
-  }, [activeVideoIndex, isFocused, isCommentOpen]); // Restored activeVideoIndex - FlatList handles this efficiently
+  }, [activeVideoIndex, isFocused, isCommentOpen]);
 
-  // PREFETCH VIDEOS: When active index changes, prefetch next 3 videos at network level
-  // This downloads video data to HTTP cache without using hardware decoders (Android-safe)
+  // Prefetch videos when scrolling
   useEffect(() => {
     if (filteredData?.length > 0 && isFocused) {
-      // Prefetch videos: current +1 to +3 (and -1 for back-scroll)
       prefetchVideosAroundIndex(filteredData, activeVideoIndex, 3);
     }
   }, [activeVideoIndex, filteredData, isFocused]);
 
-
+  // Handle new deep link storyId from route params (for foreground deep links)
   useEffect(() => {
-    // Initialize deep linking service
-    const deepLinkingService = DeepLinkingService.getInstance();
-
-    // Set navigation reference if not already set
-    if (navigation && !DeepLinkingService.navigationRef) {
-      DeepLinkingService.setNavigationRef(navigation);
-    }
-
-    // Initialize the service to handle incoming links
-    const cleanup = deepLinkingService.addEventListeners();
-
-    // Handle initial URL if app was launched from a link
-    deepLinkingService.getInitialURL();
-
-    return cleanup;
-  }, [navigation]);
-
-  React.useEffect(() => {
-    // Use route params or prop (from deep link via Following.js)
     const newStoryId = route.params?.storyId || initialStoryId;
-    if (newStoryId && newStoryId !== storyId) {
-      console.log('🐞 [ReelsComponent] New storyId detected:', newStoryId);
-      setStoryId(newStoryId);
-      setDeepLinkStoryReady(false); // Reset to show loading for new deep link
+    if (newStoryId && newStoryId !== deepLinkStoryId && !deepLinkStory) {
+      console.log('🐞 [ReelsComponent] New storyId from route:', newStoryId);
+      setDeepLinkStoryId(newStoryId);
     }
   }, [route.params, initialStoryId]);
 
@@ -244,7 +211,7 @@ export default function ReelsComponent({ amIFocused, initialStoryId }) {
   const renderReelComponent = useCallback(
     ({ item, index }) => {
       return (
-        <ReelComponent
+        <ReelItem
           item={item}
           i={index}
           isFocused={isFocused}
@@ -263,21 +230,14 @@ export default function ReelsComponent({ amIFocused, initialStoryId }) {
           isLocationOpen={isLocationOpen}
           setIsCommentOpen={setIsCommentOpen}
           descriptionSheetRef={descriptionSheetRef}
+          currentUserId={user?._id}
         />
       );
     },
-    [layoutHeight, user, activeVideoIndex, isFocused, isCommentOpen, isLocationOpen], // Restored activeVideoIndex - FlatList handles this efficiently
+    [layoutHeight, user, activeVideoIndex, isFocused, isCommentOpen, isLocationOpen],
   );
 
   const viewConfig = useRef({ viewAreaCoveragePercentThreshold: 50 }).current;
-
-  const updateViews = async s =>
-    request.post('/views', {
-      storyId: s,
-      userId: user?._id,
-    });
-
-  const updateViewsMutation = useMutation(updateViews);
 
   const viewableItemsChanged = useRef(({ viewableItems }) => {
     if (viewableItems?.length) {
@@ -330,7 +290,7 @@ export default function ReelsComponent({ amIFocused, initialStoryId }) {
         isRefetching={isRefetching}
         isFetching={isFetching}
         isFetchingStory={isFetchingStory}
-        isWaitingForDeepLinkStory={!deepLinkStoryReady}
+        isWaitingForDeepLinkStory={isWaitingForDeepLink}
         refetch={refetch}
         user={user}
         keyExtractor={keyExtractor}

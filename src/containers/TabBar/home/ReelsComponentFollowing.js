@@ -23,6 +23,7 @@ import {
 import { StackNav, TabNav } from '../../../navigation/NavigationKeys';
 import { useInfiniteQuery, useMutation } from 'react-query';
 import ReelComponent from './ReelComponent';
+import { ReelItem } from '../../../components/reel';
 import request from '../../../api/request';
 import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
 import ReelsList from './ReelsList';
@@ -164,7 +165,7 @@ export default function ReelsComponent({ amIFocused }) {
   const renderReelComponent = useCallback(
     ({ item, index }) => {
       return (
-        <ReelComponent
+        <ReelItem
           item={item}
           i={index}
           isFocused={isFocused}
@@ -183,6 +184,7 @@ export default function ReelsComponent({ amIFocused }) {
           setIsCommentOpen={setIsCommentOpen}
           isLocationOpen={isLocationOpen}
           descriptionSheetRef={descriptionSheetRef}
+          currentUserId={user?._id}
         />
       );
     },

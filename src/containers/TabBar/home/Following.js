@@ -52,8 +52,7 @@ export default function Following() {
   const renderScene = ({ route: tabRoute }) => {
     switch (tabRoute.key) {
       case 'forYou':
-        // Use key to force re-mount when storyId changes (for deep links)
-        return <ReelsComponent key={`forYou-${storyId || 'default'}`} amIFocused={index === 0} initialStoryId={storyId} />;
+        return <ReelsComponent amIFocused={index === 0} initialStoryId={storyId} />;
       case 'following':
         return <ReelsComponentFollowing amIFocused={focusedTab === 'following'} />;
       default:

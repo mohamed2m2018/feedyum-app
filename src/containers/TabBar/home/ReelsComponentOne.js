@@ -22,6 +22,7 @@ import {
 import { TabNav } from '../../../navigation/NavigationKeys';
 import { useInfiniteQuery, useMutation, useQuery } from 'react-query';
 import ReelComponent from './ReelComponent';
+import { ReelItem } from '../../../components/reel';
 import request from '../../../api/request';
 import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
 import ReelsList from './ReelsList';
@@ -212,7 +213,7 @@ export default function ReelsComponentOne() {
   const renderReelComponent = useCallback(
     ({ item, index }) => {
       return (
-        <ReelComponent
+        <ReelItem
           item={item}
           i={index}
           isFromReelsOne={true}
@@ -230,6 +231,7 @@ export default function ReelsComponentOne() {
           setselectedDescription={setselectedDescription}
           descriptionSheetRef={descriptionSheetRef}
           isLocationOpen={isLocationOpen}
+          currentUserId={route?.params?.profile?._id}
         />
       );
     },
