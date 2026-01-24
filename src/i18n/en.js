@@ -1634,6 +1634,11 @@ export default {
   viewKitchen: 'View Kitchen',
   dishes: 'dishes',
   overallRating: 'Overall Rating',
+  deliversToYou: 'Delivers to you',
+  doesNotDeliverHere: 'Does not deliver here',
+  distanceAway: '{0} km away',
+  kitchenDoesNotDeliverMessage: 'This kitchen cannot deliver to your location.',
+  ratedDishes: 'rated',
   trySearching: 'Try searching:',
 
   // Translation & Bilingual Support

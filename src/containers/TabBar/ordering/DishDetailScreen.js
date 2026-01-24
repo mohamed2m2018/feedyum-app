@@ -37,6 +37,7 @@ import {
   addToCart,
 } from '../../../redux/reducer/cartSlice';
 import { useStorage } from '../../../utils/useStorage';
+import { useLocation } from '../../../navigation/locationContext';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -133,6 +134,24 @@ const DishDetailScreen = () => {
   // Use chef data from dish or fallback
   const finalChefData = chefData || fallbackChefData;
 
+  // Get user's location for delivery check
+  const { stableLatitude, stableLongitude } = useLocation();
+
+  // Check delivery eligibility to user's location
+  const { data: deliveryData } = useQuery(
+    ['deliveryEligibility', chefId, stableLatitude, stableLongitude],
+    async () => {
+      const response = await request.get(
+        `/orders/check-delivery/${chefId}?lat=${stableLatitude}&long=${stableLongitude}`
+      );
+      return response.data;
+    },
+    {
+      enabled: !!chefId && !!stableLatitude && !!stableLongitude,
+      staleTime: 1000 * 60 * 5, // 5 minutes
+    }
+  );
+
   // Add to favorites mutation
   const addToFavoritesMutation = useMutation(
     async () => {
@@ -181,6 +200,18 @@ const DishDetailScreen = () => {
 
   const handleAddToCart = () => {
     if (!dishData) return;
+
+    // Block if kitchen doesn't deliver to user's location
+    if (deliveryData && !deliveryData.canDeliver) {
+      const distanceInfo = deliveryData.nearestDistance
+        ? ` (${(strings.distanceAway || '{0} km').replace('{0}', deliveryData.nearestDistance)})`
+        : '';
+      showErrorToast(
+        strings.doesNotDeliverHere || 'Does not deliver here',
+        (strings.kitchenDoesNotDeliverMessage || 'This kitchen cannot deliver to your location.') + distanceInfo
+      );
+      return;
+    }
 
     const computedChefName =
       finalChefData?.fullName || route?.params?.chefName || strings.unknownChef;

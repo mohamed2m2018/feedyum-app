@@ -1617,6 +1617,11 @@ export default {
   viewKitchen: 'عرض المطبخ',
   dishes: 'أطباق',
   overallRating: 'التقييم العام',
+  deliversToYou: 'يوصل إليك',
+  doesNotDeliverHere: 'لا يوصل هنا',
+  distanceAway: '{0} كم',
+  kitchenDoesNotDeliverMessage: 'هذا المطبخ لا يوصل لموقعك.',
+  ratedDishes: 'مقيّم',
   trySearching: 'جرب البحث عن:',
 
   // Translation & Bilingual Support

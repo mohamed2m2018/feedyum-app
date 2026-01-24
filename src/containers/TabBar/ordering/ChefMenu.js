@@ -38,6 +38,7 @@ import {
   clearPendingConflictItem,
 } from '../../../redux/reducer/cartSlice';
 import { useStorage } from '../../../utils/useStorage';
+import { useLocation } from '../../../navigation/locationContext';
 import FeaturedReelsSection from '../../../components/common/FeaturedReelsSection';
 import FeaturedReviewsSection from '../../../components/common/FeaturedReviewsSection';
 import FollowButton from '../../../components/common/FollowButton';
@@ -118,6 +119,24 @@ const ChefMenu = () => {
     {
       enabled: !!chefId,
       staleTime: 1000 * 60 * 10, // 10 minutes
+    }
+  );
+
+  // Get user's location for delivery check
+  const { stableLatitude, stableLongitude } = useLocation();
+
+  // Check delivery eligibility to user's location
+  const { data: deliveryData } = useQuery(
+    ['deliveryEligibility', chefId, stableLatitude, stableLongitude],
+    async () => {
+      const response = await request.get(
+        `/orders/check-delivery/${chefId}?lat=${stableLatitude}&long=${stableLongitude}`
+      );
+      return response.data;
+    },
+    {
+      enabled: !!chefId && !!stableLatitude && !!stableLongitude,
+      staleTime: 1000 * 60 * 5, // 5 minutes
     }
   );
 
@@ -284,7 +303,17 @@ const ChefMenu = () => {
   const handleAddToCart = async (dish, quantity = 1) => {
     if (!dish || quantity <= 0) return;
 
-
+    // Block if kitchen doesn't deliver to user's location
+    if (deliveryData && !deliveryData.canDeliver) {
+      const distanceInfo = deliveryData.nearestDistance
+        ? ` (${(strings.distanceAway || '{0} km').replace('{0}', deliveryData.nearestDistance)})`
+        : '';
+      showErrorToast(
+        strings.doesNotDeliverHere || 'Does not deliver here',
+        (strings.kitchenDoesNotDeliverMessage || 'This kitchen cannot deliver to your location.') + distanceInfo
+      );
+      return;
+    }
 
     try {
       // Remove .unwrap() since addToCart is a regular action creator, not an async thunk
@@ -702,81 +731,95 @@ const ChefMenu = () => {
                 </View>
               </View>
 
-              {/* Prominent Overall Rating Card - Calculate from dishes */}
-              {(() => {
-                // Calculate rating from dishes data since menuData.chef doesn't have it
-                const dishes = menuData?.dishes || [];
-                const ratedDishes = dishes.filter(d =>
-                  typeof d.average_rating === 'number' && d.average_rating >= 1
-                );
-                const ratedCount = ratedDishes.length;
-
-                let rating = 0;
-                if (ratedCount > 0) {
-                  const total = ratedDishes.reduce((sum, d) => sum + d.average_rating, 0);
-                  rating = Math.round((total / ratedCount) * 10) / 10;
-                }
-
-                // Only show if we have a valid rating
-                if (rating < 1) return null;
-
-                return (
-                  <View style={[localStyles.overallRatingCard, { backgroundColor: colors.dark ? '#1F1F1F' : '#FFF9E6', borderColor: '#FFD700' }]}>
-                    <View style={localStyles.ratingBigNumber}>
-                      <ZText type="B24" color="#FFD700" style={{ fontWeight: '800' }}>
+              {/* Compact Info Badges Row - Rating, Branches, Delivery Status */}
+              <View style={localStyles.badgesRow}>
+                {/* Rating Badge - Compact */}
+                {(() => {
+                  const dishes = menuData?.dishes || [];
+                  const ratedDishes = dishes.filter(d =>
+                    typeof d.average_rating === 'number' && d.average_rating >= 1
+                  );
+                  const ratedCount = ratedDishes.length;
+                  let rating = 0;
+                  if (ratedCount > 0) {
+                    const total = ratedDishes.reduce((sum, d) => sum + d.average_rating, 0);
+                    rating = Math.round((total / ratedCount) * 10) / 10;
+                  }
+                  if (rating < 1) return null;
+                  return (
+                    <View style={[localStyles.compactBadge, { backgroundColor: '#FFD700' + '20' }]}>
+                      <Ionicons name="star" size={14} color="#FFD700" />
+                      <ZText type="B12" color="#D4A800" style={{ marginLeft: 4 }}>
                         {rating.toFixed(1)}
                       </ZText>
-                      <Ionicons name="star" size={20} color="#FFD700" style={{ marginLeft: 4 }} />
+                      <ZText type="M11" color={colors.grayScale6} style={{ marginLeft: 3 }}>
+                        ({ratedCount} {strings.ratedDishes || 'rated'})
+                      </ZText>
                     </View>
-                    <View style={localStyles.ratingDetails}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <Ionicons
-                            key={star}
-                            name={star <= Math.round(rating) ? 'star' : 'star-outline'}
-                            size={14}
-                            color="#FFD700"
-                            style={{ marginRight: 2 }}
-                          />
-                        ))}
+                  );
+                })()}
+
+                {/* Branches Badge */}
+                {(() => {
+                  const branchLocations = (branchesData?.branches || [])
+                    .filter(b => b.isActive)
+                    .map(b => ({
+                      description: b.addressDetails?.formattedAddress || b.branchName,
+                      lat: b.location?.lat,
+                      long: b.location?.long,
+                    }));
+                  if (branchLocations.length === 0) return null;
+                  return (
+                    <TouchableOpacity
+                      onPress={() => locationsSheetRef.current?.show()}
+                      activeOpacity={0.7}
+                    >
+                      <View style={[localStyles.compactBadge, { backgroundColor: colors.primary + '15' }]}>
+                        <Ionicons name="location" size={14} color={colors.primary} />
+                        <ZText type="B12" color={colors.primary} style={{ marginLeft: 4 }}>
+                          {branchLocations.length} {branchLocations.length === 1 ? strings.branch : strings.branches}
+                        </ZText>
+                        <Ionicons name="chevron-forward" size={12} color={colors.primary} style={{ marginLeft: 2 }} />
                       </View>
-                      <ZText type="M11" color={colors.grayScale6} style={{ marginTop: 2 }}>
-                        {strings.overallRating || 'Overall Rating'}
-                        {ratedCount > 0 ? ` (${ratedCount} ${ratedCount === 1 ? strings.dish || 'dish' : strings.dishes || 'dishes'})` : ''}
-                      </ZText>
-                    </View>
-                  </View>
-                );
-              })()}
-              {/* Branches Section */}
-              {(() => {
-                // Prepare locations data for the modal
-                const branchLocations = (branchesData?.branches || [])
-                  .filter(b => b.isActive)
-                  .map(b => ({
-                    description: b.addressDetails?.formattedAddress || b.branchName,
-                    lat: b.location?.lat,
-                    long: b.location?.long,
-                  }));
+                    </TouchableOpacity>
+                  );
+                })()}
 
-                if (branchLocations.length === 0) return null;
-
-                return (
-                  <TouchableOpacity
-                    style={localStyles.branchesRow}
-                    onPress={() => locationsSheetRef.current?.show()}
-                    activeOpacity={0.7}
+                {/* Delivery Status Badge */}
+                {deliveryData && (
+                  <View
+                    style={[
+                      localStyles.compactBadge,
+                      {
+                        backgroundColor: deliveryData.canDeliver
+                          ? '#4CAF50' + '15'
+                          : '#FF9800' + '15',
+                      },
+                    ]}
                   >
-                    <View style={[localStyles.branchBadge, { backgroundColor: colors.primary + '15' }]}>
-                      <Ionicons name="location" size={14} color={colors.primary} />
-                      <ZText type="B12" color={colors.primary} style={{ marginLeft: 4 }}>
-                        {branchLocations.length} {branchLocations.length === 1 ? strings.branch || 'Branch' : strings.branches || 'Branches'}
+                    <Ionicons
+                      name={deliveryData.canDeliver ? 'checkmark-circle' : 'alert-circle'}
+                      size={14}
+                      color={deliveryData.canDeliver ? '#4CAF50' : '#FF9800'}
+                    />
+                    <ZText
+                      type="B12"
+                      color={deliveryData.canDeliver ? '#4CAF50' : '#FF9800'}
+                      style={{ marginLeft: 4 }}
+                    >
+                      {deliveryData.canDeliver
+                        ? strings.deliversToYou
+                        : strings.doesNotDeliverHere}
+                    </ZText>
+                    {!deliveryData.canDeliver && deliveryData.nearestDistance && (
+                      <ZText type="M11" color={colors.grayScale6} style={{ marginLeft: 3 }}>
+                        • {(strings.distanceAway || '{0} km').replace('{0}', deliveryData.nearestDistance)}
                       </ZText>
-                      <Ionicons name="chevron-forward" size={14} color={colors.primary} style={{ marginLeft: 2 }} />
-                    </View>
-                  </TouchableOpacity>
-                );
-              })()}
+                    )}
+                  </View>
+                )}
+              </View>
+
               {/* Follow Button - Only show if not current user's profile */}
               {chefId && user?._id?.toString() !== chefId?.toString() && (
                 <FollowButton
@@ -1061,6 +1104,21 @@ const localStyles = StyleSheet.create({
     gap: moderateScale(4),
   },
   branchBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: moderateScale(10),
+    paddingVertical: moderateScale(6),
+    borderRadius: moderateScale(16),
+  },
+  // Compact Badges Row - Unified style for rating, branches, delivery
+  badgesRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    marginTop: moderateScale(10),
+    gap: moderateScale(8),
+  },
+  compactBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: moderateScale(10),
