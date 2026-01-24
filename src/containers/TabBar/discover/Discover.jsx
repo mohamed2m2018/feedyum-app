@@ -218,8 +218,8 @@ const localStyles = StyleSheet.create({
   },
   addressDropdownWrapper: {
     flex: 1,
-    marginRight: moderateScale(15), // Increased space from search icon
-    maxWidth: moderateScale(160), // Prevent overflow
+    marginRight: moderateScale(10), // Increased space from search icon
+    marginLeft: moderateScale(10), 
   },
   searchButton: {
     padding: moderateScale(5), // Add touch area
