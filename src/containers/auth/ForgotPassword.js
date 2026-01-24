@@ -164,6 +164,9 @@ const ForgotPassword = ({ navigation }) => {
             <ZText type={'r16'} style={[styles.mt10, styles.ph20]} align="center" color={colors.grayScale6}>
               {strings.resetLinkSentDesc || 'If an account exists with this email, you will receive a password reset link shortly.'}
             </ZText>
+            <ZText type={'r14'} style={[styles.mt15, styles.ph20]} align="center" color={colors.grayScale5}>
+              {strings.checkSpamFolder || "Didn't receive it? Check your spam or junk folder."}
+            </ZText>
             <ZText type={'r14'} style={[styles.mt20]} align="center" color={colors.grayScale5}>
               {email}
             </ZText>

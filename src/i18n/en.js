@@ -85,6 +85,7 @@ export default {
   sendResetLink: 'Send Reset Link',
   resetLinkSent: 'Reset Link Sent!',
   resetLinkSentDesc: 'If an account exists with this email, you will receive a password reset link shortly.',
+  checkSpamFolder: "Didn't receive it? Check your spam or junk folder.",
   checkYourEmail: 'Check your email',
   invalidResetToken: 'Invalid Reset Link',
   invalidResetTokenDesc: 'This reset link is invalid or has expired. Please request a new one.',
