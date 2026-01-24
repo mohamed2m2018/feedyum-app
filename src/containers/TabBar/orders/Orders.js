@@ -23,11 +23,14 @@ import { StackNav } from '../../../navigation/NavigationKeys';
 import request from '../../../api/request';
 import strings from '../../../i18n/strings';
 import { useHandleAuth } from '../../../utils/useHandleAuth';
+import HeaderIconWithBadge from '../../../components/common/HeaderIconWithBadge';
+import { selectCartItemCount } from '../../../redux/reducer/cartSlice';
 
 export default function Orders({ navigation }) {
   const colors = useSelector(state => state.theme.theme);
   const [refreshing, setRefreshing] = useState(false);
   const { isGuest, handleAuthToast } = useHandleAuth();
+  const cartItemCount = useSelector(selectCartItemCount);
 
   // Get current user
   const { data: userData } = useQuery('user', () => request.get('/user'));
@@ -325,16 +328,25 @@ export default function Orders({ navigation }) {
           )}
           <ZText type="b20" color={colors.textColor}>{strings.myOrders}</ZText>
         </View>
-        <TouchableOpacity
-          onPress={() => navigation.navigate(StackNav.ChatList)}
-          style={localStyles.headerIcon}
-        >
-          <Ionicons
-            name="chatbubbles-outline"
-            size={moderateScale(24)}
-            color={colors.textColor}
+        <View style={localStyles.headerIconsRow}>
+          <HeaderIconWithBadge
+            name="basket-outline"
+            size={22}
+            count={cartItemCount}
+            onPress={() => navigation.navigate(StackNav.ShoppingCart)}
+            style={localStyles.headerIconBadge}
           />
-        </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => navigation.navigate(StackNav.ChatList)}
+            style={localStyles.headerIcon}
+          >
+            <Ionicons
+              name="chatbubbles-outline"
+              size={moderateScale(24)}
+              color={colors.textColor}
+            />
+          </TouchableOpacity>
+        </View>
       </View>
       <FlatList
         data={orders}
@@ -447,6 +459,14 @@ const localStyles = StyleSheet.create({
   },
   headerIcon: {
     padding: moderateScale(5),
+  },
+  headerIconsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerIconBadge: {
+    marginRight: moderateScale(4),
+    padding: moderateScale(3),
   },
   unseenDot: {
     position: 'absolute',

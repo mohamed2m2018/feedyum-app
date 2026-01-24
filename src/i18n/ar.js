@@ -33,6 +33,8 @@ export default {
   branchAddedSuccess: 'تمت إضافة الفرع بنجاح',
   branchUpdatedSuccess: 'تم تحديث الفرع بنجاح',
   branchDeletedSuccess: 'تم حذف الفرع بنجاح',
+  cannotDeleteBranch: 'لا يمكن الحذف',
+  lastBranchWarning: 'يجب أن يكون لديك فرع واحد على الأقل. لا يمكنك حذف فرعك الوحيد.',
   noAddressProvided: 'لم يتم تقديم عنوان',
   // Delivery Radius
   deliveryRadius: 'نطاق التوصيل',

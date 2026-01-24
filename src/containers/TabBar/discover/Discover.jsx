@@ -18,6 +18,7 @@ import AddressDropdown from '../../../components/AddressDropdown';
 import { useLocation } from '../../../navigation/locationContext';
 import HeaderIconWithBadge from '../../../components/common/HeaderIconWithBadge';
 import { useNotificationCounts } from '../../../hooks/useNotificationCounts';
+import { selectCartItemCount } from '../../../redux/reducer/cartSlice';
 
 const HeaderCetegoryItem = React.memo(({ title, index, isSelected, onPress, colors }) => {
   return (
@@ -104,6 +105,7 @@ export default function Discover({navigation}) {
   const colors = useSelector(state => state.theme.theme);
   const location = useLocation();
   const [isLocationChanging, setIsLocationChanging] = useState(false);
+  const cartItemCount = useSelector(selectCartItemCount);
   const { unseenOrdersCount, unreadChatsCount } = useNotificationCounts();
 
   const [isSelect, setIsSelect] = useState({
@@ -165,6 +167,11 @@ export default function Discover({navigation}) {
               }}
             />
           </View>
+          <HeaderIconWithBadge
+            name="basket-outline"
+            count={cartItemCount}
+            onPress={() => navigation.navigate(StackNav.ShoppingCart)}
+          />
           <HeaderIconWithBadge
             name="bag-handle-outline"
             count={unseenOrdersCount}

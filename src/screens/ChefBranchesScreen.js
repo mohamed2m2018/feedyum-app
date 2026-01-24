@@ -148,6 +148,15 @@ const ChefBranchesScreen = () => {
     };
 
     const handleDeleteBranch = (branch) => {
+        // Prevent deleting the last branch
+        if (branches.length <= 1) {
+            showErrorToast(
+                strings.cannotDeleteBranch || 'Cannot Delete',
+                strings.lastBranchWarning || 'At least one branch must exist. You cannot delete your only branch.'
+            );
+            return;
+        }
+
         showActionDialog({
             type: ALERT_TYPE.WARNING,
             title: strings.deleteBranch || 'Delete Branch',

@@ -118,6 +118,8 @@ export default {
   branchAddedSuccess: 'Branch added successfully',
   branchUpdatedSuccess: 'Branch updated successfully',
   branchDeletedSuccess: 'Branch deleted successfully',
+  cannotDeleteBranch: 'Cannot Delete',
+  lastBranchWarning: 'At least one branch must exist. You cannot delete your only branch.',
   noAddressProvided: 'No address provided',
   // Delivery Radius
   deliveryRadius: 'Delivery Radius',

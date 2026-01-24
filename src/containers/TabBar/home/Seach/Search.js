@@ -4,7 +4,6 @@ import React, { memo, useCallback, useEffect, useState, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { TabView, TabBar } from 'react-native-tab-view';
 import LinearGradient from 'react-native-linear-gradient';
-import Ionicons from 'react-native-vector-icons/Ionicons';
 
 // Local import
 import ZSafeAreaView from '../../../../components/common/ZSafeAreaView';
@@ -18,6 +17,9 @@ import { TabNav, StackNav } from '../../../../navigation/NavigationKeys';
 import ZLoader from '../../../../components/common/ZLoader';
 import SearchHeader from '../../../../components/SearchHeader';
 import CartFloatingButton from '../../../../components/common/CartFloatingButton';
+import HeaderIconWithBadge from '../../../../components/common/HeaderIconWithBadge';
+import { selectCartItemCount } from '../../../../redux/reducer/cartSlice';
+import { useNotificationCounts } from '../../../../hooks/useNotificationCounts';
 
 // Tab components
 import DishSearchTab from './DishSearchTab';
@@ -30,6 +32,8 @@ export default function Search() {
   const colors = useSelector(state => state.theme.theme);
   const { selectedAddress } = useSelector(state => state.address);
   const navigation = useNavigation();
+  const cartItemCount = useSelector(selectCartItemCount);
+  const { unseenOrdersCount, unreadChatsCount } = useNotificationCounts();
 
   // User location for location-based search
   const userLocation = selectedAddress?.coordinates ? {
@@ -171,20 +175,27 @@ export default function Search() {
             />
           </View>
           <View style={localStyles.headerIconsContainer}>
-            <TouchableOpacity onPress={() => navigation.navigate(StackNav.Orders)} style={localStyles.headerIcon}>
-              <Ionicons
-                name="bag-handle-outline"
-                size={moderateScale(24)}
-                color={colors.dark ? colors.white : colors.darkColor}
-              />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => navigation.navigate(StackNav.ChatList)} style={localStyles.headerIcon}>
-              <Ionicons
-                name="chatbubbles-outline"
-                size={moderateScale(24)}
-                color={colors.dark ? colors.white : colors.darkColor}
-              />
-            </TouchableOpacity>
+            <HeaderIconWithBadge
+              name="basket-outline"
+              size={22}
+              count={cartItemCount}
+              onPress={() => navigation.navigate(StackNav.ShoppingCart)}
+              style={localStyles.headerIconBadge}
+            />
+            <HeaderIconWithBadge
+              name="bag-handle-outline"
+              size={22}
+              count={unseenOrdersCount}
+              onPress={() => navigation.navigate(StackNav.Orders)}
+              style={localStyles.headerIconBadge}
+            />
+            <HeaderIconWithBadge
+              name="chatbubbles-outline"
+              size={22}
+              count={unreadChatsCount}
+              onPress={() => navigation.navigate(StackNav.ChatList)}
+              style={localStyles.headerIconBadge}
+            />
           </View>
         </View>
 
@@ -248,5 +259,9 @@ const localStyles = StyleSheet.create({
   },
   headerIcon: {
     padding: moderateScale(6),
+  },
+  headerIconBadge: {
+    marginLeft: moderateScale(2),
+    padding: moderateScale(3),
   },
 });
