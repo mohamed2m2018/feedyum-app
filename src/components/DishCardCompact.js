@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
+import { useQuery } from 'react-query';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import LinearGradient from 'react-native-linear-gradient';
 
@@ -19,6 +20,8 @@ import { moderateScale } from '../common/constants';
 import { styles } from '../themes';
 import strings from '../i18n/strings';
 import images from '../assets/images';
+import request from '../api/request';
+import { useLocation } from '../navigation/locationContext';
 import {
     addToCart,
     selectCartItems,
@@ -26,7 +29,7 @@ import {
     clearCartAndAddPending,
     clearPendingConflictItem,
 } from '../redux/reducer/cartSlice';
-import { showActionDialog, showSuccessToast, ALERT_TYPE } from '../utils/toast';
+import { showActionDialog, showSuccessToast, showErrorToast, ALERT_TYPE } from '../utils/toast';
 import { StackNav } from '../navigation/NavigationKeys';
 
 /**
@@ -50,6 +53,28 @@ function DishCardCompact({
     // Get quantity from Redux cart state (synced with actual cart)
     const quantity = cartItems.find(item => item.dishId === dish?._id)?.quantity || 0;
 
+    // Derive chefId from dish data
+    const chef = dish?.user || dish?.chef;
+    const effectiveChefId = chef?._id || dish?.userId || dish?.chefId;
+
+    // Get user's location for delivery check
+    const { stableLatitude, stableLongitude } = useLocation();
+
+    // Check delivery eligibility to user's location
+    const { data: deliveryData } = useQuery(
+        ['deliveryEligibility', effectiveChefId, stableLatitude, stableLongitude],
+        async () => {
+            const response = await request.get(
+                `/orders/check-delivery/${effectiveChefId}?lat=${stableLatitude}&long=${stableLongitude}`
+            );
+            return response.data;
+        },
+        {
+            enabled: !!effectiveChefId && !!stableLatitude && !!stableLongitude,
+            staleTime: 1000 * 60 * 5, // 5 minutes
+        }
+    );
+
     // Handle cart conflict - show modal when user tries to add from different chef
     useEffect(() => {
         if (pendingConflictItem) {
@@ -72,6 +97,18 @@ function DishCardCompact({
     }, [pendingConflictItem, dispatch, navigation]);
 
     const handleAddPress = () => {
+        // Block if kitchen doesn't deliver to user's location
+        if (deliveryData && !deliveryData.canDeliver) {
+            const distanceInfo = deliveryData.nearestDistance
+                ? ` (${(strings.distanceAway || '{0} km').replace('{0}', deliveryData.nearestDistance)})`
+                : '';
+            showErrorToast(
+                strings.doesNotDeliverHere || 'Does not deliver here',
+                (strings.kitchenDoesNotDeliverMessage || 'This kitchen cannot deliver to your location.') + distanceInfo
+            );
+            return;
+        }
+
         // Animate button
         Animated.sequence([
             Animated.spring(scaleAnim, {
@@ -87,10 +124,9 @@ function DishCardCompact({
         ]).start();
 
         // Dispatch to Redux cart - pass full dish object and extract chef info
-        const chef = dish.user || dish.chef;
         dispatch(addToCart({
             dish: dish,
-            chefId: chef?._id || dish.userId || dish.chefId,
+            chefId: effectiveChefId,
             chefName: chef?.fullName || chef?.username || 'Unknown Kitchen',
             quantity: 1,
         }));

@@ -511,6 +511,17 @@ const ChefMenu = () => {
                         { backgroundColor: colors.primary },
                       ]}
                       onPress={() => {
+                        // Block if kitchen doesn't deliver
+                        if (deliveryData && !deliveryData.canDeliver) {
+                          const distanceInfo = deliveryData.nearestDistance
+                            ? ` (${(strings.distanceAway || '{0} km').replace('{0}', deliveryData.nearestDistance)})`
+                            : '';
+                          showErrorToast(
+                            strings.doesNotDeliverHere || 'Does not deliver here',
+                            (strings.kitchenDoesNotDeliverMessage || 'This kitchen cannot deliver to your location.') + distanceInfo
+                          );
+                          return;
+                        }
                         handleQuantityChange(dish._id, 1);
                         handleAddToCart(dish, 1);
                       }}
@@ -529,6 +540,17 @@ const ChefMenu = () => {
                       { backgroundColor: colors.primary },
                     ]}
                     onPress={() => {
+                      // Block if kitchen doesn't deliver
+                      if (deliveryData && !deliveryData.canDeliver) {
+                        const distanceInfo = deliveryData.nearestDistance
+                          ? ` (${(strings.distanceAway || '{0} km').replace('{0}', deliveryData.nearestDistance)})`
+                          : '';
+                        showErrorToast(
+                          strings.doesNotDeliverHere || 'Does not deliver here',
+                          (strings.kitchenDoesNotDeliverMessage || 'This kitchen cannot deliver to your location.') + distanceInfo
+                        );
+                        return;
+                      }
                       handleQuantityChange(dish._id, 1);
                       handleAddToCart(dish, 1);
                     }}

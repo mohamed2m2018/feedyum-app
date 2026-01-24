@@ -134,20 +134,23 @@ const DishDetailScreen = () => {
   // Use chef data from dish or fallback
   const finalChefData = chefData || fallbackChefData;
 
+  // Derive effective chefId (from params or from dish data)
+  const effectiveChefId = chefId || dishData?.user_id;
+
   // Get user's location for delivery check
   const { stableLatitude, stableLongitude } = useLocation();
 
   // Check delivery eligibility to user's location
   const { data: deliveryData } = useQuery(
-    ['deliveryEligibility', chefId, stableLatitude, stableLongitude],
+    ['deliveryEligibility', effectiveChefId, stableLatitude, stableLongitude],
     async () => {
       const response = await request.get(
-        `/orders/check-delivery/${chefId}?lat=${stableLatitude}&long=${stableLongitude}`
+        `/orders/check-delivery/${effectiveChefId}?lat=${stableLatitude}&long=${stableLongitude}`
       );
       return response.data;
     },
     {
-      enabled: !!chefId && !!stableLatitude && !!stableLongitude,
+      enabled: !!effectiveChefId && !!stableLatitude && !!stableLongitude,
       staleTime: 1000 * 60 * 5, // 5 minutes
     }
   );
