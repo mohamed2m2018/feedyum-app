@@ -1,4 +1,4 @@
-import React, { useRef, useImperativeHandle, forwardRef } from 'react';
+import React, { useRef, useImperativeHandle, forwardRef, useState, useEffect } from 'react';
 import { StyleSheet, View, I18nManager } from 'react-native';
 import { useSelector } from 'react-redux';
 import PhoneInput from 'react-native-phone-number-input';
@@ -23,6 +23,7 @@ import ZText from './ZText';
  * @param {Object} props.containerStyle - Custom container style
  * @param {boolean} props.disabled - Disable the input
  * @param {string} props.placeholder - Placeholder text
+ * @param {function} props.onBlur - Callback when input loses focus
  * 
  * Ref Methods:
  * - isValidNumber(): Returns true if the current number is valid
@@ -42,9 +43,26 @@ const ZPhoneInput = forwardRef(({
     containerStyle,
     disabled = false,
     placeholder,
+    onBlur,
 }, ref) => {
     const colors = useSelector(state => state.theme.theme);
     const phoneInputRef = useRef(null);
+
+    // Track internal value to handle external value prop changes
+    // react-native-phone-number-input's defaultValue is not reactive
+    const [internalValue, setInternalValue] = useState(value || '');
+    const [inputKey, setInputKey] = useState(0);
+
+    // Sync internal value with external value prop when it changes from outside
+    useEffect(() => {
+        // Only update if value is coming from external source (e.g., API data load)
+        // and is different from what user has typed
+        if (value !== undefined && value !== internalValue) {
+            setInternalValue(value || '');
+            // Force remount of PhoneInput to apply new defaultValue
+            setInputKey(prev => prev + 1);
+        }
+    }, [value]);
 
     // Expose validation methods to parent via ref
     useImperativeHandle(ref, () => ({
@@ -61,6 +79,9 @@ const ZPhoneInput = forwardRef(({
     }));
 
     const handlePhoneChange = (text) => {
+        // Update internal state to track user input
+        setInternalValue(text);
+
         if (onChangeText) {
             onChangeText(text);
         }
@@ -118,8 +139,9 @@ const ZPhoneInput = forwardRef(({
                 ]}
             >
                 <PhoneInput
+                    key={inputKey}
                     ref={phoneInputRef}
-                    defaultValue={value}
+                    defaultValue={internalValue}
                     defaultCode={defaultCode}
                     layout="first"
                     onChangeText={handlePhoneChange}
@@ -149,6 +171,7 @@ const ZPhoneInput = forwardRef(({
                     textInputProps={{
                         placeholderTextColor: colors.placeHolderColor,
                         textAlign: I18nManager.isRTL ? 'right' : 'left',
+                        onBlur: onBlur,
                     }}
                     countryPickerProps={{
                         withFilter: true,

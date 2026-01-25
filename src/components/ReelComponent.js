@@ -169,8 +169,8 @@ const ReelComponent = ({
                 reviewType: item.reviewType
               });
             } else {
-              // Navigate to normal post edit screen
-              navigation.navigate(StackNav.PostDetail, {
+              // Navigate to edit post screen
+              navigation.navigate(StackNav.EditPost, {
                 postDataToBeEdited: item,
               });
             }
@@ -194,7 +194,7 @@ const ReelComponent = ({
             color="#FFD700"
           />
           <ZText type="B8" color={colors.white} style={styles.ml2}>
-            REVIEW
+            {strings.review.toUpperCase()}
           </ZText>
         </View>
       )}

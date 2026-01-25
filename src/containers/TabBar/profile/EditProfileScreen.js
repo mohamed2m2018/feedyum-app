@@ -371,7 +371,6 @@ const EditProfileScreen = ({ navigation }) => {
                         {/* Phone Field */}
                         <View style={localStyles.fieldContainer}>
                             <ZPhoneInput
-                                key={formInitialized ? 'phone-initialized' : 'phone-loading'}
                                 ref={phoneInputRef}
                                 value={phoneNo}
                                 defaultCode="EG"

@@ -26,7 +26,6 @@ import { moderateScale } from '../common/constants';
 import { styles } from '../themes';
 import ZText from './common/ZText';
 import ZSafeAreaView from './common/ZSafeAreaView';
-import ZLoader from './common/ZLoader';
 import strings from '../i18n/strings';
 import addressService from '../services/addressService';
 import { addAddress, editAddress } from '../redux/actions/addressActions';
@@ -788,7 +787,7 @@ const MapLocationPicker = () => {
               disabled={loading || addingAddress}
             >
               {(loading || addingAddress) ? (
-                <ZLoader size="small" color={colors.white} />
+                <ActivityIndicator size="small" color={colors.white} />
               ) : (
                 <ZText type="B16" color={colors.white}>
                   {strings.confirmLocation}

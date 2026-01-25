@@ -359,6 +359,10 @@ export default function StackNavigation() {
         name={StackNav.Orders}
         component={StackRoute.Orders}
       />
+      <Stack.Screen
+        name={StackNav.EditPost}
+        component={StackRoute.EditPost}
+      />
     </Stack.Navigator>
   );
 }

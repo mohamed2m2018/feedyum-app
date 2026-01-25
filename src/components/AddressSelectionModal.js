@@ -66,21 +66,35 @@ const AddressSelectionModal = ({
     setLoadingCurrentLocation(true);
 
     try {
-      // Use device location directly
-      if (location?.useDeviceLocation) {
-        location.useDeviceLocation();
-      }
+      // Close the modal and navigate to MapLocationPicker with current GPS location
+      onClose();
 
-      // Clear selected address in Redux to indicate we are using GPS
-      dispatch(setSelectedAddress(null));
+      // Navigate to MapLocationPicker with current GPS coordinates pre-filled
+      navigation.navigate(StackNav.MapLocationPicker, {
+        // Pass current GPS coordinates to pre-fill the map
+        initialLocation: location?.latitude && location?.longitude ? {
+          latitude: location.latitude,
+          longitude: location.longitude,
+        } : null,
+        onLocationSelect: async (address) => {
+          // Update location context with the selected address
+          if (location?.updateDeliveryLocation) {
+            location.updateDeliveryLocation(address);
+          }
 
-      // Clear selected address in parent component callback
-      if (onAddressSelect) {
-        onAddressSelect(null);
-      }
+          // Refresh addresses list if a new address was saved
+          if (onAddressUpdated) {
+            await onAddressUpdated();
+          }
+
+          // Select the new address
+          if (onAddressSelect) {
+            onAddressSelect(address);
+          }
+        }
+      });
 
       setLoadingCurrentLocation(false);
-      onClose();
     } catch (error) {
       setLoadingCurrentLocation(false);
       showErrorToast(strings.error, strings.failedToGetLocation);

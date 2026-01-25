@@ -324,21 +324,6 @@ export default function ProfileDetail({ navigation, route }) {
               </ZText>
             </TouchableOpacity>
           )}
-
-          {/* Message Button */}
-          <TouchableOpacity
-            style={[localStyles.secondaryButton, {
-              backgroundColor: colors.dark ? 'rgba(255,77,103,0.15)' : 'rgba(255,77,103,0.1)',
-              borderColor: colors.primary,
-            }]}
-            onPress={() => { }}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="chatbubble-outline" size={moderateScale(14)} color={colors.primary} style={{ marginRight: moderateScale(4) }} />
-            <ZText type="b13" color={colors.primary}>
-              {strings.message || 'Message'}
-            </ZText>
-          </TouchableOpacity>
         </View>
 
         {user?.type === 'chef' && (
@@ -472,17 +457,17 @@ const localStyles = StyleSheet.create({
   statsContainer: {
     flex: 1,
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginLeft: moderateScale(8),
-    gap: moderateScale(4),
+    paddingHorizontal: moderateScale(4),
+    gap: moderateScale(6),
   },
   statItem: {
     alignItems: 'center',
-    minWidth: moderateScale(58),
-    paddingVertical: moderateScale(10),
-    paddingHorizontal: moderateScale(6),
-    borderRadius: moderateScale(12),
+    minWidth: moderateScale(50),
+    paddingVertical: moderateScale(8),
+    paddingHorizontal: moderateScale(4),
+    borderRadius: moderateScale(10),
   },
 
   // Bio Section

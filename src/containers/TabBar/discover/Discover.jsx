@@ -173,7 +173,7 @@ export default function Discover({navigation}) {
             onPress={() => navigation.navigate(StackNav.ShoppingCart)}
           />
           <HeaderIconWithBadge
-            name="bag-handle-outline"
+            name="receipt-outline"
             count={unseenOrdersCount}
             onPress={() => navigation.navigate(StackNav.Orders)}
           />

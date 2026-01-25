@@ -1312,6 +1312,9 @@ export default {
   noRating: 'No rating',
   foodCreator: 'Food creator',
   menu: 'Menu',
+  editPost: 'Edit Post',
+  partnerChef: 'Partner Chef',
+  unknownRestaurant: 'Unknown restaurant',
 
 
 

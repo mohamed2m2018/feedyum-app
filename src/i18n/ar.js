@@ -1318,6 +1318,9 @@ export default {
   noRating: 'لا يوجد تقييم',
   foodCreator: 'طاهي',
   menu: 'القائمة',
+  editPost: 'تعديل المنشور',
+  partnerChef: 'طاهي شريك',
+  unknownRestaurant: 'مطعم غير معروف',
 
 
 

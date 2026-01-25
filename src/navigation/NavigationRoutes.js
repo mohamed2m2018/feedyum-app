@@ -76,6 +76,7 @@ import SavedAddresses from '../containers/TabBar/profile/SavedAddresses';
 import EditAddress from '../containers/TabBar/profile/EditAddress';
 import MapLocationPicker from '../components/MapLocationPicker';
 import ChefBranchesScreen from '../screens/ChefBranchesScreen';
+import EditPost from '../containers/TabBar/add/EditPost';
 
 export const TabRoute = {
   ForYou: ForYou,
@@ -160,4 +161,5 @@ export const StackRoute = {
   MapLocationPicker,
   ChefBranchesScreen,
   Orders,
+  EditPost,
 };
