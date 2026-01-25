@@ -39,6 +39,7 @@ import ShareOptionsSheet from '../../../components/models/ShareOptionsSheet';
 import strings from '../../../i18n/strings';
 import { getCachedVideoPath, initCache } from '../../../services/VideoCacheService';
 import FollowButton from '../../../components/common/FollowButton';
+import { useEngagementTracking } from '../../../hooks/useEngagementTracking';
 
 // Helper function to check if a URI is a video URL
 // S3 uploads from our app are videos, so we trust them unless they're obviously images
@@ -197,6 +198,8 @@ const ReelComponent = ({
   const handleShare = async Postitem => {
     setShareItem(Postitem);
     shareSheetRef.current?.show();
+    // Track share for algorithm
+    trackShare();
   };
 
   const handleContactPress = async () => {
@@ -253,6 +256,9 @@ const ReelComponent = ({
   // This should NOT run for video posts - video scroll is handled by onEnd
   const isImageOnlyPost = !item?.uri || !isVideoUri(item?.uri);
 
+  // Track image view time for engagement
+  const imageViewStartRef = useRef(null);
+
   useEffect(() => {
     let timeout;
 
@@ -260,8 +266,17 @@ const ReelComponent = ({
     // Also block if seeking, comment open, location open, or image zoom
     if (index === activeVideoIndex && isImageOnlyPost && isFocused && !isCommentOpen && !isLocationOpen && !showImageZoom && !paused.slider) {
       console.log('Auto-scroll for IMAGE EFFECT START. index:', index);
+
+      // Track image view start time
+      imageViewStartRef.current = Date.now();
+
       timeout = setTimeout(() => {
         try {
+          // Track completion before scrolling (10 seconds = 100% completion for images)
+          const viewTime = (Date.now() - (imageViewStartRef.current || Date.now())) / 1000;
+          trackProgress(viewTime);
+          trackComplete();
+
           flatListRef.current.scrollToIndex({
             animated: true,
             index: index + 1,
@@ -272,11 +287,18 @@ const ReelComponent = ({
         }
       }, 10000);
       return () => {
+        // Track partial view time when user scrolls away early
+        if (imageViewStartRef.current) {
+          const viewTime = (Date.now() - imageViewStartRef.current) / 1000;
+          if (viewTime >= 2) { // Only track if viewed for at least 2 seconds
+            trackProgress(viewTime);
+          }
+        }
         console.log('Auto-scroll for IMAGE EFFECT CLEANUP. index:', index);
         clearTimeout(timeout);
       };
     }
-  }, [isFocused, index, activeVideoIndex, flatListRef, isImageOnlyPost, isCommentOpen, isLocationOpen, showImageZoom, paused.slider]);
+  }, [isFocused, index, activeVideoIndex, flatListRef, isImageOnlyPost, isCommentOpen, isLocationOpen, showImageZoom, paused.slider, trackProgress, trackComplete]);
 
   const handlePressProfile = () => {
     // Navigate to author's profile, not the current user's profile unless they match
@@ -373,11 +395,29 @@ const ReelComponent = ({
     [],
   );
 
+  // Engagement tracking for TikTok-style algorithm
+  const {
+    onProgress: trackProgress,
+    onComplete: trackComplete,
+    onRewatch: trackRewatch,
+    onShare: trackShare,
+    cleanup: cleanupEngagement
+  } = useEngagementTracking(item?._id, durationInSeconds, 'forYou');
+
+  // Cleanup engagement tracking when component unmounts or video changes
+  useEffect(() => {
+    return () => {
+      cleanupEngagement();
+    };
+  }, [item?._id, cleanupEngagement]);
+
   const onProgress = ({ currentTime: time }) => {
     // Update the ref for accurate tracking (used by handleOnLoad)
     seekProgressRef.current = time;
     // Update state for VideoSeeker
     setCurrentTime(time);
+    // Track engagement for algorithm
+    trackProgress(time);
   };
 
 
@@ -505,6 +545,8 @@ const ReelComponent = ({
                         isVideoReadyRef.current = true;
                       }}
                       onEnd={() => {
+                        // Track video completion for algorithm
+                        trackComplete();
                         // Only auto-scroll if NOT seeking (slider interaction) and meets other conditions
                         if (activeVideoIndex === index && isFocused && !isCommentOpen && !paused.slider) {
                           console.log('Video onEnd - auto-scroll. index:', index);
@@ -518,7 +560,10 @@ const ReelComponent = ({
                                 videoRef?.current?.seek?.(0);
                               }, 100);
                             } catch (e) {
-                              console.log('Reached last item, cannot auto-scroll');
+                              // Reached last item - loop the video (counts as rewatch)
+                              console.log('Reached last item, looping video');
+                              videoRef?.current?.seek?.(0);
+                              trackRewatch();
                             }
                           }
                         }
