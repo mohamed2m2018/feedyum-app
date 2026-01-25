@@ -30,8 +30,9 @@ export const useOptimizedReels = (categoryIds = []) => {
   return useInfiniteQuery(
     ['stories', user?._id, categoryIds?.join(',') || 'all', location?.stableLatitude, location?.stableLongitude],
     async ({ pageParam = 1 }) => {
-      // Smaller initial page size for faster loading
-      const limit = pageParam === 1 ? 8 : 15;
+      // Use consistent page size to avoid pagination offset miscalculations
+      // Backend calculates startIndex = (page-1) * limit, so varying limits causes skipped items
+      const limit = 10;
       const categoryIdsParam = categoryIds?.length > 0 ? categoryIds.join(',') : undefined;
 
       console.log('[useOptimizedReels] Fetching stories with categoryIds:', categoryIdsParam, 'page:', pageParam);
@@ -136,7 +137,8 @@ export const useOptimizedFollowingReels = () => {
   return useInfiniteQuery(
     ['stories-following', user?._id, location?.stableLatitude, location?.stableLongitude],
     async ({ pageParam = 1 }) => {
-      const limit = pageParam === 1 ? 6 : 12; // Even smaller initial load for following
+      // Use consistent page size to avoid pagination offset miscalculations
+      const limit = 10;
       const response = await request.get('/story/following', {
         params: {
           limit,
