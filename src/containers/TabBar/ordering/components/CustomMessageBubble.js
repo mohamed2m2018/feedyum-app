@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   TouchableOpacity,
@@ -7,7 +7,9 @@ import {
   Text,
   Image,
   Modal,
+  Animated,
 } from 'react-native';
+import { Swipeable } from 'react-native-gesture-handler';
 import { showActionDialog } from '../../../../utils/toast';
 import { ALERT_TYPE } from 'react-native-alert-notification';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -23,11 +25,14 @@ const CustomMessageBubble = ({
   currentUser,
   onDeleteMessage,
   onEditMessage, // New prop for editing
+  onRetryMessage, // Prop for retrying failed messages
+  onReply, // Prop for replying to messages
   isRTL = false, // RTL support for Arabic
   onImagePress, // Callback when image is pressed
   language, // For locale-aware date formatting
 }) => {
   const [showOptions, setShowOptions] = useState(false);
+  const swipeableRef = useRef(null);
   const isCurrentUser = String(props.currentMessage.user._id) === String(currentUser._id);
   // Keep own messages on right, others on left (standard chat layout)
   const showOnRight = isCurrentUser;
@@ -35,9 +40,11 @@ const CustomMessageBubble = ({
   const hasImage = !!props.currentMessage.image;
   const hasAudio = !!props.currentMessage.audio;
   const hasText = !!props.currentMessage.text;
+  const messageStatus = props.currentMessage.status; // 'sending', 'sent', 'failed'
 
   const handleOptionsPress = () => {
-    if (!isDeleted && isCurrentUser) {
+    // Show options for all non-deleted messages (reply available for all)
+    if (!isDeleted) {
       setShowOptions(true);
     }
   };
@@ -57,6 +64,40 @@ const CustomMessageBubble = ({
   const handleEdit = () => {
     setShowOptions(false);
     onEditMessage(props.currentMessage);
+  };
+
+  const handleReply = () => {
+    setShowOptions(false);
+    if (onReply) {
+      onReply(props.currentMessage);
+    }
+  };
+
+  // Swipe-to-reply action - render reply icon on swipe
+  const renderLeftActions = (progress, dragX) => {
+    const trans = dragX.interpolate({
+      inputRange: [0, 50, 100],
+      outputRange: [-20, 0, 20],
+      extrapolate: 'clamp',
+    });
+    return (
+      <View style={styles.swipeActionContainer}>
+        <Animated.View style={[styles.replyActionButton, { transform: [{ translateX: trans }] }]}>
+          <Ionicons name="arrow-undo" size={moderateScale(20)} color={colors.primary || '#FF4D67'} />
+        </Animated.View>
+      </View>
+    );
+  };
+
+  // Handle swipe complete - trigger reply
+  const onSwipeOpen = (direction) => {
+    if (direction === 'left' && onReply) {
+      onReply(props.currentMessage);
+      // Close the swipeable after triggering reply
+      if (swipeableRef.current) {
+        swipeableRef.current.close();
+      }
+    }
   };
 
   const renderCustomBubble = () => {
@@ -127,6 +168,39 @@ const CustomMessageBubble = ({
           style={bubbleStyle}
           disabled={true} // Disable touch on bubble itself as we have the menu button
         >
+          {/* Reply preview - show original message being replied to */}
+          {message.replyTo && (
+            <View style={[
+              styles.replyPreviewContainer,
+              {
+                backgroundColor: isCurrentUser
+                  ? 'rgba(255, 255, 255, 0.15)'
+                  : 'rgba(0, 0, 0, 0.05)',
+                borderLeftColor: colors.primary || '#FF4D67'
+              }
+            ]}>
+              <Text style={[
+                styles.replyToSender,
+                { color: isCurrentUser ? 'rgba(255, 255, 255, 0.9)' : colors.primary }
+              ]}>
+                {message.replyTo.sender?.fullName || message.replyTo.sender?.username || strings.user}
+              </Text>
+              <Text
+                style={[
+                  styles.replyToContent,
+                  { color: isCurrentUser ? 'rgba(255, 255, 255, 0.7)' : colors.grayScale7 }
+                ]}
+                numberOfLines={2}
+              >
+                {message.replyTo.audio
+                  ? `🎤 ${strings.audioMessage || 'Voice message'}`
+                  : message.replyTo.image
+                    ? `📷 ${strings.photo || 'Photo'}`
+                    : message.replyTo.content || message.replyTo.text || '...'}
+              </Text>
+            </View>
+          )}
+
           {message.image && (
             <TouchableOpacity
               activeOpacity={0.9}
@@ -163,23 +237,68 @@ const CustomMessageBubble = ({
               (edited)
             </Text>
           )}
-          {/* Time Display */}
-          <Text style={[
-            styles.timeText,
-            {
-              color: isCurrentUser ? (isHighlighted ? colors.textColor : 'rgba(255, 255, 255, 0.7)') : colors.grayScale5
-            }
-          ]}>
-            {formatTime(message.createdAt, language)}
-          </Text>
+          {/* Time and Status Display */}
+          <View style={styles.timeStatusRow}>
+            {messageStatus === 'sending' && isCurrentUser && (
+              <Ionicons
+                name="time-outline"
+                size={moderateScale(12)}
+                color={isCurrentUser ? 'rgba(255, 255, 255, 0.7)' : colors.grayScale5}
+                style={{ marginRight: moderateScale(4) }}
+              />
+            )}
+            {messageStatus === 'sent' && isCurrentUser && (
+              <Ionicons
+                name="checkmark-done"
+                size={moderateScale(12)}
+                color={isCurrentUser ? 'rgba(255, 255, 255, 0.7)' : colors.grayScale5}
+                style={{ marginRight: moderateScale(4) }}
+              />
+            )}
+            {messageStatus === 'failed' && isCurrentUser && (
+              <TouchableOpacity
+                onPress={() => onRetryMessage && onRetryMessage(props.currentMessage)}
+                style={styles.retryButton}
+              >
+                <Ionicons
+                  name="alert-circle"
+                  size={moderateScale(12)}
+                  color={colors.red || '#FF3B30'}
+                  style={{ marginRight: moderateScale(4) }}
+                />
+                <Text style={[styles.retryText, { color: colors.red || '#FF3B30' }]}>
+                  {strings.retry || 'Retry'}
+                </Text>
+              </TouchableOpacity>
+            )}
+            <Text style={[
+              styles.timeText,
+              {
+                color: isCurrentUser ? (isHighlighted ? colors.textColor : 'rgba(255, 255, 255, 0.7)') : colors.grayScale5
+              }
+            ]}>
+              {formatTime(message.createdAt, language)}
+            </Text>
+          </View>
         </TouchableOpacity>
       </View >
     );
   };
 
   return (
-    <View style={styles.messageContainer}>
-      {renderCustomBubble()}
+    <>
+      <Swipeable
+        ref={swipeableRef}
+        renderLeftActions={renderLeftActions}
+        onSwipeableOpen={onSwipeOpen}
+        overshootLeft={false}
+        friction={2}
+        leftThreshold={40}
+      >
+        <View style={styles.messageContainer}>
+          {renderCustomBubble()}
+        </View>
+      </Swipeable>
 
       <Modal
         visible={showOptions}
@@ -190,6 +309,15 @@ const CustomMessageBubble = ({
         <TouchableWithoutFeedback onPress={() => setShowOptions(false)}>
           <View style={styles.modalOverlay}>
             <View style={[styles.optionsContainer, { backgroundColor: colors.backgroundColor || '#FFFFFF' }]}>
+              {/* Reply button - available for all messages */}
+              <TouchableOpacity
+                style={styles.optionButton}
+                onPress={handleReply}
+              >
+                <Ionicons name="arrow-undo-outline" size={moderateScale(20)} color={colors.textColor || '#000000'} />
+                <ZText type="M16" color={colors.textColor || '#000000'} style={{ marginLeft: moderateScale(10) }}>{strings.reply || 'Reply'}</ZText>
+              </TouchableOpacity>
+
               {isCurrentUser && (
                 <>
                   {hasText && !hasImage && !hasAudio && (
@@ -215,7 +343,7 @@ const CustomMessageBubble = ({
           </View>
         </TouchableWithoutFeedback>
       </Modal>
-    </View>
+    </>
   );
 };
 // ... styles ...
@@ -299,9 +427,22 @@ const styles = StyleSheet.create({
   },
   timeText: {
     fontSize: moderateScale(10),
-    marginTop: moderateScale(4),
-    alignSelf: 'flex-end',
     opacity: 0.8,
+  },
+  timeStatusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    marginTop: moderateScale(4),
+  },
+  retryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: moderateScale(8),
+  },
+  retryText: {
+    fontSize: moderateScale(10),
+    fontWeight: '600',
   },
   imageContainer: {
     marginBottom: moderateScale(4),
@@ -311,6 +452,35 @@ const styles = StyleSheet.create({
   messageImage: {
     width: moderateScale(200),
     height: moderateScale(150),
+  },
+  swipeActionContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: moderateScale(60),
+    marginLeft: moderateScale(10),
+  },
+  replyActionButton: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: moderateScale(40),
+    height: moderateScale(40),
+    borderRadius: moderateScale(20),
+    backgroundColor: 'rgba(255, 77, 103, 0.15)',
+  },
+  replyPreviewContainer: {
+    paddingVertical: moderateScale(6),
+    paddingHorizontal: moderateScale(10),
+    marginBottom: moderateScale(8),
+    borderLeftWidth: 3,
+    borderRadius: moderateScale(4),
+  },
+  replyToSender: {
+    fontSize: moderateScale(12),
+    fontWeight: '600',
+    marginBottom: moderateScale(2),
+  },
+  replyToContent: {
+    fontSize: moderateScale(12),
   },
 });
 

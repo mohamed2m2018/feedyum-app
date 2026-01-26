@@ -63,9 +63,11 @@ export default function ChatList({ navigation }) {
     },
   );
 
-  // Flatten the pages into a single array
+  // Flatten the pages into a single array and filter out null items
   const orderChats = React.useMemo(() => {
-    return chatsData?.pages?.flatMap(page => page.orderChats) || [];
+    const allChats = chatsData?.pages?.flatMap(page => page.orderChats) || [];
+    // Filter out items with missing chatPartner/chef or order
+    return allChats.filter(item => item && (item.chatPartner || item.chef) && item.order);
   }, [chatsData]);
 
   // Refresh chat list when screen comes into focus
@@ -101,8 +103,14 @@ export default function ChatList({ navigation }) {
   };
 
   const handleChatPress = (orderChat) => {
+    // Use chatPartner (new) or chef (old) for backwards compatibility
+    const partner = orderChat.chatPartner || orderChat.chef;
+    if (!partner?._id) {
+      console.warn('Chat partner not found:', orderChat);
+      return;
+    }
     navigation.navigate(StackNav.ChatScreen, {
-      chefId: orderChat.chef._id,
+      chefId: partner._id,
       orderId: orderChat.orderId,
     });
   };
@@ -121,14 +129,24 @@ export default function ChatList({ navigation }) {
   };
 
   const formatMessagePreview = (message) => {
+    // Determine sender prefix
+    let senderPrefix = '';
+    if (message?.isFromCurrentUser) {
+      senderPrefix = strings.youPrefix || 'You: ';
+    } else if (message?.sender?.fullName || message?.sender?.username) {
+      // Only show first name for brevity
+      const senderName = message.sender.fullName?.split(' ')[0] || message.sender.username;
+      senderPrefix = `${senderName}: `;
+    }
+
     // Handle message object with audio/messageType fields
     if (message?.audio || message?.messageType === 'audio') {
-      return `🎤 ${strings.audioMessage || 'Voice message'}`;
+      return `${senderPrefix}🎤 ${strings.audioMessage || 'Voice message'}`;
     }
 
     // Handle image messages
     if (message?.image) {
-      return `📷 ${strings.imageMessage || 'Image'}`;
+      return `${senderPrefix}📷 ${strings.imageMessage || 'Image'}`;
     }
 
     const content = message?.content || message;
@@ -138,21 +156,21 @@ export default function ChatList({ navigation }) {
     try {
       const parsedContent = JSON.parse(content);
       if (parsedContent.type === 'audio_with_duration') {
-        return `🎤 ${strings.audioMessage || 'Voice message'}`;
+        return `${senderPrefix}🎤 ${strings.audioMessage || 'Voice message'}`;
       }
       if (parsedContent.type === 'image_with_text') {
-        return parsedContent.text ? `📷 ${parsedContent.text}` : strings.imageMessage;
+        return parsedContent.text ? `${senderPrefix}📷 ${parsedContent.text}` : `${senderPrefix}${strings.imageMessage}`;
       }
-      return strings.mediaMessage;
+      return `${senderPrefix}${strings.mediaMessage}`;
     } catch (e) {
       // Not JSON, check checks
       const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
       const isImagePath = imageExtensions.some(ext => content.toLowerCase().includes(ext));
-      if (isImagePath) return strings.imageMessage;
+      if (isImagePath) return `${senderPrefix}${strings.imageMessage}`;
 
       const audioExtensions = ['.mp3', '.wav', '.m4a', '.aac'];
       const isAudioPath = audioExtensions.some(ext => content.toLowerCase().includes(ext));
-      if (isAudioPath) return `🎤 ${strings.audioMessage || 'Voice message'}`;
+      if (isAudioPath) return `${senderPrefix}🎤 ${strings.audioMessage || 'Voice message'}`;
 
       if (content.includes('🍽️ ORDER #')) {
         const orderMatch = content.match(/🍽️ ORDER #(\w+)/);
@@ -162,7 +180,8 @@ export default function ChatList({ navigation }) {
         }
         return strings.orderSummary;
       }
-      return content.length > 50 ? `${content.substring(0, 50)}...` : content;
+      const truncatedContent = content.length > 40 ? `${content.substring(0, 40)}...` : content;
+      return `${senderPrefix}${truncatedContent}`;
     }
   };
 
@@ -192,53 +211,58 @@ export default function ChatList({ navigation }) {
     }
   };
 
-  const renderChatItem = ({ item }) => (
-    <TouchableOpacity
-      style={[localStyles.chatItem, { backgroundColor: colors.inputBg }]}
-      onPress={() => handleChatPress(item)}
-      activeOpacity={0.7}>
-      {/* Unread badge indicator */}
-      {item.unreadCount > 0 && (
-        <View style={[localStyles.unreadBadge, { backgroundColor: colors.primary }]}>
-          <ZText type="s10" color={colors.white} style={localStyles.unreadBadgeText}>
-            {item.unreadCount > 99 ? '99+' : item.unreadCount}
-          </ZText>
-        </View>
-      )}
-      <Image
-        source={{
-          uri: item.chef.avatar || 'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?w=200',
-        }}
-        style={localStyles.avatar}
-      />
-      <View style={localStyles.chatInfo}>
-        <View style={localStyles.chatHeader}>
-          <View style={localStyles.chefInfo}>
-            <ZText type="B16" color={colors.textColor} numberOfLines={1}>
-              {item.chef.fullName || item.chef.username || 'Chef'}
-            </ZText>
-            <ZText type="M12" color={colors.grayScale7} numberOfLines={1}>
-              Order #{item.orderId?.slice(-6) || item.orderId}
+  const renderChatItem = ({ item }) => {
+    // Use chatPartner (new) or chef (old) for backwards compatibility
+    const partner = item.chatPartner || item.chef;
+
+    return (
+      <TouchableOpacity
+        style={[localStyles.chatItem, { backgroundColor: colors.inputBg }]}
+        onPress={() => handleChatPress(item)}
+        activeOpacity={0.7}>
+        {/* Unread badge indicator */}
+        {item.unreadCount > 0 && (
+          <View style={[localStyles.unreadBadge, { backgroundColor: colors.primary }]}>
+            <ZText type="s10" color={colors.white} style={localStyles.unreadBadgeText}>
+              {item.unreadCount > 99 ? '99+' : item.unreadCount}
             </ZText>
           </View>
-          <View style={localStyles.orderStatus}>
-            <View style={[localStyles.statusBadge, { backgroundColor: getOrderStatusColor(item.order.status) }]}>
-              <ZText type="M10" color={colors.white}>
-                {getOrderStatusText(item.order.status)}
+        )}
+        <Image
+          source={{
+            uri: partner?.avatar || 'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?w=200',
+          }}
+          style={localStyles.avatar}
+        />
+        <View style={localStyles.chatInfo}>
+          <View style={localStyles.chatHeader}>
+            <View style={localStyles.chefInfo}>
+              <ZText type="B16" color={colors.textColor} numberOfLines={1}>
+                {partner?.fullName || partner?.username || 'Chef'}
+              </ZText>
+              <ZText type="M12" color={colors.grayScale7} numberOfLines={1}>
+                Order #{item.orderId?.slice(-6) || item.orderId}
               </ZText>
             </View>
-            <ZText type="M12" color={colors.grayScale7}>
-              {formatTimestamp(item.latestMessage?.timestamp || item.order.created_at)}
-            </ZText>
+            <View style={localStyles.orderStatus}>
+              <View style={[localStyles.statusBadge, { backgroundColor: getOrderStatusColor(item.order?.status) }]}>
+                <ZText type="M10" color={colors.white}>
+                  {getOrderStatusText(item.order?.status)}
+                </ZText>
+              </View>
+              <ZText type="M12" color={colors.grayScale7}>
+                {formatTimestamp(item.latestMessage?.timestamp || item.order?.created_at)}
+              </ZText>
+            </View>
           </View>
+          <ZText type="M14" color={colors.grayScale7} numberOfLines={2} style={localStyles.lastMessage}>
+            {formatMessagePreview(item.latestMessage) || strings.orderPlacedStartChatting}
+          </ZText>
         </View>
-        <ZText type="M14" color={colors.grayScale7} numberOfLines={2} style={localStyles.lastMessage}>
-          {formatMessagePreview(item.latestMessage) || strings.orderPlacedStartChatting}
-        </ZText>
-      </View>
-      <Ionicons name="chevron-forward" size={moderateScale(20)} color={colors.grayScale7} />
-    </TouchableOpacity>
-  );
+        <Ionicons name="chevron-forward" size={moderateScale(20)} color={colors.grayScale7} />
+      </TouchableOpacity>
+    );
+  };
 
   const renderEmptyState = () => (
     <View style={localStyles.emptyContainer}>
@@ -278,7 +302,7 @@ export default function ChatList({ navigation }) {
       <FlatList
         data={orderChats}
         renderItem={renderChatItem}
-        keyExtractor={item => `${item.orderId}-${item.chef._id}`}
+        keyExtractor={item => `${item.orderId}-${(item.chatPartner || item.chef)?._id || 'unknown'}`}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}

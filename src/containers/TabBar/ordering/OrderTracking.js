@@ -34,6 +34,7 @@ import {
 } from '../../../redux/reducer/orderSlice';
 import { StackNav } from '../../../navigation/NavigationKeys';
 import request from '../../../api/request';
+import { useQuery } from 'react-query';
 
 const OrderTracking = () => {
   const colors = useSelector(state => state.theme.theme);
@@ -47,6 +48,13 @@ const OrderTracking = () => {
   const currentOrder = useSelector(selectCurrentOrder);
   const isLoading = useSelector(selectOrderLoading);
   const error = useSelector(selectOrderError);
+
+  // Get current user via useQuery (same pattern as ChatScreen)
+  const { data: userData } = useQuery('user', () => request.get('/user'));
+  const currentUser = userData?.data?.user;
+
+  // Determine if current user is the chef of this order
+  const isCurrentUserChef = currentOrder?.chef?._id === currentUser?._id;
 
   // Debug: Check if there's order data in route params
 
@@ -192,8 +200,14 @@ const OrderTracking = () => {
 
   const handleChatWithChef = () => {
     if (currentOrder) {
+      // If current user is the chef, navigate to chat with customer
+      // Otherwise, navigate to chat with chef
+      const chatPartnerId = isCurrentUserChef
+        ? currentOrder.user?._id
+        : currentOrder.chef?._id;
+
       navigation.navigate(StackNav.ChatScreen, {
-        chefId: currentOrder.chef._id,
+        chefId: chatPartnerId,
         orderId: currentOrder._id,
       });
     }
@@ -839,7 +853,7 @@ const OrderTracking = () => {
         {renderDeliveryInfo()}
 
         <ZButton
-          title={strings.chatWithChef}
+          title={isCurrentUserChef ? strings.chatWithCustomer : strings.chatWithChef}
           textType="B16"
           color={'#FFFFFF'}
           containerStyle={[

@@ -11,6 +11,7 @@ import {
   Modal,
   Dimensions,
   StatusBar,
+  Text,
 } from 'react-native';
 import {
   GiftedChat,
@@ -36,6 +37,7 @@ import VoiceRecorder from './components/VoiceRecorder';
 import CustomMessageBubble from './components/CustomMessageBubble';
 import OrderSummaryCard from './components/OrderSummaryCard';
 import RejectReasonModal from './components/RejectReasonModal';
+import ReplyPreviewBar from './components/ReplyPreviewBar';
 import OrderReviewModal from '../chef/components/OrderReviewModal';
 import { useNavigation } from '@react-navigation/native';
 import { StackNav } from '../../../navigation/NavigationKeys';
@@ -109,6 +111,10 @@ export default function ChatScreen({ route }) {
   const [hideOrderSummary, setHideOrderSummary] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
+  const [replyingTo, setReplyingTo] = useState(null); // Message being replied to
+  const [currentPage, setCurrentPage] = useState(1); // Pagination
+  const [hasMoreMessages, setHasMoreMessages] = useState(true); // Whether more messages exist
+  const [isLoadingEarlier, setIsLoadingEarlier] = useState(false); // Loading older messages
   const socketRef = useRef(null);
   const textInputRef = useRef(null);
   const messageContainerRef = useRef(null);
@@ -127,7 +133,23 @@ export default function ChatScreen({ route }) {
     }
   }, []);
 
+  // Handle reply to a message
+  const handleReply = useCallback((message) => {
+    console.log('Replying to message:', message);
+    setReplyingTo(message);
+    // Focus on text input
+    if (textInputRef.current) {
+      textInputRef.current.focus();
+    }
+  }, []);
+
+  // Cancel reply
+  const handleCancelReply = useCallback(() => {
+    setReplyingTo(null);
+  }, []);
+
   useEffect(() => {
+    console.log('=== CHAT SCREEN LOADED (v2) - hasMoreMessages:', hasMoreMessages, '===');
     if (!currentUserId || !chefId || !orderId) return;
 
     // Derive socket URL from the API request base URL to avoid hardcoding
@@ -341,6 +363,15 @@ export default function ChatScreen({ route }) {
               name: msg.sender.username || strings.user,
               avatar: toUriString(msg.sender.avatar),
             },
+            // Include replyTo if message is a reply to another message
+            replyTo: msg.replyTo ? {
+              _id: msg.replyTo._id,
+              content: msg.replyTo.content,
+              text: msg.replyTo.content,
+              image: msg.replyTo.messageType === 'image' || msg.replyTo.content?.includes('.jpg') || msg.replyTo.content?.includes('.png'),
+              audio: msg.replyTo.messageType === 'audio' || !!msg.replyTo.audio,
+              sender: msg.replyTo.sender,
+            } : null,
           };
 
           // Check if it's an audio message
@@ -409,8 +440,165 @@ export default function ChatScreen({ route }) {
       !isNaN(new Date(msg.createdAt).getTime())
     );
 
-    setMessages(safeMessages);
+    // Merge server messages with any pending/sending/socket-received messages
+    // This preserves optimistic messages and real-time socket messages while updating with server data
+    setMessages(prevMessages => {
+      // Get IDs of server messages
+      const serverMessageIds = new Set(safeMessages.map(m => String(m._id)));
+
+      // Keep any pending/sending messages (optimistic)
+      const pendingMessages = prevMessages.filter(m =>
+        m.pending && !serverMessageIds.has(String(m._id))
+      );
+
+      // Keep socket-received messages that are NEWER than what server returned
+      // These are confirmed messages (not pending, not temp) that aren't in server response
+      const newestServerTime = safeMessages.length > 0
+        ? Math.max(...safeMessages.map(m => new Date(m.createdAt).getTime()))
+        : 0;
+
+      const socketMessages = prevMessages.filter(m =>
+        !m.pending &&
+        !String(m._id).startsWith('temp_') &&
+        !serverMessageIds.has(String(m._id)) &&
+        new Date(m.createdAt).getTime() > newestServerTime
+      );
+
+      // ALSO keep messages from earlier loaded pages (older than oldest server message)
+      const oldestServerTime = safeMessages.length > 0
+        ? Math.min(...safeMessages.map(m => new Date(m.createdAt).getTime()))
+        : Infinity;
+
+      const olderPreviousMessages = prevMessages.filter(m =>
+        !m.pending &&
+        !String(m._id).startsWith('temp_') &&
+        !serverMessageIds.has(String(m._id)) &&
+        new Date(m.createdAt).getTime() < oldestServerTime
+      );
+
+      // Merge: server messages + socket messages + older pages + pending (sorted by time)
+      const allMessages = [...safeMessages, ...socketMessages, ...olderPreviousMessages, ...pendingMessages];
+
+      // Sort by createdAt descending (newest first for GiftedChat)
+      allMessages.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+      // Deduplicate by _id
+      const seen = new Set();
+      return allMessages.filter(m => {
+        const id = String(m._id);
+        if (seen.has(id)) return false;
+        seen.add(id);
+        return true;
+      });
+    });
+
+    // Check if there are more messages (set from API response if available)
+    console.log('[DEBUG] Pagination info:', {
+      totalPages: messagesData?.data?.totalPages,
+      currentPage: messagesData?.data?.currentPage,
+      messagesCount: safeMessages.length
+    });
+    if (messagesData?.data?.totalPages && messagesData?.data?.currentPage) {
+      const hasMore = messagesData.data.currentPage < messagesData.data.totalPages;
+      console.log('[DEBUG] Setting hasMoreMessages from API:', hasMore);
+      setHasMoreMessages(hasMore);
+    } else {
+      // FORCE TRUE for debugging - always assume more messages exist
+      console.log('[DEBUG] Forcing hasMoreMessages=true (no pagination info or <10 messages)');
+      setHasMoreMessages(true);
+    }
   }, [messagesData, order, hideOrderSummary]);
+
+  // Load earlier messages (pagination)
+  const loadEarlierMessages = useCallback(async () => {
+    console.log('[DEBUG] loadEarlierMessages called:', { isLoadingEarlier, hasMoreMessages, currentPage });
+    if (isLoadingEarlier || !hasMoreMessages) {
+      console.log('[DEBUG] loadEarlierMessages returning early');
+      return;
+    }
+
+    setIsLoadingEarlier(true);
+    try {
+      const nextPage = currentPage + 1;
+      console.log('[DEBUG] Fetching page:', nextPage);
+      const response = await request.get(
+        `/chat/messages?chatUserId=${chefId}&orderId=${orderId || ''}&page=${nextPage}&limit=20`
+      );
+
+      if (response.data?.messages && response.data.messages.length > 0) {
+        const olderMessages = response.data.messages
+          .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+          .map(msg => {
+            const baseMessage = {
+              _id: msg._id,
+              createdAt: new Date(msg.timestamp),
+              user: {
+                _id: msg.sender._id || msg.sender,
+                name: msg.sender.username || strings.user,
+                avatar: toUriString(msg.sender.avatar),
+              },
+              replyTo: msg.replyTo ? {
+                _id: msg.replyTo._id,
+                content: msg.replyTo.content,
+                text: msg.replyTo.content,
+                sender: msg.replyTo.sender,
+              } : null,
+            };
+
+            // Handle message types
+            if (msg.messageType === 'audio' || msg.audio) {
+              return { ...baseMessage, text: '', audio: msg.audio, duration: msg.duration };
+            }
+
+            try {
+              const parsedContent = JSON.parse(msg.content);
+              if (parsedContent.type === 'image_with_text') {
+                return { ...baseMessage, text: parsedContent.text || '', image: parsedContent.image };
+              }
+            } catch (e) { }
+
+            const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+            if (imageExtensions.some(ext => msg.content?.toLowerCase().includes(ext))) {
+              return { ...baseMessage, text: '', image: msg.content };
+            }
+
+            return {
+              ...baseMessage,
+              text: msg.isDeleted ? (strings.thisMessageWasDeleted || 'This message was deleted') : msg.content,
+              isDeleted: msg.isDeleted,
+              isEdited: msg.isEdited,
+            };
+          })
+          .reverse();
+
+        // Merge and deduplicate by _id
+        setMessages(prev => {
+          const messageMap = new Map();
+          // Add existing messages first
+          prev.forEach(m => messageMap.set(String(m._id), m));
+          // Add older messages (will not overwrite if already exists)
+          olderMessages.forEach(m => {
+            if (!messageMap.has(String(m._id))) {
+              messageMap.set(String(m._id), m);
+            }
+          });
+          // Convert back to array and sort (newest first for GiftedChat)
+          return Array.from(messageMap.values())
+            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        });
+        setCurrentPage(nextPage);
+        setHasMoreMessages(
+          response.data.currentPage < response.data.totalPages
+        );
+      } else {
+        setHasMoreMessages(false);
+      }
+    } catch (error) {
+      console.warn('Failed to load earlier messages:', error);
+    } finally {
+      setIsLoadingEarlier(false);
+    }
+  }, [chefId, orderId, currentPage, isLoadingEarlier, hasMoreMessages]);
 
   const createOrderSummaryMessage = (orderData) => {
     const orderSummary = {
@@ -493,92 +681,155 @@ export default function ChatScreen({ route }) {
         setEditingMessage(null);
         setText('');
         setLoading(false);
-        Keyboard.dismiss();
+        // Note: Keyboard stays open to allow continuous typing
         return;
       }
 
-      // Normal send flow
+      // Normal send flow with optimistic UI
       for (const message of newMessages) {
-        let content = '';
+        // Generate temporary ID for optimistic message
+        const tempId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+        // Determine display content for optimistic message
+        let displayText = message.text || '';
+        let displayImage = message.image || undefined;
+        let displayAudio = message.audio || undefined;
+        let displayDuration = message.duration || undefined;
+
+        // Capture replyTo data before clearing state
+        const replyToData = replyingTo ? {
+          _id: replyingTo._id,
+          content: replyingTo.text || replyingTo.content,
+          text: replyingTo.text || replyingTo.content,
+          sender: replyingTo.user || { fullName: strings.user },
+          audio: !!replyingTo.audio,
+          image: !!replyingTo.image,
+        } : null;
+
+        // Create optimistic message (shown immediately with 'sending' status)
+        const optimisticMsg = {
+          _id: tempId,
+          text: displayText,
+          createdAt: new Date(),
+          user: {
+            _id: currentUser?._id || 'unknown',
+            name: currentUser?.fullName || strings.user,
+            avatar: toUriString(currentUser?.avatar),
+          },
+          image: displayImage,
+          audio: displayAudio,
+          duration: displayDuration,
+          status: 'sending', // Optimistic status
+          pending: true,
+          replyTo: replyToData, // Include reply data for immediate display
+        };
+
+        // Add optimistic message to state immediately
+        setMessages(prev => GiftedChat.append(prev, optimisticMsg));
+
+        // Clear text and reply state immediately for better UX
+        setText('');
+        console.log('[DEBUG] Before clear - replyingTo:', replyingTo?._id);
+        setReplyingTo(null); // Always clear, don't check if replyingTo exists first
+        console.log('[DEBUG] Called setReplyingTo(null)');
+
+        // Prepare message data for API
         let messageData = {
           chatUserId: chefId,
           orderId: orderId,
+          replyTo: replyToData?._id || null, // Include reply reference
         };
 
         // Handle different message types
         if (message.audio) {
-          // Audio message
           messageData.audio = message.audio;
           messageData.duration = message.duration;
           messageData.messageType = 'audio';
-          messageData.content = ''; // No text for audio messages
-        } else if (message.image && message.text && message.text.trim()) {
-          content = JSON.stringify({
-            type: 'image_with_text',
-            image: message.image,
-            text: message.text.trim()
-          });
-          messageData.content = content;
+          messageData.content = '';
         } else if (message.image) {
-          messageData.content = message.image;
+          // Check if image is a local path (needs S3 upload)
+          let imageUrl = message.image;
+          if (message.image.startsWith('file://') || message.image.startsWith('/')) {
+            try {
+              const { uploadImageToS3 } = require('../../../utils/UploadUtils');
+              const uploadResult = await uploadImageToS3(message.image);
+              if (uploadResult.success && uploadResult.url) {
+                imageUrl = uploadResult.url;
+              }
+            } catch (uploadError) {
+              console.warn('Image upload failed, using local path:', uploadError);
+            }
+          }
+
+          if (message.text && message.text.trim()) {
+            messageData.content = JSON.stringify({
+              type: 'image_with_text',
+              image: imageUrl,
+              text: message.text.trim()
+            });
+          } else {
+            messageData.content = imageUrl;
+          }
         } else {
           messageData.content = message.text;
         }
 
-        // Send message via HTTP
-        const response = await request.post('/chat/message', messageData);
+        try {
+          // Send message via HTTP
+          const response = await request.post('/chat/message', messageData);
 
-        // Add the saved message to state immediately
-        if (response.data?.message) {
-          const savedMsg = response.data.message;
-          const displayImage = message.image || undefined;
-          const displayAudio = message.audio || savedMsg.audio || undefined;
-          const displayDuration = message.duration || savedMsg.duration || undefined;
-          let displayText = savedMsg.content;
+          if (response.data?.message) {
+            const savedMsg = response.data.message;
 
-          // Handle audio messages
-          if (savedMsg.messageType === 'audio' || savedMsg.audio) {
-            displayText = '';
-          } else {
-            try {
-              const parsedContent = JSON.parse(savedMsg.content);
-              if (parsedContent.type === 'image_with_text') {
-                displayText = parsedContent.text || '';
-              }
-            } catch (e) {
-              const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
-              if (imageExtensions.some(ext => savedMsg.content?.toLowerCase().includes(ext))) {
-                displayText = '';
+            // Parse display text from saved message
+            let finalDisplayText = savedMsg.content;
+            if (savedMsg.messageType === 'audio' || savedMsg.audio) {
+              finalDisplayText = '';
+            } else {
+              try {
+                const parsedContent = JSON.parse(savedMsg.content);
+                if (parsedContent.type === 'image_with_text') {
+                  finalDisplayText = parsedContent.text || '';
+                }
+              } catch (e) {
+                const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+                if (imageExtensions.some(ext => savedMsg.content?.toLowerCase().includes(ext))) {
+                  finalDisplayText = '';
+                }
               }
             }
-          }
 
-          const formattedMsg = {
-            _id: savedMsg._id,
-            text: displayText,
-            createdAt: new Date(savedMsg.timestamp || Date.now()),
-            user: {
-              _id: currentUser?._id || 'unknown',
-              name: currentUser?.fullName || strings.user,
-              avatar: toUriString(currentUser?.avatar),
-            },
-            image: displayImage,
-            audio: displayAudio,
-            duration: displayDuration,
-          };
-          setMessages(prev => GiftedChat.append(prev, formattedMsg));
+            // Replace optimistic message with confirmed message
+            setMessages(prev => prev.map(msg =>
+              msg._id === tempId
+                ? {
+                  ...msg,
+                  _id: savedMsg._id,
+                  text: finalDisplayText,
+                  createdAt: new Date(savedMsg.timestamp || Date.now()),
+                  status: 'sent',
+                  pending: false,
+                }
+                : msg
+            ));
+          }
+        } catch (sendError) {
+          console.error('Failed to send message:', sendError);
+          // Mark message as failed
+          setMessages(prev => prev.map(msg =>
+            msg._id === tempId
+              ? { ...msg, status: 'failed', pending: false }
+              : msg
+          ));
         }
       }
-
-      // Clear text after sending
-      setText('');
     } catch (error) {
       console.error('Error sending message:', error);
     } finally {
       setLoading(false);
-      Keyboard.dismiss();
+      // Note: Keyboard stays open to allow continuous typing
     }
-  }, [chefId, orderId, currentUser, editingMessage, text]);
+  }, [chefId, orderId, currentUser, editingMessage, text, replyingTo]);
   const handleImageMessage = useCallback((imageMessage) => {
     const fullImageMessage = {
       ...imageMessage,
@@ -636,6 +887,19 @@ export default function ChatScreen({ route }) {
     }
   }, [orderId, navigation]);
 
+  // Retry failed message
+  const handleRetryMessage = useCallback((failedMessage) => {
+    // Remove the failed message from the list
+    setMessages(prev => prev.filter(msg => msg._id !== failedMessage._id));
+    // Resend the message
+    onSend([{
+      text: failedMessage.text,
+      image: failedMessage.image,
+      audio: failedMessage.audio,
+      duration: failedMessage.duration,
+    }]);
+  }, [onSend]);
+
   const onPressProfile = () => {
     // Navigate based on user type
     if (chefId) {
@@ -686,11 +950,13 @@ export default function ChatScreen({ route }) {
       currentUser={currentUser}
       onDeleteMessage={handleDeleteMessage}
       onEditMessage={handleEditMessage}
+      onRetryMessage={handleRetryMessage}
+      onReply={handleReply}
       isRTL={isRTL}
       onImagePress={(imageUrl) => setSelectedImage(imageUrl)}
       language={language}
     />
-  ), [colors, currentUser, handleDeleteMessage, handleEditMessage, isRTL, language]);
+  ), [colors, currentUser, handleDeleteMessage, handleEditMessage, handleRetryMessage, handleReply, isRTL, language]);
 
 
   const renderInputToolbar = useCallback((props) => {
@@ -708,21 +974,32 @@ export default function ChatScreen({ route }) {
     }
 
     return (
-      <InputToolbar
-        {...props}
-        containerStyle={[
-          localStyles.inputToolbar,
-          {
-            backgroundColor: colors.inputBg,
-            borderTopColor: colors.bColor,
-            paddingTop: moderateScale(4),
-            paddingBottom: moderateScale(4),
-            marginBottom: moderateScale(8),
-          }
-        ]}
-      />
+      <View>
+        {/* Reply Preview Bar */}
+        {replyingTo && (
+          <ReplyPreviewBar
+            replyingTo={replyingTo}
+            onCancel={handleCancelReply}
+            colors={colors}
+            isRTL={isRTL}
+          />
+        )}
+        <InputToolbar
+          {...props}
+          containerStyle={[
+            localStyles.inputToolbar,
+            {
+              backgroundColor: colors.inputBg,
+              borderTopColor: colors.bColor,
+              paddingTop: moderateScale(4),
+              paddingBottom: moderateScale(4),
+              marginBottom: moderateScale(8),
+            }
+          ]}
+        />
+      </View>
     );
-  }, [colors, showVoiceRecorder, handleVoiceMessage]);
+  }, [colors, showVoiceRecorder, handleVoiceMessage, replyingTo, handleCancelReply, isRTL]);
 
   const renderComposer = useCallback((props) => (
     <Composer
@@ -771,6 +1048,38 @@ export default function ChatScreen({ route }) {
       />
     </TouchableOpacity>
   ), []);
+
+  const renderLoadEarlier = useCallback((props) => {
+    console.log('[DEBUG] renderLoadEarlier called');
+    if (props.isLoadingEarlier) {
+      return (
+        <View style={{ alignItems: 'center', padding: 10 }}>
+          <ActivityIndicator size="small" color={colors.primary} />
+        </View>
+      );
+    }
+    return (
+      <TouchableOpacity
+        style={{
+          alignItems: 'center',
+          padding: 10,
+          marginVertical: 10,
+        }}
+        onPress={props.onLoadEarlier}
+      >
+        <View style={{
+          backgroundColor: colors.inputBg,
+          borderRadius: 15,
+          paddingVertical: 8,
+          paddingHorizontal: 16,
+        }}>
+          <Text style={{ color: colors.textColor, fontSize: 14 }}>
+            {strings.loadEarlierMessages || 'Load earlier messages'}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    );
+  }, [colors]);
 
   const renderSystem = useCallback((props) => {
     const msg = props.currentMessage;
@@ -916,8 +1225,37 @@ export default function ChatScreen({ route }) {
         behavior="padding"
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
+        {/* Floating loading indicator for infinite scroll */}
+        {isLoadingEarlier && (
+          <View style={{
+            position: 'absolute',
+            top: 10,
+            left: 0,
+            right: 0,
+            alignItems: 'center',
+            zIndex: 999,
+          }}>
+            <View style={{
+              backgroundColor: colors.inputBg,
+              paddingVertical: 8,
+              paddingHorizontal: 16,
+              borderRadius: 20,
+              flexDirection: 'row',
+              alignItems: 'center',
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.25,
+              shadowRadius: 3.84,
+              elevation: 5,
+            }}>
+              <ActivityIndicator size="small" color={colors.primary} />
+              <Text style={{ color: colors.textColor, fontSize: 12, marginLeft: 8 }}>
+                {strings.loadingMoreMessages || 'Loading...'}
+              </Text>
+            </View>
+          </View>
+        )}
         <GiftedChat
-          ref={messageContainerRef}
           messages={messages}
           onSend={onSend}
           // Intentionally removed text={text} to allow uncontrolled input (fixes typing issues)
@@ -942,6 +1280,55 @@ export default function ChatScreen({ route }) {
           showUserAvatar
           renderAvatarOnTop
           onLongPress={() => { }}
+          loadEarlier={hasMoreMessages}
+          onLoadEarlier={() => {
+            console.log('[DEBUG] onLoadEarlier triggered!');
+            loadEarlierMessages();
+          }}
+          isLoadingEarlier={isLoadingEarlier}
+          renderLoadEarlier={() => isLoadingEarlier ? (
+            <View style={{
+              alignItems: 'center',
+              padding: 15,
+              marginVertical: 10,
+              backgroundColor: colors.inputBg,
+              borderRadius: 20,
+              marginHorizontal: 50,
+            }}>
+              <ActivityIndicator size="small" color={colors.primary} />
+              <Text style={{ color: colors.textColor, fontSize: 12, marginTop: 5 }}>
+                {strings.loadingMoreMessages || 'Loading...'}
+              </Text>
+            </View>
+          ) : null}
+          listViewProps={{
+            scrollEventThrottle: 100,
+          }}
+          listProps={{
+            onScroll: (event) => {
+              // Try different ways to access scroll data
+              const nativeEvent = event?.nativeEvent || event;
+              const contentOffset = nativeEvent?.contentOffset || { y: 0 };
+              const contentSize = nativeEvent?.contentSize || { height: 0 };
+              const layoutMeasurement = nativeEvent?.layoutMeasurement || { height: 0 };
+
+              const scrollPosition = contentOffset.y;
+              const maxScroll = contentSize.height - layoutMeasurement.height;
+              const distanceFromVisualTop = maxScroll - scrollPosition;
+
+              // Only log occasionally
+              if (scrollPosition > 50 && Math.round(scrollPosition) % 100 < 10) {
+                console.log('[DEBUG] Scroll:', Math.round(scrollPosition), 'fromTop:', Math.round(distanceFromVisualTop));
+              }
+
+              if (distanceFromVisualTop < 200 && hasMoreMessages && !isLoadingEarlier) {
+                console.log('[DEBUG] Near top - loading earlier messages');
+                loadEarlierMessages();
+              }
+            },
+            scrollEventThrottle: 100,
+          }}
+          scrollToBottomOffset={300}
           bottomOffset={0}
         />
       </KeyboardAvoidingView>

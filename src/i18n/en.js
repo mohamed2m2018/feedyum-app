@@ -534,6 +534,7 @@ export default {
   orderTracking: 'Order Tracking',
   goBack: 'Go Back',
   chatWithChef: 'Chat with Kitchen',
+  chatWithCustomer: 'Chat with Customer',
   cancelOrder: 'Cancel Order',
   cancelOrderConfirmation: 'Are you sure you want to cancel this order?',
   keepOrder: 'Keep Order',
@@ -1518,6 +1519,12 @@ export default {
   failedToProcessAudio: 'Failed to process audio',
   failedToPrepareAudio: 'Failed to prepare audio for preview',
   failedToPlayAudio: 'Failed to play audio preview',
+
+  // Reply Feature
+  replyingTo: 'Replying to',
+  cancelReply: 'Cancel Reply',
+  photo: 'Photo',
+  youPrefix: 'You: ',
 
   // Additional Localization Keys
   // Voice Recorder UI

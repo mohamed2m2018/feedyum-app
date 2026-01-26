@@ -548,6 +548,7 @@ export default {
   orderTracking: 'تتبع الطلب',
   goBack: 'العودة',
   chatWithChef: 'محادثة مع المطبخ',
+  chatWithCustomer: 'محادثة مع العميل',
   cancelOrder: 'إلغاء الطلب',
   cancelOrderConfirmation: 'هل أنت متأكد أنك تريد إلغاء هذا الطلب؟',
   keepOrder: 'الاحتفاظ بالطلب',
@@ -1501,6 +1502,12 @@ export default {
   failedToProcessAudio: 'فشل معالجة الصوت',
   failedToPrepareAudio: 'فشل تحضير الصوت للمعاينة',
   failedToPlayAudio: 'فشل تشغيل معاينة الصوت',
+
+  // Reply Feature
+  replyingTo: 'الرد على',
+  cancelReply: 'إلغاء الرد',
+  photo: 'صورة',
+  youPrefix: 'أنت: ',
 
   // Additional Localization Keys
   // Voice Recorder UI

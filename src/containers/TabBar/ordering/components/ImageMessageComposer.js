@@ -109,31 +109,25 @@ const ImageMessageComposer = ({ onSend, onCancel }) => {
       return;
     }
 
-    setIsProcessing(true);
-    try {
-      // Upload image to S3 first
-      const { uploadImageToS3 } = require('../../../../utils/UploadUtils');
-      const uploadResult = await uploadImageToS3(selectedImage.path);
+    // For optimistic UI: include local path so message shows immediately
+    const localImagePath = selectedImage.path;
 
-      if (!uploadResult.success || !uploadResult.url) {
-        throw new Error('Failed to upload image');
-      }
+    // Create message with local path first for immediate display
+    const imageMessage = {
+      _id: Math.round(Math.random() * 1000000),
+      text: messageText.trim(),
+      createdAt: new Date(),
+      image: localImagePath, // Use local path for instant preview
+      localImage: localImagePath, // Keep reference to local path
+      pendingUpload: true, // Flag to indicate image is being uploaded
+    };
 
-      const imageMessage = {
-        _id: Math.round(Math.random() * 1000000),
-        text: messageText.trim(),
-        createdAt: new Date(),
-        image: uploadResult.url, // Use S3 URL instead of local path
-      };
+    // Call onSend immediately for optimistic UI
+    onSend(imageMessage);
+    resetComposer();
 
-      onSend(imageMessage);
-      resetComposer();
-    } catch (error) {
-      console.error('Image upload error:', error);
-      showErrorToast(strings.error, strings.failedToUploadImage);
-    } finally {
-      setIsProcessing(false);
-    }
+    // Upload to S3 in background (the backend will receive local path,
+    // but ChatScreen's onSend handles the actual API call with proper image upload)
   };
 
   const resetComposer = () => {
