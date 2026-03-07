@@ -563,7 +563,7 @@ export default function PostDetail() {
     <ZSafeAreaView>
       <ZHeader
         onPressBack={() => navigation.goBack()}
-        title={strings.post}
+        title={postDataToBeEdited ? strings.editPost : strings.createNewPost}
       />
       <KeyboardAwareScrollView
         enableOnAndroid={true}

@@ -45,14 +45,14 @@ const FeaturedReelsSection = ({ chefId, chefProfile, limit = 6 }) => {
     );
 
     const handleSeeMore = useCallback(() => {
-        navigation.navigate(StackNav.reelsOne, {
+        navigation.navigate(StackNav.SingleReel, {
             profile: chefProfile,
             storyId: null,
         });
     }, [navigation, chefProfile]);
 
     const handleReelPress = useCallback((reel) => {
-        navigation.navigate(StackNav.reelsOne, {
+        navigation.navigate(StackNav.SingleReel, {
             profile: chefProfile,
             storyId: reel._id,
         });

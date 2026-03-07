@@ -66,7 +66,7 @@ export default function AddPost() {
         mediaType: 'video',
         compressVideoPreset: 'MediumQuality',
       });
-      navigation.navigate({ name: StackNav.PostDetail, params: { isImage: false, mediaData: result }, merge: true });
+      navigation.navigate({ name: StackNav.CreateReel, params: { isImage: false, mediaData: result }, merge: true });
     } catch (err) {
       // User cancelled or error - do nothing
     }
@@ -84,7 +84,7 @@ export default function AddPost() {
         cropping: true,
         compressImageQuality: 1,
       });
-      navigation.navigate({ name: StackNav.PostDetail, params: { isImage: true, mediaData: result }, merge: true });
+      navigation.navigate({ name: StackNav.CreateReel, params: { isImage: true, mediaData: result }, merge: true });
     } catch (err) {
       // User cancelled or error - do nothing
     }
@@ -99,7 +99,7 @@ export default function AddPost() {
         compressVideoPreset: 'MediumQuality',
       });
       const isImage = !result.duration;
-      navigation.navigate({ name: StackNav.PostDetail, params: { isImage, mediaData: result }, merge: true });
+      navigation.navigate({ name: StackNav.CreateReel, params: { isImage, mediaData: result }, merge: true });
     } catch (err) {
       // User cancelled or error - do nothing
     }

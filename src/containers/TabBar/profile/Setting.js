@@ -48,7 +48,7 @@ export default Setting = ({ navigation }) => {
       title: getEditProfileTitle(),
       header: getEditProfileTitle(),
       icon: 'person-outline',
-      route: StackNav.EditProfileScreen,
+      route: StackNav.EditProfileField,
     },
     {
       id: 2,
@@ -221,7 +221,7 @@ export default Setting = ({ navigation }) => {
 
   return (
     <ZSafeAreaView>
-      <ZHeader title={strings.setting} />
+      <ZHeader title={strings.settings} />
       {isloading && <ZLoader absolute overlay height={130} top={280} />}
       <ScrollView
         bounces={false}

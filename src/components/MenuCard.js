@@ -5,21 +5,21 @@ import {
   TouchableOpacity,
   Image,
 } from 'react-native';
-import {useSelector} from 'react-redux';
-import {useNavigation} from '@react-navigation/native';
+import { useSelector } from 'react-redux';
+import { useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 import ZText from './common/ZText';
-import {moderateScale} from '../common/constants';
-import {styles} from '../themes';
+import { moderateScale } from '../common/constants';
+import { styles } from '../themes';
 import images from '../assets/images';
 
-const MenuCard = ({menu, chefId, style}) => {
+const MenuCard = ({ menu, chefId, style }) => {
   const colors = useSelector(state => state.theme.theme);
   const navigation = useNavigation();
 
   const handleMenuPress = () => {
-    navigation.navigate('MenuDetailScreen', {
+    navigation.navigate('MenuDetail', {
       menuId: menu._id,
       chefId: chefId || menu.chef?._id,
     });
@@ -35,15 +35,15 @@ const MenuCard = ({menu, chefId, style}) => {
 
   return (
     <TouchableOpacity
-      style={[localStyles.container, {backgroundColor: colors.white}, style]}
+      style={[localStyles.container, { backgroundColor: colors.white }, style]}
       onPress={handleMenuPress}
       activeOpacity={0.8}>
-      
+
       {/* Menu Image */}
       <Image
         source={
           menu.image
-            ? {uri: menu.image}
+            ? { uri: menu.image }
             : images.dishPlaceholder
         }
         style={localStyles.menuImage}
@@ -55,7 +55,7 @@ const MenuCard = ({menu, chefId, style}) => {
         <ZText type="B16" color="#1A1A1A" numberOfLines={2} style={localStyles.menuName}>
           {menu.name}
         </ZText>
-        
+
         {menu.description && (
           <ZText type="M14" color="#666666" numberOfLines={3} style={localStyles.menuDescription}>
             {menu.description}
@@ -86,7 +86,7 @@ const MenuCard = ({menu, chefId, style}) => {
         {/* Action Buttons */}
         <View style={localStyles.actionButtons}>
           <TouchableOpacity
-            style={[localStyles.reviewButton, {borderColor: colors.primary}]}
+            style={[localStyles.reviewButton, { borderColor: colors.primary }]}
             onPress={handleCreateReviewReel}>
             <Ionicons
               name="star"

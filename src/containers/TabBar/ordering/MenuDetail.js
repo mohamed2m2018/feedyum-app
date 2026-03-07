@@ -54,7 +54,7 @@ const MenuDetailScreen = () => {
   };
 
   const handleDishPress = (dish) => {
-    navigation.navigate('DishDetailScreen', {
+    navigation.navigate('DishDetail', {
       dishId: dish._id,
       chefId: chefId,
     });

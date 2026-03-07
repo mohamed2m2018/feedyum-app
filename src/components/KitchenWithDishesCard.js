@@ -51,13 +51,13 @@ function KitchenWithDishesCard({
     };
 
     const handleCheckReels = () => {
-        navigation.navigate(StackNav.reelsOne, {
+        navigation.navigate(StackNav.SingleReel, {
             profile: kitchen,
         });
     };
 
     const handleDishPress = (dish) => {
-        navigation.navigate(StackNav.DishDetailScreen, {
+        navigation.navigate(StackNav.DishDetail, {
             dishId: dish._id,
             dish: dish,
         });

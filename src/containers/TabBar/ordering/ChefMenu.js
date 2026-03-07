@@ -407,7 +407,7 @@ const ChefMenu = () => {
             { backgroundColor: colors.backgroundColor },
           ]}
           onPress={() => {
-            navigation.navigate(StackNav.DishDetailScreen, {
+            navigation.navigate(StackNav.DishDetail, {
               dishId: dish._id,
               chefId: chefId,
             });

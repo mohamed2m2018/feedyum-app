@@ -109,7 +109,7 @@ export default function ChatList({ navigation }) {
       console.warn('Chat partner not found:', orderChat);
       return;
     }
-    navigation.navigate(StackNav.ChatScreen, {
+    navigation.navigate(StackNav.Chat, {
       chefId: partner._id,
       orderId: orderChat.orderId,
     });

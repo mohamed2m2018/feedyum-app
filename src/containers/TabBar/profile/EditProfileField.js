@@ -270,7 +270,7 @@ const EditProfileScreen = ({ navigation }) => {
 
     // Navigate to branch management
     const onPressManageBranches = () => {
-        navigation.navigate(StackNav.ChefBranchesScreen);
+        navigation.navigate(StackNav.ChefBranches);
     };
 
     // Render saved indicator

@@ -40,7 +40,7 @@ const ReviewReelDetailView = ({ reviewReel, onClose }) => {
 
   const handleViewDish = () => {
     if (reviewDetails?.reviewedDish) {
-      navigation.navigate('DishDetailScreen', {
+      navigation.navigate('DishDetail', {
         dishId: reviewDetails.reviewedDish._id,
         chefId: reviewDetails.reviewedDish.user_id,
       });
@@ -50,7 +50,7 @@ const ReviewReelDetailView = ({ reviewReel, onClose }) => {
 
   const handleViewMenu = () => {
     if (reviewDetails?.reviewedMenu) {
-      navigation.navigate('MenuDetailScreen', {
+      navigation.navigate('MenuDetail', {
         menuId: reviewDetails.reviewedMenu._id,
         chefId: reviewDetails.reviewedMenu.chef._id,
       });

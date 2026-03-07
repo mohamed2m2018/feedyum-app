@@ -354,7 +354,7 @@ class DeepLinkingService {
     // It also supports 'orderId' if provided
     console.log('🐞 [DeepLinkingService] Navigating to ChatScreen:', userId, params);
     DeepLinkingService.navigationRef?.dispatch(
-      CommonActions.navigate('ChatScreen', {
+      CommonActions.navigate('Chat', {
         chefId: userId, // Map userId to chefId as expected by ChatScreen
         orderId: params?.orderId || null,
         ...params
@@ -614,7 +614,7 @@ class DeepLinkingService {
   // Menu navigation
   navigateToMenu(menuId, params) {
     DeepLinkingService.navigationRef?.dispatch(
-      CommonActions.navigate('MenuDetailScreen', {
+      CommonActions.navigate('MenuDetail', {
         menuId,
         ...params
       })
@@ -623,7 +623,7 @@ class DeepLinkingService {
 
   navigateToMenuItem(menuId, itemId, params) {
     DeepLinkingService.navigationRef?.dispatch(
-      CommonActions.navigate('DishDetailScreen', {
+      CommonActions.navigate('DishDetail', {
         dishId: itemId,
         menuId,
         ...params
@@ -633,7 +633,7 @@ class DeepLinkingService {
 
   navigateToDish(dishId, params) {
     DeepLinkingService.navigationRef?.dispatch(
-      CommonActions.navigate('DishDetailScreen', {
+      CommonActions.navigate('DishDetail', {
         dishId,
         ...params
       })
@@ -773,7 +773,7 @@ class DeepLinkingService {
 
   navigateToSound(soundId, params) {
     DeepLinkingService.navigationRef?.dispatch(
-      CommonActions.navigate('PostSound', {
+      CommonActions.navigate('SelectSound', {
         soundId,
         ...params
       })

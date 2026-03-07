@@ -207,7 +207,7 @@ const OrderTracking = () => {
         ? currentOrder.user?._id
         : currentOrder.chef?._id;
 
-      navigation.navigate(StackNav.ChatScreen, {
+      navigation.navigate(StackNav.Chat, {
         chefId: chatPartnerId,
         orderId: currentOrder._id,
       });

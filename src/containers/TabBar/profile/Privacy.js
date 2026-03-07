@@ -8,17 +8,17 @@ import {
 } from 'react-native';
 import React from 'react';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {useSelector} from 'react-redux';
+import { useSelector } from 'react-redux';
 
 // Local import
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
 import ZText from '../../../components/common/ZText';
-import {styles} from '../../../themes';
-import {moderateScale} from '../../../common/constants';
+import { styles } from '../../../themes';
+import { moderateScale } from '../../../common/constants';
 import ZHeader from '../../../components/common/ZHeader';
 import strings from '../../../i18n/strings';
 
-export default Privacy = ({navigation}) => {
+export default Privacy = ({ navigation }) => {
   const colors = useSelector(state => state.theme.theme);
   const [isEnabled, setIsEnabled] = React.useState({
     privateAccount: false,
@@ -49,7 +49,7 @@ export default Privacy = ({navigation}) => {
           icon: 'swap-vertical-outline',
         },
         {
-          title: strings.loationServices,
+          title: strings.locationServices,
           icon: 'location-outline',
         },
       ],
@@ -150,9 +150,9 @@ export default Privacy = ({navigation}) => {
       <SectionList
         sections={SecurityData}
         keyExtractor={(item, index) => item + index}
-        renderItem={({item}) => <RenderData item={item} />}
+        renderItem={({ item }) => <RenderData item={item} />}
         stickySectionHeadersEnabled={false}
-        renderSectionHeader={({section: {title}}) => (
+        renderSectionHeader={({ section: { title } }) => (
           <ZText type="b20" style={[styles.mb25, styles.mt10]}>
             {title}
           </ZText>

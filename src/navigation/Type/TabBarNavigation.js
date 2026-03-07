@@ -40,7 +40,7 @@ import MediaSelectionModal from '../../components/modals/MediaSelectionModal';
 import request from '../../api/request';
 import { useQuery } from 'react-query';
 import { useHandleAuth } from '../../utils/useHandleAuth';
-import AddPost from '../../containers/TabBar/add/addPost';
+import AddPost from '../../containers/TabBar/add/AddReel';
 import { useScreen } from '../screenContext';
 import ChefDashboard from '../../containers/TabBar/chef/ChefDashboard';
 import ZLoader from '../../components/common/ZLoader';
@@ -229,7 +229,7 @@ export default function TabBarNavigation({ route, navigation }) {
         mediaType: 'video',
         compressVideoPreset: 'MediumQuality',
       });
-      navigation.navigate({ name: StackNav.PostDetail, params: { isImage: false, mediaData: result }, merge: true });
+      navigation.navigate({ name: StackNav.CreateReel, params: { isImage: false, mediaData: result }, merge: true });
     } catch (err) {
       // User cancelled or error - do nothing
     }
@@ -247,7 +247,7 @@ export default function TabBarNavigation({ route, navigation }) {
         cropping: true,
         compressImageQuality: 1,
       });
-      navigation.navigate({ name: StackNav.PostDetail, params: { isImage: true, mediaData: result }, merge: true });
+      navigation.navigate({ name: StackNav.CreateReel, params: { isImage: true, mediaData: result }, merge: true });
     } catch (err) {
       // User cancelled or error - do nothing
     }
@@ -262,7 +262,7 @@ export default function TabBarNavigation({ route, navigation }) {
         compressVideoPreset: 'MediumQuality',
       });
       const isImage = !result.duration;
-      navigation.navigate({ name: StackNav.PostDetail, params: { isImage, mediaData: result }, merge: true });
+      navigation.navigate({ name: StackNav.CreateReel, params: { isImage, mediaData: result }, merge: true });
     } catch (err) {
       // User cancelled or error - do nothing
     }
@@ -514,7 +514,7 @@ export default function TabBarNavigation({ route, navigation }) {
                   const order = awaitingOrderModal.order;
                   setAwaitingOrderModal({ visible: false, order: null });
                   if (order?.chef?._id) {
-                    navigation.navigate(StackNav.ChatScreen, {
+                    navigation.navigate(StackNav.Chat, {
                       recipientId: order.chef._id,
                       recipientName: order.chef.fullName || order.chef.username,
                       orderId: order._id,

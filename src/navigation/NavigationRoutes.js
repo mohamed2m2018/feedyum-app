@@ -25,8 +25,8 @@ import Security from '../containers/TabBar/profile/Security';
 import Language from '../containers/TabBar/profile/Language';
 import Setting from '../containers/TabBar/profile/Setting';
 import EditProfile from '../containers/TabBar/profile/EditProfile';
-import EditProfileScreen from '../containers/TabBar/profile/EditProfileScreen';
-import Sound from '../containers/TabBar/home/Sound';
+import EditProfileField from '../containers/TabBar/profile/EditProfileField';
+
 import Report from '../containers/TabBar/home/Report';
 import ProfileDetail from '../containers/TabBar/home/userDetail/ProfileDetail';
 import Suggested from '../containers/TabBar/home/userDetail/Suggested';
@@ -36,37 +36,34 @@ import ManageAccount from '../containers/TabBar/profile/ManageAccount';
 import QrCode from '../containers/TabBar/profile/QrCode';
 import SoundCategory from '../containers/TabBar/discover/SoundCategory';
 import HashtagCategory from '../containers/TabBar/discover/HashtagCategory';
-import TrendingSound from '../containers/TabBar/discover/TrendingSound';
-import TrendingHashtag from '../containers/TabBar/discover/TrendingHashtag';
-import Search from '../containers/TabBar/home/Seach/Search';
-import SearchTop from '../containers/TabBar/home/Seach/SearchTop';
-import SearchVideo from '../containers/TabBar/home/Seach/SearchVideo';
-import SearchSound from '../containers/TabBar/home/Seach/SearchSound';
-import SearchUser from '../containers/TabBar/home/Seach/SearchUser';
-import SearchLive from '../containers/TabBar/home/Seach/SearchLive';
-import SearchHashtag from '../containers/TabBar/home/Seach/SearchHashtag';
+import Search from '../containers/TabBar/home/Search/Search';
+import SearchTop from '../containers/TabBar/home/Search/SearchTop';
+import SearchVideo from '../containers/TabBar/home/Search/SearchVideo';
+
+import SearchUser from '../containers/TabBar/home/Search/SearchUser';
+
+import SearchHashtag from '../containers/TabBar/home/Search/SearchHashtag';
 import UserNetwork from '../containers/TabBar/home/userDetail/UserNetwork';
-import PostDetail from '../containers/TabBar/add/PostDetail';
-import PostSound from '../containers/TabBar/add/PostSound';
-import ReelsComponent from '../containers/TabBar/home/ReelsComponent';
-import ReelsComponentOne from '../containers/TabBar/home/ReelsComponentOne';
+import CreateReel from '../containers/TabBar/add/CreateReel';
+
+import ReelFeed from '../containers/TabBar/home/ReelsComponent';
+import SingleReel from '../containers/TabBar/home/ReelsComponentOne';
 import FindFriends from '../containers/TabBar/profile/FindFriends';
-import Live from '../containers/TabBar/home/Live';
+
 import ForYou from '../containers/TabBar/home/ForYou';
 import FollowingTab from '../containers/TabBar/home/Following';
-import Location from '../components/models/location';
+import LocationPicker from '../components/models/location';
 import SelectCategory from '../containers/auth/selectCategory';
 import ChefDashboard from '../containers/TabBar/chef/ChefDashboard';
 import MenuManagement from '../containers/TabBar/chef/MenuManagement';
 import OrderManagement from '../containers/TabBar/chef/OrderManagement';
 import Analytics from '../containers/TabBar/chef/Analytics';
 import ChefMenu from '../containers/TabBar/ordering/ChefMenu';
-import DishDetailScreen from '../containers/TabBar/ordering/DishDetailScreen';
-import MenuDetailScreen from '../containers/TabBar/ordering/MenuDetailScreen';
+import DishDetail from '../containers/TabBar/ordering/DishDetail';
+import MenuDetail from '../containers/TabBar/ordering/MenuDetail';
 import ShoppingCart from '../containers/TabBar/ordering/ShoppingCart';
 import OrderTracking from '../containers/TabBar/ordering/OrderTracking';
-import ChefOrderDetailsScreen from '../containers/TabBar/chef/ChefOrderDetailsScreen';
-import ChatScreen from '../containers/TabBar/ordering/ChatScreen';
+import ChatScreen from '../containers/TabBar/ordering/Chat';
 import ChatList from '../containers/TabBar/ordering/ChatList';
 import Orders from '../containers/TabBar/orders/Orders';
 import Wallet from '../containers/TabBar/profile/Wallet';
@@ -75,8 +72,9 @@ import ReviewReelDetail from '../components/ReviewReelDetailView';
 import SavedAddresses from '../containers/TabBar/profile/SavedAddresses';
 import EditAddress from '../containers/TabBar/profile/EditAddress';
 import MapLocationPicker from '../components/MapLocationPicker';
-import ChefBranchesScreen from '../screens/ChefBranchesScreen';
-import EditPost from '../containers/TabBar/add/EditPost';
+import ChefOrderDetails from '../containers/TabBar/chef/ChefOrderDetails';
+import ChefBranches from '../screens/ChefBranches';
+import EditReel from '../containers/TabBar/add/EditReel';
 
 export const TabRoute = {
   ForYou: ForYou,
@@ -112,9 +110,8 @@ export const StackRoute = {
   Security,
   Language,
   EditProfile,
-  EditProfileScreen,
-  Sound,
-  Location,
+  EditProfileField,
+  LocationPicker,
   Report,
   ProfileDetail,
   Suggested,
@@ -122,35 +119,28 @@ export const StackRoute = {
   Follower,
   ManageAccount,
   QrCode,
-  SoundCategory,
   HashtagCategory,
-  TrendingSound,
-  TrendingHashtag,
   Search,
   SearchTop,
   SearchVideo,
-  SearchSound,
   SearchUser,
-  SearchLive,
   SearchHashtag,
   UserNetwork,
-  PostDetail,
-  PostSound,
-  ReelsComponent,
+  CreateReel,
+  ReelFeed,
   FindFriends,
-  Live,
-  ReelsComponentOne,
+  SingleReel,
   SelectCategory,
   ChefDashboard,
   MenuManagement,
   OrderManagement,
   Analytics,
   ChefMenu,
-  DishDetailScreen,
-  MenuDetailScreen,
+  DishDetail,
+  MenuDetail,
   ShoppingCart,
   OrderTracking,
-  ChefOrderDetailsScreen,
+  ChefOrderDetails,
   ChatScreen,
   ChatList,
   Wallet,
@@ -159,7 +149,7 @@ export const StackRoute = {
   SavedAddresses,
   EditAddress,
   MapLocationPicker,
-  ChefBranchesScreen,
+  ChefBranches,
   Orders,
-  EditPost,
+  EditReel,
 };

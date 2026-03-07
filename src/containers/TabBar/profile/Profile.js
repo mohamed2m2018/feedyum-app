@@ -172,7 +172,7 @@ export default function Profile({ navigation }) {
   };
 
   const onPressEditProfile = isEditBio => {
-    navigation.navigate(StackNav.EditProfileScreen);
+    navigation.navigate(StackNav.EditProfileField);
   };
 
   const onPressSetting = () => navigation.navigate(StackNav.Setting);
@@ -346,7 +346,7 @@ export default function Profile({ navigation }) {
                 backgroundColor: colors.dark ? 'rgba(255,77,103,0.15)' : 'rgba(255,77,103,0.1)',
                 borderColor: colors.primary,
               }]}
-              onPress={() => navigation.navigate(StackNav.ChefBranchesScreen)}
+              onPress={() => navigation.navigate(StackNav.ChefBranches)}
               activeOpacity={0.7}
             >
               <Ionicons name="location" size={moderateScale(14)} color={colors.primary} style={{ marginRight: moderateScale(4) }} />

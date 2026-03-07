@@ -101,7 +101,7 @@ export default function ReviewsTab({ searchQuery = '', useSemanticSearch = true,
     const handleReviewPress = useCallback(review => {
         Keyboard.dismiss();
         // Pass full author object so ReelsComponentOne can fetch author's other videos
-        navigation.navigate(StackNav.reelsOne, {
+        navigation.navigate(StackNav.SingleReel, {
             storyId: review?._id,
             profile: review?.author || { _id: review?.userId },
             initialStory: review,

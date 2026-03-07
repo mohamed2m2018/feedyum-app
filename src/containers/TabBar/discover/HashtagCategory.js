@@ -302,7 +302,7 @@ export default function HashtagCategory({ selectedTag, isLocationChanging }) {
               { backgroundColor: colors.backgroundColor },
             ]}
             onPress={() => {
-              navigation.navigate(StackNav.DishDetailScreen, {
+              navigation.navigate(StackNav.DishDetail, {
                 dishId: item._id,
                 chefId: chefId,
                 fromDiscover: true,

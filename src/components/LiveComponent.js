@@ -24,7 +24,7 @@ export default function LiveComponent({
   const navigation = useNavigation();
 
   const onPressReel = () => {
-    navigation.navigate(StackNav.reelsOne, {
+    navigation.navigate(StackNav.SingleReel, {
       storyId: id,
       profile: userId,
     });

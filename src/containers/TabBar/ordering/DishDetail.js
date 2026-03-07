@@ -756,7 +756,7 @@ const DishDetailScreen = () => {
   );
 
   const handleReviewStoryPress = (story) => {
-    navigation.navigate(StackNav.reelsOne, {
+    navigation.navigate(StackNav.SingleReel, {
       storyId: story._id,
       profile: { _id: story.author._id },
       stories: [story],

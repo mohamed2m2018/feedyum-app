@@ -168,13 +168,13 @@ export default function pAppNavigator() {
         Analytics: 'chef/analytics',
 
         // Menu and dish screens
-        MenuDetailScreen: {
+        MenuDetail: {
           path: '/menu/:menuId',
           parse: {
             menuId: (menuId) => menuId,
           },
         },
-        DishDetailScreen: {
+        DishDetail: {
           path: '/dish/:dishId',
           parse: {
             dishId: (dishId) => dishId,

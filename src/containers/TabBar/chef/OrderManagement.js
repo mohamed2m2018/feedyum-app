@@ -335,7 +335,7 @@ export default function OrderManagement() {
 
   const handleChatWithCustomer = (order) => {
     // Navigate to chat screen with the customer
-    navigation.navigate(StackNav.ChatScreen, {
+    navigation.navigate(StackNav.Chat, {
       chefId: order.user?._id,
       orderId: order._id,
     });

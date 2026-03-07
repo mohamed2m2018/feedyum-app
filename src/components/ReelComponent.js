@@ -79,7 +79,7 @@ const ReelComponent = ({
   };
 
   const onPressReel = () => {
-    navigation.navigate(StackNav.reelsOne, {
+    navigation.navigate(StackNav.SingleReel, {
       storyId: id,
       profile: profileId,
     });
@@ -170,7 +170,7 @@ const ReelComponent = ({
               });
             } else {
               // Navigate to edit post screen
-              navigation.navigate(StackNav.EditPost, {
+              navigation.navigate(StackNav.EditReel, {
                 postDataToBeEdited: item,
               });
             }

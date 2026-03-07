@@ -144,7 +144,7 @@ const Splash = ({ navigation }) => {
         setIsNavigating(true);
         navigation.reset({
           index: 0,
-          routes: [{ name: StackNav.onBoarding }],
+          routes: [{ name: StackNav.OnBoarding }],
         });
       }
     }

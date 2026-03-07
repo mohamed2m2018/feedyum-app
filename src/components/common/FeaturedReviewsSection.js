@@ -45,7 +45,7 @@ const FeaturedReviewsSection = ({ chefId, chefProfile, limit = 5 }) => {
     );
 
     const handleSeeMore = useCallback(() => {
-        navigation.navigate(StackNav.reelsOne, {
+        navigation.navigate(StackNav.SingleReel, {
             profile: chefProfile,
             storyId: null,
             customTitle: `${chefProfile?.fullName || ''} ${strings.reviewsTab || 'Reviews'}`,
@@ -54,7 +54,7 @@ const FeaturedReviewsSection = ({ chefId, chefProfile, limit = 5 }) => {
     }, [navigation, chefProfile]);
 
     const handleReviewPress = useCallback((review) => {
-        navigation.navigate(StackNav.reelsOne, {
+        navigation.navigate(StackNav.SingleReel, {
             profile: chefProfile,
             storyId: review._id,
             customTitle: `${chefProfile?.fullName || ''} ${strings.reviewsTab || 'Reviews'}`,

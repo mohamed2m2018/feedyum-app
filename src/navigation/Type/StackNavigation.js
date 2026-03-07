@@ -140,10 +140,7 @@ export default function StackNavigation() {
           component={StackRoute.SelectCategory}
         />
       </Stack.Group>
-      <Stack.Screen
-        name={StackNav.onBoarding}
-        component={StackRoute.OnBoarding}
-      />
+      <Stack.Screen name={StackNav.OnBoarding} component={StackRoute.OnBoarding} />
       <Stack.Screen name={StackNav.Auth} component={AuthNavigation} />
       <Stack.Screen name={StackNav.Auth2} component={AuthNavigation2} />
       <Stack.Screen name={StackNav.TabBar} component={StackRoute.TabBar} />
@@ -157,11 +154,10 @@ export default function StackNavigation() {
       />
       <Stack.Screen name={StackNav.Setting} component={StackRoute.Setting} />
       <Stack.Screen
-        name={StackNav.reelsOne}
-        component={StackRoute.ReelsComponentOne}
+        name={StackNav.SingleReel}
+        component={StackRoute.SingleReel}
       />
-      <Stack.Screen name={StackNav.Report} component={StackRoute.Report} />
-      <Stack.Screen name={StackNav.Sound} component={StackRoute.Sound} />
+
       <Stack.Group
         screenOptions={{
           presentation: 'modal',
@@ -169,8 +165,8 @@ export default function StackNavigation() {
           ...(isAndroid && TransitionPresets.ModalPresentationIOS),
         }}>
         <Stack.Screen
-          name={StackNav.locations}
-          component={StackRoute.Location}
+          name={StackNav.LocationPicker}
+          component={StackRoute.LocationPicker}
         />
       </Stack.Group>
 
@@ -201,8 +197,8 @@ export default function StackNavigation() {
         component={StackRoute.EditProfile}
       />
       <Stack.Screen
-        name={StackNav.EditProfileScreen}
-        component={StackRoute.EditProfileScreen}
+        name={StackNav.EditProfileField}
+        component={StackRoute.EditProfileField}
       />
       <Stack.Screen name={StackNav.Privacy} component={StackRoute.Privacy} />
       <Stack.Screen
@@ -215,22 +211,9 @@ export default function StackNavigation() {
       />
       <Stack.Screen name={StackNav.Security} component={StackRoute.Security} />
       <Stack.Screen name={StackNav.Language} component={StackRoute.Language} />
-      <Stack.Screen
-        name={StackNav.SoundCategory}
-        component={StackRoute.SoundCategory}
-      />
-      <Stack.Screen
-        name={StackNav.TrendingSound}
-        component={StackRoute.TrendingSound}
-      />
-      <Stack.Screen
-        name={StackNav.HashtagCategory}
-        component={StackRoute.HashtagCategory}
-      />
-      <Stack.Screen
-        name={StackNav.TrendingHashtag}
-        component={StackRoute.TrendingHashtag}
-      />
+
+
+
       <Stack.Screen name={StackNav.Search} component={StackRoute.Search} />
       <Stack.Screen
         name={StackNav.SearchTop}
@@ -244,35 +227,26 @@ export default function StackNavigation() {
         name={StackNav.SearchVideo}
         component={StackRoute.SearchVideo}
       />
-      <Stack.Screen
-        name={StackNav.SearchSound}
-        component={StackRoute.SearchSound}
-      />
-      <Stack.Screen
-        name={StackNav.SearchLive}
-        component={StackRoute.SearchLive}
-      />
+
+
       <Stack.Screen
         name={StackNav.SearchHashtag}
         component={StackRoute.SearchHashtag}
       />
       <Stack.Screen
-        name={StackNav.PostDetail}
-        component={StackRoute.PostDetail}
+        name={StackNav.CreateReel}
+        component={StackRoute.CreateReel}
       />
+
       <Stack.Screen
-        name={StackNav.PostSound}
-        component={StackRoute.PostSound}
-      />
-      <Stack.Screen
-        name={StackNav.ReelsComponent}
-        component={StackRoute.ReelsComponent}
+        name={StackNav.ReelFeed}
+        component={StackRoute.ReelFeed}
       />
       <Stack.Screen
         name={StackNav.FindFriends}
         component={StackRoute.FindFriends}
       />
-      <Stack.Screen name={StackNav.Live} component={StackRoute.Live} />
+
       <Stack.Screen
         name={StackNav.ChefDashboard}
         component={StackRoute.ChefDashboard}
@@ -294,8 +268,8 @@ export default function StackNavigation() {
         component={StackRoute.ChefMenu}
       />
       <Stack.Screen
-        name={StackNav.DishDetailScreen}
-        component={StackRoute.DishDetailScreen}
+        name={StackNav.DishDetail}
+        component={StackRoute.DishDetail}
       />
       <Stack.Screen
         name={StackNav.ShoppingCart}
@@ -307,7 +281,7 @@ export default function StackNavigation() {
       />
       <Stack.Screen
         name={StackNav.ChefOrderDetails}
-        component={StackRoute.ChefOrderDetailsScreen}
+        component={StackRoute.ChefOrderDetails}
         options={{
           presentation: 'modal',
           gestureEnabled: true,
@@ -315,7 +289,7 @@ export default function StackNavigation() {
         }}
       />
       <Stack.Screen
-        name={StackNav.ChatScreen}
+        name={StackNav.Chat}
         component={StackRoute.ChatScreen}
         options={{ animation: 'none' }}
       />
@@ -328,8 +302,8 @@ export default function StackNavigation() {
         component={StackRoute.Wallet}
       />
       <Stack.Screen
-        name={StackNav.MenuDetailScreen}
-        component={StackRoute.MenuDetailScreen}
+        name={StackNav.MenuDetail}
+        component={StackRoute.MenuDetail}
       />
       <Stack.Screen
         name={StackNav.ReviewReelCreator}
@@ -352,16 +326,16 @@ export default function StackNavigation() {
         component={StackRoute.MapLocationPicker}
       />
       <Stack.Screen
-        name={StackNav.ChefBranchesScreen}
-        component={StackRoute.ChefBranchesScreen}
+        name={StackNav.ChefBranches}
+        component={StackRoute.ChefBranches}
       />
       <Stack.Screen
         name={StackNav.Orders}
         component={StackRoute.Orders}
       />
       <Stack.Screen
-        name={StackNav.EditPost}
-        component={StackRoute.EditPost}
+        name={StackNav.EditReel}
+        component={StackRoute.EditReel}
       />
     </Stack.Navigator>
   );
