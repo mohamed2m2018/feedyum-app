@@ -138,7 +138,7 @@ export default function Wallet({ navigation }) {
     },
   );
 
-  const formatCurrency = amount => `£${Math.abs(amount).toFixed(2)}`;
+  const formatCurrency = amount => `${strings.currency} ${Math.abs(amount).toFixed(2)}`;
 
   const getTransactionIcon = type => {
     switch (type) {

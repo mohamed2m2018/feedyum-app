@@ -340,7 +340,7 @@ export default function HashtagCategory({ selectedTag, isLocationChanging }) {
                 type="b14"
                 color={colors.white}
                 style={localStyles.dishPrice}>
-                ${item.price?.toFixed(2) || '0.00'}
+                {strings.currency} {item.price?.toFixed(2) || '0.00'}
               </ZText>
             </View>
           </TouchableOpacity>

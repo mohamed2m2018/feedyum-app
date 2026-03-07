@@ -96,7 +96,7 @@ const AttachedDishesComponent = ({
           {item.description}
         </ZText>
         <ZText type="B14" color={colors.primary}>
-          ${item.price}
+          {strings.currency} {item.price}
         </ZText>
       </View>
       <Ionicons
@@ -142,7 +142,7 @@ const AttachedDishesComponent = ({
           {dish.name}
         </ZText>
         <ZText type="B12" color={colors.primary}>
-          ${dish.price}
+          {strings.currency} {dish.price}
         </ZText>
       </View>
     </View>
