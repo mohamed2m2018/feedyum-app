@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Network Security Configuration for FeedYum
+  - Blocks cleartext (HTTP) traffic by default (release safety)
+  - Allows cleartext for localhost / emulator only (dev builds)
+-->
+<network-security-config>
+    <!-- Block cleartext HTTP traffic globally -->
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+
+    <!-- Allow cleartext for local dev only (localhost, emulator) -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">localhost</domain>
+        <domain includeSubdomains="true">10.0.2.2</domain>
+        <domain includeSubdomains="true">10.0.3.2</domain>
+        <domain includeSubdomains="false">192.168.1.105</domain>
+    </domain-config>
+</network-security-config>
