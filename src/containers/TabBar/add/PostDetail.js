@@ -171,12 +171,34 @@ export default function PostDetail() {
     );
   };
 
+  const handleLocationSelect = (newLocation) => {
+    // Adapt newLocation to the structure PostDetail expects
+    const adaptedLocation = {
+      description: newLocation.formattedAddress || newLocation.address || '',
+      lat: newLocation.lat || newLocation.latitude,
+      long: newLocation.long || newLocation.longitude,
+      latitude: newLocation.lat || newLocation.latitude,
+      longitude: newLocation.long || newLocation.longitude,
+      ...newLocation
+    };
+
+    if (locationIndexToEdit !== undefined && locationIndexToEdit !== null) {
+      setLocations(prev => {
+        const newLocs = [...prev];
+        newLocs[locationIndexToEdit] = adaptedLocation;
+        return newLocs;
+      });
+      setlocationIndexToEdit(undefined);
+    } else {
+      setLocations(prev => [...prev, adaptedLocation]);
+    }
+  };
+
   const onPressLocation = () => {
-    navigation.navigate(StackNav.locations, {
-      locationIndexToEdit,
-      setlocationIndexToEdit,
-      setLocations,
-      locations: locations,
+    setlocationIndexToEdit(undefined);
+    navigation.navigate(StackNav.MapLocationPicker, {
+      onLocationSelect: handleLocationSelect,
+      isChefBranch: true,
     });
   };
 
@@ -350,11 +372,15 @@ export default function PostDetail() {
 
   const onEditLocation = index => {
     setlocationIndexToEdit(index);
-    navigation.navigate(StackNav.locations, {
-      locationIndexToEdit: index,
-      setlocationIndexToEdit,
-      setLocations,
-      locations: locations,
+    const loc = locations[index];
+    navigation.navigate(StackNav.MapLocationPicker, {
+      onLocationSelect: handleLocationSelect,
+      isChefBranch: true,
+      initialLocation: {
+        latitude: loc.lat || loc.latitude,
+        longitude: loc.long || loc.longitude,
+        address: loc.description
+      },
     });
   };
   const onDeleteLocation = indexToDelete => {
