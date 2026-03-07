@@ -2,12 +2,16 @@
 import {
   ActivityIndicator,
   I18nManager,
+  Image,
   StyleSheet,
   TouchableOpacity,
   View,
+  FlatList,
 } from 'react-native';
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useSelector } from 'react-redux';
+import LinearGradient from 'react-native-linear-gradient';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 // Local Imports
 import ZSafeAreaView from '../../components/common/ZSafeAreaView';
@@ -15,11 +19,15 @@ import ZHeader from '../../components/common/ZHeader';
 import { styles } from '../../themes';
 import strings from '../../i18n/strings';
 import ZText from '../../components/common/ZText';
-import { moderateScale } from '../../common/constants';
+import { moderateScale, screenWidth } from '../../common/constants';
 import ZButton from '../../components/common/ZButton';
 import { useRoute } from '@react-navigation/native';
 import request from '../../api/request';
 import { useQuery } from 'react-query';
+import { getCategoryEmoji } from '../../utils/categoryEmojis';
+
+const CARD_GAP = moderateScale(10);
+const CARD_WIDTH = (screenWidth - moderateScale(16) * 2 - CARD_GAP * 2) / 3;
 
 const SelectCategory = ({ navigation }) => {
   const colors = useSelector(state => state.theme.theme);
@@ -39,85 +47,119 @@ const SelectCategory = ({ navigation }) => {
     },
   );
 
-  // eslint-disable-next-line react/no-unstable-nested-components
-  const RenderChips = ({ item, id }) => {
-    return (
-      <TouchableOpacity
-        onPress={() => onPressChips(id, item)}
-        style={[
-          localStyles.chipsContainer,
-          { borderColor: colors.primary },
-          selectedChips.includes(id) && { backgroundColor: colors.primary },
-        ]}>
-        <ZText
-          type={'b18'}
-          color={selectedChips.includes(id) ? colors.white : colors.primary}>
-          {item}
-        </ZText>
-      </TouchableOpacity>
-    );
-  };
-
-  const onPressChips = (value, name) => {
-    if (selectedChips.includes(value)) {
-      setSelectedChips(selectedChips.filter(item => item !== value));
-      setNames(names?.filter(item => item !== name));
-    } else {
-      setSelectedChips([...selectedChips, value]);
-      setNames([...names, name]);
-    }
-  };
+  const onPressChips = useCallback((value, name) => {
+    setSelectedChips(prev => {
+      if (prev.includes(value)) {
+        return prev.filter(item => item !== value);
+      }
+      return [...prev, value];
+    });
+    setNames(prev => {
+      if (prev?.includes(name)) {
+        return prev?.filter(item => item !== name);
+      }
+      return [...(prev || []), name];
+    });
+  }, []);
 
   const onPressContinue = () => {
     setcategoryIds([...selectedChips]);
     route.params?.setCategoryNames?.([...names]);
     navigation?.goBack();
-    // Note: React-query will automatically re-fetch when categoryIds state changes
-    // (it's part of the query key in useOptimizedReels)
   };
 
-  const InterestChips = () => {
-    return chips?.map(item => {
-      // Use Arabic name if RTL and available, otherwise fallback to English name
-      const displayName = I18nManager.isRTL
-        ? (item?.nameArabic || item?.name)
-        : item?.name;
-      return (
-        <RenderChips
-          item={displayName}
-          id={item?._id}
-          key={item?._id}
-        />
-      );
-    });
-  };
+  const renderCategoryItem = useCallback(({ item }) => {
+    const displayName = I18nManager.isRTL
+      ? (item?.nameArabic || item?.name)
+      : item?.name;
+    const isSelected = selectedChips.includes(item?._id);
+    const emoji = getCategoryEmoji(item?.name);
+
+    return (
+      <TouchableOpacity
+        onPress={() => onPressChips(item?._id, displayName)}
+        style={[
+          localStyles.card,
+          {
+            backgroundColor: colors.dark ? colors.inputBg : colors.white,
+            borderColor: isSelected ? colors.primary : (colors.dark ? colors.grayScale8 : colors.grayScale3),
+            borderWidth: isSelected ? 2 : 1,
+          },
+        ]}
+        activeOpacity={0.7}
+      >
+        {/* Food Image */}
+        {item?.image ? (
+          <Image
+            source={{ uri: item.image }}
+            style={localStyles.foodImage}
+            resizeMode="cover"
+          />
+        ) : (
+          <View style={[localStyles.emojiCircle, { backgroundColor: colors.primary + '15' }]}>
+            <ZText type={'b22'}>{emoji}</ZText>
+          </View>
+        )}
+
+        {/* Category Name */}
+        <ZText
+          type={'s12'}
+          numberOfLines={2}
+          align={'center'}
+          color={isSelected ? colors.primary : colors.textColor}
+          style={localStyles.cardName}
+        >
+          {displayName}
+        </ZText>
+
+        {/* Selected Check */}
+        {isSelected && (
+          <View style={[localStyles.checkBadge, { backgroundColor: colors.primary }]}>
+            <Ionicons name="checkmark" size={moderateScale(10)} color="#fff" />
+          </View>
+        )}
+      </TouchableOpacity>
+    );
+  }, [selectedChips, colors, onPressChips]);
 
   return (
     <ZSafeAreaView>
       <ZHeader title={strings.selectInterest} />
-      {isFetching && (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      {isFetching ? (
+        <View style={localStyles.loadingContainer}>
           <ActivityIndicator size={'large'} color={colors.primary} />
         </View>
-      )}
-      {!isFetching && (
-        <View style={localStyles.root}>
-          <ZText type={'m18'} style={styles.mv10}>
-            {strings.selectInterestDescription}
-          </ZText>
-          <View style={localStyles.chipMainContainer}>
-            <InterestChips />
-          </View>
-        </View>
-      )}
-      <View style={localStyles.btnContainer}>
-        <ZButton
-          title={strings.continue}
-          textType={'b18'}
-          color={colors.white}
-          containerStyle={[localStyles.skipBtnContainer]}
-          onPress={onPressContinue}
+      ) : (
+        <FlatList
+          data={chips}
+          renderItem={renderCategoryItem}
+          keyExtractor={(item) => item?._id}
+          numColumns={3}
+          columnWrapperStyle={localStyles.row}
+          contentContainerStyle={localStyles.listContent}
+          showsVerticalScrollIndicator={false}
+          ListHeaderComponent={
+            <ZText type={'m14'} color={colors.grayScale5} style={localStyles.subtitle}>
+              {strings.selectInterestDescription}
+            </ZText>
+          }
+          ListFooterComponent={<View style={{ height: moderateScale(80) }} />}
         />
+      )}
+      {/* Floating Continue Button */}
+      <View style={[localStyles.btnWrapper, { backgroundColor: colors.dark ? colors.backgroundColor + 'F0' : '#fff' + 'F0' }]}>
+        <TouchableOpacity onPress={onPressContinue} activeOpacity={0.8}>
+          <LinearGradient
+            colors={[colors.primary, colors.lightRed || '#FF7B8E']}
+            style={localStyles.continueBtn}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          >
+            <ZText type={'b16'} color={'#fff'}>
+              {strings.continue}
+            </ZText>
+          </LinearGradient>
+        </TouchableOpacity>
       </View>
     </ZSafeAreaView>
   );
@@ -126,27 +168,78 @@ const SelectCategory = ({ navigation }) => {
 export default SelectCategory;
 
 const localStyles = StyleSheet.create({
-  chipMainContainer: {
-    ...styles.wrap,
-    ...styles.flexRow,
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  root: {
-    ...styles.ph20,
-    ...styles.flex,
+  subtitle: {
+    marginBottom: moderateScale(16),
   },
-  btnContainer: {
-    ...styles.p20,
-    ...styles.rowSpaceAround,
+  listContent: {
+    paddingHorizontal: moderateScale(16),
+    paddingTop: moderateScale(12),
   },
-  chipsContainer: {
-    ...styles.ph20,
-    ...styles.pv10,
-    borderWidth: moderateScale(1),
+  row: {
+    justifyContent: 'flex-start',
+    gap: CARD_GAP,
+    marginBottom: CARD_GAP,
+  },
+  card: {
+    width: CARD_WIDTH,
+    borderRadius: moderateScale(14),
+    alignItems: 'center',
+    paddingTop: moderateScale(10),
+    paddingBottom: moderateScale(10),
+    paddingHorizontal: moderateScale(4),
+    position: 'relative',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  foodImage: {
+    width: moderateScale(52),
+    height: moderateScale(52),
+    borderRadius: moderateScale(26),
+    marginBottom: moderateScale(6),
+  },
+  emojiCircle: {
+    width: moderateScale(52),
+    height: moderateScale(52),
+    borderRadius: moderateScale(26),
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: moderateScale(6),
+  },
+  cardName: {
+    lineHeight: moderateScale(15),
+    minHeight: moderateScale(30),
+  },
+  checkBadge: {
+    position: 'absolute',
+    top: moderateScale(5),
+    right: moderateScale(5),
+    width: moderateScale(18),
+    height: moderateScale(18),
+    borderRadius: moderateScale(9),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  btnWrapper: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: moderateScale(20),
+    paddingTop: moderateScale(12),
+    paddingBottom: moderateScale(24),
+  },
+  continueBtn: {
+    height: moderateScale(50),
     borderRadius: moderateScale(25),
-    ...styles.mt15,
-    ...styles.mh5,
-  },
-  skipBtnContainer: {
-    width: '45%',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

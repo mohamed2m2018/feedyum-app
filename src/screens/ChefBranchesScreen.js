@@ -96,6 +96,7 @@ const ChefBranchesScreen = () => {
                         phoneNumber: locationData.phoneNumber || '0000000000',
                         countryCode: locationData.countryCode || '+20',
                         deliveryRadius: locationData.deliveryRadius || 20,
+                        deliveryTiers: locationData.deliveryTiers || [],
                     });
 
                     // Invalidate and refetch
@@ -113,6 +114,26 @@ const ChefBranchesScreen = () => {
     const handleEditBranch = (branch, index) => {
         navigation.navigate(StackNav.MapLocationPicker, {
             isChefBranch: true,
+            editMode: true,
+            addressToEdit: {
+                _id: branch._id,
+                location: branch.location,
+                lat: branch.location?.lat || branch.lat,
+                long: branch.location?.long || branch.long,
+                formattedAddress: branch.addressDetails?.formattedAddress || branch.description,
+                nameLine: branch.addressDetails?.formattedAddress || branch.description,
+                label: branch.branchName || 'Branch',
+                branchName: branch.branchName,
+                addressType: 'business',
+                streetDetails: branch.addressDetails?.streetDetails || {
+                    streetName: branch.addressDetails?.formattedAddress?.split(',')[0] || '',
+                    area: branch.addressDetails?.area || '',
+                },
+                buildingDetails: branch.addressDetails?.buildingDetails,
+                contactInfo: branch.contactInfo,
+                deliveryRadius: branch.deliveryRadius,
+                deliveryTiers: branch.deliveryTiers,
+            },
             initialLocation: {
                 latitude: parseFloat(branch.location?.lat || branch.lat),
                 longitude: parseFloat(branch.location?.long || branch.long),
@@ -134,6 +155,7 @@ const ChefBranchesScreen = () => {
                         phoneNumber: locationData.phoneNumber || branch.contactInfo?.phoneNumber || '0000000000',
                         countryCode: locationData.countryCode || branch.contactInfo?.countryCode || '+20',
                         deliveryRadius: locationData.deliveryRadius || branch.deliveryRadius || 20,
+                        deliveryTiers: locationData.deliveryTiers || branch.deliveryTiers || [],
                     });
 
                     queryClient.invalidateQueries('myBranches');

@@ -148,8 +148,8 @@ const FeaturedReelsSection = ({ chefId, chefProfile, limit = 6 }) => {
 
 const localStyles = StyleSheet.create({
     container: {
-        paddingTop: moderateScale(16),
-        paddingBottom: moderateScale(8),
+        paddingTop: moderateScale(12),
+        paddingBottom: moderateScale(6),
     },
     headerRow: {
         flexDirection: 'row',
@@ -184,8 +184,8 @@ const localStyles = StyleSheet.create({
         gap: moderateScale(10),
     },
     videoCard: {
-        width: moderateScale(85),
-        height: moderateScale(110),
+        width: moderateScale(75),
+        height: moderateScale(100),
         borderRadius: moderateScale(10),
         overflow: 'hidden',
     },
@@ -206,14 +206,14 @@ const localStyles = StyleSheet.create({
         height: '50%',
     },
     playButton: {
-        width: moderateScale(40),
-        height: moderateScale(40),
-        borderRadius: moderateScale(20),
-        backgroundColor: 'rgba(255,255,255,0.25)',
+        width: moderateScale(34),
+        height: moderateScale(34),
+        borderRadius: moderateScale(17),
+        backgroundColor: 'rgba(255,255,255,0.2)',
         justifyContent: 'center',
         alignItems: 'center',
-        borderWidth: 2,
-        borderColor: 'rgba(255,255,255,0.5)',
+        borderWidth: 1.5,
+        borderColor: 'rgba(255,255,255,0.4)',
     },
     viewsContainer: {
         position: 'absolute',

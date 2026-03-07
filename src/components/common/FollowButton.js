@@ -198,7 +198,7 @@ export default function FollowButton({
   const isLoading = followMutation.isLoading || unfollowMutation.isLoading;
   const sizeStyles = size === 'small' ? localStyles.small : localStyles.medium;
   const iconSize = size === 'small' ? moderateScale(12) : moderateScale(14);
-  const textType = size === 'small' ? 'B10' : 'B12';
+  const textType = size === 'small' ? 'B10' : 'B14';
 
   // Icon-only mode - just a heart icon (for restaurant badges)
   if (compact && size === 'icon') {
@@ -261,7 +261,7 @@ const localStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: moderateScale(12),
+    borderRadius: moderateScale(14),
     borderWidth: 1,
   },
   small: {
@@ -271,10 +271,10 @@ const localStyles = StyleSheet.create({
     minHeight: moderateScale(22),
   },
   medium: {
-    paddingHorizontal: moderateScale(12),
-    paddingVertical: moderateScale(5),
-    minWidth: moderateScale(70),
-    minHeight: moderateScale(28),
+    paddingHorizontal: moderateScale(16),
+    paddingVertical: moderateScale(7),
+    minWidth: moderateScale(75),
+    minHeight: moderateScale(32),
   },
   icon: {
     marginRight: moderateScale(2),

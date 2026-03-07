@@ -20,6 +20,7 @@ import ZHeader from '../../../components/common/ZHeader';
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
 import ZButton from '../../../components/common/ZButton';
 import AddressSelectionModal from '../../../components/AddressSelectionModal';
+import request from '../../../api/request';
 
 import { moderateScale } from '../../../common/constants';
 import images from '../../../assets/images';
@@ -61,6 +62,8 @@ const ShoppingCart = () => {
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [specialInstructions, setSpecialInstructions] = useState('');
   const [showAddressModal, setShowAddressModal] = useState(false);
+  const [calculatedDeliveryFee, setCalculatedDeliveryFee] = useState(null);
+  const [loadingDeliveryFee, setLoadingDeliveryFee] = useState(false);
 
   // Load addresses when component mounts and set default if needed
   useEffect(() => {
@@ -75,6 +78,41 @@ const ShoppingCart = () => {
       dispatch(setSelectedAddress(primary || addresses[0]));
     }
   }, [addresses, selectedAddress, dispatch]);
+
+  // Fetch calculated delivery fee when address or chef changes
+  useEffect(() => {
+    const fetchDeliveryFee = async () => {
+      if (!chef?.id || !selectedAddress) {
+        setCalculatedDeliveryFee(null);
+        return;
+      }
+
+      const lat = selectedAddress.location?.lat || selectedAddress.lat || selectedAddress.coordinates?.lat;
+      const long = selectedAddress.location?.long || selectedAddress.long || selectedAddress.coordinates?.lng || selectedAddress.coordinates?.long;
+
+      if (!lat || !long) {
+        setCalculatedDeliveryFee(null);
+        return;
+      }
+
+      try {
+        setLoadingDeliveryFee(true);
+        const response = await request.get(`/orders/check-delivery/${chef.id}?lat=${lat}&long=${long}`);
+        if (response.data?.success && response.data?.canDeliver) {
+          setCalculatedDeliveryFee(response.data.deliveryFee || 0);
+        } else {
+          setCalculatedDeliveryFee(null);
+        }
+      } catch (err) {
+        console.log('Failed to fetch delivery fee:', err);
+        setCalculatedDeliveryFee(null);
+      } finally {
+        setLoadingDeliveryFee(false);
+      }
+    };
+
+    fetchDeliveryFee();
+  }, [chef?.id, selectedAddress]);
 
   // Memoize expensive calculations
   const cartSummary = useMemo(() => ({
@@ -445,17 +483,28 @@ const ShoppingCart = () => {
           <ZText type="M14" color={colors.grayScale7}>
             {strings.deliveryFee}
           </ZText>
-          <ZText type="M14" color={colors.grayScale7}>
-            {strings.deliveryFeeTbd}
+          <ZText type="M14" color={calculatedDeliveryFee !== null ? colors.textColor : colors.grayScale7}>
+            {loadingDeliveryFee
+              ? (strings.loading || 'Loading...')
+              : calculatedDeliveryFee !== null
+                ? `${calculatedDeliveryFee} ${strings.EGP}`
+                : strings.deliveryFeeTbd}
           </ZText>
         </View>
+        {calculatedDeliveryFee !== null && (
+          <ZText type="s12" color={colors.grayScale6} style={{ marginTop: moderateScale(-4), marginBottom: moderateScale(4) }}>
+            {strings.deliveryFeeOverrideNote}
+          </ZText>
+        )}
 
         <View style={[localStyles.summaryRow, localStyles.totalRow]}>
           <ZText type="B18" color={colors.textColor}>
             {strings.total}
           </ZText>
           <ZText type="B18" color={colors.primary}>
-            {cartSummary.formattedSubtotal} {strings.EGP} {strings.plusDelivery}
+            {calculatedDeliveryFee !== null
+              ? `${(subtotal + calculatedDeliveryFee).toFixed(0)} ${strings.EGP}`
+              : `${cartSummary.formattedSubtotal} ${strings.EGP} ${strings.plusDelivery}`}
           </ZText>
         </View>
       </View>

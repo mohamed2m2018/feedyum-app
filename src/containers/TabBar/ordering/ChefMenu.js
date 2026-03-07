@@ -4,11 +4,13 @@ import {
   StyleSheet,
   FlatList,
   Image,
+  ImageBackground,
   TouchableOpacity,
   RefreshControl,
   InteractionManager,
   ActivityIndicator,
   I18nManager,
+  ScrollView,
 } from 'react-native';
 import { showErrorToast, showActionDialog, showSuccessToast, ALERT_TYPE } from '../../../utils/toast';
 import { useSelector, useDispatch } from 'react-redux';
@@ -124,20 +126,22 @@ const ChefMenu = () => {
     }
   );
 
-  // Get user's location for delivery check
-  const { stableLatitude, stableLongitude } = useLocation();
+  // Get user's location for delivery check - use current location (respects delivery address)
+  const location = useLocation();
+  const userLat = location?.latitude;
+  const userLng = location?.longitude;
 
   // Check delivery eligibility to user's location
   const { data: deliveryData } = useQuery(
-    ['deliveryEligibility', chefId, stableLatitude, stableLongitude],
+    ['deliveryEligibility', chefId, userLat, userLng],
     async () => {
       const response = await request.get(
-        `/orders/check-delivery/${chefId}?lat=${stableLatitude}&long=${stableLongitude}`
+        `/orders/check-delivery/${chefId}?lat=${userLat}&long=${userLng}`
       );
       return response.data;
     },
     {
-      enabled: !!chefId && !!stableLatitude && !!stableLongitude,
+      enabled: !!chefId && !!userLat && !!userLng,
       staleTime: 1000 * 60 * 5, // 5 minutes
     }
   );
@@ -226,6 +230,7 @@ const ChefMenu = () => {
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [useSemanticSearch, setUseSemanticSearch] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState(null);
 
   const onSearchInput = useCallback((text) => {
     setSearch(text);
@@ -628,21 +633,22 @@ const ChefMenu = () => {
             contentContainerStyle={localStyles.stunningCategoriesList}
             style={I18nManager.isRTL ? { transform: [{ scaleX: -1 }] } : null}
             renderItem={({ item: category, index }) => {
-              const itemCount = dishCategories[category].length;
+              const categoryDishes = dishCategories[category];
+              const itemCount = categoryDishes.length;
               const gradientColors = getCategoryGradient(index);
+              // Use the first dish image as category background
+              const categoryImage = categoryDishes.find(d => d.image)?.image;
 
               return (
                 <TouchableOpacity
                   style={[
                     localStyles.stunningCategoryCard,
                     {
-                      backgroundColor: gradientColors.primary,
                       shadowColor: gradientColors.primary,
                     },
                     I18nManager.isRTL && { transform: [{ scaleX: -1 }] },
                   ]}
                   onPress={() => {
-                    // Scroll to first dish in this category
                     const firstDishInCategory = menuData.dishes.find(
                       dish => (dish.category || strings.allItems) === category,
                     );
@@ -660,46 +666,44 @@ const ChefMenu = () => {
                     }
                   }}
                   activeOpacity={0.8}>
-                  {/* Gradient Overlay */}
-                  <View
-                    style={[
-                      localStyles.categoryGradientOverlay,
-                      { backgroundColor: gradientColors.secondary },
-                    ]}
-                  />
-
-                  {/* Category Icon */}
-                  <View
-                    style={[
-                      localStyles.categoryIconContainer,
-                      { backgroundColor: 'rgba(255,255,255,0.2)' },
-                    ]}>
-                    <Ionicons
-                      name={getCategoryIcon(category)}
-                      size={moderateScale(24)}
-                      color="white"
-                    />
-                  </View>
-
-                  {/* Category Info */}
-                  <View style={localStyles.categoryInfo}>
-                    <ZText
-                      type="B14"
-                      color="white"
-                      numberOfLines={1}
-                      style={localStyles.categoryName}>
-                      {category}
-                    </ZText>
-                    <ZText
-                      type="M10"
-                      color="rgba(255,255,255,0.9)"
-                      style={localStyles.categoryItemCount}>
-                      {itemCount} {itemCount === 1 ? 'item' : 'items'}
-                    </ZText>
-                  </View>
-
-                  {/* Shine Effect */}
-                  <View style={localStyles.shineEffect} />
+                  {categoryImage ? (
+                    <View>
+                      <Image
+                        source={{ uri: categoryImage }}
+                        style={localStyles.categoryCardImage}
+                      />
+                      <ZText
+                        type="B13"
+                        color={colors.textColor}
+                        numberOfLines={1}
+                        align="center"
+                        style={localStyles.categoryLabelBelow}>
+                        {category}
+                      </ZText>
+                    </View>
+                  ) : (
+                    <View>
+                      <View
+                        style={[
+                          localStyles.categoryCardFallback,
+                          { backgroundColor: gradientColors.primary },
+                        ]}>
+                        <Ionicons
+                          name={getCategoryIcon(category)}
+                          size={moderateScale(28)}
+                          color="white"
+                        />
+                      </View>
+                      <ZText
+                        type="B13"
+                        color={colors.textColor}
+                        numberOfLines={1}
+                        align="center"
+                        style={localStyles.categoryLabelBelow}>
+                        {category}
+                      </ZText>
+                    </View>
+                  )}
                 </TouchableOpacity>
               );
             }}
@@ -718,143 +722,136 @@ const ChefMenu = () => {
       avatar: menuData?.chef?.avatar,
     };
 
+    // Compute rating
+    const dishes = menuData?.dishes || [];
+    const ratedDishes = dishes.filter(d =>
+      typeof d.average_rating === 'number' && d.average_rating >= 1
+    );
+    const ratedCount = ratedDishes.length;
+    let rating = 0;
+    if (ratedCount > 0) {
+      const total = ratedDishes.reduce((sum, d) => sum + d.average_rating, 0);
+      rating = Math.round((total / ratedCount) * 10) / 10;
+    }
+
+    // Compute branches
+    const branchLocations = (branchesData?.branches || [])
+      .filter(b => b.isActive)
+      .map(b => ({
+        description: b.addressDetails?.formattedAddress || b.branchName,
+        lat: b.location?.lat,
+        long: b.location?.long,
+      }));
+
+    const isOwnProfile = user?._id?.toString() === chefId?.toString();
+
+    // Get hero banner image: prefer cover, fallback to avatar (like KitchensTab), then first dish image
+    const heroImage = menuData?.chef?.cover || menuData?.chef?.avatar || dishes.find(d => d.image)?.image;
+
     return (
       <View style={{ backgroundColor: colors.backgroundColor }}>
-        {/* Professional Restaurant Header */}
+        {/* Hero Banner */}
+        {heroImage && (
+          <ImageBackground
+            source={{ uri: heroImage }}
+            style={localStyles.heroBanner}
+            imageStyle={{ resizeMode: 'cover' }}
+          >
+            <View style={localStyles.heroBannerGradient} />
+          </ImageBackground>
+        )}
+
+        {/* Restaurant Info Section */}
         <View style={localStyles.restaurantHeader}>
-          {/* Restaurant Avatar & Info */}
-          <View style={localStyles.restaurantInfoRow}>
-            <Image
-              source={
-                menuData?.chef?.avatar
-                  ? { uri: menuData.chef.avatar }
-                  : colors.dark
-                    ? images.userDark
-                    : images.userLight
-              }
-              style={localStyles.restaurantAvatar}
-            />
-            <View style={localStyles.restaurantDetails}>
-              <ZText type="B20" color={colors.textColor} numberOfLines={1}>
-                {menuData?.chef?.fullName || chefName}
-              </ZText>
-              {/* Bio / Description */}
-              {menuData?.chef?.bio && (
-                <ZText type="M13" color={colors.grayScale6} numberOfLines={2} style={{ marginTop: 4 }}>
-                  {menuData.chef.bio}
-                </ZText>
-              )}
-              {/* Stats Row */}
-              <View style={localStyles.restaurantStats}>
-                {/* Dish count */}
-                <View style={localStyles.statBadge}>
-                  <Ionicons name="restaurant-outline" size={14} color={colors.primary} />
-                  <ZText type="M13" color={colors.grayScale6} style={{ marginLeft: 4 }}>
-                    {menuData?.dishes?.length || 0} {strings.dishes || 'dishes'}
+          {/* Name + Follow Row */}
+          <View style={localStyles.nameFollowRow}>
+            <ZText type="B24" color={colors.textColor} numberOfLines={1} style={{ flex: 1 }}>
+              {menuData?.chef?.fullName || chefName}
+            </ZText>
+            {chefId && !isOwnProfile && (
+              <FollowButton
+                userId={chefId}
+                isFollowed={menuData?.chef?.currentUserFollowed}
+                compact={true}
+                size="medium"
+                style={{ marginLeft: moderateScale(12) }}
+              />
+            )}
+          </View>
+
+          {/* Bio */}
+          {menuData?.chef?.bio && (
+            <ZText type="M14" color={colors.grayScale6} numberOfLines={2} style={{ marginTop: moderateScale(6) }}>
+              {menuData.chef.bio}
+            </ZText>
+          )}
+
+          {/* Card-Style Stat Badges */}
+          <View style={localStyles.statCardsRow}>
+            {/* Rating Card */}
+            {rating >= 1 && (
+              <View style={[localStyles.statCard, { borderColor: colors.grayScale4 }]}>
+                <Ionicons name="star" size={18} color="#FFD700" />
+                <View style={{ marginLeft: moderateScale(8) }}>
+                  <ZText type="B16" color={colors.textColor}>
+                    {rating.toFixed(1)}
+                  </ZText>
+                  <ZText type="M10" color={colors.grayScale6}>
+                    {strings.rating || 'Rating'} ({ratedCount})
                   </ZText>
                 </View>
               </View>
+            )}
 
-              {/* Compact Info Badges Row - Rating, Branches, Delivery Status */}
-              <View style={localStyles.badgesRow}>
-                {/* Rating Badge - Compact */}
-                {(() => {
-                  const dishes = menuData?.dishes || [];
-                  const ratedDishes = dishes.filter(d =>
-                    typeof d.average_rating === 'number' && d.average_rating >= 1
-                  );
-                  const ratedCount = ratedDishes.length;
-                  let rating = 0;
-                  if (ratedCount > 0) {
-                    const total = ratedDishes.reduce((sum, d) => sum + d.average_rating, 0);
-                    rating = Math.round((total / ratedCount) * 10) / 10;
-                  }
-                  if (rating < 1) return null;
-                  return (
-                    <View style={[localStyles.compactBadge, { backgroundColor: '#FFD700' + '20' }]}>
-                      <Ionicons name="star" size={14} color="#FFD700" />
-                      <ZText type="B12" color="#D4A800" style={{ marginLeft: 4 }}>
-                        {rating.toFixed(1)}
-                      </ZText>
-                      <ZText type="M11" color={colors.grayScale6} style={{ marginLeft: 3 }}>
-                        ({ratedCount} {strings.ratedDishes || 'rated'})
-                      </ZText>
-                    </View>
-                  );
-                })()}
-
-                {/* Branches Badge */}
-                {(() => {
-                  const branchLocations = (branchesData?.branches || [])
-                    .filter(b => b.isActive)
-                    .map(b => ({
-                      description: b.addressDetails?.formattedAddress || b.branchName,
-                      lat: b.location?.lat,
-                      long: b.location?.long,
-                    }));
-                  if (branchLocations.length === 0) return null;
-                  return (
-                    <TouchableOpacity
-                      onPress={() => locationsSheetRef.current?.show()}
-                      activeOpacity={0.7}
-                    >
-                      <View style={[localStyles.compactBadge, { backgroundColor: colors.primary + '15' }]}>
-                        <Ionicons name="location" size={14} color={colors.primary} />
-                        <ZText type="B12" color={colors.primary} style={{ marginLeft: 4 }}>
-                          {branchLocations.length} {branchLocations.length === 1 ? strings.branch : strings.branches}
-                        </ZText>
-                        <Ionicons name="chevron-forward" size={12} color={colors.primary} style={{ marginLeft: 2 }} />
-                      </View>
-                    </TouchableOpacity>
-                  );
-                })()}
-
-                {/* Delivery Status Badge */}
-                {deliveryData && (
-                  <View
-                    style={[
-                      localStyles.compactBadge,
-                      {
-                        backgroundColor: deliveryData.canDeliver
-                          ? '#4CAF50' + '15'
-                          : '#FF9800' + '15',
-                      },
-                    ]}
-                  >
-                    <Ionicons
-                      name={deliveryData.canDeliver ? 'checkmark-circle' : 'alert-circle'}
-                      size={14}
-                      color={deliveryData.canDeliver ? '#4CAF50' : '#FF9800'}
-                    />
-                    <ZText
-                      type="B12"
-                      color={deliveryData.canDeliver ? '#4CAF50' : '#FF9800'}
-                      style={{ marginLeft: 4 }}
-                    >
-                      {deliveryData.canDeliver
-                        ? strings.deliversToYou
-                        : strings.doesNotDeliverHere}
-                    </ZText>
-                    {!deliveryData.canDeliver && deliveryData.nearestDistance && (
-                      <ZText type="M11" color={colors.grayScale6} style={{ marginLeft: 3 }}>
-                        • {(strings.distanceAway || '{0} km').replace('{0}', deliveryData.nearestDistance)}
-                      </ZText>
-                    )}
-                  </View>
-                )}
+            {/* Dishes Card */}
+            <View style={[localStyles.statCard, { borderColor: colors.grayScale4 }]}>
+              <Ionicons name="restaurant" size={18} color={colors.primary} />
+              <View style={{ marginLeft: moderateScale(8) }}>
+                <ZText type="B16" color={colors.textColor}>
+                  {menuData?.dishes?.length || 0}
+                </ZText>
+                <ZText type="M10" color={colors.grayScale6}>
+                  {strings.dishes || 'Dishes'}
+                </ZText>
               </View>
-
-              {/* Follow Button - Only show if not current user's profile */}
-              {chefId && user?._id?.toString() !== chefId?.toString() && (
-                <FollowButton
-                  userId={chefId}
-                  isFollowed={menuData?.chef?.currentUserFollowed}
-                  compact={false}
-                  size="medium"
-                  style={{ marginTop: moderateScale(10), alignSelf: 'flex-start' }}
-                />
-              )}
             </View>
+
+            {/* Delivery / Branches Card */}
+            {deliveryData ? (
+              <View style={[localStyles.statCard, { borderColor: colors.grayScale4 }]}>
+                <Ionicons
+                  name={deliveryData.canDeliver ? 'checkmark-circle' : 'alert-circle'}
+                  size={18}
+                  color={deliveryData.canDeliver ? '#4CAF50' : '#FF9800'}
+                />
+                <View style={{ marginLeft: moderateScale(8), flex: 1 }}>
+                  <ZText type="B12" color={deliveryData.canDeliver ? '#4CAF50' : '#FF9800'} numberOfLines={1}>
+                    {deliveryData.canDeliver ? strings.deliversToYou : strings.doesNotDeliverHere}
+                  </ZText>
+                  <ZText type="M10" color={colors.grayScale6}>
+                    {strings.delivery || 'Delivery'}
+                  </ZText>
+                </View>
+              </View>
+            ) : branchLocations.length > 0 ? (
+              <TouchableOpacity
+                onPress={() => locationsSheetRef.current?.show()}
+                activeOpacity={0.7}
+              >
+                <View style={[localStyles.statCard, { borderColor: colors.grayScale4 }]}>
+                  <Ionicons name="location" size={18} color={colors.primary} />
+                  <View style={{ marginLeft: moderateScale(8) }}>
+                    <ZText type="B16" color={colors.textColor}>
+                      {branchLocations.length}
+                    </ZText>
+                    <ZText type="M10" color={colors.grayScale6}>
+                      {branchLocations.length === 1 ? strings.branch : strings.branches}
+                    </ZText>
+                  </View>
+                  <Ionicons name="chevron-forward" size={14} color={colors.grayScale6} style={{ marginLeft: moderateScale(4) }} />
+                </View>
+              </TouchableOpacity>
+            ) : null}
           </View>
         </View>
 
@@ -969,54 +966,68 @@ const ChefMenu = () => {
         }
       />
 
-      {/* Search Bar - Outside FlatList to prevent keyboard dismissal */}
-      {menuData?.dishes?.length > 0 && (
-        <View style={{ backgroundColor: colors.backgroundColor, paddingHorizontal: moderateScale(16), paddingVertical: moderateScale(8) }}>
-          <ZInput
-            fieldRef={searchInputRef}
-            _value={search}
-            placeHolder={strings.searchDishes}
-            toGetTextFieldValue={onSearchInput}
-            blurOnSubmit={false}
-            insideLeftIcon={() => (
-              <Ionicons name="search" size={moderateScale(16)} color={colors.grayScale6} />
-            )}
-            inputContainerStyle={{ backgroundColor: colors.inputBg || colors.grayScale2, borderColor: colors.bColor || colors.grayScale3, height: getHeight(42) }}
-            inputBoxStyle={{ color: colors.textColor, height: getHeight(42), paddingVertical: moderateScale(6) }}
-            rightAccessory={() => (
-              isSearching ? (
-                <ActivityIndicator size="small" color={colors.primary} />
-              ) : (
-                search?.length > 0 ? (
-                  <TouchableOpacity onPress={() => { setSearch(''); setDebouncedSearch(''); }}>
-                    <Ionicons name="close-circle" size={moderateScale(18)} color={colors.grayScale6} />
-                  </TouchableOpacity>
-                ) : null
-              )
-            )}
-          />
-          {/* Search indicator */}
-          {debouncedSearch.length > 0 && isSearching ? (
-            <ZText type="M12" color={colors.grayScale7} style={{ marginTop: moderateScale(4) }}>{strings.searching}</ZText>
-          ) : null}
-        </View>
-      )}
-
       <FlatList
         ref={flatListRef}
-        data={(debouncedSearch ? searchedDishes : menuData?.dishes) || []}
+        data={(() => {
+          let dishes = (debouncedSearch ? searchedDishes : menuData?.dishes) || [];
+          if (selectedCategory && !debouncedSearch) {
+            dishes = dishes.filter(d => d.category === selectedCategory);
+          }
+          return dishes;
+        })()}
         renderItem={renderDishCard}
         keyExtractor={item => item._id}
         keyboardShouldPersistTaps="handled"
-        ListHeaderComponent={() => (
+        ListHeaderComponent={
           <View style={{ backgroundColor: colors.backgroundColor }}>
             {/* Chef Info + Featured Sections */}
             {renderHeader()}
 
+            {/* Menu Section: Title + Search + Filter Chips */}
+            {menuData?.dishes?.length > 0 && (
+              <View style={{ paddingHorizontal: moderateScale(16), paddingTop: moderateScale(12), paddingBottom: moderateScale(4) }}>
+                {/* Menu Title Row + Search */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: moderateScale(10) }}>
+                  <ZText type="B20" color={colors.textColor}>
+                    {strings.menu || 'Menu'}
+                  </ZText>
+                  <View style={{ flex: 1 }}>
+                    <ZInput
+                      fieldRef={searchInputRef}
+                      _value={search}
+                      placeHolder={strings.searchDishes}
+                      toGetTextFieldValue={onSearchInput}
+                      blurOnSubmit={false}
+                      insideLeftIcon={() => (
+                        <Ionicons name="search" size={moderateScale(16)} color={colors.grayScale6} />
+                      )}
+                      inputContainerStyle={{ backgroundColor: colors.inputBg || colors.grayScale2, borderColor: colors.bColor || colors.grayScale3, height: getHeight(38) }}
+                      inputBoxStyle={{ color: colors.textColor, height: getHeight(38), paddingVertical: moderateScale(4) }}
+                      rightAccessory={() => (
+                        isSearching ? (
+                          <ActivityIndicator size="small" color={colors.primary} />
+                        ) : (
+                          search?.length > 0 ? (
+                            <TouchableOpacity onPress={() => { setSearch(''); setDebouncedSearch(''); }}>
+                              <Ionicons name="close-circle" size={moderateScale(18)} color={colors.grayScale6} />
+                            </TouchableOpacity>
+                          ) : null
+                        )
+                      )}
+                    />
+                  </View>
+                </View>
+                {/* Search indicator */}
+                {debouncedSearch.length > 0 && isSearching ? (
+                  <ZText type="M12" color={colors.grayScale7} style={{ marginTop: moderateScale(4) }}>{strings.searching}</ZText>
+                ) : null}
+              </View>
+            )}
+
             {/* Categories Section (scrolls with content) */}
             {renderStickyBrowseMenu()}
           </View>
-        )}
+        }
         contentContainerStyle={localStyles.listContainer}
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -1117,66 +1128,45 @@ const localStyles = StyleSheet.create({
   chefDetails: {
     flex: 1,
   },
-  // Professional Restaurant Header Styles
+  // Hero Banner Style
+  heroBanner: {
+    width: '100%',
+    height: moderateScale(200),
+    justifyContent: 'flex-end',
+  },
+  heroBannerGradient: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: moderateScale(80),
+    backgroundColor: 'transparent',
+  },
+  // Restaurant Info Section
   restaurantHeader: {
     paddingHorizontal: moderateScale(16),
-    paddingTop: moderateScale(16),
-    paddingBottom: moderateScale(12),
+    paddingTop: moderateScale(14),
+    paddingBottom: moderateScale(10),
   },
-  restaurantInfoRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-  },
-  restaurantAvatar: {
-    width: moderateScale(70),
-    height: moderateScale(70),
-    borderRadius: moderateScale(16),
-    marginRight: moderateScale(14),
-    borderWidth: 1,
-    borderColor: 'rgba(128,128,128,0.2)',
-  },
-  restaurantDetails: {
-    flex: 1,
-    paddingTop: moderateScale(4),
-  },
-  restaurantStats: {
+  nameFollowRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: moderateScale(8),
-    gap: moderateScale(12),
-    flexWrap: 'wrap',
+    justifyContent: 'space-between',
   },
-  statBadge: {
+  // Card-Style Stat Badges
+  statCardsRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-  },
-  branchesRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: moderateScale(6),
-    gap: moderateScale(4),
-  },
-  branchBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: moderateScale(10),
-    paddingVertical: moderateScale(6),
-    borderRadius: moderateScale(16),
-  },
-  // Compact Badges Row - Unified style for rating, branches, delivery
-  badgesRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'center',
-    marginTop: moderateScale(10),
+    marginTop: moderateScale(14),
     gap: moderateScale(8),
   },
-  compactBadge: {
+  statCard: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: moderateScale(10),
-    paddingVertical: moderateScale(6),
-    borderRadius: moderateScale(16),
+    paddingVertical: moderateScale(10),
+    borderRadius: moderateScale(12),
+    borderWidth: 1,
   },
   // Prominent Overall Rating Card
   overallRatingCard: {
@@ -1234,7 +1224,7 @@ const localStyles = StyleSheet.create({
   },
   // Sticky Browse Menu Container
   stickyBrowseContainer: {
-    backgroundColor: '#FFFFFF', // Background color for shadow efficiency
+    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(0,0,0,0.05)',
     shadowColor: '#000',
@@ -1245,6 +1235,12 @@ const localStyles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+  },
+  filterChip: {
+    paddingHorizontal: moderateScale(14),
+    paddingVertical: moderateScale(6),
+    borderRadius: moderateScale(16),
+    borderWidth: 1,
   },
   // ✨ CLEAN & MODERN DISH CARD ✨
   dishCard: {
@@ -1266,7 +1262,7 @@ const localStyles = StyleSheet.create({
   // Clean Hero Image Section
   heroImageContainer: {
     position: 'relative',
-    height: moderateScale(140),
+    height: moderateScale(160),
     overflow: 'hidden',
   },
   heroImage: {
@@ -1276,11 +1272,11 @@ const localStyles = StyleSheet.create({
   },
   topGradient: {
     position: 'absolute',
-    top: 0,
+    bottom: 0,
     left: 0,
     right: 0,
-    height: moderateScale(60),
-    backgroundColor: 'rgba(0,0,0,0.1)',
+    height: moderateScale(40),
+    backgroundColor: 'transparent',
   },
 
   // Content Section
@@ -1323,16 +1319,18 @@ const localStyles = StyleSheet.create({
 
   // Action Section
   actionSection: {
-    alignItems: 'flex-end',
+    alignItems: 'stretch',
   },
   addButton: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     paddingHorizontal: moderateScale(16),
-    paddingVertical: moderateScale(8),
-    borderRadius: moderateScale(20),
-    backgroundColor: '#FF4D67', // Background color for shadow efficiency
+    paddingVertical: moderateScale(10),
+    borderRadius: moderateScale(14),
+    backgroundColor: '#FF4D67',
     gap: moderateScale(6),
+    width: '100%',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -1415,9 +1413,9 @@ const localStyles = StyleSheet.create({
 
   // STUNNING Category Sections Styles
   stunningCategoriesContainer: {
-    paddingHorizontal: moderateScale(20),
-    paddingTop: moderateScale(8),
-    paddingBottom: moderateScale(12),
+    paddingHorizontal: moderateScale(16),
+    paddingTop: moderateScale(4),
+    paddingBottom: moderateScale(8),
   },
   categoriesTitle: {
     marginBottom: moderateScale(15),
@@ -1430,74 +1428,25 @@ const localStyles = StyleSheet.create({
     gap: moderateScale(15),
   },
   stunningCategoryCard: {
-    width: moderateScale(140),
-    height: moderateScale(120),
-    borderRadius: moderateScale(20),
-    backgroundColor: '#FFFFFF', // Background color for shadow efficiency
-    padding: moderateScale(16),
-    position: 'relative',
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 8,
+    width: moderateScale(110),
+    alignItems: 'center',
   },
-  categoryGradientOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    opacity: 0.8,
+  categoryCardImage: {
+    width: moderateScale(110),
+    height: moderateScale(90),
+    borderRadius: moderateScale(14),
+    resizeMode: 'cover',
   },
-  categoryIconContainer: {
-    width: moderateScale(48),
-    height: moderateScale(48),
-    borderRadius: moderateScale(24),
-    backgroundColor: '#FFFFFF', // Background color for shadow efficiency
+  categoryCardFallback: {
+    width: moderateScale(110),
+    height: moderateScale(90),
+    borderRadius: moderateScale(14),
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: moderateScale(8),
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    elevation: 4,
   },
-  categoryInfo: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  categoryName: {
-    fontWeight: '700',
-    letterSpacing: 0.5,
-    textShadowColor: 'rgba(0,0,0,0.3)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
-  },
-  categoryItemCount: {
-    marginTop: moderateScale(2),
-    fontWeight: '500',
-    textShadowColor: 'rgba(0,0,0,0.2)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 1,
-  },
-  shineEffect: {
-    position: 'absolute',
-    top: moderateScale(10),
-    right: moderateScale(10),
-    width: moderateScale(30),
-    height: moderateScale(30),
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    borderRadius: moderateScale(15),
-    transform: [{ rotate: '45deg' }],
+  categoryLabelBelow: {
+    marginTop: moderateScale(6),
+    fontWeight: '600',
   },
 
   // Section Header Styles

@@ -960,6 +960,28 @@ export default function ChatScreen({ route }) {
 
 
   const renderInputToolbar = useCallback((props) => {
+    // Disable chat for cancelled orders
+    if (order?.status === 'cancelled') {
+      return (
+        <View style={{
+          paddingVertical: moderateScale(14),
+          paddingHorizontal: moderateScale(20),
+          backgroundColor: colors.inputBg,
+          borderTopWidth: 1,
+          borderTopColor: colors.bColor,
+          alignItems: 'center',
+          flexDirection: 'row',
+          justifyContent: 'center',
+          gap: moderateScale(8),
+        }}>
+          <Ionicons name="close-circle-outline" size={moderateScale(18)} color={colors.grayScale6} />
+          <ZText type="M14" color={colors.grayScale6}>
+            {strings.chatDisabledCancelled || 'Chat is disabled for cancelled orders'}
+          </ZText>
+        </View>
+      );
+    }
+
     // When recording, show the VoiceRecorder instead of normal input
     if (showVoiceRecorder) {
       return (
@@ -999,7 +1021,7 @@ export default function ChatScreen({ route }) {
         />
       </View>
     );
-  }, [colors, showVoiceRecorder, handleVoiceMessage, replyingTo, handleCancelReply, isRTL]);
+  }, [colors, showVoiceRecorder, handleVoiceMessage, replyingTo, handleCancelReply, isRTL, order?.status]);
 
   const renderComposer = useCallback((props) => (
     <Composer

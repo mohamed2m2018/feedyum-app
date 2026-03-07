@@ -249,7 +249,7 @@ export default function ReelsComponent({ amIFocused }) {
         }}
         style={localStyles.headerContainer2}>
         <MaterialCommunityIcons
-          name={categoryIds?.length ? 'filter-plus' : 'filter-outline'}
+          name={categoryIds?.length ? 'tune' : 'tune-variant'}
           size={moderateScale(30)}
           color={categoryIds?.length ? colors.primary : colors.white}
         />

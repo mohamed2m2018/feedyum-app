@@ -17,16 +17,19 @@ const formatCurrency = (value) => {
 const StatusPill = ({ status, colors }) => {
   const normalized = String(status || 'pending').toLowerCase();
   const map = {
-    pending: { bg: '#FFF4E5', fg: '#C47F00', label: strings.pending },
-    accepted: { bg: '#E8FFF3', fg: '#0A7A45', label: strings.accepted },
-    preparing: { bg: '#E8F1FF', fg: '#2456E6', label: strings.preparing },
-    delivering: { bg: '#E8F1FF', fg: '#2456E6', label: strings.delivering },
-    completed: { bg: '#EAFBF3', fg: '#0D8556', label: strings.completed },
-    cancelled: { bg: '#FFEAEA', fg: '#C62828', label: strings.cancelled },
+    pending: { bg: colors.statusPendingBg, fg: colors.statusPendingFg, icon: 'time-outline', label: strings.pending },
+    awaiting_confirmation: { bg: '#FFF3E0', fg: '#E65100', icon: 'alert-circle-outline', label: strings.awaitingConfirmation || 'Awaiting Confirmation' },
+    accepted: { bg: colors.statusAcceptedBg, fg: colors.statusAcceptedFg, icon: 'checkmark-circle-outline', label: strings.accepted },
+    confirmed: { bg: colors.statusAcceptedBg, fg: colors.statusAcceptedFg, icon: 'checkmark-circle-outline', label: strings.confirmed },
+    preparing: { bg: colors.statusPreparingBg, fg: colors.statusPreparingFg, icon: 'restaurant-outline', label: strings.preparing },
+    delivering: { bg: colors.statusPreparingBg, fg: colors.statusPreparingFg, icon: 'bicycle-outline', label: strings.delivering },
+    completed: { bg: colors.statusCompletedBg, fg: colors.statusCompletedFg, icon: 'checkmark-done-circle-outline', label: strings.completed },
+    cancelled: { bg: colors.statusCancelledBg, fg: colors.statusCancelledFg, icon: 'close-circle-outline', label: strings.cancelled },
   };
-  const c = map[normalized] || { bg: colors.inputBg, fg: colors.textColor, label: status };
+  const c = map[normalized] || { bg: colors.statusDefaultBg, fg: colors.statusDefaultFg, icon: 'help-circle-outline', label: status };
   return (
     <View style={[styles.statusPill, { backgroundColor: c.bg }]}>
+      <Ionicons name={c.icon} size={moderateScale(12)} color={c.fg} style={{ marginRight: moderateScale(4) }} />
       <ZText type="M12" color={c.fg}>
         {String(c.label || 'PENDING').toUpperCase()}
       </ZText>
@@ -36,8 +39,8 @@ const StatusPill = ({ status, colors }) => {
 
 const PriceRow = ({ label, value, colors, bold }) => (
   <View style={styles.rowBetween}>
-    <ZText type={bold ? 'B14' : 'M14'} color={colors.grayScale7}>{label}</ZText>
-    <ZText type={bold ? 'B14' : 'M14'} color={colors.textColor}>{formatCurrency(value)}</ZText>
+    <ZText type={bold ? 'B14' : 'M14'} color={bold ? colors.textColor : colors.grayScale7}>{label}</ZText>
+    <ZText type={bold ? 'B16' : 'M14'} color={bold ? colors.primary : colors.textColor}>{formatCurrency(value)}</ZText>
   </View>
 );
 
@@ -83,8 +86,8 @@ const OrderSummaryCard = ({ order, colors, onPressPrimary, initialCollapsed = tr
 
 
   const containerStyle = collapsed
-    ? [styles.collapsedContainer, { backgroundColor: colors.inputBg }]
-    : [styles.card, { backgroundColor: colors.backgroundColor }];
+    ? [styles.collapsedContainer, { backgroundColor: colors.inputBg, borderColor: 'rgba(255,255,255,0.06)' }]
+    : [styles.card, { backgroundColor: colors.backgroundColor, borderColor: 'rgba(255,255,255,0.06)' }];
 
   const renderDetails = () => (
     <View>
@@ -92,16 +95,20 @@ const OrderSummaryCard = ({ order, colors, onPressPrimary, initialCollapsed = tr
         {showItems.map((it, idx) => {
           const imageUri = typeof it?.image === 'string' ? it.image : (it?.image?.url || it?.image?.uri || '');
           return (
-            <View key={idx} style={styles.itemRow}>
+            <View key={idx} style={[styles.itemRow, { backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: moderateScale(12) }]}>
               {imageUri ? (
                 <Image source={{ uri: imageUri }} style={styles.itemImage} />
-              ) : null}
+              ) : (
+                <View style={[styles.itemImage, { backgroundColor: 'rgba(255,255,255,0.06)', alignItems: 'center', justifyContent: 'center' }]}>
+                  <Ionicons name="fast-food-outline" size={moderateScale(20)} color={colors.grayScale7} />
+                </View>
+              )}
               <View style={styles.itemInfo}>
                 <ZText type="B14" color={colors.textColor} numberOfLines={1}>
                   {it?.name || 'Item'}
                 </ZText>
                 <ZText type="M12" color={colors.grayScale7}>
-                  {`${it?.quantity || 1} x ${formatCurrency(it?.unitPrice)}`}
+                  {`${it?.quantity || 1} × ${formatCurrency(it?.unitPrice)}`}
                 </ZText>
               </View>
               <ZText type="B14" color={colors.textColor}>
@@ -112,13 +119,14 @@ const OrderSummaryCard = ({ order, colors, onPressPrimary, initialCollapsed = tr
         })}
 
         {extraCount > 0 && (
-          <View style={[styles.extraRow, { backgroundColor: colors.inputBg }]}>
+          <View style={[styles.extraRow, { backgroundColor: 'rgba(255,255,255,0.04)' }]}>
+            <Ionicons name="add-circle-outline" size={moderateScale(14)} color={colors.grayScale7} style={{ marginRight: moderateScale(4) }} />
             <ZText type="M12" color={colors.grayScale7}>{strings.moreItems.replace('{count}', extraCount)}</ZText>
           </View>
         )}
       </View>
 
-      <View style={styles.pricesContainer}>
+      <View style={[styles.pricesContainer, { backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: moderateScale(12), padding: moderateScale(12) }]}>
         <PriceRow label={strings.subtotal} value={order?.subtotal} colors={colors} />
         {order?.deliveryFee !== undefined && (
           <PriceRow label={strings.delivery} value={order?.deliveryFee} colors={colors} />
@@ -137,8 +145,9 @@ const OrderSummaryCard = ({ order, colors, onPressPrimary, initialCollapsed = tr
       </View>
 
       {!!order?.address && (
-        <View style={[styles.addressContainer, { backgroundColor: colors.inputBg }]}>
-          <ZText type="M12" color={colors.grayScale7} numberOfLines={2}>
+        <View style={[styles.addressContainer, { backgroundColor: 'rgba(255,255,255,0.04)' }]}>
+          <Ionicons name="location-outline" size={moderateScale(14)} color={colors.grayScale7} style={{ marginRight: moderateScale(6) }} />
+          <ZText type="M12" color={colors.grayScale7} numberOfLines={2} style={{ flex: 1 }}>
             {order?.address}
           </ZText>
         </View>
@@ -147,15 +156,18 @@ const OrderSummaryCard = ({ order, colors, onPressPrimary, initialCollapsed = tr
       <View style={styles.actionsRow}>
         {isChef && order?.status === 'pending' ? (
           <>
-            <TouchableOpacity style={[styles.secondaryBtn, { borderColor: colors.error, marginRight: moderateScale(10) }]} onPress={onReject}>
-              <ZText type="B14" color={colors.error}>{strings.reject}</ZText>
+            <TouchableOpacity style={[styles.secondaryBtn, { borderColor: '#EF5350' }]} onPress={onReject}>
+              <Ionicons name="close-outline" size={moderateScale(18)} color="#EF5350" style={{ marginRight: moderateScale(4) }} />
+              <ZText type="B14" color="#EF5350">{strings.reject}</ZText>
             </TouchableOpacity>
             <TouchableOpacity style={[styles.primaryBtn, { backgroundColor: colors.primary }]} onPress={onAccept}>
+              <Ionicons name="checkmark-outline" size={moderateScale(18)} color={colors.white} style={{ marginRight: moderateScale(4) }} />
               <ZText type="B14" color={colors.white}>{strings.acceptOrder}</ZText>
             </TouchableOpacity>
           </>
         ) : (
           <TouchableOpacity style={[styles.primaryBtn, { backgroundColor: colors.primary }]} onPress={onPressPrimary}>
+            <Ionicons name="navigate-outline" size={moderateScale(16)} color={colors.white} style={{ marginRight: moderateScale(6) }} />
             <ZText type="B14" color={colors.white}>{strings.trackOrder}</ZText>
           </TouchableOpacity>
         )}
@@ -165,30 +177,42 @@ const OrderSummaryCard = ({ order, colors, onPressPrimary, initialCollapsed = tr
 
   return (
     <View style={containerStyle}>
-      <TouchableOpacity style={styles.headerRow} activeOpacity={0.8} onPress={collapsed ? expand : collapse}>
-        <View style={styles.headerLeft}>
-          <ZText type={collapsed ? 'B14' : 'B16'} color={colors.textColor}>
-            {strings.orderNumber}{String(order?.id || order?._id || '').slice(-6) || '—'}
-          </ZText>
-          {collapsed ? (
-            <View style={styles.collapseMeta}>
-              <View style={styles.metaLeft}>
-                <ZText type="M12" color={colors.grayScale7}>{order?.formattedDate}</ZText>
-              </View>
-              <ZText type="M12" color={colors.textColor}>{formatCurrency(order?.totalPrice)}</ZText>
-            </View>
-          ) : (
-            <ZText type="M12" color={colors.grayScale7}>{order?.formattedDate || ''}</ZText>
-          )}
+      <TouchableOpacity style={styles.headerRow} activeOpacity={0.7} onPress={collapsed ? expand : collapse}>
+        {/* Order icon */}
+        <View style={[styles.orderIcon, { backgroundColor: `${colors.primary}20` }]}>
+          <Ionicons name="receipt-outline" size={moderateScale(16)} color={colors.primary} />
         </View>
-        <View style={styles.headerRight}>
-          <StatusPill status={order?.status} colors={colors} />
-          <Ionicons name={collapsed ? 'chevron-down' : 'chevron-up'} size={moderateScale(18)} color={colors.textColor} />
+
+        <View style={styles.headerLeft}>
+          {/* Top row: order number + status pill + chevron */}
+          <View style={styles.titleRow}>
+            <ZText type={collapsed ? 'B14' : 'B16'} color={colors.textColor} style={{ flex: 1 }}>
+              {strings.orderNumber}{String(order?.id || order?._id || '').slice(-6) || '—'}
+            </ZText>
+            <View style={styles.headerRight}>
+              <StatusPill status={order?.status} colors={colors} />
+              <View style={[styles.chevronCircle, { backgroundColor: 'rgba(255,255,255,0.06)' }]}>
+                <Ionicons name={collapsed ? 'chevron-down' : 'chevron-up'} size={moderateScale(16)} color={colors.textColor} />
+              </View>
+            </View>
+          </View>
+
+          {/* Bottom row: date + price */}
+          <View style={styles.metaRow}>
+            <View style={styles.metaLeft}>
+              <Ionicons name="calendar-outline" size={moderateScale(11)} color={colors.grayScale7} style={{ marginRight: moderateScale(3) }} />
+              <ZText type="M12" color={colors.grayScale7} numberOfLines={1}>{order?.formattedDate || ''}</ZText>
+            </View>
+            {collapsed && (
+              <ZText type="B14" color={colors.primary}>{formatCurrency(order?.totalPrice)}</ZText>
+            )}
+          </View>
         </View>
       </TouchableOpacity>
 
       {!collapsed && (
         <Animated.View style={{ opacity: contentOpacity }}>
+          <View style={[styles.expandDivider, { backgroundColor: 'rgba(255,255,255,0.06)' }]} />
           {renderDetails()}
         </Animated.View>
       )}
@@ -204,50 +228,76 @@ const styles = StyleSheet.create({
     paddingHorizontal: moderateScale(14),
     paddingTop: moderateScale(14),
     paddingBottom: moderateScale(18),
+    borderWidth: 1,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 4,
+  },
+  orderIcon: {
+    width: moderateScale(36),
+    height: moderateScale(36),
+    borderRadius: moderateScale(10),
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: moderateScale(10),
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
   },
   headerLeft: {
     flexDirection: 'column',
     flex: 1,
   },
   statusPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
     borderRadius: moderateScale(20),
-    paddingHorizontal: moderateScale(10),
+    paddingHorizontal: moderateScale(8),
     paddingVertical: moderateScale(4),
+    marginRight: moderateScale(6),
+  },
+  chevronCircle: {
+    width: moderateScale(28),
+    height: moderateScale(28),
+    borderRadius: moderateScale(14),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  expandDivider: {
+    height: 1,
+    marginTop: moderateScale(12),
+    marginBottom: moderateScale(4),
   },
   itemsContainer: {
     marginTop: moderateScale(12),
-    gap: moderateScale(12),
+    gap: moderateScale(8),
   },
   itemRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: moderateScale(6),
+    paddingVertical: moderateScale(8),
+    paddingHorizontal: moderateScale(10),
     gap: moderateScale(12),
     minHeight: moderateScale(56),
   },
   itemImage: {
-    width: moderateScale(48),
-    height: moderateScale(48),
-    borderRadius: moderateScale(8),
+    width: moderateScale(44),
+    height: moderateScale(44),
+    borderRadius: moderateScale(10),
     backgroundColor: '#eee',
   },
   itemInfo: {
     flex: 1,
   },
   extraRow: {
+    flexDirection: 'row',
     alignSelf: 'flex-start',
-    marginTop: moderateScale(6),
+    alignItems: 'center',
+    marginTop: moderateScale(4),
     borderRadius: moderateScale(10),
     paddingHorizontal: moderateScale(10),
     paddingVertical: moderateScale(6),
@@ -258,12 +308,14 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: StyleSheet.hairlineWidth,
-    opacity: 0.7,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    marginVertical: moderateScale(8),
+    opacity: 0.5,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    marginVertical: moderateScale(6),
   },
   addressContainer: {
-    marginTop: moderateScale(16),
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: moderateScale(12),
     borderRadius: moderateScale(12),
     padding: moderateScale(10),
   },
@@ -276,10 +328,10 @@ const styles = StyleSheet.create({
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: moderateScale(4),
   },
   primaryBtn: {
     flex: 1,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: moderateScale(12),
@@ -288,6 +340,7 @@ const styles = StyleSheet.create({
   },
   secondaryBtn: {
     flex: 1,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: moderateScale(10),
@@ -299,47 +352,31 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  iconBtn: {
-    padding: moderateScale(6),
-  },
   collapsedContainer: {
     marginHorizontal: moderateScale(10),
     marginVertical: moderateScale(6),
     borderRadius: moderateScale(16),
     paddingHorizontal: moderateScale(12),
-    paddingVertical: moderateScale(10),
+    paddingVertical: moderateScale(12),
+    borderWidth: 1,
+  },
+  titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  collapseMain: {
-    flex: 1,
-  },
-  collapseMeta: {
+  metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: moderateScale(8),
-    marginTop: moderateScale(4),
+    marginTop: moderateScale(6),
   },
   metaLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: moderateScale(8),
     flex: 1,
+    marginRight: moderateScale(8),
   },
-  collapseRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  dot: {
-    width: moderateScale(4),
-    height: moderateScale(4),
-    borderRadius: moderateScale(2),
-    backgroundColor: '#999999',
-  }
 });
 
 export default OrderSummaryCard;
-
-

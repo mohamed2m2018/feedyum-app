@@ -21,6 +21,14 @@ const StatusBadge = ({ status, colors }) => {
           text: strings.pending,
           icon: 'time-outline',
         };
+      case 'awaiting_confirmation':
+      case 'chef_review':
+        return {
+          color: colors.info || '#2196F3',
+          backgroundColor: (colors.info || '#2196F3') + '20',
+          text: strings.awaitingConfirmation || 'Awaiting Confirmation',
+          icon: 'hourglass-outline',
+        };
       case 'confirmed':
         return {
           color: colors.green, // Use green for Accepted
@@ -88,7 +96,7 @@ const StatusBadge = ({ status, colors }) => {
 };
 
 const StatusUpdateButtons = ({ order, onStatusChange, onReject, onAccept, colors }) => {
-  if (order.status === 'pending') {
+  if (order.status === 'pending' || order.status === 'awaiting_confirmation' || order.status === 'chef_review') {
     return (
       <View style={{ flexDirection: 'row', gap: moderateScale(8) }}>
         <ZButton

@@ -31,6 +31,7 @@ import {
   setCurrentOrder,
   updateOrderStatus,
   cancelOrderByUser,
+  confirmOrderByUser,
 } from '../../../redux/reducer/orderSlice';
 import { StackNav } from '../../../navigation/NavigationKeys';
 import request from '../../../api/request';
@@ -240,6 +241,35 @@ const OrderTracking = () => {
     });
   };
 
+  const [confirming, setConfirming] = useState(false);
+
+  const handleConfirmOrder = () => {
+    showActionDialog({
+      type: ALERT_TYPE.SUCCESS,
+      title: strings.confirmOrder || 'Confirm Order',
+      message: strings.confirmOrderQuestion || 'Confirm this order?',
+      confirmText: strings.confirmOrder || 'Confirm',
+      cancelText: strings.cancel || 'Cancel',
+      onConfirm: async () => {
+        try {
+          setConfirming(true);
+          await dispatch(confirmOrderByUser(currentOrder._id));
+          showSuccessToast(
+            strings.orderConfirmed || 'Order Confirmed',
+            strings.orderConfirmedMessage || 'Your order has been confirmed.'
+          );
+        } catch (error) {
+          showErrorToast(
+            strings.error || 'Error',
+            error.message || strings.failedToConfirmOrder || 'Failed to confirm order.'
+          );
+        } finally {
+          setConfirming(false);
+        }
+      },
+    });
+  };
+
   const getStatusColor = status => {
     switch (status) {
       case 'pending':
@@ -327,7 +357,7 @@ const OrderTracking = () => {
   };
 
   const renderStatusTimeline = () => {
-    const statuses = ['pending', 'confirmed', 'preparing', 'ready', 'delivered'];
+    const statuses = ['pending', 'awaiting_confirmation', 'confirmed', 'preparing', 'ready', 'delivered'];
 
     // Validate current status
     let effectiveStatus = currentOrder?.status;
@@ -863,8 +893,8 @@ const OrderTracking = () => {
           onPress={handleChatWithChef}
         />
 
-        {/* Cancel Order Button - only show before order is preparing (pending/confirmed) */}
-        {currentOrder && ['pending', 'confirmed'].includes(currentOrder.status) && (
+        {/* Cancel Order Button - only show before order is preparing */}
+        {currentOrder && ['pending', 'awaiting_confirmation', 'confirmed'].includes(currentOrder.status) && (
           <ZButton
             title={cancelling ? (strings.cancelling || 'Cancelling...') : (strings.cancelOrder || 'Cancel Order')}
             textType="B16"
@@ -877,6 +907,41 @@ const OrderTracking = () => {
             disabled={cancelling}
           />
         )}
+
+        {/* Confirm Order Button - show when awaiting_confirmation */}
+        {currentOrder && currentOrder.status === 'awaiting_confirmation' && (
+          <View style={{ marginHorizontal: moderateScale(16), marginBottom: moderateScale(12) }}>
+            {/* Show delivery fee override alert if applicable */}
+            <View style={{ backgroundColor: '#FFF3E0', padding: moderateScale(12), borderRadius: moderateScale(10), marginBottom: moderateScale(10) }}>
+              <ZText type="B14" color="#E65100">
+                {strings.awaitingConfirmation || 'Awaiting Your Confirmation'}
+              </ZText>
+              <ZText type="s12" color="#BF360C" style={{ marginTop: moderateScale(4) }}>
+                {strings.awaitingConfirmationDesc || 'The kitchen has accepted your order. Please review and confirm.'}
+              </ZText>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: moderateScale(8) }}>
+                <ZText type="s12" color="#795548">{strings.deliveryFee || 'Delivery Fee'}:</ZText>
+                <ZText type="B14" color="#E65100">{currentOrder.deliveryFee || 0} {strings.currency || 'EGP'}</ZText>
+              </View>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: moderateScale(4) }}>
+                <ZText type="s12" color="#795548">{strings.totalLabel || 'Total'}:</ZText>
+                <ZText type="B14" color="#E65100">{currentOrder.totalPrice || 0} {strings.currency || 'EGP'}</ZText>
+              </View>
+            </View>
+            <ZButton
+              title={confirming ? (strings.confirming || 'Confirming...') : (strings.confirmOrder || 'Confirm Order')}
+              textType="B16"
+              color={'#FFFFFF'}
+              containerStyle={[
+                localStyles.cancelButton,
+                { backgroundColor: '#4CAF50' },
+              ]}
+              onPress={handleConfirmOrder}
+              disabled={confirming}
+            />
+          </View>
+        )}
+
         <View style={{ height: moderateScale(50) }} />
       </ScrollView>
     </ZSafeAreaView>

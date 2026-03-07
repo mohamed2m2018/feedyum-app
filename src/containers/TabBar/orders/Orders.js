@@ -114,8 +114,10 @@ export default function Orders({ navigation }) {
     switch (status) {
       case 'pending':
         return colors.warning || '#FF9800';
+      case 'awaiting_confirmation':
       case 'chef_review':
         return colors.info || '#2196F3';
+      case 'confirmed':
       case 'accepted':
         return colors.success || '#4CAF50';
       case 'preparing':
@@ -123,6 +125,7 @@ export default function Orders({ navigation }) {
       case 'ready':
         return colors.success || '#4CAF50';
       case 'delivered':
+      case 'completed':
         return colors.success || '#4CAF50';
       case 'cancelled':
         return colors.error || '#F44336';
@@ -135,8 +138,11 @@ export default function Orders({ navigation }) {
     switch (status) {
       case 'pending':
         return strings.pending;
+      case 'awaiting_confirmation':
+        return strings.awaitingConfirmation;
       case 'chef_review':
         return strings.chefReviewing;
+      case 'confirmed':
       case 'accepted':
         return strings.orderAccepted;
       case 'preparing':
@@ -144,7 +150,8 @@ export default function Orders({ navigation }) {
       case 'ready':
         return strings.ready;
       case 'delivered':
-        return strings.delivered;
+      case 'completed':
+        return strings.delivered || strings.completed;
       case 'cancelled':
         return strings.cancelled;
       default:

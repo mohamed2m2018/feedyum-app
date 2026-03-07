@@ -11,7 +11,9 @@ import ZHeader from '../../../components/common/ZHeader';
 import ZText from '../../../components/common/ZText';
 import ZButton from '../../../components/common/ZButton';
 import DashboardCard from './components/DashboardCard';
+import HeaderIconWithBadge from '../../../components/common/HeaderIconWithBadge';
 import { useDashboardStats, useRecentActivity } from './hooks/useDashboardData';
+import { useNotificationCounts } from '../../../hooks/useNotificationCounts';
 import { styles } from '../../../themes';
 import { moderateScale } from '../../../common/constants';
 import { StackNav } from '../../../navigation/NavigationKeys';
@@ -36,6 +38,7 @@ export default function ChefDashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const { data: stats, refetch } = useDashboardStats();
   const { data: recentActivity = [], refetch: refetchActivity } = useRecentActivity();
+  const { unseenOrdersCount, unreadChatsCount } = useNotificationCounts();
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -62,7 +65,26 @@ export default function ChefDashboard() {
 
   return (
     <ZSafeAreaView>
-      <ZHeader title={strings.chefDashboard} isHideBack={!isFromProfile} />
+      <View style={localStyles.headerContainer}>
+        {isFromProfile && (
+          <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: moderateScale(8) }}>
+            <Ionicons name="arrow-back" size={moderateScale(24)} color={colors.textColor} />
+          </TouchableOpacity>
+        )}
+        <ZText type="b24" style={{ flex: 1 }}>{strings.chefDashboard}</ZText>
+        <View style={localStyles.headerRightSection}>
+          <HeaderIconWithBadge
+            name="reader-outline"
+            count={unseenOrdersCount}
+            onPress={() => navigation.navigate(StackNav.OrderManagement)}
+          />
+          <HeaderIconWithBadge
+            name="chatbubbles-outline"
+            count={unreadChatsCount}
+            onPress={() => navigation.navigate(StackNav.ChatList)}
+          />
+        </View>
+      </View>
       <ScrollView
         style={localStyles.container}
         showsVerticalScrollIndicator={false}
@@ -401,5 +423,16 @@ const localStyles = StyleSheet.create({
   activityInfo: {
     flex: 1,
     marginRight: moderateScale(8),
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingTop: moderateScale(20),
+    paddingHorizontal: moderateScale(20),
+    paddingBottom: moderateScale(10),
+  },
+  headerRightSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
 });

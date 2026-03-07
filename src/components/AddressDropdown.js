@@ -56,6 +56,17 @@ const AddressDropdown = ({ onAddressSelect, style, compact = false }) => {
     }
   }, [addresses.length, selectedAddress]);
 
+  // Sync selectedAddress to LocationContext on mount/reload
+  // Handles case where Redux already has a persisted selectedAddress
+  // but LocationContext was reset (e.g., app reload)
+  const hasSyncedToLocation = useRef(false);
+  useEffect(() => {
+    if (selectedAddress && !hasSyncedToLocation.current && location?.updateDeliveryLocation) {
+      hasSyncedToLocation.current = true;
+      location.updateDeliveryLocation(selectedAddress);
+    }
+  }, [selectedAddress, location?.updateDeliveryLocation]);
+
   const handleAddressSelect = useCallback((address) => {
     dispatch(setSelectedAddress(address));
 

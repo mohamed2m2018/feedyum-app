@@ -31,28 +31,22 @@ const OrderReviewModal = ({ visible, order, onClose, onAccept, onReject }) => {
   const [deliveryFee, setDeliveryFee] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [estimatedTime, setEstimatedTime] = useState('30');
+  const [isDeliveryFeeCustom, setIsDeliveryFeeCustom] = useState(false);
 
   useEffect(() => {
     if (visible && order) {
-      // Reset form when modal opens
-      setDeliveryFee('');
+      // Pre-populate delivery fee from the order (auto-calculated at creation)
+      const autoFee = order?.deliveryFee !== undefined ? String(order.deliveryFee) : '0';
+      setDeliveryFee(autoFee);
+      setIsDeliveryFeeCustom(false);
       setEstimatedTime('30');
       setIsProcessing(false);
     }
   }, [visible, order]);
 
   const handleAcceptOrder = async () => {
-    if (!deliveryFee || isNaN(parseFloat(deliveryFee))) {
-      showErrorToast(
-        strings.invalidDeliveryFeeTitle,
-        strings.pleaseEnterValidDeliveryFee,
-      );
-      return;
-    }
-
-
-    const fee = parseFloat(deliveryFee);
-    if (fee < 0) {
+    const fee = parseFloat(deliveryFee || '0');
+    if (isNaN(fee) || fee < 0) {
       showErrorToast(strings.invalidDeliveryFee, strings.deliveryFeeCannotBeNegative);
       return;
     }
@@ -261,7 +255,7 @@ const OrderReviewModal = ({ visible, order, onClose, onAccept, onReject }) => {
       <View style={localStyles.rowContainer}>
         <View style={[localStyles.inputWrapper, { marginRight: moderateScale(10) }]}>
           <ZText type="M14" color={colors.textColor} style={localStyles.inputLabel}>
-            {strings.deliveryFeeLabelInput}
+            {isDeliveryFeeCustom ? (strings.deliveryFeeCustom || 'Delivery Fee (custom)') : (strings.deliveryFeeAutoCalculated || 'Delivery Fee (auto-calculated)')}
           </ZText>
           <TextInput
             style={[
@@ -273,7 +267,11 @@ const OrderReviewModal = ({ visible, order, onClose, onAccept, onReject }) => {
               },
             ]}
             value={deliveryFee}
-            onChangeText={setDeliveryFee}
+            onChangeText={(val) => {
+              setDeliveryFee(val);
+              const autoFee = order?.deliveryFee !== undefined ? String(order.deliveryFee) : '0';
+              setIsDeliveryFeeCustom(val !== autoFee);
+            }}
             placeholder={strings.zeroPlaceholder}
             placeholderTextColor={colors.grayScale7}
             keyboardType="decimal-pad"

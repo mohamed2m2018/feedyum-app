@@ -77,9 +77,9 @@ const ChefOrderDetailsScreen = () => {
     // Reject order mutation
     const rejectOrderMutation = useMutation(
         async ({ orderId, reason }) => {
-            const response = await request.put(`/orders/${orderId}/status`, { 
+            const response = await request.put(`/orders/${orderId}/status`, {
                 status: 'cancelled',
-                notes: reason 
+                notes: reason
             });
             return response.data;
         },
@@ -120,6 +120,7 @@ const ChefOrderDetailsScreen = () => {
     };
 
     const getStatusConfig = (status) => {
+        console.log('🐞 [ChefOrderDetailsScreen] getStatusConfig called with status:', status);
         switch (status) {
             case 'pending':
                 return {
@@ -127,6 +128,14 @@ const ChefOrderDetailsScreen = () => {
                     backgroundColor: colors.orange + '20',
                     text: strings.pending,
                     icon: 'time-outline',
+                };
+            case 'awaiting_confirmation':
+            case 'chef_review':
+                return {
+                    color: colors.info || '#2196F3',
+                    backgroundColor: (colors.info || '#2196F3') + '20',
+                    text: strings.awaitingConfirmation || strings.accepted || 'Awaiting Confirmation',
+                    icon: 'hourglass-outline',
                 };
             case 'confirmed':
                 return {
@@ -177,6 +186,9 @@ const ChefOrderDetailsScreen = () => {
         if (!order) return null;
         switch (order.status) {
             case 'pending':
+                return 'awaiting_confirmation';
+            case 'awaiting_confirmation':
+            case 'chef_review':
                 return 'confirmed';
             case 'confirmed':
                 return 'preparing';
@@ -194,6 +206,9 @@ const ChefOrderDetailsScreen = () => {
         switch (order.status) {
             case 'pending':
                 return strings.acceptOrder || 'Accept Order';
+            case 'awaiting_confirmation':
+            case 'chef_review':
+                return strings.confirmOrder || 'Confirm Order';
             case 'confirmed':
                 return strings.startPreparing;
             case 'preparing':
@@ -243,7 +258,7 @@ const ChefOrderDetailsScreen = () => {
 
     const StatusTimeline = () => {
         if (!order) return null;
-        const statuses = ['pending', 'confirmed', 'preparing', 'ready', 'completed'];
+        const statuses = ['pending', 'awaiting_confirmation', 'confirmed', 'preparing', 'ready', 'completed'];
         const currentIndex = statuses.indexOf(order.status);
 
         return (

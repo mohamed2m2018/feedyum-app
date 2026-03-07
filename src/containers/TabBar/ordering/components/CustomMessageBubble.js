@@ -413,11 +413,11 @@ const styles = StyleSheet.create({
     padding: moderateScale(12),
     marginHorizontal: moderateScale(10),
     marginVertical: moderateScale(2),
-    maxWidth: '80%',
   },
   messageText: {
     fontSize: moderateScale(14),
     lineHeight: moderateScale(18),
+
   },
   editedText: {
     fontSize: moderateScale(10),

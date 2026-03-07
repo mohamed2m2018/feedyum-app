@@ -76,7 +76,7 @@ const FeaturedReviewsSection = ({ chefId, chefProfile, limit = 5 }) => {
                 <Ionicons
                     key={i}
                     name={i < fullStars ? 'star' : 'star-outline'}
-                    size={10}
+                    size={13}
                     color="#FFD700"
                 />
             );
@@ -176,8 +176,8 @@ const FeaturedReviewsSection = ({ chefId, chefProfile, limit = 5 }) => {
 
 const localStyles = StyleSheet.create({
     container: {
-        paddingTop: moderateScale(8),
-        paddingBottom: moderateScale(12),
+        paddingTop: moderateScale(6),
+        paddingBottom: moderateScale(6),
     },
     headerRow: {
         flexDirection: 'row',
@@ -213,10 +213,17 @@ const localStyles = StyleSheet.create({
         gap: moderateScale(10),
     },
     reviewCard: {
-        width: moderateScale(85),
-        height: moderateScale(110),
+        width: moderateScale(75),
+        height: moderateScale(100),
         borderRadius: moderateScale(10),
         overflow: 'hidden',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.1)',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 2,
     },
     cardThumbnail: {
         width: '100%',
@@ -250,9 +257,9 @@ const localStyles = StyleSheet.create({
         padding: moderateScale(8),
     },
     miniAvatar: {
-        width: moderateScale(22),
-        height: moderateScale(22),
-        borderRadius: moderateScale(11),
+        width: moderateScale(26),
+        height: moderateScale(26),
+        borderRadius: moderateScale(13),
         borderWidth: 1.5,
         borderColor: '#FFFFFF',
         marginRight: moderateScale(6),

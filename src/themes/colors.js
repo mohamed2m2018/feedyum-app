@@ -52,6 +52,20 @@ export const commonColor = {
   yellow: '#FFD300',
   darkColor: '#1F222A',
   green: '#00C566',
+
+  // Order status colors
+  statusPendingBg: 'rgba(255, 193, 7, 0.15)',
+  statusPendingFg: '#FFB300',
+  statusAcceptedBg: 'rgba(76, 175, 80, 0.15)',
+  statusAcceptedFg: '#66BB6A',
+  statusPreparingBg: 'rgba(33, 150, 243, 0.15)',
+  statusPreparingFg: '#42A5F5',
+  statusCompletedBg: 'rgba(76, 175, 80, 0.15)',
+  statusCompletedFg: '#66BB6A',
+  statusCancelledBg: 'rgba(244, 67, 54, 0.15)',
+  statusCancelledFg: '#EF5350',
+  statusDefaultBg: 'rgba(158, 158, 158, 0.15)',
+  statusDefaultFg: '#9E9E9E',
 };
 
 export const colors = {

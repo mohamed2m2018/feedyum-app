@@ -57,20 +57,22 @@ function DishCardCompact({
     const chef = dish?.user || dish?.chef;
     const effectiveChefId = chef?._id || dish?.userId || dish?.chefId;
 
-    // Get user's location for delivery check
-    const { stableLatitude, stableLongitude } = useLocation();
+    // Get user's location for delivery check - use current location (respects delivery address)
+    const location = useLocation();
+    const userLat = location?.latitude;
+    const userLng = location?.longitude;
 
     // Check delivery eligibility to user's location
     const { data: deliveryData } = useQuery(
-        ['deliveryEligibility', effectiveChefId, stableLatitude, stableLongitude],
+        ['deliveryEligibility', effectiveChefId, userLat, userLng],
         async () => {
             const response = await request.get(
-                `/orders/check-delivery/${effectiveChefId}?lat=${stableLatitude}&long=${stableLongitude}`
+                `/orders/check-delivery/${effectiveChefId}?lat=${userLat}&long=${userLng}`
             );
             return response.data;
         },
         {
-            enabled: !!effectiveChefId && !!stableLatitude && !!stableLongitude,
+            enabled: !!effectiveChefId && !!userLat && !!userLng,
             staleTime: 1000 * 60 * 5, // 5 minutes
         }
     );

@@ -54,18 +54,27 @@ const MapLocationPicker = () => {
   const { data } = useQuery('user', () => request.get('/user'), { retry: 1 });
   const user = data?.data?.user;
 
-  // Initial map region - prioritize GPS location, then initialLocation, then Cairo default
-  const initialRegion = useMemo(() => ({
-    latitude: location?.latitude || initialLocation?.latitude || 30.0444,
-    longitude: location?.longitude || initialLocation?.longitude || 31.2357,
-    latitudeDelta: 0.004,
-    longitudeDelta: 0.004,
-  }), []);
+  // Initial map region - in edit mode, use saved address; otherwise GPS, then initialLocation, then Cairo default
+  const editLat = editMode && addressToEdit ? (addressToEdit.location?.lat || addressToEdit.lat) : null;
+  const editLng = editMode && addressToEdit ? (addressToEdit.location?.long || addressToEdit.long || addressToEdit.lng) : null;
+
+  const initialRegion = useMemo(() => {
+    const region = {
+      latitude: (editLat ? parseFloat(editLat) : null) || location?.latitude || initialLocation?.latitude || 30.0444,
+      longitude: (editLng ? parseFloat(editLng) : null) || location?.longitude || initialLocation?.longitude || 31.2357,
+      latitudeDelta: 0.004,
+      longitudeDelta: 0.004,
+    };
+    return region;
+  }, []);
 
   const [selectedLocation, setSelectedLocation] = useState(null);
-  const [markerPosition, setMarkerPosition] = useState({
-    latitude: initialRegion.latitude,
-    longitude: initialRegion.longitude,
+  const [markerPosition, setMarkerPosition] = useState(() => {
+    const pos = {
+      latitude: (editLat ? parseFloat(editLat) : null) || initialRegion.latitude,
+      longitude: (editLng ? parseFloat(editLng) : null) || initialRegion.longitude,
+    };
+    return pos;
   });
   const [loading, setLoading] = useState(false);
   const [reverseGeocoding, setReverseGeocoding] = useState(false);
@@ -90,6 +99,36 @@ const MapLocationPicker = () => {
   const [coverageAreas, setCoverageAreas] = useState([]);
   const [loadingAreas, setLoadingAreas] = useState(false);
   const [showBranchForm, setShowBranchForm] = useState(false);
+  const [deliveryTiers, setDeliveryTiers] = useState([{ maxDistance: 20, fee: '' }]);
+
+  // Auto-adjust delivery tiers when radius changes
+  useEffect(() => {
+    setDeliveryTiers(prev => {
+      // Clamp all maxDistance values to not exceed radius
+      let adjusted = prev.map(tier => ({
+        ...tier,
+        maxDistance: Math.min(tier.maxDistance, deliveryRadius),
+      }));
+
+      // Remove zero-range tiers (where From >= To after clamping)
+      adjusted = adjusted.filter((tier, idx) => {
+        const from = idx === 0 ? 0 : adjusted[idx - 1]?.maxDistance || 0;
+        return tier.maxDistance > from;
+      });
+
+      if (adjusted.length === 0) {
+        return [{ maxDistance: deliveryRadius, fee: '' }];
+      }
+
+      // Ensure last tier reaches the radius
+      adjusted[adjusted.length - 1] = {
+        ...adjusted[adjusted.length - 1],
+        maxDistance: deliveryRadius,
+      };
+
+      return adjusted;
+    });
+  }, [deliveryRadius]);
 
   // Initialize state for edit mode - show form instantly with existing data
   useEffect(() => {
@@ -106,15 +145,41 @@ const MapLocationPicker = () => {
           formattedAddress: addressToEdit.formattedAddress || addressToEdit.nameLine || '',
           area: addressToEdit.streetDetails?.area || ''
         });
-        setMarkerPosition({
+        const editCoords = {
           latitude: parseFloat(editLat),
           longitude: parseFloat(editLng)
-        });
+        };
+        setMarkerPosition(editCoords);
+        // Animate map camera to saved branch location
+        setTimeout(() => {
+          mapRef.current?.animateToRegion({
+            ...editCoords,
+            latitudeDelta: 0.004,
+            longitudeDelta: 0.004,
+          }, 500);
+        }, 300);
       }
 
-      // Show form instantly in edit mode
-      setShowAddressForm(true);
+      // Show the appropriate form instantly in edit mode
+      if (isChefBranch) {
+        setShowBranchForm(true);
+      } else {
+        setShowAddressForm(true);
+      }
       setLocationSaved(true);
+      // Prevent GPS centering from overwriting the saved branch location
+      setInitialGeocodeDone(true);
+
+      // Initialize delivery config from existing branch data
+      if (addressToEdit.deliveryRadius) {
+        setDeliveryRadius(addressToEdit.deliveryRadius);
+      }
+      if (addressToEdit.deliveryTiers && addressToEdit.deliveryTiers.length > 0) {
+        setDeliveryTiers(addressToEdit.deliveryTiers);
+      }
+      if (addressToEdit.branchName) {
+        setBranchName(addressToEdit.branchName);
+      }
     }
   }, [editMode, addressToEdit]);
 
@@ -129,7 +194,9 @@ const MapLocationPicker = () => {
   }, [user?.phone, addressDetails.phoneNumber]);
 
   // Initial GPS centering effect - run once when location becomes available
+  // Skip entirely in edit mode - the edit init effect handles positioning
   useEffect(() => {
+    if (editMode) return;
     if (location?.latitude && location?.longitude && !initialGeocodeDone) {
       setInitialGeocodeDone(true);
 
@@ -143,7 +210,7 @@ const MapLocationPicker = () => {
       // Do initial reverse geocode
       reverseGeocodePositionSilent(location.latitude, location.longitude);
     }
-  }, [location?.latitude, location?.longitude, initialGeocodeDone]);
+  }, [location?.latitude, location?.longitude, initialGeocodeDone, editMode]);
 
   // Silent reverse geocode - doesn't show address form automatically
   const reverseGeocodePositionSilent = useCallback(async (latitude, longitude) => {
@@ -325,6 +392,22 @@ const MapLocationPicker = () => {
       return;
     }
 
+    // Validate delivery tiers - all must have a fee > 0
+    const hasInvalidFee = deliveryTiers.some(t => !t.fee || isNaN(Number(t.fee)) || Number(t.fee) <= 0);
+    if (hasInvalidFee) {
+      showErrorToast(
+        strings.invalidDeliveryFee || 'Invalid Delivery Fee',
+        strings.allTiersMustHaveFee || 'All delivery tiers must have a fee greater than 0'
+      );
+      return;
+    }
+
+    // Format delivery tiers
+    const validTiers = deliveryTiers.map(t => ({
+      maxDistance: Number(t.maxDistance),
+      fee: Number(t.fee),
+    }));
+
     const locationData = {
       lat: selectedLocation.lat,
       latitude: selectedLocation.lat,
@@ -335,6 +418,7 @@ const MapLocationPicker = () => {
       description: selectedLocation.formattedAddress,
       branchName: branchName.trim() || `${selectedLocation.area || 'New'} Branch`,
       deliveryRadius: deliveryRadius,
+      deliveryTiers: validTiers,
       area: selectedLocation.area,
       city: selectedLocation.city,
     };
@@ -343,7 +427,7 @@ const MapLocationPicker = () => {
       onLocationSelect(locationData);
     }
     navigation.goBack();
-  }, [selectedLocation, branchName, deliveryRadius, onLocationSelect, navigation]);
+  }, [selectedLocation, branchName, deliveryRadius, deliveryTiers, onLocationSelect, navigation]);
 
   const handleAddressDetailChange = (field, value) => {
     setAddressDetails(prev => ({
@@ -644,6 +728,116 @@ const MapLocationPicker = () => {
                 />
                 <ZText type="s12" color={colors.grayScale6}>50km</ZText>
               </View>
+            </View>
+
+            {/* Delivery Fee Tiers */}
+            <View style={localStyles.section}>
+              <ZText type="B16" color={colors.textColor} style={localStyles.sectionTitle}>
+                {strings.deliveryTiers}
+              </ZText>
+              <ZText type="s12" color={colors.grayScale6} style={{ marginBottom: moderateScale(12) }}>
+                {strings.deliveryTiersHint}
+              </ZText>
+
+              {deliveryTiers.map((tier, index) => (
+                <View key={index} style={[localStyles.tierRow, { backgroundColor: colors.inputBg, borderColor: colors.grayScale4 }]}>
+                  <View style={localStyles.tierInputGroup}>
+                    <View style={localStyles.tierInputWrapper}>
+                      <ZText type="s12" color={colors.grayScale6}>{strings.tierFromKm}</ZText>
+                      <ZInput
+                        placeHolder="0"
+                        _value={index === 0 ? '0' : String(deliveryTiers[index - 1].maxDistance)}
+                        keyBoardType="numeric"
+                        editable={index !== 0}
+                        toGetTextFieldValue={(val) => {
+                          if (index > 0) {
+                            const num = Math.min(parseInt(val) || 0, deliveryRadius);
+                            const updated = [...deliveryTiers];
+                            updated[index - 1] = { ...updated[index - 1], maxDistance: num };
+                            setDeliveryTiers(updated);
+                          }
+                        }}
+                        inputContainerStyle={[localStyles.tierFeeInput, {
+                          backgroundColor: index === 0 ? colors.inputBg : colors.backgroundColor,
+                          borderColor: colors.grayScale4,
+                          opacity: index === 0 ? 0.6 : 1,
+                        }]}
+                      />
+                    </View>
+                    <View style={localStyles.tierInputWrapper}>
+                      <ZText type="s12" color={colors.grayScale6}>{strings.tierToKm}</ZText>
+                      <ZInput
+                        placeHolder="0"
+                        _value={String(tier.maxDistance)}
+                        keyBoardType="numeric"
+                        toGetTextFieldValue={(val) => {
+                          const num = Math.min(parseInt(val) || 0, deliveryRadius);
+                          let updated = [...deliveryTiers];
+                          updated[index] = { ...updated[index], maxDistance: num };
+                          // Remove downstream tiers that become zero-range (From >= To)
+                          updated = updated.filter((t, i) => {
+                            if (i <= index) return true;
+                            const from = updated[i - 1]?.maxDistance || 0;
+                            return t.maxDistance > from;
+                          });
+                          setDeliveryTiers(updated);
+                        }}
+                        inputContainerStyle={[localStyles.tierFeeInput, { backgroundColor: colors.backgroundColor, borderColor: colors.grayScale4 }]}
+                      />
+                    </View>
+                    <View style={localStyles.tierInputWrapper}>
+                      <ZText type="s12" color={colors.grayScale6}>{strings.tierFeeEgp}</ZText>
+                      <ZInput
+                        placeHolder="0"
+                        _value={String(tier.fee)}
+                        keyBoardType="numeric"
+                        toGetTextFieldValue={(val) => {
+                          const updated = [...deliveryTiers];
+                          updated[index] = { ...updated[index], fee: val };
+                          setDeliveryTiers(updated);
+                        }}
+                        inputContainerStyle={[localStyles.tierFeeInput, { backgroundColor: colors.backgroundColor, borderColor: colors.grayScale4 }]}
+                      />
+                    </View>
+                  </View>
+                  {deliveryTiers.length > 1 && (
+                    <TouchableOpacity
+                      onPress={() => {
+                        const updated = deliveryTiers.filter((_, i) => i !== index);
+                        setDeliveryTiers(updated);
+                      }}
+                      style={localStyles.tierRemoveButton}
+                    >
+                      <Feather name="x" size={moderateScale(16)} color={colors.primary} />
+                    </TouchableOpacity>
+                  )}
+                </View>
+              ))}
+
+              <TouchableOpacity
+                style={[localStyles.addTierButton, { borderColor: colors.primary }]}
+                onPress={() => {
+                  const lastTier = deliveryTiers[deliveryTiers.length - 1];
+                  const prevFrom = deliveryTiers.length > 1
+                    ? deliveryTiers[deliveryTiers.length - 2].maxDistance
+                    : 0;
+                  const lastRange = lastTier.maxDistance - prevFrom;
+
+                  if (lastRange > 1) {
+                    // Split the last tier's range in half
+                    const splitPoint = prevFrom + Math.floor(lastRange / 2);
+                    const updated = [...deliveryTiers];
+                    updated[updated.length - 1] = { ...lastTier, maxDistance: splitPoint };
+                    updated.push({ maxDistance: lastTier.maxDistance, fee: '' });
+                    setDeliveryTiers(updated);
+                  }
+                }}
+              >
+                <Feather name="plus" size={moderateScale(16)} color={colors.primary} />
+                <ZText type="M14" color={colors.primary} style={{ marginLeft: moderateScale(6) }}>
+                  {strings.addTier}
+                </ZText>
+              </TouchableOpacity>
             </View>
 
             {/* Coverage Areas */}
@@ -952,6 +1146,52 @@ const localStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: moderateScale(8),
+  },
+  // Delivery Tier Styles
+  tierRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: moderateScale(10),
+    borderRadius: moderateScale(10),
+    borderWidth: 1,
+    marginBottom: moderateScale(8),
+  },
+  tierInputGroup: {
+    flex: 1,
+    flexDirection: 'row',
+    gap: moderateScale(8),
+    alignItems: 'flex-end',
+  },
+  tierInputWrapper: {
+    flex: 1,
+  },
+  tierInput: {
+    paddingVertical: moderateScale(8),
+    paddingHorizontal: moderateScale(10),
+    borderRadius: moderateScale(8),
+    borderWidth: 1,
+    alignItems: 'center',
+    marginTop: moderateScale(4),
+  },
+  tierFeeInput: {
+    borderRadius: moderateScale(8),
+    borderWidth: 1,
+    marginTop: moderateScale(4),
+    height: moderateScale(38),
+  },
+  tierRemoveButton: {
+    padding: moderateScale(6),
+    marginLeft: moderateScale(4),
+  },
+  addTierButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: moderateScale(10),
+    borderRadius: moderateScale(10),
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    marginTop: moderateScale(4),
   },
   slider: {
     flex: 1,

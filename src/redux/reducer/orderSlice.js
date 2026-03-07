@@ -246,7 +246,7 @@ export const cancelOrderByUser = (orderId, reason) => async (dispatch) => {
     if (!orderId) {
       throw new Error('Order ID is required');
     }
-    
+
     dispatch(setLoading(true));
     dispatch(clearError());
 
@@ -264,6 +264,38 @@ export const cancelOrderByUser = (orderId, reason) => async (dispatch) => {
     return cancelledOrder;
   } catch (error) {
     const errorMessage = error?.message || error || 'Failed to cancel order';
+    dispatch(setError(errorMessage));
+    throw new Error(errorMessage);
+  } finally {
+    dispatch(setLoading(false));
+  }
+};
+
+export const confirmOrderByUser = (orderId) => async (dispatch) => {
+  try {
+    if (!orderId) {
+      throw new Error('Order ID is required');
+    }
+
+    dispatch(setLoading(true));
+    dispatch(clearError());
+
+    const response = await request.put(`/orders/${orderId}/confirm`);
+    const confirmedOrder = response.data.order;
+
+    dispatch(updateOrderStatus({
+      orderId,
+      status: 'confirmed',
+      deliveryFee: confirmedOrder?.deliveryFee,
+      totalAmount: confirmedOrder?.totalPrice,
+    }));
+
+    // Re-fetch the order to get full updated data
+    await dispatch(fetchOrderById(orderId));
+
+    return confirmedOrder;
+  } catch (error) {
+    const errorMessage = error?.message || error?.response?.data?.message || 'Failed to confirm order';
     dispatch(setError(errorMessage));
     throw new Error(errorMessage);
   } finally {

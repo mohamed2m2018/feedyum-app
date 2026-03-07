@@ -37,6 +37,7 @@ const OrderDetailsModal = ({
   };
 
   const getStatusConfig = (status) => {
+    console.log('🐞 [OrderDetailsModal] getStatusConfig called with status:', status);
     switch (status) {
       case 'pending':
         return {
@@ -44,6 +45,21 @@ const OrderDetailsModal = ({
           backgroundColor: colors.orange + '20',
           text: strings.pending,
           icon: 'time-outline',
+        };
+      case 'awaiting_confirmation':
+      case 'chef_review':
+        return {
+          color: colors.info || '#2196F3',
+          backgroundColor: (colors.info || '#2196F3') + '20',
+          text: strings.awaitingConfirmation || strings.chefReviewing || 'Awaiting Confirmation',
+          icon: 'hourglass-outline',
+        };
+      case 'confirmed':
+        return {
+          color: colors.success || '#4CAF50',
+          backgroundColor: (colors.success || '#4CAF50') + '20',
+          text: strings.confirmed || strings.orderAccepted || 'Confirmed',
+          icon: 'checkmark-circle-outline',
         };
       case 'preparing':
         return {
@@ -60,6 +76,7 @@ const OrderDetailsModal = ({
           icon: 'checkmark-circle-outline',
         };
       case 'completed':
+      case 'delivered':
         return {
           color: colors.primary,
           backgroundColor: colors.primary + '20',
