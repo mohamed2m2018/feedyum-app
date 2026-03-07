@@ -26,13 +26,13 @@ import {
   Profile_Light,
   Search_Dark,
   Search_Light,
-  Orders_Dark,
-  Orders_Light,
   Inbox_Dark,
   Inbox_Light,
   ChefDashboard_Dark,
   ChefDashboard_Light,
 } from '../../assets/svgs';
+import Orders_Dark from '../../assets/svgs/ordersActiveDark.svg';
+import Orders_Light from '../../assets/svgs/ordersActiveLight.svg';
 import { styles } from '../../themes';
 import MediaSelectionModal from '../../components/modals/MediaSelectionModal';
 import request from '../../api/request';

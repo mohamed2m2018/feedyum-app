@@ -1,4 +1,4 @@
-// Tab Bar Icons are imported
+// Tab Bar Icons are imported // updated 2026-03-07
 import Home_Light from '../../assets/svgs/homeLight.svg';
 import Home_Dark from '../../assets/svgs/homeDark.svg';
 import Inbox_Light from '../../assets/svgs/inboxLight.svg';
@@ -30,8 +30,8 @@ import Connect_Dark from './connectDark.svg';
 import Notification_Icon from './notification.svg';
 import Search_Dark from './searchDark.svg';
 import Search_Light from './searchLight.svg';
-import Orders_Dark from './ordersDark.svg';
-import Orders_Light from './ordersLight.svg';
+import Orders_Dark from './ordersActiveDark.svg';
+import Orders_Light from './ordersActiveLight.svg';
 import Menu_Dark from './menuDark.svg';
 import Menu_Light from './menuLight.svg';
 import Control from './control.svg';

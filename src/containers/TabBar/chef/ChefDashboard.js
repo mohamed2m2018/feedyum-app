@@ -130,7 +130,7 @@ export default function ChefDashboard() {
               style={[localStyles.actionCard, { backgroundColor: colors.inputBg }]}
               onPress={() => navigateToSection('Orders')}>
               <View style={[localStyles.actionIcon, { backgroundColor: colors.orange }]}>
-                <Ionicons name="receipt-outline" size={moderateScale(24)} color={colors.white} />
+                <Ionicons name="reader-outline" size={moderateScale(24)} color={colors.white} />
               </View>
               <ZText type="S16" style={localStyles.actionTitle}>
                 {strings.viewOrders}

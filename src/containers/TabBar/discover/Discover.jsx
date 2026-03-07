@@ -1,18 +1,18 @@
 // Library import
-import {StyleSheet, TouchableOpacity, View, I18nManager, FlatList, Dimensions} from 'react-native';
-import React, {useState, useRef, useEffect, useCallback} from 'react';
-import {useSelector} from 'react-redux';
-import {TabView} from 'react-native-tab-view';
+import { StyleSheet, TouchableOpacity, View, I18nManager, FlatList, Dimensions } from 'react-native';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useSelector } from 'react-redux';
+import { TabView } from 'react-native-tab-view';
 
 // Local import
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
-import {moderateScale} from '../../../common/constants';
+import { moderateScale } from '../../../common/constants';
 import ZText from '../../../components/common/ZText';
-import {styles} from '../../../themes';
+import { styles } from '../../../themes';
 import HashtagCategory from './HashtagCategory';
 import ZLoader from '../../../components/common/ZLoader';
-import {StackNav} from '../../../navigation/NavigationKeys';
-import {routes} from './utils/routes';
+import { StackNav } from '../../../navigation/NavigationKeys';
+import { routes } from './utils/routes';
 import strings from '../../../i18n/strings';
 import AddressDropdown from '../../../components/AddressDropdown';
 import { useLocation } from '../../../navigation/locationContext';
@@ -58,9 +58,9 @@ const RenderTabBar = React.memo(({ navigationState, index, onIndexChange, colors
   }, [index]);
 
   const renderItem = useCallback(({ item, index: itemIndex }) => (
-    <HeaderCetegoryItem 
-      title={item.title} 
-      index={itemIndex} 
+    <HeaderCetegoryItem
+      title={item.title}
+      index={itemIndex}
       isSelected={index === itemIndex}
       onPress={onIndexChange}
       colors={colors}
@@ -89,19 +89,19 @@ const RenderTabBar = React.memo(({ navigationState, index, onIndexChange, colors
 });
 
 const RenderScene = React.memo(({ route, isLocationChanging }) => {
-   const selectedTag = route.key;
+  const selectedTag = route.key;
 
-   return (
-     <View style={I18nManager.isRTL ? { transform: [{ scaleX: -1 }] } : {}}>
-       <HashtagCategory 
-         selectedTag={selectedTag}
-         isLocationChanging={isLocationChanging}
-       />
-     </View>
-   );
+  return (
+    <View style={I18nManager.isRTL ? { transform: [{ scaleX: -1 }] } : {}}>
+      <HashtagCategory
+        selectedTag={selectedTag}
+        isLocationChanging={isLocationChanging}
+      />
+    </View>
+  );
 });
 
-export default function Discover({navigation}) {
+export default function Discover({ navigation }) {
   const colors = useSelector(state => state.theme.theme);
   const location = useLocation();
   const [isLocationChanging, setIsLocationChanging] = useState(false);
@@ -110,7 +110,7 @@ export default function Discover({navigation}) {
 
   const [isSelect, setIsSelect] = useState({
     index: 0,
-    routes: routes?.map(item => ({key: item.nameEn, title:  I18nManager.isRTL? item.nameAr: item.nameEn})),
+    routes: routes?.map(item => ({ key: item.nameEn, title: I18nManager.isRTL ? item.nameAr : item.nameEn })),
   });
 
   // Track location changes and provide visual feedback
@@ -122,17 +122,17 @@ export default function Discover({navigation}) {
       const timer = setTimeout(() => {
         setIsLocationChanging(false);
       }, 500);
-      
+
       return () => clearTimeout(timer);
     }
   }, [location?.latitude, location?.longitude, location?.selectedAddress]);
 
   const _handleIndexChange = useCallback(index => {
-    setIsSelect(prev => ({...prev, index: index}));
+    setIsSelect(prev => ({ ...prev, index: index }));
   }, []);
 
   const _renderTabBar = useCallback(props => (
-    <RenderTabBar 
+    <RenderTabBar
       navigationState={isSelect}
       index={isSelect.index}
       onIndexChange={_handleIndexChange}
@@ -140,7 +140,7 @@ export default function Discover({navigation}) {
     />
   ), [isSelect, _handleIndexChange, colors]);
 
-  const _renderScene = useCallback(({route}) => (
+  const _renderScene = useCallback(({ route }) => (
     <RenderScene route={route} isLocationChanging={isLocationChanging} />
   ), [isLocationChanging]);
 
@@ -149,15 +149,15 @@ export default function Discover({navigation}) {
   };
 
   return (
-    <ZSafeAreaView style={{flex: 1}}>
+    <ZSafeAreaView style={{ flex: 1 }}>
       <View style={localStyles.headerContainer}>
         <ZText type="b24">{strings.explore}</ZText>
         <View style={localStyles.headerRightSection}>
           {/* Address Dropdown for Discover */}
           <View style={localStyles.addressDropdownWrapper}>
-            <AddressDropdown 
+            <AddressDropdown
               compact={true}
-              style={{ 
+              style={{
                 flex: 1,
                 maxWidth: moderateScale(160) // Increased max width
               }}
@@ -173,7 +173,7 @@ export default function Discover({navigation}) {
             onPress={() => navigation.navigate(StackNav.ShoppingCart)}
           />
           <HeaderIconWithBadge
-            name="receipt-outline"
+            name="reader-outline"
             count={unseenOrdersCount}
             onPress={() => navigation.navigate(StackNav.Orders)}
           />
@@ -184,13 +184,13 @@ export default function Discover({navigation}) {
           />
         </View>
       </View>
-      
+
       <TabView
         navigationState={isSelect}
         renderScene={_renderScene}
         renderTabBar={_renderTabBar}
         onIndexChange={_handleIndexChange}
-        activeColor={{color: colors.primary}}
+        activeColor={{ color: colors.primary }}
         navigation={navigation}
         lazy={true}
         lazyPreloadDistance={1}
@@ -219,7 +219,7 @@ const localStyles = StyleSheet.create({
   addressDropdownWrapper: {
     flex: 1,
     marginRight: moderateScale(10), // Increased space from search icon
-    marginLeft: moderateScale(10), 
+    marginLeft: moderateScale(10),
   },
   searchButton: {
     padding: moderateScale(5), // Add touch area

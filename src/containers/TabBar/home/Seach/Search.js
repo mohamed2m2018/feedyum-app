@@ -183,7 +183,7 @@ export default function Search() {
               style={localStyles.headerIconBadge}
             />
             <HeaderIconWithBadge
-              name="receipt-outline"
+              name="reader-outline"
               size={22}
               count={unseenOrdersCount}
               onPress={() => navigation.navigate(StackNav.Orders)}
