@@ -6,7 +6,7 @@ import Description from '../../../components/models/Descriptions';
 import Locations from '../../../components/models/Locations';
 import Comment from '../../../components/models/Comment';
 import { useSelector } from 'react-redux';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 import { useIsFocused, useNavigation, useRoute } from '@react-navigation/native';
 
@@ -31,6 +31,7 @@ import { ReelItem } from '../../../components/reel';
 import request from '../../../api/request';
 import ReelsList from './ReelsList';
 import strings from '../../../i18n/strings';
+import ZText from '../../../components/common/ZText';
 import ZLoader from '../../../components/common/ZLoader';
 import { useLocation } from '../../../navigation/locationContext';
 import { useStorage } from '../../../utils/useStorage';
@@ -38,6 +39,7 @@ import AddressDropdown from '../../../components/AddressDropdown';
 import { useOptimizedReels, useOptimizedStory } from '../../../hooks/useOptimizedQueries';
 import { prefetchImages } from '../../../utils/imageOptimizer';
 import { prefetchVideosAroundIndex } from '../../../services/VideoPrefetchService';
+import ReelFiltersSheet from '../../../components/modals/ReelFiltersSheet';
 
 // Module-level locked height removed in favor of dynamic calculation
 // let GLOBAL_LOCKED_HEIGHT = 0;
@@ -69,6 +71,8 @@ export default function ReelsComponent({ amIFocused, initialStoryId }) {
   const [selectedDescription, setselectedDescription] = useState('');
   const [selectedGov, setselectedGov] = useState('');
   const [categoryIds, setcategoryIds] = useState([]);
+  const [filters, setFilters] = useState({});
+  const filtersSheetRef = useRef(null);
   const [isFilterLoading, setIsFilterLoading] = useState(false);
   const [isCommentOpen, setIsCommentOpen] = useState(false);
   const [isLocationOpen, setIsLocationOpen] = useState(false);
@@ -84,12 +88,15 @@ export default function ReelsComponent({ amIFocused, initialStoryId }) {
     [windowHeight, insets.top, insets.bottom]
   );
 
-  // When categoryIds change, show loading indicator
+  // When filters change, scroll to top and show loading
   useEffect(() => {
-    if (categoryIds.length > 0) {
+    if (categoryIds.length > 0 || Object.values(filters).some(v => v && v !== 'default')) {
       setIsFilterLoading(true);
+      setActiveVideoIndex(0);
+      // Scroll FlatList to top
+      flatListRef?.current?.scrollToOffset?.({ offset: 0, animated: true });
     }
-  }, [categoryIds]);
+  }, [categoryIds, filters]);
 
   // Use optimized reels hook - fetches main feed
   const {
@@ -101,7 +108,7 @@ export default function ReelsComponent({ amIFocused, initialStoryId }) {
     isRefetching,
     isFetching,
     data: reelsData,
-  } = useOptimizedReels(categoryIds);
+  } = useOptimizedReels(categoryIds, filters);
 
   // Views mutation - defined early as it's used in multiple places
   const updateViews = async storyId =>
@@ -271,18 +278,26 @@ export default function ReelsComponent({ amIFocused, initialStoryId }) {
       {isLoadingStory && !initialStoryId && <ZLoader absolute height={100} top={300} />}
 
       <TouchableOpacity
-        onPress={() => {
-          navigation.navigate(StackNav.SelectCategory, {
-            setcategoryIds,
-            categoryIds,
-          });
-        }}
+        onPress={() => filtersSheetRef.current?.show()}
         style={localStyles.headerContainer2}>
-        <MaterialCommunityIcons
-          name={categoryIds?.length ? 'tune' : 'tune-variant'}
-          size={moderateScale(30)}
-          color={categoryIds?.length ? colors.primary : colors.white}
+        <Ionicons
+          name={(categoryIds?.length || Object.values(filters).some(v => v && v !== 'default')) ? 'options' : 'options-outline'}
+          size={moderateScale(26)}
+          color={(categoryIds?.length || Object.values(filters).some(v => v && v !== 'default')) ? colors.primary : colors.white}
         />
+        {/* Active filter count badge */}
+        {(() => {
+          const count = categoryIds.length +
+            (filters.reviewsOnly ? 1 : 0) +
+            (filters.chefsOnly ? 1 : 0) +
+            (filters.hasDishes ? 1 : 0) +
+            (filters.sortBy && filters.sortBy !== 'default' ? 1 : 0);
+          return count > 0 ? (
+            <View style={[localStyles.filterBadge, { backgroundColor: colors.primary }]}>
+              <ZText type="s10" color={colors.white}>{count}</ZText>
+            </View>
+          ) : null;
+        })()}
       </TouchableOpacity>
 
       <ReelsList
@@ -323,6 +338,13 @@ export default function ReelsComponent({ amIFocused, initialStoryId }) {
         description={selectedDescription}
       />
       <Locations SheetRef={locationSheetRef} selectedGov={selectedGov} onClose={() => setIsLocationOpen(false)} />
+      <ReelFiltersSheet
+        sheetRef={filtersSheetRef}
+        filters={filters}
+        categoryIds={categoryIds}
+        onApplyFilters={setFilters}
+        onApplyCategories={setcategoryIds}
+      />
       {/* {!adFailedToLoad && (
         <View style={localStyles.bannerContainer}>
           <BannerAd
@@ -411,6 +433,17 @@ const localStyles = StyleSheet.create({
     zIndex: 1,
     right: 30,
     ...styles.rowSpaceBetween,
+  },
+  filterBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -6,
+    minWidth: moderateScale(16),
+    height: moderateScale(16),
+    borderRadius: moderateScale(8),
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: moderateScale(3),
   },
   addressDropdownContainer: {
     position: 'absolute',

@@ -23,19 +23,23 @@ const QueryConfigs = {
 };
 
 // Optimized hook for stories/reels with smaller initial page size
-export const useOptimizedReels = (categoryIds = []) => {
+// Accepts optional filters: { reviewsOnly, chefsOnly, hasDishes, sortBy }
+export const useOptimizedReels = (categoryIds = [], filters = {}) => {
   const location = useLocation();
   const [user] = useStorage('user');
 
+  // Build a stable filter key for cache invalidation
+  const filterKey = `${!!filters.reviewsOnly}:${!!filters.chefsOnly}:${!!filters.hasDishes}:${filters.sortBy || 'default'}`;
+
   return useInfiniteQuery(
-    ['stories', user?._id, categoryIds?.join(',') || 'all', location?.stableLatitude, location?.stableLongitude],
+    ['stories', user?._id, categoryIds?.join(',') || 'all', location?.stableLatitude, location?.stableLongitude, filterKey],
     async ({ pageParam = 1 }) => {
       // Use consistent page size to avoid pagination offset miscalculations
       // Backend calculates startIndex = (page-1) * limit, so varying limits causes skipped items
       const limit = 10;
       const categoryIdsParam = categoryIds?.length > 0 ? categoryIds.join(',') : undefined;
 
-      console.log('[useOptimizedReels] Fetching stories with categoryIds:', categoryIdsParam, 'page:', pageParam);
+      console.log('[useOptimizedReels] Fetching stories with categoryIds:', categoryIdsParam, 'filters:', filterKey, 'page:', pageParam);
 
       const response = await request.get('/story/stories', {
         params: {
@@ -44,7 +48,11 @@ export const useOptimizedReels = (categoryIds = []) => {
           userId: user?._id,
           lat: location?.latitude,
           long: location?.longitude,
-          categoryIds: categoryIdsParam
+          categoryIds: categoryIdsParam,
+          ...(filters.reviewsOnly && { reviewsOnly: 'true' }),
+          ...(filters.chefsOnly && { chefsOnly: 'true' }),
+          ...(filters.hasDishes && { hasDishes: 'true' }),
+          ...(filters.sortBy && filters.sortBy !== 'default' && { sortBy: filters.sortBy }),
         }
       });
 

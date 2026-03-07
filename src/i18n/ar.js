@@ -8,6 +8,19 @@ export default {
   review: 'تقييم',
   dishesTab: 'أطباق',
 
+  // فلاتر الريلز
+  reelFilters: 'فلاتر',
+  filterBy: 'فلترة حسب',
+  reviewsOnlyFilter: 'التقييمات فقط',
+  fromChefsFilter: 'من الطباخين',
+  orderableFilter: 'قابلة للطلب',
+  sortByLabel: 'ترتيب حسب',
+  sortDefault: 'افتراضي',
+  sortTrending: 'الأكثر رواجاً',
+  sortNearby: 'القريبة',
+  resetFilters: 'إعادة تعيين',
+  applyFilters: 'تطبيق الفلاتر',
+
   profile: 'ملفك',
   discover: 'استكشف',
   inbox: 'صندوق الوارد',
@@ -60,6 +73,12 @@ export default {
   // Order Confirmation
   awaitingConfirmation: 'في انتظار تأكيدك',
   awaitingConfirmationDesc: 'المطبخ قبل طلبك. يرجى المراجعة والتأكيد.',
+  orderNeedsConfirmation: 'لديك طلب ينتظر تأكيدك!',
+  confirmNow: 'أكّد الآن',
+  later: 'لاحقاً',
+  orderReminderTitle: 'تذكير بالطلب',
+  orderAwaitingYourConfirmation: 'طلبك من {chefName} يحتاج تأكيدك',
+  chefOrderPendingReminder: 'لديك طلب معلق من {customerName} للمراجعة',
   confirmOrder: 'تأكيد الطلب',
   confirmOrderQuestion: 'تأكيد هذا الطلب؟',
   orderConfirmed: 'تم تأكيد الطلب',

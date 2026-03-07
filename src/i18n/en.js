@@ -8,6 +8,19 @@ export default {
   review: 'Review',
   dishesTab: 'Dishes',
 
+  // Reel Feed Filters
+  reelFilters: 'Filters',
+  filterBy: 'Filter By',
+  reviewsOnlyFilter: 'Reviews Only',
+  fromChefsFilter: 'From Chefs',
+  orderableFilter: 'Orderable',
+  sortByLabel: 'Sort By',
+  sortDefault: 'Default',
+  sortTrending: 'Trending',
+  sortNearby: 'Nearby',
+  resetFilters: 'Reset',
+  applyFilters: 'Apply Filters',
+
   profile: 'Profile',
   discover: 'Discover',
   inbox: 'Inbox',
@@ -146,6 +159,12 @@ export default {
   // Order Confirmation
   awaitingConfirmation: 'Awaiting Your Confirmation',
   awaitingConfirmationDesc: 'The kitchen has accepted your order. Please review and confirm.',
+  orderNeedsConfirmation: 'You have an order waiting for your confirmation!',
+  confirmNow: 'Confirm Now',
+  later: 'Later',
+  orderReminderTitle: 'Order Reminder',
+  orderAwaitingYourConfirmation: 'Your order from {chefName} needs your confirmation',
+  chefOrderPendingReminder: 'You have a pending order from {customerName} to review',
   confirmOrder: 'Confirm Order',
   confirmOrderQuestion: 'Confirm this order?',
   orderConfirmed: 'Order Confirmed',

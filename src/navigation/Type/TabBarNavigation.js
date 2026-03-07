@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { StyleSheet, TouchableOpacity, View, Alert, Linking, Platform } from 'react-native';
+import { StyleSheet, TouchableOpacity, View, Alert, Linking, Platform, Modal } from 'react-native';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as SplashScreen from 'expo-splash-screen';
 import ImagePicker from 'react-native-image-crop-picker';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { PERMISSIONS, request as requestPermission, check as checkPermission, RESULTS } from 'react-native-permissions';
 
 // Local import
@@ -14,6 +15,7 @@ import { checkPlatform } from '../../utils/helpers';
 
 import { getHeight, moderateScale, BOTTOM_TAB_HEIGHT } from '../../common/constants';
 import ZText from '../../components/common/ZText';
+import ZButton from '../../components/common/ZButton';
 import strings from '../../i18n/strings';
 
 import {
@@ -53,6 +55,7 @@ export default function TabBarNavigation({ route, navigation }) {
   const { handleAuthToast } = useHandleAuth();
   const { currentScreen: previousScreen } = useScreen();
   const [modalState, setModalState] = useState({ visible: false, title: '', message: '' });
+  const [awaitingOrderModal, setAwaitingOrderModal] = useState({ visible: false, order: null });
   const hasHandledInitialNav = useRef(false); // Track if initial navigation was handled
 
   // Extract initialTab from route params - check for storyId/postId to go to FollowingTab
@@ -101,6 +104,24 @@ export default function TabBarNavigation({ route, navigation }) {
       navigation.navigate(targetTab, targetParams);
     }
   }, [route.params, hasReelDeepLink, isLoading, data, isChef]);
+
+  // Check for orders awaiting user confirmation on app open
+  useEffect(() => {
+    if (isLoading || !user) return;
+    const checkAwaitingOrders = async () => {
+      try {
+        const response = await request.get('/orders/user?page=1&limit=5');
+        const orders = response?.data?.orders || [];
+        const awaitingOrder = orders.find(o => o.status === 'awaiting_confirmation');
+        if (awaitingOrder) {
+          setAwaitingOrderModal({ visible: true, order: awaitingOrder });
+        }
+      } catch (err) {
+        // Silent fail - non-critical check
+      }
+    };
+    checkAwaitingOrders();
+  }, [user?._id]);
 
   // Show loading AFTER all hooks have been called
   if (isLoading && !data) {
@@ -440,6 +461,89 @@ export default function TabBarNavigation({ route, navigation }) {
         title={strings.createNewPost}
         subtitle={strings.chooseHowToCreatePost}
       />
+
+      {/* Awaiting Confirmation Modal */}
+      <Modal
+        visible={awaitingOrderModal.visible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setAwaitingOrderModal({ visible: false, order: null })}
+      >
+        <TouchableOpacity
+          style={localStyles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setAwaitingOrderModal({ visible: false, order: null })}
+        >
+          <TouchableOpacity activeOpacity={1} style={[localStyles.modalCard, { backgroundColor: colors.inputBg }]}>
+            {/* Warning Icon */}
+            <View style={[localStyles.modalIconContainer, { backgroundColor: (colors.warning || '#FF9800') + '15' }]}>
+              <Ionicons
+                name="alert-circle"
+                size={moderateScale(48)}
+                color={colors.warning || '#FF9800'}
+              />
+            </View>
+
+            {/* Title */}
+            <ZText type="B20" style={localStyles.modalTitle} align="center">
+              {strings.orderNeedsConfirmation}
+            </ZText>
+
+            {/* Description */}
+            <ZText type="M16" color={colors.grayScale7} style={localStyles.modalDesc} align="center">
+              {strings.awaitingConfirmationDesc}
+            </ZText>
+
+            {/* Order Info */}
+            {awaitingOrderModal.order && (
+              <View style={[localStyles.modalOrderInfo, { backgroundColor: colors.backgroundColor || '#F5F5F5' }]}>
+                <ZText type="M14" color={colors.grayScale7}>
+                  {strings.orderNumber || 'Order'} #{awaitingOrderModal.order._id?.slice(-6)}
+                </ZText>
+                <ZText type="B16" color={colors.primary}>
+                  {awaitingOrderModal.order.totalPrice?.toFixed(2) || '0.00'} {strings.EGP}
+                </ZText>
+              </View>
+            )}
+
+            {/* Buttons */}
+            <View style={localStyles.modalButtons}>
+              <TouchableOpacity
+                style={[localStyles.modalSecondaryBtn, { backgroundColor: colors.primary + '15' }]}
+                onPress={() => {
+                  const order = awaitingOrderModal.order;
+                  setAwaitingOrderModal({ visible: false, order: null });
+                  if (order?.chef?._id) {
+                    navigation.navigate(StackNav.ChatScreen, {
+                      recipientId: order.chef._id,
+                      recipientName: order.chef.fullName || order.chef.username,
+                      orderId: order._id,
+                    });
+                  }
+                }}
+              >
+                <Ionicons name="chatbubble-outline" size={moderateScale(16)} color={colors.primary} style={{ marginRight: 6 }} />
+                <ZText type="B16" color={colors.primary}>
+                  {strings.chatWithChef || 'Chat'}
+                </ZText>
+              </TouchableOpacity>
+              <ZButton
+                title={strings.confirmNow}
+                textType="B16"
+                color={colors.white}
+                containerStyle={localStyles.modalPrimaryBtn}
+                onPress={() => {
+                  const orderId = awaitingOrderModal.order?._id;
+                  setAwaitingOrderModal({ visible: false, order: null });
+                  if (orderId) {
+                    navigation.navigate(StackNav.OrderTracking, { orderId });
+                  }
+                }}
+              />
+            </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
     </>
   );
 }
@@ -453,5 +557,67 @@ const localStyles = StyleSheet.create({
     width: moderateScale(70),
     height: getHeight(40),
     right: moderateScale(20),
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: moderateScale(24),
+  },
+  modalCard: {
+    width: '100%',
+    borderRadius: moderateScale(20),
+    padding: moderateScale(24),
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  modalIconContainer: {
+    width: moderateScale(80),
+    height: moderateScale(80),
+    borderRadius: moderateScale(40),
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: moderateScale(16),
+  },
+  modalTitle: {
+    marginBottom: moderateScale(8),
+  },
+  modalDesc: {
+    marginBottom: moderateScale(16),
+    lineHeight: moderateScale(22),
+  },
+  modalOrderInfo: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+    padding: moderateScale(12),
+    borderRadius: moderateScale(12),
+    marginBottom: moderateScale(20),
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    width: '100%',
+    gap: moderateScale(12),
+  },
+  modalSecondaryBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    height: moderateScale(48),
+    borderRadius: moderateScale(24),
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalPrimaryBtn: {
+    flex: 1,
+    height: moderateScale(48),
+    borderRadius: moderateScale(24),
   },
 });

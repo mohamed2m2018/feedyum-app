@@ -7,7 +7,6 @@ import Locations from '../../../components/models/Locations';
 import Comment from '../../../components/models/Comment';
 import { useSelector } from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 
 // Local import
@@ -28,12 +27,14 @@ import request from '../../../api/request';
 import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
 import ReelsList from './ReelsList';
 import strings from '../../../i18n/strings';
+import ZText from '../../../components/common/ZText';
 import { useLocation } from '../../../navigation/locationContext';
 import ZButton from '../../../components/common/ZButton';
 import { useStorage } from '../../../utils/useStorage';
 import { useOptimizedFollowingReels } from '../../../hooks/useOptimizedQueries';
 import { optimizeImageUrl, prefetchImages } from '../../../utils/imageOptimizer';
 import { prefetchVideosAroundIndex } from '../../../services/VideoPrefetchService';
+import ReelFiltersSheet from '../../../components/modals/ReelFiltersSheet';
 
 export default function ReelsComponent({ amIFocused }) {
   const colors = useSelector(state => state.theme.theme);
@@ -72,6 +73,8 @@ export default function ReelsComponent({ amIFocused }) {
   const [selectedDescription, setselectedDescription] = useState('');
   const [selectedGov, setselectedGov] = useState('');
   const [categoryIds, setcategoryIds] = useState([]);
+  const [filters, setFilters] = useState({});
+  const filtersSheetRef = useRef(null);
   const [user] = useStorage('user');
 
   const [isCommentOpen, setIsCommentOpen] = useState(false);
@@ -81,7 +84,7 @@ export default function ReelsComponent({ amIFocused }) {
 
   const fetchReelsFollowing = page =>
     request.get(
-      `/story/following?limit=15&page=${page}&userId=${user?._id}&lat=${location?.latitude}&long=${location?.longitude}&categoryIds=${categoryIds}`,
+      `/story/following?limit=15&page=${page}&userId=${user?._id}&lat=${location?.latitude}&long=${location?.longitude}&categoryIds=${categoryIds}${filters.reviewsOnly ? '&reviewsOnly=true' : ''}${filters.chefsOnly ? '&chefsOnly=true' : ''}${filters.hasDishes ? '&hasDishes=true' : ''}${filters.sortBy && filters.sortBy !== 'default' ? `&sortBy=${filters.sortBy}` : ''}`,
     );
 
   const {
@@ -240,19 +243,25 @@ export default function ReelsComponent({ amIFocused }) {
         </TouchableOpacity>
       </View>
       <TouchableOpacity
-        onPress={() => {
-          navigation.navigate(StackNav.SelectCategory, {
-            setcategoryIds,
-            categoryIds,
-            setFilteredData: setFilteredData,
-          });
-        }}
+        onPress={() => filtersSheetRef.current?.show()}
         style={localStyles.headerContainer2}>
-        <MaterialCommunityIcons
-          name={categoryIds?.length ? 'tune' : 'tune-variant'}
-          size={moderateScale(30)}
-          color={categoryIds?.length ? colors.primary : colors.white}
+        <Ionicons
+          name={(categoryIds?.length || Object.values(filters).some(v => v && v !== 'default')) ? 'options' : 'options-outline'}
+          size={moderateScale(26)}
+          color={(categoryIds?.length || Object.values(filters).some(v => v && v !== 'default')) ? colors.primary : colors.white}
         />
+        {(() => {
+          const count = categoryIds.length +
+            (filters.reviewsOnly ? 1 : 0) +
+            (filters.chefsOnly ? 1 : 0) +
+            (filters.hasDishes ? 1 : 0) +
+            (filters.sortBy && filters.sortBy !== 'default' ? 1 : 0);
+          return count > 0 ? (
+            <View style={[localStyles.filterBadge, { backgroundColor: colors.primary }]}>
+              <ZText type="s10" color={colors.white}>{count}</ZText>
+            </View>
+          ) : null;
+        })()}
       </TouchableOpacity>
 
       <ReelsList
@@ -292,6 +301,13 @@ export default function ReelsComponent({ amIFocused }) {
         description={selectedDescription}
       />
       <Locations SheetRef={locationSheetRef} selectedGov={selectedGov} onClose={() => setIsLocationOpen(false)} />
+      <ReelFiltersSheet
+        sheetRef={filtersSheetRef}
+        filters={filters}
+        categoryIds={categoryIds}
+        onApplyFilters={setFilters}
+        onApplyCategories={setcategoryIds}
+      />
       {/* {!adFailedToLoad && (
         <View style={localStyles.bannerContainer}>
           <BannerAd
@@ -380,6 +396,17 @@ const localStyles = StyleSheet.create({
     zIndex: 1,
     right: 30,
     ...styles.rowSpaceBetween,
+  },
+  filterBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -6,
+    minWidth: moderateScale(16),
+    height: moderateScale(16),
+    borderRadius: moderateScale(8),
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: moderateScale(3),
   },
   headerInnerContainer: {
     ...styles.flex,

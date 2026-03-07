@@ -274,6 +274,7 @@ const OrderTracking = () => {
     switch (status) {
       case 'pending':
         return colors.warning || '#FF9800';
+      case 'awaiting_confirmation':
       case 'chef_review':
         return colors.info || '#2196F3';
       case 'confirmed':
@@ -296,6 +297,8 @@ const OrderTracking = () => {
     switch (status) {
       case 'pending':
         return strings.orderPlaced;
+      case 'awaiting_confirmation':
+        return strings.awaitingConfirmation;
       case 'chef_review':
         return strings.chefReviewing;
       case 'confirmed':
