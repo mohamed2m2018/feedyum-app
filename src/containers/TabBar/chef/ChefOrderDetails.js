@@ -7,6 +7,8 @@ import {
     TouchableOpacity,
     Image,
     ActivityIndicator,
+    Linking,
+    Platform,
 } from 'react-native';
 import { useSelector } from 'react-redux';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -442,15 +444,38 @@ const ChefOrderDetailsScreen = () => {
                             </View>
                         )}
                         {order.deliveryAddress?.nameLine && (
-                            <View style={localStyles.infoRow}>
-                                <Ionicons
-                                    name="location-outline"
-                                    size={moderateScale(20)}
-                                    color={colors.grayScale7}
-                                />
-                                <ZText type="M16" style={localStyles.infoText}>
-                                    {order.deliveryAddress.nameLine}
-                                </ZText>
+                            <View style={[localStyles.infoRow, { justifyContent: 'space-between' }]}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                                    <Ionicons
+                                        name="location-outline"
+                                        size={moderateScale(20)}
+                                        color={colors.grayScale7}
+                                    />
+                                    <ZText type="M16" style={[localStyles.infoText, { flex: 1 }]}>
+                                        {order.deliveryAddress.nameLine}
+                                    </ZText>
+                                </View>
+                                {order.deliveryAddress?.location?.lat && order.deliveryAddress?.location?.long && (
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            const lat = order.deliveryAddress.location.lat;
+                                            const lng = order.deliveryAddress.location.long;
+                                            const url = Platform.select({
+                                                ios: `maps:0,0?q=${lat},${lng}`,
+                                                android: `geo:${lat},${lng}?q=${lat},${lng}`,
+                                            });
+                                            Linking.openURL(url).catch(() => {
+                                                Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`);
+                                            });
+                                        }}
+                                        style={{
+                                            padding: moderateScale(6),
+                                            marginLeft: moderateScale(8),
+                                        }}
+                                    >
+                                        <Ionicons name="navigate" size={moderateScale(20)} color={colors.primary} />
+                                    </TouchableOpacity>
+                                )}
                             </View>
                         )}
                     </View>
