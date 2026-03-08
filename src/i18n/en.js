@@ -440,7 +440,7 @@ export default {
   notFollowing:
     'You are not Following anyone. Watch more reels and decide who to follow.',
   notFollowingUser: 'This user is not Following anyone',
-  noFollower: 'You have no followers, try to publish something :D',
+  noFollower: 'No followers yet. Share your dishes to start building your community!',
   noFollowerUser: 'This user has no followers',
   dangerousOrganizationsIndividuals: 'Dangerous organizations/individuals',
   fraudsScams: 'Frauds & Scams',

@@ -425,7 +425,7 @@ export default {
   notFollowing:
     'أنت لا تتابع أي شخص. شاهد المزيد من الريلز وقرر من ستتابع.',
   notFollowingUser: 'هذا المستخدم لا يقوم بمتابعة أحد',
-  noFollower: 'ليس لديك أي متابعين، جرب نشر شيء :D',
+  noFollower: 'لا يوجد متابعون بعد. شارك أطباقك لبناء مجتمعك!',
   noFollowerUser: 'هذا المستخدم ليس لديه متابعين',
   dangerousOrganizationsIndividuals: 'المنظمات / الأفراد الخطرة',
   fraudsScams: 'الاحتيال',

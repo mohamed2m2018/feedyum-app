@@ -153,7 +153,7 @@ function DishSearchResultCard({ dish, style }) {
             />
 
             {/* Info Section */}
-            <View style={[localStyles.info, isRTL && styles.itemsEnd]}>
+            <View style={[localStyles.info, isRTL && localStyles.infoRTL]}>
                 {/* Dish Name */}
                 <ZText type="b16" numberOfLines={1}>
                     {dish?.name || strings.unknownDish}
@@ -243,6 +243,7 @@ const localStyles = StyleSheet.create({
         shadowRadius: 8,
         elevation: 3,
     },
+
     image: {
         width: moderateScale(90),
         height: moderateScale(90),
@@ -250,9 +251,12 @@ const localStyles = StyleSheet.create({
     },
     info: {
         flex: 1,
-        marginLeft: moderateScale(12),
+        marginStart: moderateScale(12),
         justifyContent: 'center',
         gap: moderateScale(3),
+    },
+    infoRTL: {
+        alignItems: 'flex-end',
     },
     ratingRow: {
         flexDirection: 'row',
@@ -272,7 +276,7 @@ const localStyles = StyleSheet.create({
         borderRadius: moderateScale(6),
     },
     addButtonWrap: {
-        marginLeft: moderateScale(8),
+        marginStart: moderateScale(8),
     },
     addButton: {
         width: moderateScale(38),
