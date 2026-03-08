@@ -97,16 +97,16 @@ class AppInitializer {
   static showDeferredLinkWelcome(type, contentId) {
     // Optional: Show a welcome toast or modal for users who just installed the app
     const messages = {
-      reel: 'Welcome to FoodTok! Check out this amazing recipe 🍽️',
-      profile: 'Welcome to FoodTok! Discover this food creator 👨‍🍳',
-      chefProfile: 'Welcome to FoodTok! Meet this talented chef 👨‍🍳',
-      chefMenu: 'Welcome to FoodTok! Browse this delicious menu 📋',
-      menu: 'Welcome to FoodTok! Explore this menu 🍽️',
-      dish: 'Welcome to FoodTok! Check out this recipe 🍝',
-      live: 'Welcome to FoodTok! Join this live session 🔴'
+      reel: 'Welcome to FeedYum! Check out this amazing recipe 🍽️',
+      profile: 'Welcome to FeedYum! Discover this food creator 👨‍🍳',
+      chefProfile: 'Welcome to FeedYum! Meet this talented chef 👨‍🍳',
+      chefMenu: 'Welcome to FeedYum! Browse this delicious menu 📋',
+      menu: 'Welcome to FeedYum! Explore this menu 🍽️',
+      dish: 'Welcome to FeedYum! Check out this recipe 🍝',
+      live: 'Welcome to FeedYum! Join this live session 🔴'
     };
 
-    const message = messages[type] || 'Welcome to FoodTok! 🎉';
+    const message = messages[type] || 'Welcome to FeedYum! 🎉';
 
     // You can implement a toast or modal here
     // Example with react-native-toast-message (if installed)

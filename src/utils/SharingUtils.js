@@ -65,14 +65,14 @@ class SharingUtils {
     const shareLinks = DeepLinkingService.generateShareableLink(type, contentId, customParams);
 
     const fallbackMessages = {
-      reel: 'Check out this amazing reel on FoodTok!',
-      profile: 'Check out this profile on FoodTok!',
-      chefProfile: 'Check out this amazing chef on FoodTok!',
-      chefMenu: 'Check out this delicious menu on FoodTok!',
-      menu: 'Check out this menu on FoodTok!',
-      dish: 'Check out this delicious dish on FoodTok!',
-      live: 'Join me live on FoodTok!',
-      story: 'Check out this story on FoodTok!'
+      reel: 'Check out this amazing reel on FeedYum!',
+      profile: 'Check out this profile on FeedYum!',
+      chefProfile: 'Check out this amazing chef on FeedYum!',
+      chefMenu: 'Check out this delicious menu on FeedYum!',
+      menu: 'Check out this menu on FeedYum!',
+      dish: 'Check out this delicious dish on FeedYum!',
+      live: 'Join me live on FeedYum!',
+      story: 'Check out this story on FeedYum!'
     };
 
     return {
