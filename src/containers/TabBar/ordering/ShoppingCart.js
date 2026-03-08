@@ -7,13 +7,14 @@ import {
   TouchableOpacity,
   TextInput,
   Platform,
-  KeyboardAvoidingView
+  KeyboardAvoidingView,
+  ActivityIndicator
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 import { useQueryClient } from 'react-query';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { showActionDialog, showErrorToast, showInfoToast } from '../../../utils/toast';
+import { showActionDialog, showErrorToast, showInfoToast, showSuccessToast } from '../../../utils/toast';
 import { ALERT_TYPE } from 'react-native-alert-notification';
 import ZText from '../../../components/common/ZText';
 import ZHeader from '../../../components/common/ZHeader';
@@ -30,9 +31,12 @@ import {
   selectCartItems,
   selectCartSubtotal,
   selectCartChef,
+  selectCartPromocode,
   updateQuantity,
   removeFromCart,
   clearCart,
+  applyPromocode,
+  removePromocode,
 } from '../../../redux/reducer/cartSlice';
 import {
   placeOrder,
@@ -55,6 +59,7 @@ const ShoppingCart = () => {
   const cartItems = useSelector(selectCartItems);
   const subtotal = useSelector(selectCartSubtotal);
   const chef = useSelector(selectCartChef);
+  const appliedPromo = useSelector(selectCartPromocode);
   const isPlacingOrder = useSelector(selectOrderPlacing);
   const orderError = useSelector(selectOrderError);
   const { selectedAddress, addresses } = useSelector(state => state.address);
@@ -64,6 +69,12 @@ const ShoppingCart = () => {
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [calculatedDeliveryFee, setCalculatedDeliveryFee] = useState(null);
   const [loadingDeliveryFee, setLoadingDeliveryFee] = useState(false);
+
+  // Promo code state
+  const [promoCode, setPromoCode] = useState('');
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [promoError, setPromoError] = useState('');
+  const [promoExpanded, setPromoExpanded] = useState(false);
 
   // Load addresses when component mounts and set default if needed
   useEffect(() => {
@@ -157,6 +168,45 @@ const ShoppingCart = () => {
       onConfirm: () => dispatch(clearCart()),
     });
   }, []);
+
+  // Promo code handlers
+  const handleApplyPromo = useCallback(async () => {
+    const code = promoCode.trim();
+    if (!code) {
+      setPromoError(strings.enterPromoCode);
+      return;
+    }
+    setPromoLoading(true);
+    setPromoError('');
+    try {
+      const response = await request.post('/promocode/validate', {
+        code,
+        orderAmount: subtotal,
+        chefId: chef?.id,
+      });
+      if (response.data?.success) {
+        dispatch(applyPromocode({
+          code: code.toUpperCase(),
+          discountAmount: response.data.discountAmount,
+          discountType: response.data.discountType,
+        }));
+        showSuccessToast(strings.successExclamation, strings.promoCodeApplied);
+      } else {
+        setPromoError(response.data?.message || strings.promoCodeInvalidMsg);
+      }
+    } catch (err) {
+      const msg = err?.response?.data?.message || strings.failedToValidatePromoCode;
+      setPromoError(msg);
+    } finally {
+      setPromoLoading(false);
+    }
+  }, [promoCode, subtotal, chef?.id, dispatch]);
+
+  const handleRemovePromo = useCallback(() => {
+    dispatch(removePromocode());
+    setPromoCode('');
+    setPromoError('');
+  }, [dispatch]);
 
   const handleCheckout = async () => {
     // Block guests from checkout
@@ -261,6 +311,13 @@ const ShoppingCart = () => {
               };
             })(),
             notes: specialInstructions || '', // Backend expects 'notes' not 'specialInstructions'
+            ...(appliedPromo && {
+              promocode: {
+                code: appliedPromo.code,
+                discountAmount: appliedPromo.discountAmount,
+                discountType: appliedPromo.discountType,
+              },
+            }),
           };
           // Place real order using Redux thunk
           const newOrder = await dispatch(placeOrder(orderData));
@@ -469,6 +526,82 @@ const ShoppingCart = () => {
         </ZText>
       </View>
 
+      {/* Promo Code Section */}
+      <View style={localStyles.promoSection}>
+        {!appliedPromo ? (
+          <>
+            <TouchableOpacity
+              onPress={() => setPromoExpanded(!promoExpanded)}
+              style={localStyles.promoToggle}
+            >
+              <Ionicons name="pricetag-outline" size={moderateScale(18)} color={colors.primary} />
+              <ZText type="M14" color={colors.primary} style={{ marginLeft: moderateScale(8), flex: 1 }}>
+                {strings.havePromoCode}
+              </ZText>
+              <Ionicons
+                name={promoExpanded ? 'chevron-up' : 'chevron-down'}
+                size={moderateScale(16)}
+                color={colors.primary}
+              />
+            </TouchableOpacity>
+            {promoExpanded && (
+              <View style={localStyles.promoInputRow}>
+                <TextInput
+                  style={[
+                    localStyles.promoInput,
+                    {
+                      backgroundColor: colors.inputBg,
+                      borderColor: promoError ? colors.error : (colors.borderColor || colors.grayScale3),
+                      color: colors.textColor,
+                    }
+                  ]}
+                  placeholder={strings.enterPromoCodePlaceholder}
+                  placeholderTextColor={colors.grayScale7}
+                  value={promoCode}
+                  onChangeText={(text) => { setPromoCode(text); setPromoError(''); }}
+                  autoCapitalize="characters"
+                  editable={!promoLoading}
+                />
+                <TouchableOpacity
+                  style={[
+                    localStyles.promoApplyButton,
+                    { backgroundColor: colors.primary, opacity: promoLoading ? 0.6 : 1 }
+                  ]}
+                  onPress={handleApplyPromo}
+                  disabled={promoLoading}
+                >
+                  {promoLoading ? (
+                    <ActivityIndicator size="small" color={colors.white} />
+                  ) : (
+                    <ZText type="B14" color={colors.white}>{strings.apply}</ZText>
+                  )}
+                </TouchableOpacity>
+              </View>
+            )}
+            {promoError ? (
+              <ZText type="M12" color={colors.error} style={{ marginTop: moderateScale(6) }}>
+                {promoError}
+              </ZText>
+            ) : null}
+          </>
+        ) : (
+          <View style={[localStyles.promoAppliedRow, { backgroundColor: colors.primary + '10' }]}>
+            <Ionicons name="checkmark-circle" size={moderateScale(18)} color={colors.primary} />
+            <View style={{ flex: 1, marginLeft: moderateScale(8) }}>
+              <ZText type="B14" color={colors.primary}>
+                {appliedPromo.code}
+              </ZText>
+              <ZText type="M12" color={colors.grayScale7}>
+                -{appliedPromo.discountAmount.toFixed(0)} {strings.EGP} {strings.discount.toLowerCase()}
+              </ZText>
+            </View>
+            <TouchableOpacity onPress={handleRemovePromo} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+              <Ionicons name="close-circle" size={moderateScale(22)} color={colors.error} />
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
+
       <View style={localStyles.summaryContainer}>
         <View style={localStyles.summaryRow}>
           <ZText type="M16" color={colors.textColor}>
@@ -497,14 +630,29 @@ const ShoppingCart = () => {
           </ZText>
         )}
 
+        {appliedPromo && (
+          <View style={localStyles.summaryRow}>
+            <ZText type="M14" color={colors.primary}>
+              {strings.discount}
+            </ZText>
+            <ZText type="B14" color={colors.primary}>
+              -{appliedPromo.discountAmount.toFixed(0)} {strings.EGP}
+            </ZText>
+          </View>
+        )}
+
         <View style={[localStyles.summaryRow, localStyles.totalRow]}>
           <ZText type="B18" color={colors.textColor}>
             {strings.total}
           </ZText>
           <ZText type="B18" color={colors.primary}>
-            {calculatedDeliveryFee !== null
-              ? `${(subtotal + calculatedDeliveryFee).toFixed(0)} ${strings.EGP}`
-              : `${cartSummary.formattedSubtotal} ${strings.EGP} ${strings.plusDelivery}`}
+            {(() => {
+              const discount = appliedPromo?.discountAmount || 0;
+              if (calculatedDeliveryFee !== null) {
+                return `${Math.max(0, subtotal + calculatedDeliveryFee - discount).toFixed(0)} ${strings.EGP}`;
+              }
+              return `${Math.max(0, subtotal - discount).toFixed(0)} ${strings.EGP} ${strings.plusDelivery}`;
+            })()}
           </ZText>
         </View>
       </View>
@@ -791,6 +939,46 @@ const localStyles = StyleSheet.create({
   characterCount: {
     marginTop: moderateScale(4),
     textAlign: 'right',
+  },
+  // Promo code styles
+  promoSection: {
+    marginBottom: moderateScale(20),
+    paddingBottom: moderateScale(16),
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.1)',
+  },
+  promoToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: moderateScale(4),
+  },
+  promoInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: moderateScale(10),
+    gap: moderateScale(8),
+  },
+  promoInput: {
+    flex: 1,
+    paddingHorizontal: moderateScale(12),
+    paddingVertical: moderateScale(10),
+    borderRadius: moderateScale(8),
+    borderWidth: 1,
+    fontSize: moderateScale(14),
+  },
+  promoApplyButton: {
+    paddingHorizontal: moderateScale(20),
+    paddingVertical: moderateScale(10),
+    borderRadius: moderateScale(8),
+    justifyContent: 'center',
+    alignItems: 'center',
+    minWidth: moderateScale(70),
+  },
+  promoAppliedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: moderateScale(12),
+    borderRadius: moderateScale(10),
   },
 });
 

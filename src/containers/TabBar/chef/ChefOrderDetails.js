@@ -516,6 +516,12 @@ const ChefOrderDetailsScreen = () => {
                                 <ZText type="M16">{order.tax?.toFixed(2) || '0.00'}</ZText>
                             </View>
                         )}
+                        {order.promocode?.discountAmount > 0 && (
+                            <View style={localStyles.summaryRow}>
+                                <ZText type="M16" color={colors.primary}>{strings.discount} ({order.promocode.code})</ZText>
+                                <ZText type="M16" color={colors.primary}>-{order.promocode.discountAmount?.toFixed(2)}</ZText>
+                            </View>
+                        )}
                         <View style={[localStyles.summaryRow, localStyles.totalRow]}>
                             <ZText type="B18">{strings.total}</ZText>
                             <ZText type="B18" color={colors.primary}>

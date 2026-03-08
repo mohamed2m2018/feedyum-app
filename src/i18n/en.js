@@ -1204,6 +1204,7 @@ export default {
   remove: 'Remove',
   havePromoCode: 'Have a promo code?',
   apply: 'Apply',
+  promoCodeApplied: 'Promo code applied!',
   reviewNow: 'Review Now',
   loadingWallet: 'Loading wallet...',
   failedToLoadWallet: 'Failed to load wallet information',

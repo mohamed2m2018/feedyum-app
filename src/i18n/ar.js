@@ -1210,6 +1210,7 @@ export default {
   remove: 'إزالة',
   havePromoCode: 'هل لديك كود خصم؟',
   apply: 'تطبيق',
+  promoCodeApplied: 'تم تطبيق كود الخصم!',
   reviewNow: 'قيم الآن',
   loadingWallet: 'جاري تحميل المحفظة...',
   failedToLoadWallet: 'فشل في تحميل معلومات المحفظة',

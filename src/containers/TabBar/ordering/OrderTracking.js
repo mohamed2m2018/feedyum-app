@@ -747,6 +747,15 @@ const OrderTracking = () => {
           </Text>
         </View>
 
+        {currentOrder.promocode?.discountAmount > 0 && (
+          <View style={localStyles.pricingRow}>
+            <Text style={{ fontSize: 14, color: '#FF4D67' }}>{strings.discount} ({currentOrder.promocode.code})</Text>
+            <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#FF4D67' }}>
+              -{currentOrder.promocode.discountAmount.toFixed(2)} {strings.currency}
+            </Text>
+          </View>
+        )}
+
         <View style={[localStyles.pricingRow, localStyles.totalRow]}>
           <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#000000' }}>
             {strings.total}

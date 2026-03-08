@@ -121,7 +121,8 @@ const OrderReviewModal = ({ visible, order, onClose, onAccept, onReject }) => {
   const calculateTotal = () => {
     const subtotal = order?.subtotal || 0;
     const fee = parseFloat(deliveryFee) || 0;
-    return subtotal + fee;
+    const discount = order?.promocode?.discountAmount || 0;
+    return subtotal + fee - discount;
   };
 
   const renderCustomerInfo = () => (
@@ -330,6 +331,17 @@ const OrderReviewModal = ({ visible, order, onClose, onAccept, onReject }) => {
           {parseFloat(deliveryFee || 0).toFixed(2)}
         </ZText>
       </View>
+
+      {order?.promocode?.discountAmount > 0 && (
+        <View style={localStyles.pricingRow}>
+          <ZText type="M14" color={colors.primary}>
+            {strings.discount} ({order.promocode.code})
+          </ZText>
+          <ZText type="B14" color={colors.primary}>
+            -{order.promocode.discountAmount?.toFixed(2)}
+          </ZText>
+        </View>
+      )}
 
       <View style={[localStyles.pricingRow, localStyles.totalRow]}>
         <ZText type="B16" color={colors.textColor}>
