@@ -1,0 +1,291 @@
+// Library import
+import React, { memo, useState, useEffect } from 'react';
+import {
+    View,
+    StyleSheet,
+    TouchableOpacity,
+    Image,
+    I18nManager,
+    Animated,
+} from 'react-native';
+import { useSelector, useDispatch } from 'react-redux';
+import { useNavigation } from '@react-navigation/native';
+import { useQuery } from 'react-query';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+
+// Local imports
+import ZText from './common/ZText';
+import { moderateScale } from '../common/constants';
+import { styles } from '../themes';
+import strings from '../i18n/strings';
+import images from '../assets/images';
+import request from '../api/request';
+import { useLocation } from '../navigation/locationContext';
+import {
+    addToCart,
+    selectCartItems,
+    selectPendingConflictItem,
+    clearCartAndAddPending,
+    clearPendingConflictItem,
+} from '../redux/reducer/cartSlice';
+import { showActionDialog, showSuccessToast, showErrorToast, ALERT_TYPE } from '../utils/toast';
+import { StackNav } from '../navigation/NavigationKeys';
+
+/**
+ * DishSearchResultCard - Individual dish card for search results
+ * Shows dish image, name, kitchen name, price, rating, delivery badge, and add-to-cart
+ * Design: Horizontal card layout (image left, info right) for easy scanning
+ */
+function DishSearchResultCard({ dish, style }) {
+    const colors = useSelector(state => state.theme.theme);
+    const cartItems = useSelector(selectCartItems);
+    const pendingConflictItem = useSelector(selectPendingConflictItem);
+    const dispatch = useDispatch();
+    const navigation = useNavigation();
+    const isRTL = I18nManager.isRTL;
+    const [scaleAnim] = useState(new Animated.Value(1));
+
+    // Get quantity from Redux cart
+    const quantity = cartItems.find(item => item.dishId === dish?._id)?.quantity || 0;
+
+    // Derive chef info
+    const chef = dish?.chef || dish?.user || (typeof dish?.user_id === 'object' ? dish.user_id : null);
+    const chefId = chef?._id || dish?.userId || dish?.chefId;
+    const chefName = chef?.fullName || chef?.username || '';
+
+    // Location for delivery check
+    const location = useLocation();
+    const userLat = location?.latitude;
+    const userLng = location?.longitude;
+
+    // Check delivery eligibility
+    const { data: deliveryData } = useQuery(
+        ['deliveryEligibility', chefId, userLat, userLng],
+        async () => {
+            const response = await request.get(
+                `/orders/check-delivery/${chefId}?lat=${userLat}&long=${userLng}`
+            );
+            return response.data;
+        },
+        {
+            enabled: !!chefId && !!userLat && !!userLng,
+            staleTime: 1000 * 60 * 5,
+        }
+    );
+
+    // Handle cart conflict
+    useEffect(() => {
+        if (pendingConflictItem) {
+            showActionDialog({
+                type: ALERT_TYPE.WARNING,
+                title: strings.differentChefTitle,
+                message: strings.differentChefMessage,
+                confirmText: strings.clearCart,
+                cancelText: strings.viewCart,
+                onConfirm: () => {
+                    dispatch(clearCartAndAddPending());
+                    showSuccessToast(strings.dishAddedTitle, strings.formatString(strings.dishAddedMessage, pendingConflictItem.dish?.name));
+                },
+                onCancel: () => {
+                    dispatch(clearPendingConflictItem());
+                    navigation.navigate(StackNav.ShoppingCart);
+                },
+            });
+        }
+    }, [pendingConflictItem, dispatch, navigation]);
+
+    const handlePress = () => {
+        navigation.navigate(StackNav.DishDetail, {
+            dishId: dish._id,
+            chefId: chefId,
+        });
+    };
+
+    const handleChefPress = () => {
+        navigation.navigate(StackNav.ChefMenu, {
+            chefId: chefId,
+            chefName: chefName,
+        });
+    };
+
+    const handleAddPress = () => {
+        if (deliveryData && !deliveryData.canDeliver) {
+            const distanceInfo = deliveryData.nearestDistance
+                ? ` (${(strings.distanceAway || '{0} km').replace('{0}', deliveryData.nearestDistance)})`
+                : '';
+            showErrorToast(
+                strings.doesNotDeliverHere || 'Does not deliver here',
+                (strings.kitchenDoesNotDeliverMessage || 'This kitchen cannot deliver to your location.') + distanceInfo
+            );
+            return;
+        }
+
+        Animated.sequence([
+            Animated.spring(scaleAnim, { toValue: 1.15, friction: 3, useNativeDriver: true }),
+            Animated.spring(scaleAnim, { toValue: 1, friction: 3, useNativeDriver: true }),
+        ]).start();
+
+        dispatch(addToCart({
+            dish: dish,
+            chefId: chefId,
+            chefName: chefName,
+            quantity: 1,
+        }));
+    };
+
+    const price = dish?.price || 0;
+    const rating = dish?.averageRating || dish?.average_rating || 0;
+    const ratingCount = dish?.ratingCount || dish?.reviewCount || 0;
+    const imageUri = dish?.image || dish?.poster || dish?.avatarUri;
+    const canDeliver = deliveryData?.canDeliver;
+
+    return (
+        <TouchableOpacity
+            onPress={handlePress}
+            activeOpacity={0.95}
+            style={[localStyles.container, { backgroundColor: colors.inputBg }, style]}
+        >
+            {/* Dish Image */}
+            <Image
+                source={imageUri ? { uri: imageUri } : images.post}
+                style={localStyles.image}
+                resizeMode="cover"
+            />
+
+            {/* Info Section */}
+            <View style={[localStyles.info, isRTL && styles.itemsEnd]}>
+                {/* Dish Name */}
+                <ZText type="b16" numberOfLines={1}>
+                    {dish?.name || strings.unknownDish}
+                </ZText>
+
+                {/* Kitchen Name (tappable) */}
+                <TouchableOpacity onPress={handleChefPress} activeOpacity={0.7}>
+                    <ZText type="m12" color={colors.grayScale5} numberOfLines={1}>
+                        {chefName}
+                    </ZText>
+                </TouchableOpacity>
+
+                {/* Rating Row */}
+                {rating > 0 && (
+                    <View style={[localStyles.ratingRow, isRTL && styles.flexRowReverse]}>
+                        <Ionicons name="star" size={12} color="#FFD700" />
+                        <ZText type="m12" color={colors.textColor} style={styles.ml5}>
+                            {rating.toFixed(1)}
+                        </ZText>
+                        {ratingCount > 0 && (
+                            <ZText type="m11" color={colors.grayScale5} style={styles.ml5}>
+                                ({ratingCount})
+                            </ZText>
+                        )}
+                    </View>
+                )}
+
+                {/* Price + Delivery Badge Row */}
+                <View style={[localStyles.bottomRow, isRTL && styles.flexRowReverse]}>
+                    <ZText type="b16" color={colors.primary}>
+                        {price} {strings.EGP}
+                    </ZText>
+
+                    {deliveryData && (
+                        <View style={[
+                            localStyles.deliveryBadge,
+                            { backgroundColor: canDeliver ? '#4CAF5015' : '#FF980015' },
+                        ]}>
+                            <Ionicons
+                                name={canDeliver ? 'checkmark-circle' : 'alert-circle-outline'}
+                                size={11}
+                                color={canDeliver ? '#4CAF50' : '#FF9800'}
+                            />
+                            <ZText
+                                type="m10"
+                                color={canDeliver ? '#4CAF50' : '#FF9800'}
+                                style={styles.ml5}
+                                numberOfLines={1}
+                            >
+                                {canDeliver
+                                    ? (strings.delivers || 'Delivers')
+                                    : (strings.noDelivery || 'No delivery')}
+                            </ZText>
+                        </View>
+                    )}
+                </View>
+            </View>
+
+            {/* Add to Cart Button */}
+            <Animated.View style={[localStyles.addButtonWrap, { transform: [{ scale: scaleAnim }] }]}>
+                <TouchableOpacity
+                    onPress={handleAddPress}
+                    activeOpacity={0.8}
+                    style={[localStyles.addButton, { backgroundColor: colors.primary }]}
+                >
+                    {quantity > 0 ? (
+                        <ZText type="b14" color={colors.white}>{quantity}</ZText>
+                    ) : (
+                        <Ionicons name="add" size={20} color={colors.white} />
+                    )}
+                </TouchableOpacity>
+            </Animated.View>
+        </TouchableOpacity>
+    );
+}
+
+const localStyles = StyleSheet.create({
+    container: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderRadius: moderateScale(14),
+        marginBottom: moderateScale(10),
+        padding: moderateScale(10),
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
+        elevation: 3,
+    },
+    image: {
+        width: moderateScale(90),
+        height: moderateScale(90),
+        borderRadius: moderateScale(12),
+    },
+    info: {
+        flex: 1,
+        marginLeft: moderateScale(12),
+        justifyContent: 'center',
+        gap: moderateScale(3),
+    },
+    ratingRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    bottomRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: moderateScale(8),
+        marginTop: moderateScale(2),
+    },
+    deliveryBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: moderateScale(6),
+        paddingVertical: moderateScale(2),
+        borderRadius: moderateScale(6),
+    },
+    addButtonWrap: {
+        marginLeft: moderateScale(8),
+    },
+    addButton: {
+        width: moderateScale(38),
+        height: moderateScale(38),
+        borderRadius: moderateScale(19),
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+});
+
+export default memo(DishSearchResultCard);

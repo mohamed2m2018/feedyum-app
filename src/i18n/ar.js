@@ -1122,6 +1122,7 @@ export default {
   createNewPromocode: 'إنشاء كود خصم جديد',
   promocode: 'كود الخصم',
   discountType: 'نوع الخصم',
+  off: 'خصم',
   percentage: 'نسبة مئوية',
   fixedAmount: 'مبلغ ثابت',
   discountValue: 'قيمة الخصم',
@@ -1685,6 +1686,9 @@ export default {
   kitchenDoesNotDeliverMessage: 'هذا المطبخ لا يوصل لموقعك.',
   ratedDishes: 'مقيّم',
   trySearching: 'جرب البحث عن:',
+  delivers: 'يوصّل',
+  noDelivery: 'لا يوصّل',
+  moreDishes: 'أطباق أخرى',
 
   // Translation & Bilingual Support
   translating: 'جاري الترجمة...',

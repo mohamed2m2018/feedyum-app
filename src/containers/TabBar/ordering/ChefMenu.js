@@ -816,8 +816,8 @@ const ChefMenu = () => {
               </View>
             </View>
 
-            {/* Delivery / Branches Card */}
-            {deliveryData ? (
+            {/* Delivery Card */}
+            {deliveryData && (
               <View style={[localStyles.statCard, { borderColor: colors.grayScale4 }]}>
                 <Ionicons
                   name={deliveryData.canDeliver ? 'checkmark-circle' : 'alert-circle'}
@@ -833,7 +833,10 @@ const ChefMenu = () => {
                   </ZText>
                 </View>
               </View>
-            ) : branchLocations.length > 0 ? (
+            )}
+
+            {/* Branches Card */}
+            {branchLocations.length > 0 && (
               <TouchableOpacity
                 onPress={() => locationsSheetRef.current?.show()}
                 activeOpacity={0.7}
@@ -851,7 +854,7 @@ const ChefMenu = () => {
                   <Ionicons name="chevron-forward" size={14} color={colors.grayScale6} style={{ marginLeft: moderateScale(4) }} />
                 </View>
               </TouchableOpacity>
-            ) : null}
+            )}
           </View>
         </View>
 

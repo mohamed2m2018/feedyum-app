@@ -1380,6 +1380,7 @@ export default {
   createNewPromocode: 'Create New Promocode',
   promocode: 'Promocode',
   discountType: 'Discount Type',
+  off: 'off',
   percentage: 'Percentage',
   fixedAmount: 'Fixed Amount',
   discountValue: 'Discount Value',
@@ -1702,6 +1703,9 @@ export default {
   kitchenDoesNotDeliverMessage: 'This kitchen cannot deliver to your location.',
   ratedDishes: 'rated',
   trySearching: 'Try searching:',
+  delivers: 'Delivers',
+  noDelivery: 'No delivery',
+  moreDishes: 'more dishes',
 
   // Translation & Bilingual Support
   translating: 'Translating...',

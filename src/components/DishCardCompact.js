@@ -12,7 +12,6 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 import { useQuery } from 'react-query';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import LinearGradient from 'react-native-linear-gradient';
 
 // Local imports
 import ZText from './common/ZText';
@@ -33,14 +32,16 @@ import { showActionDialog, showSuccessToast, showErrorToast, ALERT_TYPE } from '
 import { StackNav } from '../navigation/NavigationKeys';
 
 /**
- * DishCardCompact - Compact dish card for horizontal lists
- * Features: image, name, price, rating, add-to-cart with micro-animations
+ * DishCardCompact - Dish card with two variants:
+ *   - "compact" (default): Small card for horizontal lists
+ *   - "full": Full-width card with large image, used in KitchenWithDishesCard
  */
 function DishCardCompact({
     dish,
     onPress,
     onAddToCart,
     style,
+    variant = 'compact',
 }) {
     const colors = useSelector(state => state.theme.theme);
     const cartItems = useSelector(selectCartItems);
@@ -50,19 +51,21 @@ function DishCardCompact({
     const isRTL = I18nManager.isRTL;
     const [scaleAnim] = useState(new Animated.Value(1));
 
-    // Get quantity from Redux cart state (synced with actual cart)
+    const isFull = variant === 'full';
+
+    // Get quantity from Redux cart state
     const quantity = cartItems.find(item => item.dishId === dish?._id)?.quantity || 0;
 
     // Derive chefId from dish data
     const chef = dish?.user || dish?.chef;
     const effectiveChefId = chef?._id || dish?.userId || dish?.chefId;
 
-    // Get user's location for delivery check - use current location (respects delivery address)
+    // Get user's location for delivery check
     const location = useLocation();
     const userLat = location?.latitude;
     const userLng = location?.longitude;
 
-    // Check delivery eligibility to user's location
+    // Check delivery eligibility
     const { data: deliveryData } = useQuery(
         ['deliveryEligibility', effectiveChefId, userLat, userLng],
         async () => {
@@ -73,11 +76,11 @@ function DishCardCompact({
         },
         {
             enabled: !!effectiveChefId && !!userLat && !!userLng,
-            staleTime: 1000 * 60 * 5, // 5 minutes
+            staleTime: 1000 * 60 * 5,
         }
     );
 
-    // Handle cart conflict - show modal when user tries to add from different chef
+    // Handle cart conflict
     useEffect(() => {
         if (pendingConflictItem) {
             showActionDialog({
@@ -99,7 +102,7 @@ function DishCardCompact({
     }, [pendingConflictItem, dispatch, navigation]);
 
     const handleAddPress = () => {
-        // Block if kitchen doesn't deliver to user's location
+        // Block if kitchen doesn't deliver
         if (deliveryData && !deliveryData.canDeliver) {
             const distanceInfo = deliveryData.nearestDistance
                 ? ` (${(strings.distanceAway || '{0} km').replace('{0}', deliveryData.nearestDistance)})`
@@ -114,7 +117,7 @@ function DishCardCompact({
         // Animate button
         Animated.sequence([
             Animated.spring(scaleAnim, {
-                toValue: 1.2,
+                toValue: 1.15,
                 friction: 3,
                 useNativeDriver: true,
             }),
@@ -125,7 +128,6 @@ function DishCardCompact({
             }),
         ]).start();
 
-        // Dispatch to Redux cart - pass full dish object and extract chef info
         dispatch(addToCart({
             dish: dish,
             chefId: effectiveChefId,
@@ -144,22 +146,79 @@ function DishCardCompact({
     const rating = dish?.averageRating || 0;
     const imageUri = dish?.poster || dish?.image || dish?.avatarUri;
 
+    // ─── Full variant (large card inside KitchenWithDishesCard) ───
+    if (isFull) {
+        return (
+            <TouchableOpacity
+                onPress={handleCardPress}
+                activeOpacity={0.95}
+                style={[fullStyles.container, style]}
+            >
+                {/* Large Image */}
+                <View style={fullStyles.imageContainer}>
+                    <Image
+                        source={imageUri ? { uri: imageUri } : images.post}
+                        style={fullStyles.image}
+                        resizeMode="cover"
+                    />
+                </View>
+
+                {/* Info Row */}
+                <View style={[fullStyles.infoRow, isRTL && styles.flexRowReverse]}>
+                    <View style={[fullStyles.textBlock, isRTL && styles.itemsEnd]}>
+                        <ZText type="b16" numberOfLines={1}>
+                            {dish?.name || strings.unknownDish}
+                        </ZText>
+                        <View style={[fullStyles.priceRow, isRTL && styles.flexRowReverse]}>
+                            <ZText type="b14" color={colors.textColor}>
+                                {price} {strings.EGP}
+                            </ZText>
+                            {rating > 0 && (
+                                <View style={[fullStyles.ratingInline, isRTL && styles.flexRowReverse]}>
+                                    <Ionicons name="star" size={13} color="#FFD700" />
+                                    <ZText type="m12" color={colors.grayScale5} style={styles.ml5}>
+                                        {rating.toFixed(1)}
+                                    </ZText>
+                                </View>
+                            )}
+                        </View>
+                    </View>
+
+                    {/* Add Button */}
+                    <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+                        <TouchableOpacity
+                            onPress={handleAddPress}
+                            activeOpacity={0.8}
+                            style={[fullStyles.addButton, { backgroundColor: colors.primary }]}
+                        >
+                            {quantity > 0 ? (
+                                <ZText type="b14" color={colors.white}>{quantity}</ZText>
+                            ) : (
+                                <Ionicons name="add" size={22} color={colors.white} />
+                            )}
+                        </TouchableOpacity>
+                    </Animated.View>
+                </View>
+            </TouchableOpacity>
+        );
+    }
+
+    // ─── Compact variant (default, for standalone horizontal lists) ───
     return (
         <TouchableOpacity
             onPress={handleCardPress}
             activeOpacity={0.9}
-            style={[localStyles.container, { backgroundColor: colors.btnColor1 }, style]}
+            style={[compactStyles.container, { backgroundColor: colors.btnColor1 }, style]}
         >
             {/* Dish Image */}
-            <View style={localStyles.imageContainer}>
+            <View style={compactStyles.imageContainer}>
                 <Image
                     source={imageUri ? { uri: imageUri } : images.post}
-                    style={localStyles.image}
+                    style={compactStyles.image}
                     resizeMode="cover"
                 />
-                {/* Rating Badge */}
                 {rating > 0 && (
-                    <View style={[localStyles.ratingBadge, { backgroundColor: colors.darkBg + 'CC' }]}>
+                    <View style={[compactStyles.ratingBadge, { backgroundColor: colors.darkBg + 'CC' }]}>
                         <Ionicons name="star" size={10} color={colors.yellow} />
                         <ZText type="m10" color={colors.white} style={styles.ml5}>
                             {rating.toFixed(1)}
@@ -169,18 +228,17 @@ function DishCardCompact({
             </View>
 
             {/* Dish Info */}
-            <View style={localStyles.infoContainer}>
-                <ZText type="b14" numberOfLines={1} style={localStyles.dishName}>
+            <View style={compactStyles.infoContainer}>
+                <ZText type="b14" numberOfLines={1} style={compactStyles.dishName}>
                     {dish?.name || strings.unknownDish}
                 </ZText>
 
-                <View style={[localStyles.priceRow, isRTL && styles.flexRowReverse]}>
+                <View style={[compactStyles.priceRow, isRTL && styles.flexRowReverse]}>
                     <ZText type="b14" color={colors.primary}>
                         {price} {strings.EGP}
                     </ZText>
 
-                    {/* Rating display */}
-                    <View style={[localStyles.ratingDisplay, isRTL && styles.flexRowReverse]}>
+                    <View style={[compactStyles.ratingDisplay, isRTL && styles.flexRowReverse]}>
                         <Ionicons
                             name="star"
                             size={12}
@@ -202,32 +260,72 @@ function DishCardCompact({
                 <TouchableOpacity
                     onPress={handleAddPress}
                     activeOpacity={0.8}
-                    style={localStyles.addButton}
+                    style={[compactStyles.addButton, { backgroundColor: colors.primary }]}
                 >
-                    <LinearGradient
-                        colors={[colors.primary, colors.lightRed]}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                        style={localStyles.gradientAdd}
-                    >
-                        {quantity > 0 ? (
-                            <ZText type="b12" color={colors.white}>{quantity}</ZText>
-                        ) : (
-                            <Ionicons name="add" size={18} color={colors.white} />
-                        )}
-                    </LinearGradient>
+                    {quantity > 0 ? (
+                        <ZText type="b12" color={colors.white}>{quantity}</ZText>
+                    ) : (
+                        <Ionicons name="add" size={18} color={colors.white} />
+                    )}
                 </TouchableOpacity>
             </Animated.View>
         </TouchableOpacity>
     );
 }
 
-const localStyles = StyleSheet.create({
+// ─── Full variant styles ───
+const fullStyles = StyleSheet.create({
+    container: {
+        borderRadius: moderateScale(12),
+        overflow: 'hidden',
+    },
+    imageContainer: {
+        borderRadius: moderateScale(12),
+        overflow: 'hidden',
+    },
+    image: {
+        width: '100%',
+        height: moderateScale(180),
+    },
+    infoRow: {
+        ...styles.rowSpaceBetween,
+        ...styles.itemsCenter,
+        paddingTop: moderateScale(10),
+        paddingBottom: moderateScale(2),
+    },
+    textBlock: {
+        flex: 1,
+        marginRight: moderateScale(12),
+    },
+    priceRow: {
+        ...styles.flexRow,
+        ...styles.itemsCenter,
+        marginTop: moderateScale(2),
+        gap: moderateScale(8),
+    },
+    ratingInline: {
+        ...styles.flexRow,
+        ...styles.itemsCenter,
+    },
+    addButton: {
+        width: moderateScale(40),
+        height: moderateScale(40),
+        borderRadius: moderateScale(20),
+        ...styles.center,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 6,
+        elevation: 4,
+    },
+});
+
+// ─── Compact variant styles ───
+const compactStyles = StyleSheet.create({
     container: {
         width: moderateScale(140),
         borderRadius: moderateScale(12),
         overflow: 'hidden',
-        // Shadow
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
@@ -264,7 +362,7 @@ const localStyles = StyleSheet.create({
         ...styles.flexRow,
         ...styles.itemsCenter,
         ...styles.justifyBetween,
-        paddingRight: moderateScale(36), // Space for add button
+        paddingRight: moderateScale(36),
     },
     ratingDisplay: {
         ...styles.flexRow,
@@ -274,16 +372,13 @@ const localStyles = StyleSheet.create({
         position: 'absolute',
         bottom: moderateScale(8),
         right: moderateScale(8),
-    },
-    gradientAdd: {
         width: moderateScale(32),
         height: moderateScale(32),
         borderRadius: moderateScale(16),
         ...styles.center,
-        // Haptic-ready shadow
-        shadowColor: '#FF4D67',
+        shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.4,
+        shadowOpacity: 0.2,
         shadowRadius: 4,
         elevation: 4,
     },

@@ -17,11 +17,11 @@ import { moderateScale } from '../../../../common/constants';
 import { styles as globalStyles } from '../../../../themes';
 import strings from '../../../../i18n/strings';
 import request from '../../../../api/request';
-import KitchenWithDishesCard from '../../../../components/KitchenWithDishesCard';
+import DishSearchResultCard from '../../../../components/DishSearchResultCard';
 
 /**
- * DishSearchTab - Tab 1: "Discover"
- * Uses shared search query from parent
+ * DishSearchTab - Flat list of individual dishes for easy comparison
+ * Each dish shows as its own card with kitchen name as subtitle
  */
 export default function DishSearchTab({
     searchQuery = '',
@@ -31,7 +31,7 @@ export default function DishSearchTab({
 }) {
     const colors = useSelector(state => state.theme.theme);
 
-    // Fetch kitchens with dishes matching search
+    // Fetch dishes
     const {
         data,
         fetchNextPage,
@@ -42,7 +42,7 @@ export default function DishSearchTab({
     } = useInfiniteQuery(
         ['search_dishes_kitchens', searchQuery, useSemanticSearch, userLocation?.lat],
         async ({ pageParam = 1 }) => {
-            // Browse mode - get popular/all dishes when no search query
+            // Browse mode
             if (!searchQuery || searchQuery.trim().length < 2) {
                 const response = await request.get('/dishes', {
                     params: {
@@ -80,55 +80,30 @@ export default function DishSearchTab({
         },
     );
 
-    // Group dishes by chef/kitchen and normalize data
-    const groupedResults = useMemo(() => {
+    // Flatten all dishes into a single list (no grouping by kitchen)
+    const flatDishes = useMemo(() => {
         if (!data?.pages) return [];
 
         const allDishes = data.pages.flatMap(page => {
             return page?.data?.dishes || page?.dishes || page?.results || [];
         });
 
-        const kitchenMap = new Map();
-
-        allDishes.forEach(dish => {
-            // Backend returns kitchen data in different fields depending on API path
-            // dish.chef is preferred as it always includes full data with averageRating
-            const rawKitchen = dish.chef || dish.user || (typeof dish.user_id === 'object' ? dish.user_id : null);
-            if (!rawKitchen?._id) return;
-
-            if (!kitchenMap.has(rawKitchen._id)) {
-                // Normalize kitchen data - use backend's averageRating field
-                const normalizedKitchen = {
-                    ...rawKitchen,
-                    rating: rawKitchen.averageRating || 0,
-                };
-                kitchenMap.set(rawKitchen._id, {
-                    kitchen: normalizedKitchen,
-                    dishes: [],
-                });
-            }
-            kitchenMap.get(rawKitchen._id).dishes.push(dish);
+        // Deduplicate by _id
+        const seen = new Set();
+        return allDishes.filter(dish => {
+            if (!dish?._id || seen.has(dish._id)) return false;
+            seen.add(dish._id);
+            return true;
         });
-
-        return Array.from(kitchenMap.values());
     }, [data]);
 
-    const handleAddToCart = useCallback(dish => {
-        console.log('Added to cart:', dish.name);
-    }, []);
-
-    const renderKitchenCard = ({ item }) => (
-        <KitchenWithDishesCard
-            kitchen={item.kitchen}
-            dishes={item.dishes.slice(0, 5)}
-            onAddToCart={handleAddToCart}
-        />
-    );
+    const renderDishCard = useCallback(({ item: dish }) => (
+        <DishSearchResultCard dish={dish} />
+    ), []);
 
     const renderEmpty = () => {
         if (isLoading) return null;
 
-        // No results found
         return (
             <View style={localStyles.emptyContainer}>
                 <View style={[localStyles.emptyIconBg, { backgroundColor: colors.grayScale2 }]}>
@@ -166,9 +141,9 @@ export default function DishSearchTab({
     return (
         <View style={[{ flex: 1 }, rtlStyle]}>
             <FlatList
-                data={groupedResults}
-                renderItem={renderKitchenCard}
-                keyExtractor={(item, index) => item.kitchen?._id || `kitchen-${index}`}
+                data={flatDishes}
+                renderItem={renderDishCard}
+                keyExtractor={(item, index) => item?._id || `dish-${index}`}
                 ListEmptyComponent={renderEmpty}
                 ListFooterComponent={renderFooter}
                 onEndReached={() => hasNextPage && fetchNextPage()}
@@ -185,7 +160,7 @@ export default function DishSearchTab({
 
 const localStyles = StyleSheet.create({
     listContent: {
-        paddingHorizontal: moderateScale(16),
+        paddingHorizontal: moderateScale(12),
         paddingTop: moderateScale(8),
         paddingBottom: moderateScale(100),
         flexGrow: 1,
