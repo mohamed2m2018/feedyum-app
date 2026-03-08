@@ -256,7 +256,7 @@ const localStyles = StyleSheet.create({
         gap: moderateScale(3),
     },
     infoRTL: {
-        alignItems: 'flex-end',
+        alignItems: 'flex-start',
     },
     ratingRow: {
         flexDirection: 'row',
