@@ -42,7 +42,6 @@
           "apiKey": "***REMOVED***"
         }
       },
-
       "permissions": [
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.ACCESS_FINE_LOCATION",
@@ -125,8 +124,9 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "de19b9c5-a9b5-43c8-9d52-83a096b94c86"
+        "projectId": "98042cba-f7a5-408c-851b-15482b2769d6"
       }
-    }
+    },
+    "owner": "mohamed2m2035"
   }
 }
