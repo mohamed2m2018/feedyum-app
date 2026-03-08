@@ -1,3 +1,4 @@
+import React from 'react';
 // Tab Routes
 import Discover from '../containers/TabBar/discover/Discover';
 import Profile from '../containers/TabBar/profile/Profile';
@@ -67,6 +68,8 @@ import ChatScreen from '../containers/TabBar/ordering/Chat';
 import ChatList from '../containers/TabBar/ordering/ChatList';
 import Orders from '../containers/TabBar/orders/Orders';
 import Wallet from '../containers/TabBar/profile/Wallet';
+// Lazy-load PaymobCheckout to avoid crashing on startup if react-native-webview native module isn't available
+const PaymobCheckout = React.lazy(() => import('../containers/TabBar/profile/PaymobCheckout'));
 import ReviewReelCreator from '../components/ReviewReelCreator';
 import ReviewReelDetail from '../components/ReviewReelDetailView';
 import SavedAddresses from '../containers/TabBar/profile/SavedAddresses';
@@ -144,6 +147,7 @@ export const StackRoute = {
   ChatScreen,
   ChatList,
   Wallet,
+  PaymobCheckout,
   ReviewReelCreator,
   ReviewReelDetail,
   SavedAddresses,

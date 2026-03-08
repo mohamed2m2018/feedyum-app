@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   StyleSheet,
@@ -8,10 +8,12 @@ import {
   TextInput,
   Switch,
   ActivityIndicator,
+  Modal,
 } from 'react-native';
 import { showSuccessToast, showErrorToast, showInfoToast } from '../../../utils/toast';
 import { useSelector } from 'react-redux';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
+import { useFocusEffect } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 
@@ -25,6 +27,8 @@ import { moderateScale } from '../../../common/constants';
 import request from '../../../api/request';
 import strings from '../../../i18n/strings';
 import { useHandleAuth } from '../../../utils/useHandleAuth';
+import paymobService from '../../../api/paymobService';
+import { StackNav } from '../../../navigation/NavigationKeys';
 
 export default function Wallet({ navigation }) {
   const colors = useSelector(state => state.theme.theme);
@@ -45,6 +49,13 @@ export default function Wallet({ navigation }) {
   const [hasUsageLimit, setHasUsageLimit] = useState(false);
   const [hasMaxDiscount, setHasMaxDiscount] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
+
+  // Charge wallet state
+  const [showChargeModal, setShowChargeModal] = useState(false);
+  const [chargeAmount, setChargeAmount] = useState('');
+  const [isCharging, setIsCharging] = useState(false);
+
+  const PRESET_AMOUNTS = [50, 100, 200, 500];
 
   // Get current user
   const { data: userData } = useQuery('user', () => request.get('/user'), {
@@ -72,6 +83,15 @@ export default function Wallet({ navigation }) {
       onError: error => {
       },
     },
+  );
+
+  // Auto-refetch wallet when screen gains focus (e.g., returning from PaymobCheckout)
+  useFocusEffect(
+    useCallback(() => {
+      if (user?._id) {
+        refetch();
+      }
+    }, [user?._id])
   );
 
   // Get user's promocodes
@@ -172,23 +192,46 @@ export default function Wallet({ navigation }) {
     }
   };
 
-  const handlePayment = async () => {
-    if (!walletData?.summary?.isPaymentRequired) {
-      showInfoToast(strings.noPaymentRequired, strings.accountInGoodStanding);
+  const handlePayment = () => {
+    // Open charge modal with the due amount pre-filled
+    if (walletData?.summary?.isPaymentRequired) {
+      setChargeAmount(walletData.summary.paymentDueAmount.toFixed(0));
+    }
+    setShowChargeModal(true);
+  };
+
+  const handleChargeWallet = async () => {
+    const amount = parseFloat(chargeAmount);
+    if (!amount || amount <= 0) {
+      showErrorToast(strings.error, strings.enterValidAmount);
+      return;
+    }
+    if (amount < 10) {
+      showErrorToast(strings.error, strings.minChargeAmount);
+      return;
+    }
+    if (amount > 50000) {
+      showErrorToast(strings.error, strings.maxChargeAmount);
       return;
     }
 
-    showActionDialog({
-      type: ALERT_TYPE.WARNING,
-      title: strings.paymentRequiredTitle,
-      message: strings.paymentRequiredMessage.replace('{amount}', walletData.summary.paymentDueAmount.toFixed(2)),
-      confirmText: strings.payNow,
-      cancelText: strings.cancel,
-      onConfirm: () => {
-        // Navigate to payment screen or handle payment
-        showInfoToast(strings.paymentTitle, strings.paymentFunctionalityNotImplemented);
-      },
-    });
+    setIsCharging(true);
+    try {
+      const result = await paymobService.createPaymentIntention(amount);
+      setShowChargeModal(false);
+      setChargeAmount('');
+
+      // Navigate to checkout WebView
+      navigation.navigate(StackNav.PaymobCheckout, {
+        checkoutUrl: result.checkoutUrl,
+        transactionId: result.transactionId,
+        amount: amount,
+      });
+    } catch (error) {
+      showErrorToast(strings.error, error.message || strings.failedToCreatePayment);
+    } finally {
+      setIsCharging(false);
+    }
   };
 
   const handlePromocodeInputChange = (field, value) => {
@@ -332,16 +375,14 @@ export default function Wallet({ navigation }) {
                 localStyles.actionButton,
                 { backgroundColor: 'rgba(255,255,255,0.2)' },
               ]}
-              onPress={() =>
-                showInfoToast(strings.info, strings.noPaymentRequiredAtThisTime)
-              }>
+              onPress={() => setShowChargeModal(true)}>
               <Ionicons
-                name="checkmark-circle"
+                name="wallet-outline"
                 size={moderateScale(16)}
                 color={colors.white}
               />
               <ZText type="m12" color={colors.white} style={styles.ml5}>
-                {strings.goodStanding}
+                {strings.chargeWallet}
               </ZText>
             </TouchableOpacity>
           )}
@@ -1016,6 +1057,118 @@ export default function Wallet({ navigation }) {
     );
   }
 
+  const renderChargeModal = () => (
+    <Modal
+      visible={showChargeModal}
+      transparent={true}
+      animationType="slide"
+      onRequestClose={() => setShowChargeModal(false)}>
+      <View style={localStyles.modalOverlay}>
+        <View style={[localStyles.modalContent, { backgroundColor: colors.backgroundColor }]}>
+          <View style={localStyles.modalHeader}>
+            <ZText type="b18" color={colors.textColor}>
+              {strings.chargeWallet}
+            </ZText>
+            <TouchableOpacity onPress={() => setShowChargeModal(false)}>
+              <Ionicons
+                name="close"
+                size={moderateScale(24)}
+                color={colors.textColor}
+              />
+            </TouchableOpacity>
+          </View>
+
+          <ZText type="m14" color={colors.grayScale7} style={styles.mb15}>
+            {strings.chargeWalletDescription}
+          </ZText>
+
+          {/* Preset amounts */}
+          <View style={localStyles.presetAmountsContainer}>
+            {PRESET_AMOUNTS.map(preset => (
+              <TouchableOpacity
+                key={preset}
+                style={[
+                  localStyles.presetButton,
+                  {
+                    backgroundColor: chargeAmount === preset.toString()
+                      ? colors.primary
+                      : colors.inputBg,
+                    borderColor: chargeAmount === preset.toString()
+                      ? colors.primary
+                      : 'transparent',
+                  },
+                ]}
+                onPress={() => setChargeAmount(preset.toString())}>
+                <ZText
+                  type="b14"
+                  color={chargeAmount === preset.toString() ? colors.white : colors.textColor}>
+                  {preset}
+                </ZText>
+                <ZText
+                  type="m10"
+                  color={chargeAmount === preset.toString() ? colors.white : colors.grayScale7}>
+                  {strings.currency}
+                </ZText>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {/* Custom amount */}
+          <ZText type="m14" color={colors.textColor} style={styles.mb5}>
+            {strings.customAmount}
+          </ZText>
+          <TextInput
+            style={[
+              localStyles.textInput,
+              {
+                backgroundColor: colors.inputBg,
+                color: colors.textColor,
+                borderColor: colors.grayScale7 + '40',
+              },
+            ]}
+            placeholder={strings.enterAmountPlaceholder}
+            placeholderTextColor={colors.grayScale7}
+            value={chargeAmount}
+            onChangeText={setChargeAmount}
+            keyboardType="numeric"
+          />
+
+          <ZText type="m11" color={colors.grayScale7} style={styles.mt5}>
+            {strings.minChargeNote}
+          </ZText>
+
+          {/* Pay button */}
+          <TouchableOpacity
+            style={[
+              localStyles.chargeButton,
+              {
+                backgroundColor: colors.primary,
+                opacity: isCharging || !chargeAmount ? 0.6 : 1,
+              },
+            ]}
+            onPress={handleChargeWallet}
+            disabled={isCharging || !chargeAmount}>
+            {isCharging ? (
+              <ActivityIndicator size="small" color={colors.white} />
+            ) : (
+              <>
+                <Ionicons
+                  name="card-outline"
+                  size={moderateScale(18)}
+                  color={colors.white}
+                />
+                <ZText type="b14" color={colors.white} style={styles.ml10}>
+                  {strings.proceedToPayment}
+                  {chargeAmount ? ` - ${chargeAmount} ${strings.currency}` : ''}
+                </ZText>
+              </>
+            )}
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+
   return (
     <ZSafeAreaView>
       <ZHeader title={strings.wallet} showBack />
@@ -1031,6 +1184,8 @@ export default function Wallet({ navigation }) {
           {selectedTab === 'settings' && renderSettings()}
         </View>
       </ScrollView>
+
+      {renderChargeModal()}
     </ZSafeAreaView>
   );
 }
@@ -1240,5 +1395,44 @@ const localStyles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: moderateScale(8),
+  },
+  // Charge wallet modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    borderTopLeftRadius: moderateScale(24),
+    borderTopRightRadius: moderateScale(24),
+    padding: moderateScale(24),
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: moderateScale(12),
+  },
+  presetAmountsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: moderateScale(20),
+  },
+  presetButton: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: moderateScale(14),
+    marginHorizontal: moderateScale(4),
+    borderRadius: moderateScale(12),
+    borderWidth: 1.5,
+  },
+  chargeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: moderateScale(14),
+    borderRadius: moderateScale(12),
+    marginTop: moderateScale(20),
   },
 });

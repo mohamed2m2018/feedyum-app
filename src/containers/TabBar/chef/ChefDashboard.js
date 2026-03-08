@@ -1,15 +1,13 @@
 // Library imports
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import { useSelector } from 'react-redux';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 // Local imports
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
-import ZHeader from '../../../components/common/ZHeader';
 import ZText from '../../../components/common/ZText';
-import ZButton from '../../../components/common/ZButton';
 import DashboardCard from './components/DashboardCard';
 import HeaderIconWithBadge from '../../../components/common/HeaderIconWithBadge';
 import { useDashboardStats, useRecentActivity } from './hooks/useDashboardData';
@@ -45,6 +43,13 @@ export default function ChefDashboard() {
     await Promise.all([refetch(), refetchActivity()]);
     setRefreshing(false);
   };
+
+  // Refetch stats when screen gains focus (e.g. after returning from Wallet/payment)
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [refetch])
+  );
 
   const navigateToSection = (sectionName) => {
     // Navigate to specific management screens

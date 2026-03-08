@@ -69,6 +69,7 @@ export const StackNav = {
   Chat: 'Chat',
   ChatList: 'ChatList',
   Wallet: 'Wallet',
+  PaymobCheckout: 'PaymobCheckout',
   // Review System
   ReviewReelCreator: 'ReviewReelCreator',
   ReviewReelDetail: 'ReviewReelDetail',

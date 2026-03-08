@@ -302,6 +302,10 @@ export default function StackNavigation() {
         component={StackRoute.Wallet}
       />
       <Stack.Screen
+        name={StackNav.PaymobCheckout}
+        component={StackRoute.PaymobCheckout}
+      />
+      <Stack.Screen
         name={StackNav.MenuDetail}
         component={StackRoute.MenuDetail}
       />
