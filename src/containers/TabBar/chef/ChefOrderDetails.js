@@ -166,11 +166,12 @@ const ChefOrderDetailsScreen = () => {
                     icon: 'checkmark-done-outline',
                 };
             case 'cancelled':
+            case 'expired':
                 return {
                     color: colors.redColor,
                     backgroundColor: colors.redColor + '20',
-                    text: strings.cancelled,
-                    icon: 'close-circle-outline',
+                    text: status === 'expired' ? (strings.expired || 'Expired') : strings.cancelled,
+                    icon: status === 'expired' ? 'timer-outline' : 'close-circle-outline',
                 };
             default:
                 return {

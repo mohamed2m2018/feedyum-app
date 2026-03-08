@@ -960,8 +960,8 @@ export default function ChatScreen({ route }) {
 
 
   const renderInputToolbar = useCallback((props) => {
-    // Disable chat for cancelled orders
-    if (order?.status === 'cancelled') {
+    // Disable chat for cancelled/expired orders
+    if (order?.status === 'cancelled' || order?.status === 'expired') {
       return (
         <View style={{
           paddingVertical: moderateScale(14),

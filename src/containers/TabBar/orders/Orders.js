@@ -128,6 +128,7 @@ export default function Orders({ navigation }) {
       case 'completed':
         return colors.success || '#4CAF50';
       case 'cancelled':
+      case 'expired':
         return colors.error || '#F44336';
       default:
         return colors.grayScale7;
@@ -154,6 +155,8 @@ export default function Orders({ navigation }) {
         return strings.delivered || strings.completed;
       case 'cancelled':
         return strings.cancelled;
+      case 'expired':
+        return strings.expired;
       default:
         return status?.charAt(0).toUpperCase() + status?.slice(1) || 'Unknown';
     }

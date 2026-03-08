@@ -97,6 +97,11 @@ export const useRecentActivity = () => {
               color = '#F44336';
               message = strings.activityOrderCancelled.replace('{0}', orderNum);
               break;
+            case 'expired':
+              icon = 'timer-outline';
+              color = '#F44336';
+              message = (strings.activityOrderExpired || strings.activityOrderCancelled).replace('{0}', orderNum);
+              break;
             default:
               icon = 'receipt-outline';
               color = '#757575';

@@ -668,6 +668,7 @@ export default {
   readyForPickup: 'Ready for Pickup',
   completed: 'Completed',
   cancelled: 'Cancelled',
+  expired: 'Expired',
   delivered: 'Delivered',
   orderPlaced: 'Order Placed',
 
@@ -1259,6 +1260,7 @@ export default {
   delivering: 'DELIVERING',
   completed: 'COMPLETED',
   cancelled: 'CANCELLED',
+  expired: 'EXPIRED',
   browseMenu: 'Browse Menu',
   currentlyUnavailable: 'Currently Unavailable',
   addToCart: 'Add to Cart',

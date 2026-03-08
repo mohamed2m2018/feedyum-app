@@ -193,7 +193,7 @@ export default function ChatList({ navigation }) {
       case 'preparing': return colors.info || '#2196F3';
       case 'ready': return colors.success || '#4CAF50';
       case 'delivered': return colors.success || '#4CAF50';
-      case 'cancelled': return colors.error || '#F44336';
+      case 'cancelled': case 'expired': return colors.error || '#F44336';
       default: return colors.grayScale7;
     }
   };
@@ -207,6 +207,7 @@ export default function ChatList({ navigation }) {
       case 'ready': return strings.ready;
       case 'delivered': return strings.delivered;
       case 'cancelled': return strings.cancelled;
+      case 'expired': return strings.expired;
       default: return status?.charAt(0).toUpperCase() + status?.slice(1) || 'Unknown';
     }
   };

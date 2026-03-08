@@ -150,6 +150,7 @@ export default function OrderManagement() {
     { label: strings.ready, value: 'ready', color: colors.yellow, count: 0 },
     { label: strings.completed, value: 'completed', color: colors.primary, count: 0 },
     { label: strings.cancelled, value: 'cancelled', color: colors.redColor, count: 0 },
+    { label: strings.expired, value: 'expired', color: colors.redColor, count: 0 },
   ];
 
   // Fetch current user first

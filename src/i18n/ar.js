@@ -661,6 +661,7 @@ export default {
   readyForPickup: 'جاهز للاستلام',
   completed: 'مكتمل',
   cancelled: 'ملغي',
+  expired: 'منتهي الصلاحية',
   delivered: 'تم التوصيل',
   orderPlaced: 'تم وضع الطلب',
 
@@ -1265,6 +1266,7 @@ export default {
   delivering: 'جاري التوصيل',
   completed: 'مكتمل',
   cancelled: 'ملغي',
+  expired: 'منتهي الصلاحية',
   browseMenu: 'تصفح القائمة',
   currentlyUnavailable: 'غير متاح حالياً',
   addToCart: 'أضف للسلة',

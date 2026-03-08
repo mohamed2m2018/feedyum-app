@@ -120,7 +120,7 @@ const OrderTracking = () => {
       if (
         orderId &&
         currentOrder &&
-        !['delivered', 'cancelled', 'completed'].includes(currentOrder.status)
+        !['delivered', 'cancelled', 'completed', 'expired'].includes(currentOrder.status)
       ) {
         intervalRef.current = setInterval(async () => {
           try {
@@ -144,7 +144,7 @@ const OrderTracking = () => {
     // Start polling when order is active
     if (
       currentOrder &&
-      !['delivered', 'cancelled', 'completed'].includes(currentOrder.status)
+      !['delivered', 'cancelled', 'completed', 'expired'].includes(currentOrder.status)
     ) {
       startPolling();
     } else {
@@ -164,7 +164,7 @@ const OrderTracking = () => {
         }
         if (
           currentOrder &&
-          !['delivered', 'cancelled', 'completed'].includes(currentOrder.status)
+          !['delivered', 'cancelled', 'completed', 'expired'].includes(currentOrder.status)
         ) {
           startPolling();
         }
@@ -287,6 +287,7 @@ const OrderTracking = () => {
       case 'completed':
         return colors.success || '#4CAF50';
       case 'cancelled':
+      case 'expired':
         return colors.error || '#F44336';
       default:
         return colors.grayScale7;
@@ -312,6 +313,8 @@ const OrderTracking = () => {
         return strings.delivered;
       case 'cancelled':
         return strings.cancelled;
+      case 'expired':
+        return strings.expired;
       default:
         return status;
     }

@@ -134,7 +134,7 @@ const RecentOrderItem = ({ order, colors, getStatusTranslation }) => {
       case 'preparing': return '#9C27B0';
       case 'ready': case 'ready_for_pickup': return '#4CAF50';
       case 'completed': return '#4CAF50';
-      case 'cancelled': return '#F44336';
+      case 'cancelled': case 'expired': return '#F44336';
       default: return colors.grayScale6;
     }
   };
@@ -203,6 +203,7 @@ export default function Analytics() {
     ready: '#4CAF50',
     completed: '#4CAF50',
     cancelled: '#F44336',
+    expired: '#F44336',
   };
 
   // Helper function to get translated status
@@ -214,6 +215,7 @@ export default function Analytics() {
       case 'ready': case 'ready_for_pickup': return strings.statusReady;
       case 'completed': return strings.statusCompleted;
       case 'cancelled': return strings.statusCancelled;
+      case 'expired': return strings.expired;
       default: return status;
     }
   };
@@ -240,7 +242,7 @@ export default function Analytics() {
             tintColor={colors.primary}
           />
         }>
-        
+
         {/* Period Selector */}
         <View style={localStyles.periodSelector}>
           {getPeriods().map((period) => (
