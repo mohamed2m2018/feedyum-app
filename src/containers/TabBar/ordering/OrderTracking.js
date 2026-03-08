@@ -7,6 +7,7 @@ import {
   RefreshControl,
   AppState,
   Text,
+  TouchableOpacity,
 } from 'react-native';
 import { showErrorToast, showSuccessToast, showActionDialog } from '../../../utils/toast';
 import { ALERT_TYPE } from 'react-native-alert-notification';
@@ -891,74 +892,123 @@ const OrderTracking = () => {
             tintColor={'#FF4D67'}
           />
         }>
+
+        {/* Confirmation Banner - TOP PRIORITY when awaiting_confirmation */}
+        {currentOrder && currentOrder.status === 'awaiting_confirmation' && (
+          <View style={localStyles.confirmationBanner}>
+            <View style={localStyles.confirmationHeader}>
+              <View style={localStyles.confirmationIconCircle}>
+                <Ionicons name="notifications" size={moderateScale(22)} color="#FFFFFF" />
+              </View>
+              <View style={{ flex: 1, marginLeft: moderateScale(12) }}>
+                <ZText type="B16" color="#FFFFFF">
+                  {strings.awaitingConfirmation || 'Action Required'}
+                </ZText>
+                <ZText type="M12" color="rgba(255,255,255,0.85)" style={{ marginTop: moderateScale(2) }}>
+                  {strings.awaitingConfirmationDesc || 'The kitchen accepted your order. Review and confirm.'}
+                </ZText>
+              </View>
+            </View>
+
+            <View style={localStyles.confirmationDetails}>
+              <View style={localStyles.confirmationDetailRow}>
+                <ZText type="M14" color="rgba(255,255,255,0.7)">{strings.deliveryFee || 'Delivery Fee'}</ZText>
+                <ZText type="B14" color="#FFFFFF">{currentOrder.deliveryFee || 0} {strings.currency || 'EGP'}</ZText>
+              </View>
+              {currentOrder.promocode?.discountAmount > 0 && (
+                <View style={localStyles.confirmationDetailRow}>
+                  <ZText type="M14" color="rgba(255,255,255,0.7)">{strings.discount} ({currentOrder.promocode.code})</ZText>
+                  <ZText type="B14" color="#FFFFFF">-{currentOrder.promocode.discountAmount.toFixed(0)} {strings.currency || 'EGP'}</ZText>
+                </View>
+              )}
+              <View style={[localStyles.confirmationDetailRow, { borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.2)', paddingTop: moderateScale(6), marginTop: moderateScale(4) }]}>
+                <ZText type="B16" color="#FFFFFF">{strings.totalLabel || 'Total'}</ZText>
+                <ZText type="B18" color="#FFFFFF">{currentOrder.totalPrice || 0} {strings.currency || 'EGP'}</ZText>
+              </View>
+            </View>
+
+            <View style={localStyles.confirmationButtons}>
+              <TouchableOpacity
+                style={localStyles.confirmButton}
+                onPress={handleConfirmOrder}
+                disabled={confirming}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="checkmark-circle" size={moderateScale(20)} color="#2E7D32" />
+                <ZText type="B16" color="#2E7D32" style={{ marginLeft: moderateScale(8) }}>
+                  {confirming ? (strings.confirming || 'Confirming...') : (strings.confirmOrder || 'Confirm Order')}
+                </ZText>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={localStyles.declineButton}
+                onPress={handleCancelOrder}
+                disabled={cancelling}
+                activeOpacity={0.8}
+              >
+                <ZText type="B14" color="rgba(255,255,255,0.9)">
+                  {strings.cancelOrder || 'Decline'}
+                </ZText>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
         {renderStatusTimeline()}
+
+        {/* Contact Kitchen Card */}
+        <TouchableOpacity
+          style={localStyles.contactCard}
+          onPress={handleChatWithChef}
+          activeOpacity={0.7}
+        >
+          <View style={localStyles.contactCardLeft}>
+            <View style={localStyles.contactCardAvatar}>
+              <Ionicons name="restaurant" size={moderateScale(18)} color="#FF4D67" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <ZText type="B14" color="#333" numberOfLines={1}>
+                {(typeof currentOrder?.chef === 'object' && currentOrder?.chef?.fullName)
+                  || (typeof currentOrder?.chef === 'object' && currentOrder?.chef?.username)
+                  || strings.unknownChef
+                  || 'Kitchen'}
+              </ZText>
+              <ZText type="M12" color="#999">
+                {isCurrentUserChef ? (strings.chatWithCustomer || 'Chat with Customer') : (strings.tapToChat || 'Tap to chat')}
+              </ZText>
+            </View>
+          </View>
+          <View style={localStyles.contactCardButton}>
+            <Ionicons name="chatbubble-ellipses" size={moderateScale(16)} color="#FFFFFF" />
+            <ZText type="B12" color="#FFFFFF" style={{ marginLeft: moderateScale(4) }}>
+              {strings.chat || 'Chat'}
+            </ZText>
+          </View>
+        </TouchableOpacity>
         {renderOrderDetails()}
         {renderOrderItems()}
         {renderPricingSummary()}
         {renderDeliveryInfo()}
 
-        <ZButton
-          title={isCurrentUserChef ? strings.chatWithCustomer : strings.chatWithChef}
-          textType="B16"
-          color={'#FFFFFF'}
-          containerStyle={[
-            localStyles.chatButton,
-            { backgroundColor: '#FF4D67' },
-          ]}
-          onPress={handleChatWithChef}
-        />
-
-        {/* Cancel Order Button - only show before order is preparing */}
-        {currentOrder && ['pending', 'awaiting_confirmation', 'confirmed'].includes(currentOrder.status) && (
-          <ZButton
-            title={cancelling ? (strings.cancelling || 'Cancelling...') : (strings.cancelOrder || 'Cancel Order')}
-            textType="B16"
-            color={'#FFFFFF'}
-            containerStyle={[
-              localStyles.cancelButton,
-              { backgroundColor: '#F44336' },
-            ]}
+        {/* Cancel Order - subtle text link, not a button */}
+        {currentOrder && ['pending', 'confirmed'].includes(currentOrder.status) && (
+          <TouchableOpacity
+            style={localStyles.cancelLink}
             onPress={handleCancelOrder}
             disabled={cancelling}
-          />
+            activeOpacity={0.6}
+          >
+            <Ionicons name="close-circle-outline" size={moderateScale(16)} color="#F44336" />
+            <ZText type="M14" color="#F44336" style={{ marginLeft: moderateScale(6) }}>
+              {cancelling ? (strings.cancelling || 'Cancelling...') : (strings.cancelOrder || 'Cancel Order')}
+            </ZText>
+          </TouchableOpacity>
         )}
 
-        {/* Confirm Order Button - show when awaiting_confirmation */}
-        {currentOrder && currentOrder.status === 'awaiting_confirmation' && (
-          <View style={{ marginHorizontal: moderateScale(16), marginBottom: moderateScale(12) }}>
-            {/* Show delivery fee override alert if applicable */}
-            <View style={{ backgroundColor: '#FFF3E0', padding: moderateScale(12), borderRadius: moderateScale(10), marginBottom: moderateScale(10) }}>
-              <ZText type="B14" color="#E65100">
-                {strings.awaitingConfirmation || 'Awaiting Your Confirmation'}
-              </ZText>
-              <ZText type="s12" color="#BF360C" style={{ marginTop: moderateScale(4) }}>
-                {strings.awaitingConfirmationDesc || 'The kitchen has accepted your order. Please review and confirm.'}
-              </ZText>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: moderateScale(8) }}>
-                <ZText type="s12" color="#795548">{strings.deliveryFee || 'Delivery Fee'}:</ZText>
-                <ZText type="B14" color="#E65100">{currentOrder.deliveryFee || 0} {strings.currency || 'EGP'}</ZText>
-              </View>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: moderateScale(4) }}>
-                <ZText type="s12" color="#795548">{strings.totalLabel || 'Total'}:</ZText>
-                <ZText type="B14" color="#E65100">{currentOrder.totalPrice || 0} {strings.currency || 'EGP'}</ZText>
-              </View>
-            </View>
-            <ZButton
-              title={confirming ? (strings.confirming || 'Confirming...') : (strings.confirmOrder || 'Confirm Order')}
-              textType="B16"
-              color={'#FFFFFF'}
-              containerStyle={[
-                localStyles.cancelButton,
-                { backgroundColor: '#4CAF50' },
-              ]}
-              onPress={handleConfirmOrder}
-              disabled={confirming}
-            />
-          </View>
-        )}
-
-        <View style={{ height: moderateScale(50) }} />
+        <View style={{ height: moderateScale(30) }} />
       </ScrollView>
+
+
     </ZSafeAreaView>
   );
 };
@@ -1106,10 +1156,131 @@ const localStyles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.05)',
     borderRadius: moderateScale(8),
   },
-  chatButton: {
-    margin: moderateScale(16),
-    height: moderateScale(50),
-    borderRadius: moderateScale(25),
+  chatFab: {
+    position: 'absolute',
+    bottom: moderateScale(24),
+    right: moderateScale(20),
+    width: moderateScale(56),
+    height: moderateScale(56),
+    borderRadius: moderateScale(28),
+    backgroundColor: '#FF4D67',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#FF4D67',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 8,
+    zIndex: 10,
+  },
+  cancelLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: moderateScale(16),
+    marginHorizontal: moderateScale(16),
+  },
+  contactCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginHorizontal: moderateScale(16),
+    marginBottom: moderateScale(8),
+    paddingVertical: moderateScale(12),
+    paddingHorizontal: moderateScale(14),
+    backgroundColor: '#FFFFFF',
+    borderRadius: moderateScale(12),
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  contactCardLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  contactCardAvatar: {
+    width: moderateScale(36),
+    height: moderateScale(36),
+    borderRadius: moderateScale(18),
+    backgroundColor: '#FFE8EC',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: moderateScale(10),
+  },
+  contactCardButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FF4D67',
+    paddingVertical: moderateScale(7),
+    paddingHorizontal: moderateScale(14),
+    borderRadius: moderateScale(20),
+  },
+  // Confirmation Banner (awaiting_confirmation)
+  confirmationBanner: {
+    borderTopLeftRadius: moderateScale(20),
+    borderTopRightRadius: moderateScale(20),
+    backgroundColor: '#2E7D32',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+  confirmationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: moderateScale(16),
+    paddingTop: moderateScale(16),
+    paddingBottom: moderateScale(12),
+  },
+  confirmationIconCircle: {
+    width: moderateScale(40),
+    height: moderateScale(40),
+    borderRadius: moderateScale(20),
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  confirmationDetails: {
+    marginHorizontal: moderateScale(16),
+    paddingVertical: moderateScale(10),
+    paddingHorizontal: moderateScale(12),
+    backgroundColor: 'rgba(0,0,0,0.12)',
+    borderRadius: moderateScale(10),
+  },
+  confirmationDetailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: moderateScale(3),
+  },
+  confirmationButtons: {
+    padding: moderateScale(16),
+    gap: moderateScale(10),
+  },
+  confirmButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    paddingVertical: moderateScale(14),
+    borderRadius: moderateScale(12),
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  declineButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: moderateScale(10),
+    borderRadius: moderateScale(12),
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
   },
   cancelButton: {
     marginHorizontal: moderateScale(16),
