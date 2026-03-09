@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import {
   View,
   StyleSheet,
@@ -12,13 +12,17 @@ import {
   Platform,
   Keyboard,
   TouchableWithoutFeedback,
+  ActivityIndicator,
 } from 'react-native';
 import { useSelector } from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import debounce from 'lodash/debounce';
 import { moderateScale, getHeight } from '../../common/constants';
 import ZText from '../common/ZText';
 import ZButton from '../common/ZButton';
+import ZInput from '../common/ZInput';
 import strings from '../../i18n/strings';
+import request from '../../api/request';
 
 const { height: screenHeight } = Dimensions.get('window');
 
@@ -35,6 +39,61 @@ const SectionInputModal = ({
   const [customSection, setCustomSection] = useState('');
   const [slideAnim] = useState(new Animated.Value(screenHeight));
   const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  // Translation states
+  const [translatedName, setTranslatedName] = useState('');
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [translationEdited, setTranslationEdited] = useState(false);
+
+  // Detect language from text
+  const detectLanguage = useCallback((text) => {
+    if (!text || typeof text !== 'string') return 'en';
+    const arabicPattern = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/g;
+    const arabicMatches = (text.match(arabicPattern) || []).length;
+    const latinMatches = (text.match(/[a-zA-Z]/g) || []).length;
+    return arabicMatches > 0 && arabicMatches >= latinMatches ? 'ar' : 'en';
+  }, []);
+
+  // Translate text to target language
+  const translateText = useCallback(async (text, targetLang) => {
+    if (!text || text.trim().length < 2) return '';
+    try {
+      const response = await request.post('/translate', {
+        text: text.trim(),
+        to: targetLang,
+      });
+      return response.data?.translation || '';
+    } catch (error) {
+      console.error('Section translation error:', error);
+      return '';
+    }
+  }, []);
+
+  // Debounced translation
+  const debouncedTranslate = useCallback(
+    debounce(async (name) => {
+      if (!name || name.trim().length < 2 || translationEdited) {
+        setIsTranslating(false);
+        return;
+      }
+      setIsTranslating(true);
+      const detectedLang = detectLanguage(name);
+      const targetLang = detectedLang === 'ar' ? 'en' : 'ar';
+      const translation = await translateText(name, targetLang);
+      if (translation) {
+        setTranslatedName(translation);
+      }
+      setIsTranslating(false);
+    }, 700),
+    [translationEdited, detectLanguage, translateText]
+  );
+
+  // Handle section name change
+  const handleNameChange = useCallback((text) => {
+    setCustomSection(text);
+    setTranslationEdited(false);
+    debouncedTranslate(text);
+  }, [debouncedTranslate]);
 
   // Track keyboard height
   useEffect(() => {
@@ -56,6 +115,8 @@ const SectionInputModal = ({
   useEffect(() => {
     if (visible) {
       setCustomSection(selectedSection);
+      setTranslatedName('');
+      setTranslationEdited(false);
       Animated.spring(slideAnim, {
         toValue: 0,
         useNativeDriver: true,
@@ -86,11 +147,27 @@ const SectionInputModal = ({
 
   const handleSelectSection = (sectionName) => {
     setCustomSection(sectionName);
+    // If selecting an existing section, show its existing translation
+    const existing = availableSections.find(s => s.name === sectionName);
+    if (existing) {
+      const lang = detectLanguage(sectionName);
+      setTranslatedName(lang === 'ar' ? (existing.nameEnglish || '') : (existing.nameArabic || ''));
+      setTranslationEdited(true);
+    } else {
+      setTranslatedName('');
+      setTranslationEdited(false);
+      debouncedTranslate(sectionName);
+    }
   };
 
   const handleConfirm = () => {
     if (customSection.trim()) {
-      onSelectSection(customSection.trim());
+      const detectedLang = detectLanguage(customSection.trim());
+      onSelectSection(customSection.trim(), {
+        nameArabic: detectedLang === 'ar' ? customSection.trim() : translatedName,
+        nameEnglish: detectedLang === 'en' ? customSection.trim() : translatedName,
+        originalLanguage: detectedLang,
+      });
       onClose();
     }
   };
@@ -239,13 +316,13 @@ const SectionInputModal = ({
                   placeholder={strings.enterSectionName || "Enter section name or choose from below"}
                   placeholderTextColor={colors.grayScale7}
                   value={customSection}
-                  onChangeText={setCustomSection}
+                  onChangeText={handleNameChange}
                   returnKeyType="done"
                   autoCapitalize="words"
                 />
                 {customSection.length > 0 && (
                   <TouchableOpacity
-                    onPress={() => setCustomSection('')}
+                    onPress={() => { setCustomSection(''); setTranslatedName(''); setTranslationEdited(false); }}
                     style={styles.clearInputButton}>
                     <Ionicons
                       name="close-circle"
@@ -255,6 +332,41 @@ const SectionInputModal = ({
                   </TouchableOpacity>
                 )}
               </View>
+
+              {/* Translation Field */}
+              {customSection && customSection.length >= 2 && (
+                <View style={styles.translationContainer}>
+                  <View style={styles.translationHeader}>
+                    <ZText type="M12" color={colors.grayScale7}>
+                      {detectLanguage(customSection) === 'ar'
+                        ? (strings.englishTranslation || 'English Translation')
+                        : (strings.arabicTranslation || 'Arabic Translation')}
+                    </ZText>
+                    {isTranslating && (
+                      <View style={styles.translatingBadge}>
+                        <ActivityIndicator size="small" color={colors.primary} />
+                        <ZText type="R10" color={colors.primary} style={{ marginLeft: 4 }}>
+                          {strings.translating}
+                        </ZText>
+                      </View>
+                    )}
+                  </View>
+                  <View style={[styles.textInputContainer, { backgroundColor: colors.inputBg, borderColor: colors.bColor }]}>
+                    <TextInput
+                      style={[styles.textInput, { color: colors.textColor }]}
+                      placeholder={strings.translatedName || 'Translated name'}
+                      placeholderTextColor={colors.grayScale7}
+                      value={translatedName}
+                      onChangeText={(text) => { setTranslatedName(text); setTranslationEdited(true); }}
+                    />
+                  </View>
+                  {!isTranslating && translatedName ? (
+                    <ZText type="R10" color={colors.grayScale6} style={styles.translationHint}>
+                      {strings.autoTranslated}
+                    </ZText>
+                  ) : null}
+                </View>
+              )}
             </View>
 
             {/* Sections List */}
@@ -550,6 +662,23 @@ const styles = StyleSheet.create({
   },
   confirmButton: {
     marginLeft: moderateScale(6),
+  },
+  translationContainer: {
+    marginTop: moderateScale(10),
+  },
+  translationHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: moderateScale(6),
+  },
+  translatingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  translationHint: {
+    marginTop: moderateScale(4),
+    textAlign: 'right',
   },
 });
 

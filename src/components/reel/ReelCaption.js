@@ -46,14 +46,14 @@ const ReelCaption = React.memo(({ title, caption, duration }) => {
             <ZText
                 style={captionStyles.title}
                 align="left"
-                type="b12"
+                type="b14"
                 color={colors.white}
             >
                 {title}
             </ZText>
 
             {/* Caption */}
-            <ZText type="m13" color={colors.white} style={styles.mv10}>
+            <ZText type="m14" color={colors.white} style={[styles.mv10, captionStyles.caption]}>
                 {shouldTruncate && !isExpanded
                     ? caption?.slice(0, 50) + '...'
                     : caption}

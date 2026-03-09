@@ -24,7 +24,8 @@ const ReelOverlay = React.memo(({ isVisible, children }) => {
         <View pointerEvents="box-none" style={styles.container}>
             {/* Gradient for text readability */}
             <LinearGradient
-                colors={['rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, 0.85)']}
+                colors={['rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, 0.5)', 'rgba(0, 0, 0, 0.9)']}
+                locations={[0, 0.4, 1]}
                 style={styles.gradient}
             />
             {children}

@@ -123,7 +123,7 @@ export const overlayStyles = StyleSheet.create({
         bottom: 0,
         left: 0,
         right: 0,
-        height: 150,
+        height: 350,
     },
     contentContainer: {
         flex: 1,
@@ -283,9 +283,15 @@ export const actionBarStyles = StyleSheet.create({
 export const captionStyles = StyleSheet.create({
     title: {
         fontWeight: 'bold',
+        textShadowColor: 'rgba(0, 0, 0, 0.9)',
+        textShadowOffset: { width: 1, height: 1 },
+        textShadowRadius: 4,
     },
     caption: {
         marginVertical: 2,
+        textShadowColor: 'rgba(0, 0, 0, 0.8)',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 3,
     },
     duration: {
         fontSize: 12,

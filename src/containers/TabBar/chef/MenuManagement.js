@@ -27,6 +27,7 @@ import ZButton from '../../../components/common/ZButton';
 import DishCard from './components/DishCard';
 import AddEditDishModal from './components/AddEditDishModal';
 import ChefDishPreviewModal from './components/ChefDishPreviewModal';
+import MenuUploadModal from './components/MenuUploadModal';
 import { useChefSocket } from './hooks/useChefSocket';
 import { useBackgroundUpload } from '../../../providers/BackgroundUploadProvider';
 import request from '../../../api/request';
@@ -52,42 +53,108 @@ const SectionTab = ({ section, isSelected, onPress, colors }) => (
   </TouchableOpacity>
 );
 
-const EmptyState = ({ searchQuery, colors, onAddDish }) => (
-  <View style={localStyles.emptyContainer}>
-    <Ionicons
-      name="restaurant-outline"
-      size={moderateScale(64)}
-      color={colors.grayScale4}
-    />
-    <ZText type="B18" color={colors.grayScale7} style={localStyles.emptyTitle}>
-      {strings.noDishesFound}
-    </ZText>
-    <ZText
-      type="M14"
-      color={colors.grayScale7}
-      style={localStyles.emptySubtitle}>
-      {searchQuery
-        ? strings.tryAdjustingSearch
-        : strings.startAddingDish}
-    </ZText>
-    {!searchQuery && (
-      <ZButton
-        title={strings.addFirstDish}
-        textType={'b18'}
-        color={colors.white}
-        containerStyle={localStyles.ctaButton}
-        frontIcon={
-          <Ionicons
-            name="add"
-            size={moderateScale(18)}
-            color={colors.white}
-            style={{ marginRight: moderateScale(8) }}
-          />
-        }
-        onPress={onAddDish}
-      />
-    )}
+const OnboardingStep = ({ number, icon, title, description, colors }) => (
+  <View style={localStyles.onboardingStep}>
+    <View style={[localStyles.stepNumberCircle, { backgroundColor: colors.primary }]}>
+      <ZText type="B16" color={colors.white}>{number}</ZText>
+    </View>
+    <View style={localStyles.stepContent}>
+      <View style={localStyles.stepHeader}>
+        <Ionicons name={icon} size={moderateScale(20)} color={colors.primary} />
+        <ZText type="B16" color={colors.textColor} style={localStyles.stepTitle}>
+          {title}
+        </ZText>
+      </View>
+      <ZText type="M14" color={colors.grayScale7} style={localStyles.stepDesc}>
+        {description}
+      </ZText>
+    </View>
   </View>
+);
+
+const SubmittedBanner = ({ colors }) => (
+  <View style={[localStyles.submittedBanner, { backgroundColor: colors.inputBg }]}>
+    <Ionicons name="checkmark-circle" size={moderateScale(40)} color="#4CAF50" />
+    <ZText type="B18" color={colors.textColor} style={localStyles.submittedTitle}>
+      {strings.menuSubmitted}
+    </ZText>
+    <ZText type="M14" color={colors.grayScale7} style={localStyles.submittedDesc}>
+      {strings.menuSubmittedDesc}
+    </ZText>
+  </View>
+);
+
+const EmptyState = ({ searchQuery, colors, onAddDish, onUploadMenu, hasSubmittedMenu }) => (
+  <ScrollView
+    contentContainerStyle={localStyles.emptyContainer}
+    showsVerticalScrollIndicator={false}>
+    {searchQuery ? (
+      <>
+        <Ionicons
+          name="search-outline"
+          size={moderateScale(64)}
+          color={colors.grayScale4}
+        />
+        <ZText type="B18" color={colors.grayScale7} style={localStyles.emptyTitle}>
+          {strings.noDishesFound}
+        </ZText>
+        <ZText type="M14" color={colors.grayScale7} style={localStyles.emptySubtitle}>
+          {strings.tryAdjustingSearch}
+        </ZText>
+      </>
+    ) : (
+      <>
+        {/* PRIMARY: Upload menu (Talabat style) */}
+        {hasSubmittedMenu ? (
+          <SubmittedBanner colors={colors} />
+        ) : (
+          <View style={[localStyles.uploadHero, { backgroundColor: colors.inputBg }]}>
+            <View style={[localStyles.uploadIconCircle, { backgroundColor: colors.primary + '20' }]}>
+              <Ionicons name="cloud-upload-outline" size={moderateScale(40)} color={colors.primary} />
+            </View>
+            <ZText type="B20" color={colors.textColor} style={localStyles.uploadHeroTitle}>
+              {strings.menuUploadTitle}
+            </ZText>
+            <ZText type="M14" color={colors.grayScale7} style={localStyles.uploadHeroDesc}>
+              {strings.uploadMenuInsteadDesc}
+            </ZText>
+            <ZButton
+              title={strings.uploadMenuButton}
+              textType={'b18'}
+              color={colors.white}
+              containerStyle={localStyles.uploadHeroBtn}
+              frontIcon={
+                <Ionicons
+                  name="camera-outline"
+                  size={moderateScale(20)}
+                  color={colors.white}
+                  style={{ marginRight: moderateScale(8) }}
+                />
+              }
+              onPress={onUploadMenu}
+            />
+          </View>
+        )}
+
+        <ZButton
+          title={strings.addDishesManually}
+          textType={'b16'}
+          color={colors.textColor}
+          containerStyle={[localStyles.manualAddBtn, { borderColor: colors.bColor }]}
+          bgColor="transparent"
+          frontIcon={
+            <Ionicons
+              name="add"
+              size={moderateScale(18)}
+              color={colors.textColor}
+              style={{ marginRight: moderateScale(8) }}
+            />
+          }
+          onPress={onAddDish}
+        />
+      </>
+    )}
+  </ScrollView>
 );
 
 export default function MenuManagement() {
@@ -117,6 +184,9 @@ export default function MenuManagement() {
   // Dish details modal state
   const [detailsModalVisible, setDetailsModalVisible] = useState(false);
   const [selectedDish, setSelectedDish] = useState(null);
+
+  // Menu upload modal state
+  const [uploadModalVisible, setUploadModalVisible] = useState(false);
 
   // Helper function to ensure chef has a menu (no default sections)
   const ensureMenu = async () => {
@@ -333,6 +403,19 @@ export default function MenuManagement() {
   // Connect to socket for real-time updates
   useChefSocket(userId);
 
+  // Check if chef has submitted a menu upload request
+  const { data: uploadStatusData } = useQuery(
+    ['menuUploadStatus', userId],
+    async () => {
+      try {
+        const res = await request.get('/menu-upload/status');
+        return res.data?.request;
+      } catch { return null; }
+    },
+    { enabled: !!userId }
+  );
+  const hasSubmittedMenu = uploadStatusData?.status === 'pending' || uploadStatusData?.status === 'processing';
+
   // Fetch menu sections - using real API call
   const { data: sectionsData, isLoading: sectionsLoading } = useQuery(
     ['menuSections', userId],
@@ -534,7 +617,6 @@ export default function MenuManagement() {
     <ZSafeAreaView>
       <ZHeader
         title={strings.menuManagement}
-        isHideBack={fromTabsParam || isFromTabBar || !navigation.canGoBack()}
       />
 
       <View style={localStyles.container}>
@@ -635,6 +717,8 @@ export default function MenuManagement() {
                   searchQuery={searchQuery}
                   colors={colors}
                   onAddDish={handleAddDish}
+                  onUploadMenu={() => setUploadModalVisible(true)}
+                  hasSubmittedMenu={hasSubmittedMenu}
                 />
               }
               contentContainerStyle={localStyles.dishesContent}
@@ -663,6 +747,15 @@ export default function MenuManagement() {
         onEdit={handleEditDish}
         onDelete={handleDeleteDish}
         onToggleVisibility={handleToggleVisibility}
+      />
+
+      {/* Menu Upload Modal */}
+      <MenuUploadModal
+        visible={uploadModalVisible}
+        onClose={() => setUploadModalVisible(false)}
+        onSuccess={() => {
+          queryClient.invalidateQueries(['menuUploadStatus', userId]);
+        }}
       />
 
       {/* Floating Action Button */}
@@ -784,10 +877,10 @@ const localStyles = StyleSheet.create({
     textAlign: 'center',
   },
   emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
+    flexGrow: 1,
     alignItems: 'center',
-    paddingVertical: moderateScale(60),
+    paddingVertical: moderateScale(24),
+    paddingHorizontal: moderateScale(4),
   },
   emptyTitle: {
     marginTop: moderateScale(16),
@@ -798,9 +891,105 @@ const localStyles = StyleSheet.create({
     paddingHorizontal: moderateScale(32),
   },
   ctaButton: {
-    marginTop: moderateScale(16),
+    marginTop: moderateScale(24),
     paddingHorizontal: moderateScale(20),
     alignSelf: 'center',
-    width: '75%',
+    width: '85%',
+  },
+  uploadHero: {
+    padding: moderateScale(24),
+    borderRadius: moderateScale(20),
+    alignItems: 'center',
+    width: '100%',
+    gap: moderateScale(12),
+  },
+  uploadIconCircle: {
+    width: moderateScale(72),
+    height: moderateScale(72),
+    borderRadius: moderateScale(36),
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  uploadHeroTitle: {
+    textAlign: 'center',
+  },
+  uploadHeroDesc: {
+    textAlign: 'center',
+    lineHeight: moderateScale(20),
+    paddingHorizontal: moderateScale(8),
+  },
+  uploadHeroBtn: {
+    marginTop: moderateScale(4),
+    width: '90%',
+  },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+    marginVertical: moderateScale(20),
+    gap: moderateScale(12),
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+  },
+  dividerText: {
+    textAlign: 'center',
+  },
+  manualAddBtn: {
+    marginTop: moderateScale(8),
+    paddingHorizontal: moderateScale(20),
+    alignSelf: 'center',
+    width: '85%',
+    borderWidth: 1,
+  },
+  stepsContainer: {
+    width: '100%',
+    gap: moderateScale(4),
+  },
+  onboardingStep: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingVertical: moderateScale(12),
+    paddingHorizontal: moderateScale(4),
+    gap: moderateScale(12),
+  },
+  stepNumberCircle: {
+    width: moderateScale(28),
+    height: moderateScale(28),
+    borderRadius: moderateScale(14),
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: moderateScale(2),
+  },
+  stepContent: {
+    flex: 1,
+  },
+  stepHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: moderateScale(8),
+    marginBottom: moderateScale(4),
+  },
+  stepTitle: {
+    flex: 1,
+  },
+  stepDesc: {
+    lineHeight: moderateScale(20),
+  },
+  submittedBanner: {
+    marginTop: moderateScale(24),
+    padding: moderateScale(24),
+    borderRadius: moderateScale(16),
+    alignItems: 'center',
+    width: '100%',
+    gap: moderateScale(8),
+  },
+  submittedTitle: {
+    textAlign: 'center',
+  },
+  submittedDesc: {
+    textAlign: 'center',
+    lineHeight: moderateScale(20),
   },
 });

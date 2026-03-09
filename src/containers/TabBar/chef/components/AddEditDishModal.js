@@ -328,8 +328,10 @@ const AddEditDishModal = ({
     }
   }, []);
 
-  const handleSectionSelection = (sectionName) => {
+  const handleSectionSelection = (sectionName, translations = {}) => {
     updateFormData('section', sectionName);
+    if (translations.nameArabic) updateFormData('sectionNameArabic', translations.nameArabic);
+    if (translations.nameEnglish) updateFormData('sectionNameEnglish', translations.nameEnglish);
 
     // Add to custom sections if it's not already in available sections
     const existingSection = availableSections.find(section =>
@@ -339,6 +341,8 @@ const AddEditDishModal = ({
     if (!existingSection) {
       const newSection = {
         name: sectionName,
+        nameArabic: translations.nameArabic || '',
+        nameEnglish: translations.nameEnglish || '',
         description: `Custom section: ${sectionName}`
       };
       setCustomSections(prev => [...prev, newSection]);
