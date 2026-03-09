@@ -38,7 +38,7 @@
     "android": {
       "package": "com.feedyum",
       "googleServicesFile": "./google-services.json",
-      "versionCode": 1,
+      "versionCode": 3,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "monochromeImage": "./assets/adaptive-icon.png",
@@ -95,13 +95,14 @@
         {
           "ios": {
             "useFrameworks": "static",
-            "deploymentTarget": "15.0"
+            "deploymentTarget": "15.1"
           },
           "android": {
             "kotlinVersion": "1.9.23",
             "compileSdkVersion": 35,
-            "targetSdkVersion": 34,
-            "buildToolsVersion": "35.0.0"
+            "targetSdkVersion": 35,
+            "buildToolsVersion": "35.0.0",
+            "extraProguardRules": "-keep class ** { *; }"
           }
         }
       ],
@@ -136,7 +137,8 @@
             "Microphone"
           ]
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "extra": {
       "eas": {
