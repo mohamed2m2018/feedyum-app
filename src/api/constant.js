@@ -313,37 +313,37 @@ const privacyPolicyData = [
   {
     title: '1. Collection of Personal Information',
     description:
-      'FoodTok collects personal information that you voluntarily provide when using the app. This may include your name, email address, profile picture, and any additional information you choose to share in your user profile. We only collect personal information that is necessary for the functioning of the app and to provide you with a personalized experience.',
+      'FeedYum collects personal information that you voluntarily provide when using the app. This may include your name, email address, profile picture, and any additional information you choose to share in your user profile. We only collect personal information that is necessary for the functioning of the app and to provide you with a personalized experience.',
   },
   {
     title: '2. Use of Information',
     description:
-      "FoodTok uses the collected information to enhance your experience on the app. We may use your personal information to create and maintain your user account, provide customer support, send you relevant updates and notifications, and personalize the content and recommendations you see on the app. Additionally, we may analyze user behavior and interactions to improve the app's features and functionality.",
+      "FeedYum uses the collected information to enhance your experience on the app. We may use your personal information to create and maintain your user account, provide customer support, send you relevant updates and notifications, and personalize the content and recommendations you see on the app. Additionally, we may analyze user behavior and interactions to improve the app's features and functionality.",
   },
   {
     title: '3. Sharing of Information',
     description:
-      "FoodTok may share your personal information with trusted third-party service providers to assist us in delivering and improving the app's features. These service providers are contractually obligated to maintain the confidentiality and security of your information and are prohibited from using it for any other purpose. We may also share your information in response to legal obligations, such as complying with applicable laws, regulations, or court orders.",
+      "FeedYum may share your personal information with trusted third-party service providers to assist us in delivering and improving the app's features. These service providers are contractually obligated to maintain the confidentiality and security of your information and are prohibited from using it for any other purpose. We may also share your information in response to legal obligations, such as complying with applicable laws, regulations, or court orders.",
   },
   {
     title: '4. Data Security',
     description:
-      'FoodTok takes data security seriously and implements industry-standard measures to protect your personal information from unauthorized access, disclosure, alteration, or destruction. We use encryption and secure data storage practices to safeguard your data. However, please be aware that no data transmission or storage system can guarantee 100% security, and we cannot guarantee the absolute security of your personal information.',
+      'FeedYum takes data security seriously and implements industry-standard measures to protect your personal information from unauthorized access, disclosure, alteration, or destruction. We use encryption and secure data storage practices to safeguard your data. However, please be aware that no data transmission or storage system can guarantee 100% security, and we cannot guarantee the absolute security of your personal information.',
   },
   {
     title: '5. Third-Party Links',
     description:
-      'The FoodTok app may contain links to third-party websites or services, such as dishes, restaurants, or cooking-related resources. Please note that we are not responsible for the privacy practices or the content of these third-party websites or services. We encourage you to review the privacy policies and terms of service of these third parties before interacting with them or providing any personal information.',
+      'The FeedYum app may contain links to third-party websites or services, such as dishes, restaurants, or cooking-related resources. Please note that we are not responsible for the privacy practices or the content of these third-party websites or services. We encourage you to review the privacy policies and terms of service of these third parties before interacting with them or providing any personal information.',
   },
   {
     title: "6. Children's Privacy",
     description:
-      'FoodTok is intended for users who are 13 years of age or older. We do not knowingly collect personal information from children under the age of 13. If we become aware that we have inadvertently collected personal information from a child under 13 without parental consent, we will promptly delete the information from our records. If you believe that your child has provided personal information without your consent, please contact us to request its removal.',
+      'FeedYum is intended for users who are 13 years of age or older. We do not knowingly collect personal information from children under the age of 13. If we become aware that we have inadvertently collected personal information from a child under 13 without parental consent, we will promptly delete the information from our records. If you believe that your child has provided personal information without your consent, please contact us to request its removal.',
   },
   {
     title: '7. Changes to this Privacy Policy',
     description:
-      'FoodTok reserves the right to update or modify this Privacy Policy from time to time. When we make changes, we will notify you through the app or by other means of communication. It is recommended to review this Privacy Policy periodically for any updates. Your continued use of the FoodTok app after the changes are implemented will signify your acceptance of the updated Privacy Policy.',
+      'FeedYum reserves the right to update or modify this Privacy Policy from time to time. When we make changes, we will notify you through the app or by other means of communication. It is recommended to review this Privacy Policy periodically for any updates. Your continued use of the FeedYum app after the changes are implemented will signify your acceptance of the updated Privacy Policy.',
   },
 ];
 
@@ -351,37 +351,37 @@ const privacyPolicyDataArabic = [
   {
     title: '1. جمع المعلومات الشخصية',
     description:
-      'تقوم FoodTok بجمع المعلومات الشخصية التي تقدمها طوعًا عند استخدام التطبيق. قد تشمل هذه المعلومات اسمك، عنوان بريدك الإلكتروني، صورة ملفك الشخصي، وأي معلومات إضافية تختار مشاركتها في ملف تعريف المستخدم الخاص بك. نقوم بجمع المعلومات الشخصية الضرورية فقط لتشغيل التطبيق وتوفير تجربة مخصصة لك.',
+      'تقوم FeedYum بجمع المعلومات الشخصية التي تقدمها طوعًا عند استخدام التطبيق. قد تشمل هذه المعلومات اسمك، عنوان بريدك الإلكتروني، صورة ملفك الشخصي، وأي معلومات إضافية تختار مشاركتها في ملف تعريف المستخدم الخاص بك. نقوم بجمع المعلومات الشخصية الضرورية فقط لتشغيل التطبيق وتوفير تجربة مخصصة لك.',
   },
   {
     title: '2. استخدام المعلومات',
     description:
-      'يستخدم FoodTok المعلومات المجمعة لتعزيز تجربتك في التطبيق. قد نستخدم معلوماتك الشخصية لإنشاء وصيانة حساب المستخدم الخاص بك، وتقديم دعم فني، وإرسال تحديثات وإشعارات ذات صلة، وتخصيص المحتوى والتوصيات التي تظهر في التطبيق. بالإضافة إلى ذلك، قد نحلل سلوك المستخدمين وتفاعلاتهم لتحسين ميزات ووظائف التطبيق.',
+      'يستخدم FeedYum المعلومات المجمعة لتعزيز تجربتك في التطبيق. قد نستخدم معلوماتك الشخصية لإنشاء وصيانة حساب المستخدم الخاص بك، وتقديم دعم فني، وإرسال تحديثات وإشعارات ذات صلة، وتخصيص المحتوى والتوصيات التي تظهر في التطبيق. بالإضافة إلى ذلك، قد نحلل سلوك المستخدمين وتفاعلاتهم لتحسين ميزات ووظائف التطبيق.',
   },
   {
     title: '3. مشاركة المعلومات',
     description:
-      'قد يشارك FoodTok معلوماتك الشخصية مع مقدمي خدمات طرف ثالث موثوق بهم لمساعدتنا في تقديم وتحسين ميزات التطبيق. يتعين على هؤلاء مقدمي الخدمات الالتزام بالحفاظ على سرية وأمان معلوماتك وممنوع عليهم استخدامها لأي غرض آخر. قد نشارك أيضًا معلوماتك استجابةً لالتزامات قانونية، مثل الامتثال للقوانين واللوائح أو أوامر المحكمة.',
+      'قد يشارك FeedYum معلوماتك الشخصية مع مقدمي خدمات طرف ثالث موثوق بهم لمساعدتنا في تقديم وتحسين ميزات التطبيق. يتعين على هؤلاء مقدمي الخدمات الالتزام بالحفاظ على سرية وأمان معلوماتك وممنوع عليهم استخدامها لأي غرض آخر. قد نشارك أيضًا معلوماتك استجابةً لالتزامات قانونية، مثل الامتثال للقوانين واللوائح أو أوامر المحكمة.',
   },
   {
     title: '4. أمان البيانات',
     description:
-      'تولي FoodTok أهمية بالغة لأمان البيانات وتنفيذ تدابير قياسية لحماية معلوماتك الشخصية من الوصول غير المصرح به والكشف عنه والتعديل عليه والتدمير. نستخدم التشفير وممارسات تخزين البيانات الآمنة لحماية بياناتك. ومع ذلك، يُرجى أن تكون على علم بأنه لا يمكن لنقل البيانات أو نظام تخزينها ضمان الأمان التام بنسبة 100%، ولا يمكننا ضمان الأمان المطلق لمعلوماتك الشخصية.',
+      'تولي FeedYum أهمية بالغة لأمان البيانات وتنفيذ تدابير قياسية لحماية معلوماتك الشخصية من الوصول غير المصرح به والكشف عنه والتعديل عليه والتدمير. نستخدم التشفير وممارسات تخزين البيانات الآمنة لحماية بياناتك. ومع ذلك، يُرجى أن تكون على علم بأنه لا يمكن لنقل البيانات أو نظام تخزينها ضمان الأمان التام بنسبة 100%، ولا يمكننا ضمان الأمان المطلق لمعلوماتك الشخصية.',
   },
   {
     title: '5. روابط الأطراف الثالثة',
     description:
-      'قد يحتوي تطبيق FoodTok على روابط إلى مواقع وخدمات طرف ثالث، مثل اطباق، مطاعم، أو موارد تتعلق بالطهي. يُرجى ملاحظة أننا غير مسؤولين عن ممارسات الخصوصية أو محتوى هذه المواقع والخدمات من الأطراف الثالثة. نشجعك على مراجعة سياسات الخصوصية وشروط الخدمة لهذه الأطراف الثالثة قبل التفاعل معها أو تقديم أي معلومات شخصية.',
+      'قد يحتوي تطبيق FeedYum على روابط إلى مواقع وخدمات طرف ثالث، مثل اطباق، مطاعم، أو موارد تتعلق بالطهي. يُرجى ملاحظة أننا غير مسؤولين عن ممارسات الخصوصية أو محتوى هذه المواقع والخدمات من الأطراف الثالثة. نشجعك على مراجعة سياسات الخصوصية وشروط الخدمة لهذه الأطراف الثالثة قبل التفاعل معها أو تقديم أي معلومات شخصية.',
   },
   {
     title: '6. خصوصية الأطفال',
     description:
-      'صمم تطبيق FoodTok للمستخدمين الذين تتراوح أعمارهم بين 13 عامًا وما فوق. نحن لا نقوم بجمع معلومات شخصية عن الأطفال الذين تقل أعمارهم عن 13 عامًا بشكل عمد. إذا أدركنا أننا قمنا بجمع معلومات شخصية عن طفل دون سن 13 عامًا بدون موافقة الوالدين، سنقوم بحذف المعلومات من سجلاتنا على الفور. إذا كنت تعتقد أن طفلك قد قدم معلومات شخصية دون موافقتك، يُرجى الاتصال بنا لطلب إزالتها.',
+      'صمم تطبيق FeedYum للمستخدمين الذين تتراوح أعمارهم بين 13 عامًا وما فوق. نحن لا نقوم بجمع معلومات شخصية عن الأطفال الذين تقل أعمارهم عن 13 عامًا بشكل عمد. إذا أدركنا أننا قمنا بجمع معلومات شخصية عن طفل دون سن 13 عامًا بدون موافقة الوالدين، سنقوم بحذف المعلومات من سجلاتنا على الفور. إذا كنت تعتقد أن طفلك قد قدم معلومات شخصية دون موافقتك، يُرجى الاتصال بنا لطلب إزالتها.',
   },
   {
     title: '7. تغييرات على سياسة الخصوصية هذه',
     description:
-      'تحتفظ FoodTok بالحق في تحديث أو تعديل سياسة الخصوصية هذه من وقت لآخر. عندما نقوم بإجراء تغييرات، سنُخطرك من خلال التطبيق أو عن طريق وسائل أخرى للاتصال. يُوصى بمراجعة سياسة الخصوصية هذه بشكل دوري للحصول على أي تحديثات. سيُعد استمرار استخدام تطبيق FoodTok بعد تنفيذ التغييرات مؤشرًا على قبولك لسياسة الخصوصية المحدثة.',
+      'تحتفظ FeedYum بالحق في تحديث أو تعديل سياسة الخصوصية هذه من وقت لآخر. عندما نقوم بإجراء تغييرات، سنُخطرك من خلال التطبيق أو عن طريق وسائل أخرى للاتصال. يُوصى بمراجعة سياسة الخصوصية هذه بشكل دوري للحصول على أي تحديثات. سيُعد استمرار استخدام تطبيق FeedYum بعد تنفيذ التغييرات مؤشرًا على قبولك لسياسة الخصوصية المحدثة.',
   },
 ];
 
