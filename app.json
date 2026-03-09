@@ -22,7 +22,14 @@
         "NSCameraUsageDescription": "FeedYum needs camera access for taking photos and videos",
         "NSPhotoLibraryUsageDescription": "FeedYum needs access to your photos to upload images",
         "NSPhotoLibraryAddUsageDescription": "FeedYum needs access to save photos to your library",
-        "NSMicrophoneUsageDescription": "FeedYum needs microphone access for recording videos"
+        "NSMicrophoneUsageDescription": "FeedYum needs microphone access for recording videos",
+        "LSApplicationQueriesSchemes": [
+          "instagram",
+          "instagram-stories",
+          "whatsapp",
+          "twitter",
+          "fb"
+        ]
       },
       "config": {
         "googleMapsApiKey": "***REMOVED***"
@@ -71,7 +78,16 @@
             "DEFAULT"
           ]
         }
-      ]
+      ],
+      "queries": {
+        "schemes": [
+          "instagram",
+          "instagram-stories",
+          "whatsapp",
+          "twitter",
+          "fb"
+        ]
+      }
     },
     "plugins": [
       [

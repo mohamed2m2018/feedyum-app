@@ -229,12 +229,18 @@ export default function ChatList({ navigation }) {
             </ZText>
           </View>
         )}
-        <Image
-          source={{
-            uri: partner?.avatar || 'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?w=200',
-          }}
-          style={localStyles.avatar}
-        />
+        {partner?.avatar ? (
+          <Image
+            source={{ uri: typeof partner.avatar === 'string' ? partner.avatar : (partner.avatar?.url || partner.avatar?.uri) }}
+            style={localStyles.avatar}
+          />
+        ) : (
+          <View style={[localStyles.avatar, { backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' }]}>
+            <ZText type="B16" color={colors.white}>
+              {(partner?.fullName || partner?.username || '?').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)}
+            </ZText>
+          </View>
+        )}
         <View style={localStyles.chatInfo}>
           <View style={localStyles.chatHeader}>
             <View style={localStyles.chefInfo}>

@@ -906,7 +906,7 @@ const MapLocationPicker = () => {
             {/* Address Label */}
             <View style={localStyles.section}>
               <ZText type="B16" color={colors.textColor} style={localStyles.sectionTitle}>
-                {strings.addressLabel} *
+                {strings.addressLabel}<ZText style={{ color: colors.lightRed }}>{' *'}</ZText>
               </ZText>
               <ZInput
                 placeHolder={strings.addressLabelPlaceholder}
@@ -919,7 +919,7 @@ const MapLocationPicker = () => {
             {/* Building Details */}
             <View style={localStyles.section}>
               <ZText type="B16" color={colors.textColor} style={localStyles.sectionTitle}>
-                {strings.buildingDetails}
+                {strings.buildingDetails}<ZText style={{ color: colors.lightRed }}>{' *'}</ZText>
               </ZText>
               <ZInput
                 placeHolder={strings.buildingNamePlaceholder}

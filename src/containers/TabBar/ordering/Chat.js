@@ -67,18 +67,30 @@ const ChefProfile = ({ chef, orderId, colors, onPress }) => {
     justifyContent: 'center',
   };
 
-  const avatarUri = typeof chef?.avatar === 'string'
+  const avatarUri = typeof chef?.avatar === 'string' && chef.avatar
     ? chef.avatar
-    : (chef?.avatar?.url || chef?.avatar?.uri || 'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?w=200');
+    : (chef?.avatar?.url || chef?.avatar?.uri || null);
+
+  // Generate initials for fallback avatar
+  const initials = (chef?.fullName || chef?.username || '?')
+    .split(' ')
+    .map(w => w[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
 
   return (
     <TouchableOpacity onPress={onPress} style={profileStyles}>
-      <Image
-        source={{
-          uri: avatarUri
-        }}
-        style={avatarStyles}
-      />
+      {avatarUri ? (
+        <Image
+          source={{ uri: avatarUri }}
+          style={avatarStyles}
+        />
+      ) : (
+        <View style={[avatarStyles, { backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' }]}>
+          <ZText type="B14" color={colors.white}>{initials}</ZText>
+        </View>
+      )}
       <View style={profileInfoStyles}>
         <ZText type="B16" color={colors.textColor} numberOfLines={1}>
           {chef?.fullName || chef?.username || strings.defaultChefName}
@@ -630,7 +642,7 @@ export default function ChatScreen({ route }) {
       user: {
         _id: 'system',
         name: strings.orderSystem,
-        avatar: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=200',
+        avatar: null,
       },
       system: true,
       type: 'order_summary',

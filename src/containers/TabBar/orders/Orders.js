@@ -192,17 +192,24 @@ export default function Orders({ navigation }) {
             <View style={[localStyles.unseenDot, { backgroundColor: colors.primary }]} />
           )
         )}
-        <Image
-          source={{
-            uri: optimizeImageUri(
-              item.chef?.avatar ||
-              'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?w=200',
-              50,
-              50
-            ),
-          }}
-          style={localStyles.avatar}
-        />
+        {item.chef?.avatar ? (
+          <Image
+            source={{
+              uri: optimizeImageUri(
+                typeof item.chef.avatar === 'string' ? item.chef.avatar : (item.chef.avatar?.url || item.chef.avatar?.uri),
+                50,
+                50
+              ),
+            }}
+            style={localStyles.avatar}
+          />
+        ) : (
+          <View style={[localStyles.avatar, { backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' }]}>
+            <ZText type="B16" color={colors.white}>
+              {(item.chef?.fullName || item.chef?.username || '?').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)}
+            </ZText>
+          </View>
+        )}
 
         <View style={localStyles.orderInfo}>
           <View style={localStyles.orderHeader}>
