@@ -33,6 +33,7 @@ import request from '../api/request';
 import { useLocation } from '../navigation/locationContext';
 import GoogleMapsService from '../services/GoogleMapsService';
 import branchService from '../api/branchService';
+import Geolocation from '@react-native-community/geolocation';
 
 const { width, height } = Dimensions.get('window');
 
@@ -320,19 +321,54 @@ const MapLocationPicker = () => {
     }
   }, [reverseGeocodePositionSilent]);
 
-  // Center map on current GPS location
+  // Center map on current GPS location (fresh position, not cached context)
   const handleCenterOnCurrentLocation = useCallback(() => {
-    if (location?.latitude && location?.longitude) {
-      const lat = location.latitude;
-      const lng = location.longitude;
+    Geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
 
-      setMarkerPosition({ latitude: lat, longitude: lng });
+        setMarkerPosition({ latitude, longitude });
 
-      // Use silent geocode - don't auto-show form
-      reverseGeocodePositionSilent(lat, lng);
-      setLocationSaved(false);
-      setShowAddressForm(false);
-    }
+        // Animate the map camera to the fresh GPS position
+        mapRef.current?.animateToRegion(
+          {
+            latitude,
+            longitude,
+            latitudeDelta: 0.004,
+            longitudeDelta: 0.004,
+          },
+          500,
+        );
+
+        // Reverse-geocode the new position silently
+        reverseGeocodePositionSilent(latitude, longitude);
+        setLocationSaved(false);
+        setShowAddressForm(false);
+      },
+      (error) => {
+        console.warn('GPS relocate failed:', error.message);
+        // Fallback: use context location if GPS fails
+        if (location?.latitude && location?.longitude) {
+          const lat = location.latitude;
+          const lng = location.longitude;
+
+          setMarkerPosition({ latitude: lat, longitude: lng });
+          mapRef.current?.animateToRegion(
+            {
+              latitude: lat,
+              longitude: lng,
+              latitudeDelta: 0.004,
+              longitudeDelta: 0.004,
+            },
+            500,
+          );
+          reverseGeocodePositionSilent(lat, lng);
+          setLocationSaved(false);
+          setShowAddressForm(false);
+        }
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 5000 },
+    );
   }, [location, reverseGeocodePositionSilent]);
 
   // Fetch coverage areas when radius changes
