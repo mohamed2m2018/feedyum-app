@@ -5,9 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
+    "runtimeVersion": "1.0.0",
     "updates": {
       "url": "https://u.expo.dev/98042cba-f7a5-408c-851b-15482b2769d6",
       "enabled": true,
@@ -108,7 +106,7 @@
             "deploymentTarget": "15.1"
           },
           "android": {
-            "kotlinVersion": "1.9.23",
+            "kotlinVersion": "2.0.21",
             "compileSdkVersion": 35,
             "targetSdkVersion": 35,
             "buildToolsVersion": "35.0.0",
