@@ -311,6 +311,7 @@ const ShoppingCart = () => {
               };
             })(),
             notes: specialInstructions || '', // Backend expects 'notes' not 'specialInstructions'
+            paymentMethod: 'cod',
             ...(appliedPromo && {
               promocode: {
                 code: appliedPromo.code,
@@ -496,6 +497,35 @@ const ShoppingCart = () => {
             <Ionicons name="chevron-forward" size={16} color={colors.grayScale7} />
           </View>
         </TouchableOpacity>
+      </View>
+
+      {/* Payment Method Section */}
+      <View style={localStyles.paymentMethodSection}>
+        <ZText type="B16" color={colors.textColor} style={localStyles.sectionTitle}>
+          {strings.paymentMethod || 'Payment Method'}
+        </ZText>
+        <View
+          style={[
+            localStyles.paymentMethodOption,
+            {
+              backgroundColor: colors.primary + '10',
+              borderColor: colors.primary,
+            }
+          ]}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+            <Ionicons name="cash-outline" size={moderateScale(22)} color={colors.primary} />
+            <View style={{ marginLeft: moderateScale(12), flex: 1 }}>
+              <ZText type="B14" color={colors.textColor}>
+                {strings.cashOnDelivery || 'Cash on Delivery'}
+              </ZText>
+              <ZText type="M12" color={colors.grayScale7}>
+                {strings.codNote || 'Pay with cash when your order arrives'}
+              </ZText>
+            </View>
+          </View>
+          <Ionicons name="checkmark-circle" size={moderateScale(22)} color={colors.primary} />
+        </View>
       </View>
 
       {/* Special Instructions Section */}
@@ -979,6 +1009,19 @@ const localStyles = StyleSheet.create({
     alignItems: 'center',
     padding: moderateScale(12),
     borderRadius: moderateScale(10),
+  },
+  paymentMethodSection: {
+    marginBottom: moderateScale(20),
+    paddingBottom: moderateScale(16),
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.1)',
+  },
+  paymentMethodOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: moderateScale(14),
+    borderRadius: moderateScale(12),
+    borderWidth: 1.5,
   },
 });
 

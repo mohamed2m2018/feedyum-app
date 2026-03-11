@@ -2,6 +2,7 @@ import { OneSignal } from 'react-native-onesignal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { showPersistentClickableToast } from '../utils/toast';
 import DeepLinkingService from './DeepLinkingService';
+import BackgroundAlarmService from './BackgroundAlarmService';
 
 class NotificationService {
   static instance = null;
@@ -52,23 +53,30 @@ class NotificationService {
       }
     });
 
-    // Handle foreground notifications with elegant toast
+    // Handle foreground notifications
     OneSignal.Notifications.addEventListener('foregroundWillDisplay', (event) => {
       console.log('🐞 [NotificationService] Foreground notification received');
 
-      // Prevent default OneSignal banner
+      // Prevent default OneSignal display
       event.preventDefault();
 
       // Don't show toast if this is from a background notification tap
       if (justHandledClick) {
-        console.log('🐞 [NotificationService] Skipping toast - coming from background tap');
+        console.log('🐞 [NotificationService] Skipping - coming from background tap');
         return;
       }
 
       const notification = event.notification;
       const data = notification.additionalData;
 
-      // Show elegant persistent toast - stays until user clicks or dismisses
+      // If it's a new order alarm, display via notifee on high-priority channel
+      if (data?.alarmType === 'newOrder' || data?.type === 'chefDashboard') {
+        console.log('🐞 [NotificationService] Order alarm — displaying via notifee');
+        BackgroundAlarmService.showAlarmNotification();
+        return;
+      }
+
+      // All other notifications: show elegant persistent toast
       showPersistentClickableToast(
         notification.title || 'New Notification',
         notification.body || '',

@@ -50,6 +50,13 @@ const StatusBadge = ({ status, colors }) => {
           text: strings.ready,
           icon: 'checkmark-circle-outline',
         };
+      case 'out_for_delivery':
+        return {
+          color: colors.info || '#2196F3',
+          backgroundColor: (colors.info || '#2196F3') + '20',
+          text: strings.outForDelivery || 'Out for Delivery',
+          icon: 'bicycle-outline',
+        };
       case 'completed':
         return {
           color: colors.primary,
@@ -136,11 +143,11 @@ const StatusUpdateButtons = ({ order, onStatusChange, onReject, onAccept, colors
     switch (order.status) {
       case 'confirmed':
         return 'preparing';
-      case 'preparing': // Should we skip confirmed? Logic in backend implies pending->confirmed->preparing.
-        // If frontend was doing pending->preparing, I'll align with backend.
-        // Assuming 'confirmed' is correct next step from 'pending'.
+      case 'preparing':
         return 'ready';
       case 'ready':
+        return 'out_for_delivery';
+      case 'out_for_delivery':
         return 'completed';
       default:
         return null;
@@ -154,6 +161,8 @@ const StatusUpdateButtons = ({ order, onStatusChange, onReject, onAccept, colors
       case 'preparing':
         return strings.markReady;
       case 'ready':
+        return strings.markOutForDelivery;
+      case 'out_for_delivery':
         return strings.completeOrder;
       default:
         return null;

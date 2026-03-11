@@ -132,6 +132,7 @@ export default function OrderManagement() {
   const route = useRoute();
   const queryClient = useQueryClient();
 
+
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [refreshing, setRefreshing] = useState(false);
 
@@ -148,6 +149,7 @@ export default function OrderManagement() {
     { label: strings.accepted, value: 'confirmed', color: colors.green, count: 0 }, // Backend status is confirmed
     { label: strings.preparing, value: 'preparing', color: colors.blue, count: 0 },
     { label: strings.ready, value: 'ready', color: colors.yellow, count: 0 },
+    { label: strings.outForDelivery || 'Out for Delivery', value: 'out_for_delivery', color: colors.blue, count: 0 },
     { label: strings.completed, value: 'completed', color: colors.primary, count: 0 },
     { label: strings.cancelled, value: 'cancelled', color: colors.redColor, count: 0 },
     { label: strings.expired, value: 'expired', color: colors.redColor, count: 0 },

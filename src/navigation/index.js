@@ -9,6 +9,7 @@ import { ScreenProvider } from './screenContext';
 import DeepLinkingService from '../services/DeepLinkingService';
 import NotificationService from '../services/NotificationService';
 import AppInitializer from '../services/AppInitializer';
+import NewOrderAlarmBanner from '../containers/TabBar/chef/components/NewOrderAlarmBanner';
 
 export default function pAppNavigator() {
   const navigationRef = useNavigationContainerRef();
@@ -343,6 +344,7 @@ export default function pAppNavigator() {
         <BackgroundUploadProvider>
           <LocationProvider>
             <StackNavigation />
+            <NewOrderAlarmBanner />
           </LocationProvider>
         </BackgroundUploadProvider>
       </ScreenProvider>

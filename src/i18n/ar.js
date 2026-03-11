@@ -868,7 +868,19 @@ export default {
   chefReviewing: 'المطبخ يراجع الطلب',
   orderAccepted: 'تم قبول الطلب',
   readyForPickupDelivery: 'جاهز للاستلام/التوصيل',
+  outForDelivery: 'في الطريق إليك',
+  outForDeliveryMessage: 'طلبك في الطريق إليك!',
   orderPlacedStartChatting: 'تم وضع الطلب - ابدأ المحادثة مع المطبخ',
+
+  // Payment Method
+  cashOnDelivery: 'الدفع عند الاستلام',
+  paymentMethod: 'طريقة الدفع',
+  cod: 'كاش',
+  codNote: 'ادفع نقداً عند وصول طلبك',
+
+  // Order Alarm
+  newOrderAlarm: 'طلب جديد!',
+  tapToViewOrders: 'اضغط لعرض الطلبات',
   orderPlacedExclamation: 'تم وضع الطلب!',
   orderPlacedSuccessMessage: 'تم وضع طلبك بنجاح. سيقوم المطبخ بتأكيد طلبك ورسوم التوصيل قريباً.',
 
@@ -1042,6 +1054,7 @@ export default {
   statusAccepted: 'مقبول',
   statusPreparing: 'قيد التحضير',
   statusReady: 'جاهز',
+  statusOutForDelivery: 'في الطريق',
   statusCompleted: 'مكتمل',
   statusCancelled: 'ملغي',
 
@@ -1049,6 +1062,7 @@ export default {
   startPreparing: 'بدء التحضير',
   markReady: 'وضع علامة جاهز',
   markAsReady: 'وضع علامة جاهز',
+  markOutForDelivery: 'في الطريق للتوصيل',
   completeOrder: 'إكمال الطلب',
 
   // Miscellaneous

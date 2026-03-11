@@ -284,6 +284,8 @@ const OrderTracking = () => {
         return colors.info || '#2196F3';
       case 'ready':
         return colors.success || '#4CAF50';
+      case 'out_for_delivery':
+        return colors.info || '#2196F3';
       case 'delivered':
       case 'completed':
         return colors.success || '#4CAF50';
@@ -309,6 +311,8 @@ const OrderTracking = () => {
         return strings.preparing;
       case 'ready':
         return strings.readyForPickupDelivery;
+      case 'out_for_delivery':
+        return strings.outForDelivery;
       case 'delivered':
       case 'completed':
         return strings.delivered;
@@ -345,6 +349,7 @@ const OrderTracking = () => {
       'confirmed',
       'preparing',
       'ready',
+      'out_for_delivery',
       'delivered',
     ];
 
@@ -364,7 +369,7 @@ const OrderTracking = () => {
   };
 
   const renderStatusTimeline = () => {
-    const statuses = ['pending', 'awaiting_confirmation', 'confirmed', 'preparing', 'ready', 'delivered'];
+    const statuses = ['pending', 'awaiting_confirmation', 'confirmed', 'preparing', 'ready', 'out_for_delivery', 'delivered'];
 
     // Validate current status
     let effectiveStatus = currentOrder?.status;
@@ -607,6 +612,23 @@ const OrderTracking = () => {
               {getStatusText(currentOrder.status) || strings.unknown}
             </Text>
           </View>
+
+          {currentOrder.paymentMethod && (
+            <View style={localStyles.infoRow}>
+              <Text style={{ color: '#666666', fontSize: 14 }}>{strings.paymentMethod}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Ionicons
+                  name="cash-outline"
+                  size={moderateScale(16)}
+                  color={'#4CAF50'}
+                  style={{ marginRight: 6 }}
+                />
+                <Text style={{ color: '#4CAF50', fontSize: 14, fontWeight: 'bold' }}>
+                  {currentOrder.paymentMethod === 'cod' ? strings.cashOnDelivery : strings.paymentMethod}
+                </Text>
+              </View>
+            </View>
+          )}
         </View>
       </View>
     );

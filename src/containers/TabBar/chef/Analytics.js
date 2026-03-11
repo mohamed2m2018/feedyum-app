@@ -133,6 +133,7 @@ const RecentOrderItem = ({ order, colors, getStatusTranslation }) => {
       case 'accepted': return '#2196F3';
       case 'preparing': return '#9C27B0';
       case 'ready': case 'ready_for_pickup': return '#4CAF50';
+      case 'out_for_delivery': return '#2196F3';
       case 'completed': return '#4CAF50';
       case 'cancelled': case 'expired': return '#F44336';
       default: return colors.grayScale6;
@@ -201,6 +202,7 @@ export default function Analytics() {
     accepted: '#2196F3',
     preparing: '#9C27B0',
     ready: '#4CAF50',
+    out_for_delivery: '#2196F3',
     completed: '#4CAF50',
     cancelled: '#F44336',
     expired: '#F44336',
@@ -213,6 +215,7 @@ export default function Analytics() {
       case 'accepted': return strings.statusAccepted;
       case 'preparing': return strings.statusPreparing;
       case 'ready': case 'ready_for_pickup': return strings.statusReady;
+      case 'out_for_delivery': return strings.statusOutForDelivery;
       case 'completed': return strings.statusCompleted;
       case 'cancelled': return strings.statusCancelled;
       case 'expired': return strings.expired;

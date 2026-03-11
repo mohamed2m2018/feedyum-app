@@ -878,7 +878,19 @@ export default {
   chefReviewing: 'Kitchen Reviewing',
   orderAccepted: 'Order Accepted',
   readyForPickupDelivery: 'Ready for Pickup/Delivery',
+  outForDelivery: 'Out for Delivery',
+  outForDeliveryMessage: 'Your order is on its way!',
   orderPlacedStartChatting: 'Order placed - Start chatting with kitchen',
+
+  // Payment Method
+  cashOnDelivery: 'Cash on Delivery',
+  paymentMethod: 'Payment Method',
+  cod: 'COD',
+  codNote: 'Pay with cash when your order arrives',
+
+  // Order Alarm
+  newOrderAlarm: 'New Order!',
+  tapToViewOrders: 'Tap to view orders',
   orderPlacedExclamation: 'Order Placed!',
   orderPlacedSuccessMessage:
     'Your order has been placed successfully. The kitchen will confirm your order and delivery fee shortly.',
@@ -1065,6 +1077,7 @@ export default {
   statusAccepted: 'Accepted',
   statusPreparing: 'Preparing',
   statusReady: 'Ready',
+  statusOutForDelivery: 'Out for Delivery',
   statusCompleted: 'Completed',
   statusCancelled: 'Cancelled',
 
@@ -1072,6 +1085,7 @@ export default {
   startPreparing: 'Start Preparing',
   markReady: 'Mark Ready',
   markAsReady: 'Mark as Ready',
+  markOutForDelivery: 'Out for Delivery',
   completeOrder: 'Complete Order',
   promocodeCreatedSuccessfully: 'Promocode created successfully',
   promocodeDeletedSuccessfully: 'Promocode deleted successfully',

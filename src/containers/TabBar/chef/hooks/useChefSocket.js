@@ -1,12 +1,14 @@
 // Library imports
 import { useEffect, useRef, useCallback } from 'react';
 import { useQueryClient } from 'react-query';
-import { Platform, Vibration } from 'react-native';
+import { useSelector } from 'react-redux';
 import io from 'socket.io-client';
 import * as Notifications from 'expo-notifications';
 
 // Local imports
 import request from '../../../../api/request';
+import OrderAlarmService from '../../../../services/OrderAlarmService';
+import BackgroundAlarmService from '../../../../services/BackgroundAlarmService';
 
 // Configure notifications to show when app is in foreground
 Notifications.setNotificationHandler({
@@ -20,11 +22,15 @@ Notifications.setNotificationHandler({
 /**
  * Hook to manage real-time socket updates for the chef dashboard
  * Automatically refetches data when orders or dishes change
+ * ONLY activates for chef-type users
  * @param {string} userId - The chef's user ID
  */
 export const useChefSocket = (userId) => {
   const socketRef = useRef(null);
   const queryClient = useQueryClient();
+
+  // Get user type from Redux to guard against non-chef users
+  const userType = useSelector(state => state.user?.user?.type);
 
   const handleDashboardUpdate = useCallback((data) => {
     console.log('[ChefSocket] Received dashboard update:', data);
@@ -37,17 +43,11 @@ export const useChefSocket = (userId) => {
         queryClient.invalidateQueries(['chefOrders', userId]);
         console.log('[ChefSocket] Invalidated queries for new order');
 
-        // Ring the chef mobile
-        Vibration.vibrate([0, 500, 200, 500]);
-        Notifications.scheduleNotificationAsync({
-          content: {
-            title: "New Order! 🔔",
-            body: "You have received a new order.",
-            sound: true,
-            priority: Notifications.AndroidNotificationPriority.HIGH,
-          },
-          trigger: null,
-        }).catch(err => console.log('Error showing notification:', err));
+        // Start persistent alarm (looping sound + vibration)
+        OrderAlarmService.startAlarm();
+
+        // Show persistent notification via notifee (works even if app goes to background)
+        BackgroundAlarmService.showAlarmNotification();
         break;
 
       case 'orderStatusUpdate':
@@ -75,8 +75,14 @@ export const useChefSocket = (userId) => {
   }, [queryClient, userId]);
 
   useEffect(() => {
+    // Guard: only connect for chef users with a valid userId
     if (!userId) {
       console.log('[ChefSocket] No userId provided, skipping socket connection');
+      return;
+    }
+
+    if (userType && userType !== 'chef') {
+      console.log('[ChefSocket] User is not a chef, skipping socket connection');
       return;
     }
 
@@ -120,14 +126,16 @@ export const useChefSocket = (userId) => {
         socketRef.current.disconnect();
         socketRef.current = null;
       }
+      // Stop alarm if playing when hook unmounts
+      OrderAlarmService.stopAlarm();
     };
-  }, [userId, handleDashboardUpdate]);
+  }, [userId, userType, handleDashboardUpdate]);
 
   return {
     socket: socketRef.current,
     isConnected: socketRef.current?.connected || false,
+    stopAlarm: () => OrderAlarmService.stopAlarm(),
   };
 };
 
 export default useChefSocket;
-

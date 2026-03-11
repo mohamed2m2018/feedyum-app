@@ -15,6 +15,7 @@ import firebase from '@react-native-firebase/app';
 import { useStorage } from './utils/useStorage';
 
 import NotificationService from './services/NotificationService';
+import BackgroundAlarmService from './services/BackgroundAlarmService';
 
 const firebaseConfig = {
   apiKey:
@@ -52,6 +53,11 @@ const App = () => {
       notificationService.setLanguage(currentLang);
     };
     handleLanguage();
+
+    // Initialize background alarm service (creates notification channel)
+    BackgroundAlarmService.initialize()
+      .then(() => console.log('[App] BackgroundAlarmService initialized'))
+      .catch(err => console.error('[App] BackgroundAlarmService init FAILED:', err));
 
     if (firebase.getApps && !firebase.getApps().length) {
       try {
