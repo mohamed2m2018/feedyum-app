@@ -176,6 +176,9 @@ class DeepLinkingService {
       hashtag: /^\/hashtag\/([a-zA-Z0-9_]+)$/i,
       sound: /^\/sound\/([a-f\d]{24})$/i,
 
+      // Support deep links
+      supportChat: /^\/support-chat$/i,
+
       // Auth deep links
       resetPassword: /^\/reset-password$/i,
     };
@@ -323,6 +326,11 @@ class DeepLinkingService {
           break;
         case 'sound':
           this.navigateToSound(id, params);
+          break;
+
+        // Support navigation
+        case 'supportChat':
+          this.navigateToSupportChat(params);
           break;
 
         // Auth navigation
@@ -775,6 +783,16 @@ class DeepLinkingService {
     DeepLinkingService.navigationRef?.dispatch(
       CommonActions.navigate('SelectSound', {
         soundId,
+        ...params
+      })
+    );
+  }
+
+  // Support navigation
+  navigateToSupportChat(params) {
+    console.log('🐞 [DeepLinkingService] Navigating to SupportChat with params:', params);
+    DeepLinkingService.navigationRef?.dispatch(
+      CommonActions.navigate('SupportChat', {
         ...params
       })
     );

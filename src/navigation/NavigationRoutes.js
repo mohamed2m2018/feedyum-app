@@ -78,6 +78,7 @@ import MapLocationPicker from '../components/MapLocationPicker';
 import ChefOrderDetails from '../containers/TabBar/chef/ChefOrderDetails';
 import ChefBranches from '../screens/ChefBranches';
 import EditReel from '../containers/TabBar/add/EditReel';
+import SupportChat from '../containers/TabBar/profile/SupportChat';
 
 export const TabRoute = {
   ForYou: ForYou,
@@ -156,4 +157,5 @@ export const StackRoute = {
   ChefBranches,
   Orders,
   EditReel,
+  SupportChat,
 };

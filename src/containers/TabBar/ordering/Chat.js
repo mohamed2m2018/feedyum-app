@@ -127,11 +127,28 @@ export default function ChatScreen({ route }) {
   const [currentPage, setCurrentPage] = useState(1); // Pagination
   const [hasMoreMessages, setHasMoreMessages] = useState(true); // Whether more messages exist
   const [isLoadingEarlier, setIsLoadingEarlier] = useState(false); // Loading older messages
+  const [chatAvailable, setChatAvailable] = useState(true); // Whether chef has chat enabled
   const socketRef = useRef(null);
   const textInputRef = useRef(null);
   const messageContainerRef = useRef(null);
   const { data: currentUserData } = useQuery('user', () => request.get('/user'));
   const currentUserId = currentUserData?.data?.user?._id;
+  const isCurrentUserChef = currentUserId === chefId;
+
+  // Check if the chef has chat enabled
+  useEffect(() => {
+    const checkChatStatus = async () => {
+      try {
+        const response = await request.get(`/chat/chat-status/${chefId}`);
+        setChatAvailable(response?.data?.chatEnabled !== false);
+      } catch (error) {
+        console.error('[Chat] Failed to check chat status:', error);
+        // Default to available on error
+        setChatAvailable(true);
+      }
+    };
+    if (chefId) checkChatStatus();
+  }, [chefId]);
 
   // Add handleEditMessage function
   const handleEditMessage = useCallback((message) => {
@@ -990,6 +1007,64 @@ export default function ChatScreen({ route }) {
           <ZText type="M14" color={colors.grayScale6}>
             {strings.chatDisabledCancelled || 'Chat is disabled for cancelled orders'}
           </ZText>
+        </View>
+      );
+    }
+
+    // Disable chat when chef has paused chat
+    if (!chatAvailable) {
+      // Chef sees self-reminder, customer gets redirected to support
+      if (isCurrentUserChef) {
+        return (
+          <View style={{
+            paddingVertical: moderateScale(14),
+            paddingHorizontal: moderateScale(20),
+            backgroundColor: colors.inputBg,
+            borderTopWidth: 1,
+            borderTopColor: colors.bColor,
+            alignItems: 'center',
+            flexDirection: 'row',
+            justifyContent: 'center',
+            gap: moderateScale(8),
+          }}>
+            <Ionicons name="chatbubbles-outline" size={moderateScale(18)} color={colors.grayScale6} />
+            <ZText type="M14" color={colors.grayScale6}>
+              {strings.chatDisabledSelfReminder}
+            </ZText>
+          </View>
+        );
+      }
+      // Customer: show Contact Support button with order context
+      return (
+        <View style={{
+          paddingVertical: moderateScale(12),
+          paddingHorizontal: moderateScale(20),
+          backgroundColor: colors.inputBg,
+          borderTopWidth: 1,
+          borderTopColor: colors.bColor,
+          alignItems: 'center',
+          gap: moderateScale(8),
+        }}>
+          <ZText type="M13" color={colors.grayScale6}>
+            {strings.chatDisabledByChef}
+          </ZText>
+          <TouchableOpacity
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              backgroundColor: colors.primary,
+              paddingVertical: moderateScale(10),
+              paddingHorizontal: moderateScale(20),
+              borderRadius: moderateScale(20),
+              gap: moderateScale(6),
+            }}
+            onPress={() => navigation.navigate(StackNav.SupportChat, { orderId })}
+          >
+            <Ionicons name="headset-outline" size={moderateScale(16)} color={colors.white} />
+            <ZText type="B14" color={colors.white}>
+              {strings.contactSupport}
+            </ZText>
+          </TouchableOpacity>
         </View>
       );
     }

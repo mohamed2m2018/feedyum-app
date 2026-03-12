@@ -158,6 +158,7 @@ export default {
   tierInvalidRange: 'From distance must be less than To distance',
   // Order Confirmation
   awaitingConfirmation: 'Awaiting Your Confirmation',
+  awaitingCustomerConfirmation: 'Awaiting Customer Confirmation',
   awaitingConfirmationDesc: 'The kitchen has accepted your order. Please review and confirm.',
   orderNeedsConfirmation: 'You have an order waiting for your confirmation!',
   confirmNow: 'Confirm Now',
@@ -764,8 +765,12 @@ export default {
   paymentSuccessful: 'Payment Successful',
   walletChargedSuccessfully: 'Your wallet has been charged successfully.',
   commissionInfoMessage: 'A {percentage}% commission is deducted from the subtotal of each confirmed order',
-  platformCommission: 'Platform Commission',
+  platformFeeInfoMessage: 'A fixed {fee} EGP platform fee is deducted from your wallet per confirmed order',
+  platformFeeRate: 'Platform Fee Rate',
+  egpPerOrder: 'EGP per order',
+  platformCommission: 'Platform Fee',
   yourEarnings: 'Your Earnings',
+  whatYouGet: 'What you get',
   totalCustomerPays: 'What customer pays',
   deductedFromWallet: 'Deducted from your wallet upon order confirmation',
   commissionFormula: 'Commission % × (Subtotal - Discount)',
@@ -914,7 +919,7 @@ export default {
   serviceFee: 'Service Fee',
   serviceFees: 'Service Fees',
   serviceFeeRate: 'Service Fee Rate',
-  serviceFeePercentage: 'Service Fee (5%)',
+  serviceFeePercentage: 'Platform Fee (4 EGP)',
   loading: 'Loading...',
   thankYou: 'Thank You!',
   reviewsSubmittedSuccessfully:
@@ -1841,5 +1846,26 @@ export default {
   kitchensSearchExamples: ['Grilled chicken', 'Homemade food', 'Desserts'],
   reviewsSearchExamples: ['Delicious homemade', 'New experience', 'Popular restaurant'],
   defaultSearchExamples: ['Burger', 'Pizza', 'Salad'],
+
+  // Chat Availability Toggle
+  availableForChat: 'Available for Chat',
+  chatPaused: 'Chat Paused',
+  chatPausedDesc: 'Customers cannot send you messages',
+  confirmationRequired: 'Confirmation Required',
+  confirmationSkipped: 'Auto-Confirm Orders',
+  confirmationRequiredDesc: 'Customers must confirm after you accept',
+  confirmationSkippedDesc: 'Orders are confirmed when you accept',
+  availableForChatDesc: 'Customers can message you about orders',
+  chatDisabledByChef: 'This kitchen has disabled chat',
+  chatDisabledSelfReminder: 'Your chat is currently paused. Enable it from your Dashboard.',
+  chatUnavailable: 'Chat Unavailable',
+
+  // Support Chat
+  contactSupport: 'Contact Support',
+  contactSupportDesc: 'Chat is unavailable, contact us',
+  whatsapp: 'WhatsApp',
+  supportChat: 'Support Chat',
+  loadingSupportChat: 'Loading support chat...',
+  supportChatError: 'Failed to load support chat. Please try again.',
 
 };

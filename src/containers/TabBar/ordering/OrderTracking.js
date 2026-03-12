@@ -8,6 +8,7 @@ import {
   AppState,
   Text,
   TouchableOpacity,
+  Linking,
 } from 'react-native';
 import { showErrorToast, showSuccessToast, showActionDialog } from '../../../utils/toast';
 import { ALERT_TYPE } from 'react-native-alert-notification';
@@ -981,29 +982,50 @@ const OrderTracking = () => {
         {/* Contact Kitchen Card */}
         <TouchableOpacity
           style={localStyles.contactCard}
-          onPress={handleChatWithChef}
+          onPress={() => {
+            const isChatAvailable = currentOrder?.chef?.chatEnabled !== false;
+            if (isChatAvailable) {
+              handleChatWithChef();
+            } else {
+              navigation.navigate(StackNav.SupportChat, { orderId: currentOrder?._id });
+            }
+          }}
           activeOpacity={0.7}
         >
           <View style={localStyles.contactCardLeft}>
             <View style={localStyles.contactCardAvatar}>
-              <Ionicons name="restaurant" size={moderateScale(18)} color="#FF4D67" />
+              <Ionicons
+                name={currentOrder?.chef?.chatEnabled !== false ? 'restaurant' : 'headset'}
+                size={moderateScale(18)}
+                color="#FF4D67"
+              />
             </View>
             <View style={{ flex: 1 }}>
               <ZText type="B14" color="#333" numberOfLines={1}>
-                {(typeof currentOrder?.chef === 'object' && currentOrder?.chef?.fullName)
-                  || (typeof currentOrder?.chef === 'object' && currentOrder?.chef?.username)
-                  || strings.unknownChef
-                  || 'Kitchen'}
+                {currentOrder?.chef?.chatEnabled !== false
+                  ? ((typeof currentOrder?.chef === 'object' && currentOrder?.chef?.fullName)
+                    || (typeof currentOrder?.chef === 'object' && currentOrder?.chef?.username)
+                    || strings.unknownChef
+                    || 'Kitchen')
+                  : (strings.contactSupport || 'Contact Support')}
               </ZText>
               <ZText type="M12" color="#999">
-                {isCurrentUserChef ? (strings.chatWithCustomer || 'Chat with Customer') : (strings.tapToChat || 'Tap to chat')}
+                {currentOrder?.chef?.chatEnabled !== false
+                  ? (isCurrentUserChef ? (strings.chatWithCustomer || 'Chat with Customer') : (strings.tapToChat || 'Tap to chat'))
+                  : (strings.contactSupportDesc || 'Chat is unavailable, contact us')}
               </ZText>
             </View>
           </View>
           <View style={localStyles.contactCardButton}>
-            <Ionicons name="chatbubble-ellipses" size={moderateScale(16)} color="#FFFFFF" />
+            <Ionicons
+              name={currentOrder?.chef?.chatEnabled !== false ? 'chatbubble-ellipses' : 'headset'}
+              size={moderateScale(16)}
+              color="#FFFFFF"
+            />
             <ZText type="B12" color="#FFFFFF" style={{ marginLeft: moderateScale(4) }}>
-              {strings.chat || 'Chat'}
+              {currentOrder?.chef?.chatEnabled !== false
+                ? (strings.chat || 'Chat')
+                : (strings.support || 'Support')}
             </ZText>
           </View>
         </TouchableOpacity>

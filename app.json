@@ -147,6 +147,12 @@
         }
       ],
       "expo-web-browser",
+      [
+        "react-native-crisp-chat-sdk",
+        {
+          "websiteId": "dcd331d3-58d2-4d93-aa4f-b5c8feab9d11"
+        }
+      ],
       "./plugins/withOrderAlarmChannel",
       "./plugins/withNotifeeMaven"
     ],

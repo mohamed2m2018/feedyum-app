@@ -72,6 +72,7 @@ export default {
   tierInvalidRange: 'مسافة البداية يجب أن تكون أقل من مسافة النهاية',
   // Order Confirmation
   awaitingConfirmation: 'في انتظار تأكيدك',
+  awaitingCustomerConfirmation: 'في انتظار تأكيد العميل',
   awaitingConfirmationDesc: 'المطبخ قبل طلبك. يرجى المراجعة والتأكيد.',
   orderNeedsConfirmation: 'لديك طلب ينتظر تأكيدك!',
   confirmNow: 'أكّد الآن',
@@ -757,8 +758,12 @@ export default {
   paymentSuccessful: 'تم الدفع بنجاح',
   walletChargedSuccessfully: 'تم شحن محفظتك بنجاح.',
   commissionInfoMessage: 'يتم خصم عمولة {percentage}٪ من إجمالي كل طلب مؤكد',
-  platformCommission: 'عمولة المنصة',
+  platformFeeInfoMessage: 'يتم خصم رسوم منصة ثابتة {fee} ج.م من محفظتك لكل طلب مؤكد',
+  platformFeeRate: 'رسوم المنصة',
+  egpPerOrder: 'ج.م لكل طلب',
+  platformCommission: 'رسوم المنصة',
   yourEarnings: 'صافي أرباحك',
+  whatYouGet: 'اللي هتاخده',
   totalCustomerPays: 'المبلغ الذي يدفعه العميل',
   deductedFromWallet: 'يُخصم من محفظتك عند تأكيد العميل للطلب',
   commissionFormula: 'نسبة العمولة × (الإجمالي الفرعي - الخصم)',
@@ -903,7 +908,7 @@ export default {
   serviceFee: 'رسوم الخدمة',
   serviceFees: 'رسوم الخدمة',
   serviceFeeRate: 'معدل رسوم الخدمة',
-  serviceFeePercentage: 'رسوم الخدمة (5%)',
+  serviceFeePercentage: 'رسوم المنصة (4 ج.م)',
   loading: 'جاري التحميل...',
   thankYou: 'شكراً لك!',
   reviewsSubmittedSuccessfully: 'تم إرسال مراجعاتك بنجاح.',
@@ -1824,5 +1829,26 @@ export default {
   kitchensSearchExamples: ['فراخ مشوية', 'أكل بيتي', 'حلويات'],
   reviewsSearchExamples: ['أكل بيتي لذيذ', 'تجربة جديدة', 'مطعم شعبي'],
   defaultSearchExamples: ['برجر', 'بيتزا', 'سلطة'],
+
+  // Chat Availability Toggle
+  availableForChat: 'متاح للمحادثة',
+  chatPaused: 'المحادثة متوقفة',
+  chatPausedDesc: 'لا يمكن للعملاء إرسال رسائل لك',
+  confirmationRequired: 'تأكيد العميل مطلوب',
+  confirmationSkipped: 'تأكيد تلقائي',
+  confirmationRequiredDesc: 'العميل لازم يأكد بعد ما تقبل الطلب',
+  confirmationSkippedDesc: 'الطلب بيتأكد علطول لما تقبله',
+  availableForChatDesc: 'يمكن للعملاء مراسلتك بشأن الطلبات',
+  chatDisabledByChef: 'هذا المطبخ أوقف المحادثة',
+  chatDisabledSelfReminder: 'المحادثة متوقفة حالياً. فعّلها من لوحة التحكم.',
+  chatUnavailable: 'المحادثة غير متاحة',
+
+  // Support Chat
+  contactSupport: 'تواصل مع الدعم',
+  contactSupportDesc: 'المحادثة غير متاحة، تواصل معنا',
+  whatsapp: 'واتساب',
+  supportChat: 'دعم المحادثة',
+  loadingSupportChat: 'جاري تحميل دعم المحادثة...',
+  supportChatError: 'فشل تحميل دعم المحادثة. حاول مرة أخرى.',
 
 };

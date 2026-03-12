@@ -920,10 +920,10 @@ export default function Wallet({ navigation }) {
           />
           <View style={styles.ml15}>
             <ZText type="m14" color={colors.textColor}>
-              {strings.serviceFeeRate}
+              {strings.platformFeeRate}
             </ZText>
             <ZText type="m12" color={colors.grayScale7}>
-              5% per order
+              {walletData?.summary?.orderFee || 4} {strings.egpPerOrder}
             </ZText>
           </View>
         </View>
@@ -1177,7 +1177,7 @@ export default function Wallet({ navigation }) {
         {renderBalanceCard()}
 
         {/* Commission info banner */}
-        {walletData?.summary?.commissionPercentage != null && (
+        {walletData?.summary?.orderFee != null && (
           <View style={[localStyles.commissionBanner, { backgroundColor: colors.primary + '12', borderColor: colors.primary + '30' }]}>
             <Ionicons
               name="information-circle-outline"
@@ -1186,7 +1186,7 @@ export default function Wallet({ navigation }) {
               style={styles.mr10}
             />
             <ZText type="m12" color={colors.primary} style={styles.flex}>
-              {strings.commissionInfoMessage.replace('{percentage}', walletData.summary.commissionPercentage)}
+              {strings.platformFeeInfoMessage.replace('{fee}', walletData.summary.orderFee)}
             </ZText>
           </View>
         )}

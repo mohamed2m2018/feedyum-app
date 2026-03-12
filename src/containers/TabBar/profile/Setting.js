@@ -105,6 +105,12 @@ export default Setting = ({ navigation }) => {
       icon: 'alert-circle-outline',
       route: StackNav.PrivacyPolicy,
     },
+    {
+      id: 9,
+      title: strings.contactSupport,
+      icon: 'headset-outline',
+      route: StackNav.SupportChat,
+    },
   ];
 
   const color = useSelector(state => state.theme.theme);

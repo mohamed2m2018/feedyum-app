@@ -68,6 +68,7 @@ const ShoppingCart = () => {
   const [specialInstructions, setSpecialInstructions] = useState('');
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [calculatedDeliveryFee, setCalculatedDeliveryFee] = useState(null);
+  const [calculatedServiceFee, setCalculatedServiceFee] = useState(null);
   const [loadingDeliveryFee, setLoadingDeliveryFee] = useState(false);
 
   // Promo code state
@@ -95,6 +96,7 @@ const ShoppingCart = () => {
     const fetchDeliveryFee = async () => {
       if (!chef?.id || !selectedAddress) {
         setCalculatedDeliveryFee(null);
+        setCalculatedServiceFee(null);
         return;
       }
 
@@ -103,27 +105,31 @@ const ShoppingCart = () => {
 
       if (!lat || !long) {
         setCalculatedDeliveryFee(null);
+        setCalculatedServiceFee(null);
         return;
       }
 
       try {
         setLoadingDeliveryFee(true);
-        const response = await request.get(`/orders/check-delivery/${chef.id}?lat=${lat}&long=${long}`);
+        const response = await request.get(`/orders/check-delivery/${chef.id}?lat=${lat}&long=${long}&subtotal=${subtotal || 0}`);
         if (response.data?.success && response.data?.canDeliver) {
           setCalculatedDeliveryFee(response.data.deliveryFee || 0);
+          setCalculatedServiceFee(response.data.serviceFee != null ? response.data.serviceFee : null);
         } else {
           setCalculatedDeliveryFee(null);
+          setCalculatedServiceFee(null);
         }
       } catch (err) {
         console.log('Failed to fetch delivery fee:', err);
         setCalculatedDeliveryFee(null);
+        setCalculatedServiceFee(null);
       } finally {
         setLoadingDeliveryFee(false);
       }
     };
 
     fetchDeliveryFee();
-  }, [chef?.id, selectedAddress]);
+  }, [chef?.id, selectedAddress, subtotal]);
 
   // Memoize expensive calculations
   const cartSummary = useMemo(() => ({
@@ -695,6 +701,17 @@ const ShoppingCart = () => {
           </View>
         )}
 
+        {calculatedServiceFee != null && calculatedServiceFee > 0 && (
+          <View style={localStyles.summaryRow}>
+            <ZText type="M14" color={colors.grayScale7}>
+              {strings.serviceFee}
+            </ZText>
+            <ZText type="M14" color={colors.textColor}>
+              {calculatedServiceFee} {strings.EGP}
+            </ZText>
+          </View>
+        )}
+
         <View style={[localStyles.summaryRow, localStyles.totalRow]}>
           <ZText type="B18" color={colors.textColor}>
             {strings.total}
@@ -703,7 +720,7 @@ const ShoppingCart = () => {
             {(() => {
               const discount = appliedPromo?.discountAmount || 0;
               if (calculatedDeliveryFee !== null) {
-                return `${Math.max(0, subtotal + calculatedDeliveryFee - discount).toFixed(0)} ${strings.EGP}`;
+                return `${Math.max(0, subtotal + calculatedDeliveryFee + (calculatedServiceFee || 0) - discount).toFixed(0)} ${strings.EGP}`;
               }
               return `${Math.max(0, subtotal - discount).toFixed(0)} ${strings.EGP} ${strings.plusDelivery}`;
             })()}

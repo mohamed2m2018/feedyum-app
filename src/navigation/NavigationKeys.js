@@ -80,4 +80,5 @@ export const StackNav = {
   ChefBranches: 'ChefBranches',
   Orders: 'Orders',
   EditReel: 'EditReel',
+  SupportChat: 'SupportChat',
 };

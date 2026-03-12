@@ -345,6 +345,10 @@ export default function StackNavigation() {
         name={StackNav.Report}
         component={StackRoute.Report}
       />
+      <Stack.Screen
+        name={StackNav.SupportChat}
+        component={StackRoute.SupportChat}
+      />
     </Stack.Navigator>
   );
 }

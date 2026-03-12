@@ -1,6 +1,6 @@
 // Library imports
 import React, { useState, useCallback } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, Switch } from 'react-native';
 import { useSelector } from 'react-redux';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -16,6 +16,8 @@ import { styles } from '../../../themes';
 import { moderateScale } from '../../../common/constants';
 import { StackNav } from '../../../navigation/NavigationKeys';
 import strings from '../../../i18n/strings';
+import request from '../../../api/request';
+import { useQuery, useQueryClient } from 'react-query';
 
 // Format currency with K/M suffix for large numbers
 const formatCurrency = (value) => {
@@ -32,11 +34,52 @@ export default function ChefDashboard() {
   const colors = useSelector(state => state.theme.theme);
   const navigation = useNavigation();
   const route = useRoute();
+  const queryClient = useQueryClient();
   const isFromProfile = route.params?.isFromProfile;
   const [refreshing, setRefreshing] = useState(false);
   const { data: stats, refetch } = useDashboardStats();
   const { data: recentActivity = [], refetch: refetchActivity } = useRecentActivity();
   const { unseenOrdersCount, unreadChatsCount } = useNotificationCounts();
+
+  // User data for chat toggle
+  const { data: userData } = useQuery('user', () => request.get('/user'));
+  const user = userData?.data?.user;
+  const [chatEnabled, setChatEnabled] = useState(true);
+  const [requireConfirmation, setRequireConfirmation] = useState(true);
+
+  // Sync chatEnabled and requireConfirmation with server data when user loads
+  useFocusEffect(
+    useCallback(() => {
+      if (user?.chatEnabled !== undefined) {
+        setChatEnabled(user.chatEnabled !== false);
+      }
+      if (user?.chefSettings?.requireCustomerConfirmation !== undefined) {
+        setRequireConfirmation(user.chefSettings.requireCustomerConfirmation !== false);
+      }
+    }, [user?.chatEnabled, user?.chefSettings?.requireCustomerConfirmation])
+  );
+
+  const handleChatToggle = useCallback(async (value) => {
+    setChatEnabled(value);
+    try {
+      await request.patch('/user', { chatEnabled: value });
+      queryClient.invalidateQueries('user');
+    } catch (error) {
+      console.error('[ChefDashboard] Failed to update chat status:', error);
+      setChatEnabled(!value);
+    }
+  }, [queryClient]);
+
+  const handleConfirmationToggle = useCallback(async (value) => {
+    setRequireConfirmation(value);
+    try {
+      await request.patch('/user', { requireCustomerConfirmation: value });
+      queryClient.invalidateQueries('user');
+    } catch (error) {
+      console.error('[ChefDashboard] Failed to update confirmation setting:', error);
+      setRequireConfirmation(!value);
+    }
+  }, [queryClient]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -105,6 +148,108 @@ export default function ChefDashboard() {
           <ZText type="M16" color={colors.grayScale7}>
             {strings.restaurantOverview}
           </ZText>
+        </View>
+
+        {/* Chat Availability Toggle Banner */}
+        <View style={[
+          localStyles.chatToggleBanner,
+          {
+            backgroundColor: chatEnabled
+              ? (colors.success || '#4CAF50') + '12'
+              : (colors.grayScale4 || '#BDBDBD') + '20',
+            borderColor: chatEnabled
+              ? (colors.success || '#4CAF50') + '30'
+              : (colors.grayScale4 || '#BDBDBD') + '40',
+          },
+        ]}>
+          <View style={[
+            localStyles.chatToggleIcon,
+            {
+              backgroundColor: chatEnabled
+                ? (colors.success || '#4CAF50')
+                : (colors.grayScale7 || '#757575'),
+            },
+          ]}>
+            <Ionicons
+              name={chatEnabled ? 'chatbubbles' : 'chatbubbles-outline'}
+              size={moderateScale(22)}
+              color={colors.white}
+            />
+          </View>
+          <View style={localStyles.chatToggleInfo}>
+            <ZText
+              type="B16"
+              color={chatEnabled
+                ? (colors.success || '#4CAF50')
+                : (colors.grayScale7 || '#757575')
+              }
+            >
+              {chatEnabled ? strings.availableForChat : strings.chatPaused}
+            </ZText>
+            <ZText type="M12" color={colors.grayScale7}>
+              {chatEnabled ? strings.availableForChatDesc : strings.chatPausedDesc}
+            </ZText>
+          </View>
+          <Switch
+            value={chatEnabled}
+            onValueChange={handleChatToggle}
+            trackColor={{
+              false: colors.grayScale3 || '#E0E0E0',
+              true: (colors.success || '#4CAF50') + '80',
+            }}
+            thumbColor={chatEnabled ? (colors.success || '#4CAF50') : colors.grayScale7 || '#757575'}
+          />
+        </View>
+
+        {/* Customer Confirmation Toggle Banner */}
+        <View style={[
+          localStyles.chatToggleBanner,
+          {
+            backgroundColor: requireConfirmation
+              ? (colors.primary) + '12'
+              : (colors.grayScale4 || '#BDBDBD') + '20',
+            borderColor: requireConfirmation
+              ? (colors.primary) + '30'
+              : (colors.grayScale4 || '#BDBDBD') + '40',
+          },
+        ]}>
+          <View style={[
+            localStyles.chatToggleIcon,
+            {
+              backgroundColor: requireConfirmation
+                ? colors.primary
+                : (colors.grayScale7 || '#757575'),
+            },
+          ]}>
+            <Ionicons
+              name={requireConfirmation ? 'shield-checkmark' : 'shield-checkmark-outline'}
+              size={moderateScale(22)}
+              color={colors.white}
+            />
+          </View>
+          <View style={localStyles.chatToggleInfo}>
+            <ZText
+              type="B16"
+              color={requireConfirmation
+                ? colors.primary
+                : (colors.grayScale7 || '#757575')
+              }
+            >
+              {requireConfirmation ? (strings.confirmationRequired || 'Confirmation Required') : (strings.confirmationSkipped || 'Auto-Confirm Orders')}
+            </ZText>
+            <ZText type="M12" color={colors.grayScale7}>
+              {requireConfirmation ? (strings.confirmationRequiredDesc || 'Customers must confirm after you accept') : (strings.confirmationSkippedDesc || 'Orders are confirmed when you accept')}
+            </ZText>
+          </View>
+          <Switch
+            value={requireConfirmation}
+            onValueChange={handleConfirmationToggle}
+            trackColor={{
+              false: colors.grayScale3 || '#E0E0E0',
+              true: (colors.primary) + '80',
+            }}
+            thumbColor={requireConfirmation ? colors.primary : colors.grayScale7 || '#757575'}
+          />
         </View>
 
         {/* Wallet Card */}
@@ -439,5 +584,25 @@ const localStyles = StyleSheet.create({
   headerRightSection: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  chatToggleBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: moderateScale(14),
+    borderRadius: moderateScale(14),
+    marginBottom: moderateScale(20),
+    borderWidth: 1,
+  },
+  chatToggleIcon: {
+    width: moderateScale(42),
+    height: moderateScale(42),
+    borderRadius: moderateScale(21),
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: moderateScale(12),
+  },
+  chatToggleInfo: {
+    flex: 1,
+    marginRight: moderateScale(8),
   },
 });

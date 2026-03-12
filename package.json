@@ -61,6 +61,7 @@
     "react-native-background-upload": "^6.6.0",
     "react-native-compressor": "^1.13.0",
     "react-native-create-thumbnail": "^2.1.1",
+    "react-native-crisp-chat-sdk": "^0.23.1",
     "react-native-double-tap": "^1.0.1",
     "react-native-dropdown-select-list": "^2.0.5",
     "react-native-element-dropdown": "^2.12.2",

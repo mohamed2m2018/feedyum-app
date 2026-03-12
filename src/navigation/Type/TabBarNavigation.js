@@ -512,19 +512,28 @@ export default function TabBarNavigation({ route, navigation }) {
                 style={[localStyles.modalSecondaryBtn, { backgroundColor: colors.primary + '15' }]}
                 onPress={() => {
                   const order = awaitingOrderModal.order;
+                  const isChatAvailable = order?.chef?.chatEnabled !== false;
                   setAwaitingOrderModal({ visible: false, order: null });
-                  if (order?.chef?._id) {
+                  if (isChatAvailable && order?.chef?._id) {
                     navigation.navigate(StackNav.Chat, {
-                      recipientId: order.chef._id,
-                      recipientName: order.chef.fullName || order.chef.username,
+                      chefId: order.chef._id,
                       orderId: order._id,
                     });
+                  } else {
+                    navigation.navigate(StackNav.SupportChat, { orderId: order?._id });
                   }
                 }}
               >
-                <Ionicons name="chatbubble-outline" size={moderateScale(16)} color={colors.primary} style={{ marginRight: 6 }} />
+                <Ionicons
+                  name={awaitingOrderModal.order?.chef?.chatEnabled !== false ? 'chatbubble-outline' : 'headset-outline'}
+                  size={moderateScale(16)}
+                  color={colors.primary}
+                  style={{ marginRight: 6 }}
+                />
                 <ZText type="B16" color={colors.primary}>
-                  {strings.chatWithChef || 'Chat'}
+                  {awaitingOrderModal.order?.chef?.chatEnabled !== false
+                    ? (strings.chatWithChef || 'Chat')
+                    : (strings.contactSupport || 'Contact Support')}
                 </ZText>
               </TouchableOpacity>
               <ZButton

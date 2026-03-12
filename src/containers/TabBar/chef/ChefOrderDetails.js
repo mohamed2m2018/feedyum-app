@@ -136,7 +136,7 @@ const ChefOrderDetailsScreen = () => {
                 return {
                     color: colors.info || '#2196F3',
                     backgroundColor: (colors.info || '#2196F3') + '20',
-                    text: strings.awaitingConfirmation || strings.accepted || 'Awaiting Confirmation',
+                    text: strings.awaitingCustomerConfirmation || 'Awaiting Customer Confirmation',
                     icon: 'hourglass-outline',
                 };
             case 'confirmed':
@@ -190,9 +190,7 @@ const ChefOrderDetailsScreen = () => {
         switch (order.status) {
             case 'pending':
                 return 'awaiting_confirmation';
-            case 'awaiting_confirmation':
-            case 'chef_review':
-                return 'confirmed';
+            // awaiting_confirmation: customer must confirm — no chef action
             case 'confirmed':
                 return 'preparing';
             case 'preparing':
@@ -209,9 +207,7 @@ const ChefOrderDetailsScreen = () => {
         switch (order.status) {
             case 'pending':
                 return strings.acceptOrder || 'Accept Order';
-            case 'awaiting_confirmation':
-            case 'chef_review':
-                return strings.confirmOrder || 'Confirm Order';
+            // awaiting_confirmation: no button — customer's turn
             case 'confirmed':
                 return strings.startPreparing;
             case 'preparing':
@@ -563,17 +559,9 @@ const ChefOrderDetailsScreen = () => {
                                 <View style={[localStyles.summaryRow, localStyles.commissionRow]}>
                                     <View style={localStyles.commissionLabel}>
                                         <Ionicons name="information-circle-outline" size={moderateScale(14)} color={colors.orange} style={{ marginRight: moderateScale(4) }} />
-                                        <View>
-                                            <ZText type="M14" color={colors.orange}>
-                                                {strings.platformCommission || 'Platform Commission'} ({order.chefCommission.percentage}%)
-                                            </ZText>
-                                            <ZText type="R11" color={colors.grayScale7}>
-                                                {strings.deductedFromWallet || 'Deducted from your wallet upon order confirmation'}
-                                            </ZText>
-                                            <ZText type="R11" color={colors.grayScale7}>
-                                                {strings.commissionFormula || 'Commission % × (Subtotal - Discount)'}
-                                            </ZText>
-                                        </View>
+                                        <ZText type="M14" color={colors.orange}>
+                                            {strings.platformCommission || 'Platform Fee'} ({order.chefCommission.orderFee} {strings.EGP})
+                                        </ZText>
                                     </View>
                                     <ZText type="M14" color={colors.orange}>
                                         -{order.chefCommission.amount?.toFixed(2)}
@@ -581,10 +569,10 @@ const ChefOrderDetailsScreen = () => {
                                 </View>
                                 <View style={[localStyles.summaryRow, localStyles.earningsRow]}>
                                     <ZText type="B16" color={colors.success || '#4CAF50'}>
-                                        {strings.yourEarnings || 'Your Earnings'}
+                                        {strings.whatYouGet || 'What you get'}
                                     </ZText>
                                     <ZText type="B16" color={colors.success || '#4CAF50'}>
-                                        {order.chefCommission.earnings?.toFixed(2)}
+                                        {((order.chefCommission.earnings || 0) + (order.deliveryFee || 0)).toFixed(2)}
                                     </ZText>
                                 </View>
                             </>
