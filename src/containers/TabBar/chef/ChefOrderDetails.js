@@ -548,11 +548,47 @@ const ChefOrderDetailsScreen = () => {
                             </View>
                         )}
                         <View style={[localStyles.summaryRow, localStyles.totalRow]}>
-                            <ZText type="B18">{strings.total}</ZText>
+                            <View>
+                                <ZText type="B18">{strings.total}</ZText>
+                                <ZText type="R12" color={colors.grayScale7}>
+                                    {strings.totalCustomerPays || 'What customer pays'}
+                                </ZText>
+                            </View>
                             <ZText type="B18" color={colors.primary}>
                                 {order.totalPrice?.toFixed(2) || '0.00'}
                             </ZText>
                         </View>
+                        {order.chefCommission && (
+                            <>
+                                <View style={[localStyles.summaryRow, localStyles.commissionRow]}>
+                                    <View style={localStyles.commissionLabel}>
+                                        <Ionicons name="information-circle-outline" size={moderateScale(14)} color={colors.orange} style={{ marginRight: moderateScale(4) }} />
+                                        <View>
+                                            <ZText type="M14" color={colors.orange}>
+                                                {strings.platformCommission || 'Platform Commission'} ({order.chefCommission.percentage}%)
+                                            </ZText>
+                                            <ZText type="R11" color={colors.grayScale7}>
+                                                {strings.deductedFromWallet || 'Deducted from your wallet upon order confirmation'}
+                                            </ZText>
+                                            <ZText type="R11" color={colors.grayScale7}>
+                                                {strings.commissionFormula || 'Commission % × (Subtotal - Discount)'}
+                                            </ZText>
+                                        </View>
+                                    </View>
+                                    <ZText type="M14" color={colors.orange}>
+                                        -{order.chefCommission.amount?.toFixed(2)}
+                                    </ZText>
+                                </View>
+                                <View style={[localStyles.summaryRow, localStyles.earningsRow]}>
+                                    <ZText type="B16" color={colors.success || '#4CAF50'}>
+                                        {strings.yourEarnings || 'Your Earnings'}
+                                    </ZText>
+                                    <ZText type="B16" color={colors.success || '#4CAF50'}>
+                                        {order.chefCommission.earnings?.toFixed(2)}
+                                    </ZText>
+                                </View>
+                            </>
+                        )}
                     </View>
                 </View>
 
@@ -743,6 +779,20 @@ const localStyles = StyleSheet.create({
         borderTopColor: '#E0E0E0',
         paddingTop: moderateScale(12),
         marginTop: moderateScale(8),
+        marginBottom: 0,
+    },
+    commissionRow: {
+        paddingVertical: moderateScale(6),
+        marginBottom: moderateScale(4),
+    },
+    commissionLabel: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1,
+        marginRight: moderateScale(8),
+    },
+    earningsRow: {
+        paddingTop: moderateScale(8),
         marginBottom: 0,
     },
     footer: {

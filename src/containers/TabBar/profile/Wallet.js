@@ -1175,6 +1175,22 @@ export default function Wallet({ navigation }) {
 
       <ScrollView style={styles.flex} showsVerticalScrollIndicator={false}>
         {renderBalanceCard()}
+
+        {/* Commission info banner */}
+        {walletData?.summary?.commissionPercentage != null && (
+          <View style={[localStyles.commissionBanner, { backgroundColor: colors.primary + '12', borderColor: colors.primary + '30' }]}>
+            <Ionicons
+              name="information-circle-outline"
+              size={moderateScale(18)}
+              color={colors.primary}
+              style={styles.mr10}
+            />
+            <ZText type="m12" color={colors.primary} style={styles.flex}>
+              {strings.commissionInfoMessage.replace('{percentage}', walletData.summary.commissionPercentage)}
+            </ZText>
+          </View>
+        )}
+
         {renderStatsCards()}
         {renderTabBar()}
 
@@ -1434,5 +1450,15 @@ const localStyles = StyleSheet.create({
     paddingVertical: moderateScale(14),
     borderRadius: moderateScale(12),
     marginTop: moderateScale(20),
+  },
+  commissionBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: moderateScale(20),
+    marginBottom: moderateScale(12),
+    paddingHorizontal: moderateScale(14),
+    paddingVertical: moderateScale(10),
+    borderRadius: moderateScale(12),
+    borderWidth: 1,
   },
 });
