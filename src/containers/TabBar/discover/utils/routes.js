@@ -1,7 +1,7 @@
 export const routes = [
   {
-    nameEn: 'Coupons',
-    nameAr: 'الكوبونات',
+    nameEn: 'All',
+    nameAr: 'الكل',
   },
   {
     nameEn: 'Homemade',

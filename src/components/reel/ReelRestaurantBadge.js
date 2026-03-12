@@ -37,8 +37,8 @@ const ReelRestaurantBadge = React.memo(({
         return null;
     }
 
-    // Extract short address (first part before comma)
-    const shortAddress = restaurantAddress?.split(',')[0];
+    // Filter out Google Plus Codes (contain '+') and extract short address
+    const shortAddress = restaurantAddress?.includes('+') ? null : restaurantAddress?.split(',')[0];
 
     // Check if we should show follow button for reviewed chef
     const showFollowButton = item?.reviewedChef?._id && item?.reviewedChef?._id !== currentUserId;

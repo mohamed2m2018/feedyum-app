@@ -143,6 +143,7 @@ export default function HashtagCategory({ selectedTag, isLocationChanging }) {
       if (!kitchenMap.has(user._id)) {
         kitchenMap.set(user._id, {
           ...user,
+          kmAway: user.kmAway ?? user.distance ?? undefined, // Map batch distance to kmAway
           dishes: [],
           reelDishes: [], // Dishes attached to tagged reels
           categoryDishes: [] // Dishes that match category but not attached to reels
@@ -190,7 +191,6 @@ export default function HashtagCategory({ selectedTag, isLocationChanging }) {
           fullName: chefInfo.fullName || 'Unknown Chef',
           avatar: chefInfo.avatar,
           bio: chefInfo.bio || strings.foodCreator,
-          kmAway: dish.distance, // Use distance from dish
           stories: [], // No stories for this chef
           dishes: [],
           reelDishes: [],
@@ -202,11 +202,6 @@ export default function HashtagCategory({ selectedTag, isLocationChanging }) {
       }
 
       const kitchen = kitchenMap.get(chefId);
-
-      // Update distance to keep the minimum distance (closest location)
-      if (dish.distance !== undefined && (kitchen.kmAway === undefined || dish.distance < kitchen.kmAway)) {
-        kitchen.kmAway = dish.distance;
-      }
 
       // Check if this dish is already in reelDishes
       const isInReelDishes = kitchen.reelDishes.find(d => d._id === dish._id);

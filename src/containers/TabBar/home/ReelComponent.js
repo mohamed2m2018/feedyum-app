@@ -765,19 +765,7 @@ const ReelComponent = ({
                                 }} numberOfLines={1}>
                                   {item?.restaurantName || item?.reviewedChef?.fullName}
                                 </ZText>
-                                {/* Address Subtitle */}
-                                {(item?.restaurantAddress || (item?.reviewedChef?.locations && item?.reviewedChef?.locations[0]?.address)) && (
-                                  <ZText style={{
-                                    fontSize: moderateScale(10),
-                                    color: 'rgba(255,255,255,0.8)',
-                                    fontWeight: '500',
-                                    marginTop: 1
-                                  }} numberOfLines={1}>
-                                    {/* Extract city/area from address if possible, or show truncated address */}
-                                    {item?.restaurantAddress?.split(',')[0] || item?.restaurantAddress || item?.reviewedChef?.locations?.[0]?.address?.split(',')[0]}
-                                  </ZText>
-                                )}
-                              </View>
+                                </View>
                               {/* Arrow indicator to show it's clickable */}
                               <Ionicons
                                 name={item?.reviewedChef?._id ? 'chevron-forward' : 'open-outline'}
@@ -1158,6 +1146,12 @@ const localStyles = StyleSheet.create({
     paddingHorizontal: 8,
     ...styles.flexRow,
     ...styles.itemsEnd,
+  },
+  addressSubtitle: {
+    fontSize: moderateScale(10),
+    color: 'rgba(255,255,255,0.8)',
+    fontWeight: '500',
+    marginTop: 1,
   },
   userImage: {
     width: moderateScale(40),

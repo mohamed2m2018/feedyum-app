@@ -81,12 +81,18 @@ export default function ReelsComponent({ amIFocused, initialStoryId }) {
   const location = useLocation();
 
   // Dynamic Height Calculation
+  // Use formula as initial estimate, then onLayout provides the ACTUAL measured height
   const { height: windowHeight } = useWindowDimensions();
   const insets = useSafeAreaInsets();
-  const layoutHeight = useMemo(() =>
-    Math.floor(windowHeight - insets.top - insets.bottom - BOTTOM_TAB_HEIGHT - TOP_TAB_HEIGHT),
-    [windowHeight, insets.top, insets.bottom]
-  );
+  const estimatedHeight = Math.floor(windowHeight - insets.top - insets.bottom - BOTTOM_TAB_HEIGHT - TOP_TAB_HEIGHT);
+  const [layoutHeight, setLayoutHeight] = useState(estimatedHeight);
+
+  const handleContainerLayout = useCallback((e) => {
+    const measured = Math.floor(e.nativeEvent.layout.height);
+    if (measured > 0) {
+      setLayoutHeight(measured);
+    }
+  }, []);
 
   // When filters change, scroll to top and show loading
   useEffect(() => {
@@ -264,13 +270,14 @@ export default function ReelsComponent({ amIFocused, initialStoryId }) {
   const onSetLayout = useCallback(() => { }, []);
 
   return (
-    <View style={[localStyles.outerContainer, { backgroundColor: colors.backgroundColor }]}>
+    <View style={[localStyles.outerContainer, { backgroundColor: colors.backgroundColor }]}
+      onLayout={handleContainerLayout}>
       {/* Address Dropdown for Delivery Location */}
       <View style={localStyles.addressDropdownContainer}>
         <AddressDropdown
           compact={true}
           style={{
-            width: moderateScale(140), // Fixed width to match discover
+            width: moderateScale(140),
           }}
         />
       </View>
@@ -447,10 +454,10 @@ const localStyles = StyleSheet.create({
   },
   addressDropdownContainer: {
     position: 'absolute',
-    top: moderateScale(15), // Move higher to avoid any overlaps
+    top: moderateScale(15),
     right: moderateScale(15),
     zIndex: 999,
-    width: moderateScale(140), // Fixed width to match discover
+    width: moderateScale(140),
   },
   headerInnerContainer: {
     ...styles.flex,
