@@ -6,10 +6,12 @@ import {
   View,
   ScrollView,
   I18nManager,
+  Alert,
 } from 'react-native';
-import React, { createRef, useState } from 'react';
+import React, { createRef, useState, useRef, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import RNRestart from 'react-native-restart';
 import ZLoader from '../../../components/common/ZLoader';
 // Local import
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
@@ -23,6 +25,7 @@ import { StackNav, TabNav } from '../../../navigation/NavigationKeys';
 import LogOut from '../../../components/models/LogOut';
 import { useQuery, useQueryClient } from 'react-query';
 import request from '../../../api/request';
+import { switchEnvironment, getCurrentEnvironment } from '../../../api/request';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { useHandleAuth } from '../../../utils/useHandleAuth';
 import { OneSignal } from 'react-native-onesignal';
@@ -30,10 +33,68 @@ import { useStorage } from '../../../utils/useStorage';
 import AppInitializer from '../../../services/AppInitializer';
 import { persistor } from '../../../redux/store';
 
+const TAP_COUNT_THRESHOLD = 6;
+const TAP_TIMEOUT_MS = 3000;
+
 export default Setting = ({ navigation }) => {
   const { data: user } = useQuery('user', () => request.get('/user'));
 
   const [isloading, setisloading] = useState(false);
+
+  // Secret environment toggle state
+  const [currentEnv, setCurrentEnv] = useState(getCurrentEnvironment());
+  const tapCountRef = useRef(0);
+  const tapTimerRef = useRef(null);
+
+  const handleHeaderTap = useCallback(() => {
+    tapCountRef.current += 1;
+
+    // Reset timer on each tap
+    if (tapTimerRef.current) {
+      clearTimeout(tapTimerRef.current);
+    }
+
+    // Set timeout to reset tap count after TAP_TIMEOUT_MS
+    tapTimerRef.current = setTimeout(() => {
+      tapCountRef.current = 0;
+    }, TAP_TIMEOUT_MS);
+
+    // Check if threshold reached
+    if (tapCountRef.current >= TAP_COUNT_THRESHOLD) {
+      tapCountRef.current = 0;
+      if (tapTimerRef.current) {
+        clearTimeout(tapTimerRef.current);
+      }
+
+      const targetEnv = currentEnv === 'production' ? 'staging' : 'production';
+      const title = targetEnv === 'staging'
+        ? strings.switchToStaging
+        : strings.switchToProduction;
+      const message = targetEnv === 'staging'
+        ? strings.switchToStagingMessage
+        : strings.switchToProductionMessage;
+
+      Alert.alert(
+        title,
+        message,
+        [
+          { text: strings.cancel, style: 'cancel' },
+          {
+            text: strings.switchConfirm,
+            style: targetEnv === 'staging' ? 'destructive' : 'default',
+            onPress: () => {
+              switchEnvironment(targetEnv);
+              setCurrentEnv(targetEnv);
+              // Restart the app so all connections use the new base URL
+              setTimeout(() => {
+                RNRestart.restart();
+              }, 300);
+            },
+          },
+        ],
+      );
+    }
+  }, [currentEnv]);
 
   // Get dynamic edit profile title based on user type
   const getEditProfileTitle = () => {
@@ -57,24 +118,6 @@ export default Setting = ({ navigation }) => {
       icon: 'location-outline',
       route: StackNav.SavedAddresses,
     },
-    // {
-    //   id: 2,
-    //   title: strings.privacy,
-    //   icon: 'lock-closed-outline',
-    //   route: StackNav.Privacy,
-    // },
-    // {
-    //   id: 4,
-    //   title: strings.security,
-    //   icon: 'shield-checkmark-outline',
-    //   route: StackNav.Security,
-    // },
-    // {
-    //   id: 4,
-    //   title: strings.qrCode,
-    //   icon: 'scan-outline',
-    //   route: StackNav.QrCode,
-    // },
     {
       id: 5,
       title: strings.language,
@@ -82,17 +125,6 @@ export default Setting = ({ navigation }) => {
       value: 'English(US)',
       route: StackNav.Language,
     },
-    // {
-    //   id: 6,
-    //   title: strings.darkMode,
-    //   icon: 'contrast-outline',
-    //   rightIcon: 'rightIcon',
-    // },
-    // {
-    //   id: 3,
-    //   title: strings.reportProblem,
-    //   icon: 'cloud-download-outline',
-    // },
     {
       id: 7,
       title: strings.helpCenter,
@@ -227,7 +259,18 @@ export default Setting = ({ navigation }) => {
 
   return (
     <ZSafeAreaView>
-      <ZHeader title={strings.settings} />
+      <ZHeader
+        title={strings.settings}
+        onTitlePress={handleHeaderTap}
+      />
+      {/* Staging indicator badge */}
+      {currentEnv === 'staging' && (
+        <View style={localStyles.stagingBadge}>
+          <ZText type="s12" color="#FF6B00" style={localStyles.stagingText}>
+            {strings.stagingMode}
+          </ZText>
+        </View>
+      )}
       {isloading && <ZLoader absolute overlay height={130} top={280} />}
       <ScrollView
         bounces={false}
@@ -324,5 +367,17 @@ const localStyles = StyleSheet.create({
   rightContainer: {
     ...styles.flex,
     ...styles.rowEnd,
+  },
+  stagingBadge: {
+    alignSelf: 'center',
+    paddingHorizontal: moderateScale(12),
+    paddingVertical: moderateScale(4),
+    borderRadius: moderateScale(12),
+    borderWidth: 1,
+    borderColor: '#FF6B00',
+    marginBottom: moderateScale(8),
+  },
+  stagingText: {
+    fontWeight: '700',
   },
 });

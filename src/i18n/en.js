@@ -1868,4 +1868,14 @@ export default {
   loadingSupportChat: 'Loading support chat...',
   supportChatError: 'Failed to load support chat. Please try again.',
 
+  // Environment Toggle (Dev mode)
+  switchToStaging: 'Switch to Staging?',
+  switchToProduction: 'Switch to Production?',
+  switchToStagingMessage: 'The app will restart and connect to the staging server. All data changes will be on the test database.',
+  switchToProductionMessage: 'The app will restart and connect to the production server. All data changes will be real.',
+  switchConfirm: 'Switch & Restart',
+  switchedToStaging: 'Switched to Staging',
+  switchedToProduction: 'Switched to Production',
+  stagingMode: '🧪 STAGING',
+
 };

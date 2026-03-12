@@ -1851,4 +1851,14 @@ export default {
   loadingSupportChat: 'جاري تحميل دعم المحادثة...',
   supportChatError: 'فشل تحميل دعم المحادثة. حاول مرة أخرى.',
 
+  // Environment Toggle (Dev mode)
+  switchToStaging: 'التبديل إلى التجريبي؟',
+  switchToProduction: 'التبديل إلى الإنتاج؟',
+  switchToStagingMessage: 'سيتم إعادة تشغيل التطبيق والاتصال بالخادم التجريبي. جميع التغييرات ستكون على قاعدة البيانات التجريبية.',
+  switchToProductionMessage: 'سيتم إعادة تشغيل التطبيق والاتصال بخادم الإنتاج. جميع التغييرات ستكون حقيقية.',
+  switchConfirm: 'تبديل وإعادة تشغيل',
+  switchedToStaging: 'تم التبديل إلى التجريبي',
+  switchedToProduction: 'تم التبديل إلى الإنتاج',
+  stagingMode: '🧪 تجريبي',
+
 };

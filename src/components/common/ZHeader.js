@@ -8,11 +8,25 @@ import {useSelector} from 'react-redux';
 import {moderateScale} from '../../common/constants';
 
 export default function ZHeader(props) {
-  const {title, onPressBack, rightIcon, isHideBack, isLeftIcon} = props;
+  const {title, onPressBack, rightIcon, isHideBack, isLeftIcon, onTitlePress} = props;
   const navigation = useNavigation();
   const colors = useSelector(state => state.theme.theme);
 
   const goBack = () => navigation.goBack();
+
+  const titleContent = (
+    <ZText
+      numberOfLines={1}
+      style={[
+        styles.pr10,
+        styles.mr10,
+        !!rightIcon && localStyles.titleText,
+      ]}
+      type={'B24'}>
+      {title}
+    </ZText>
+  );
+
   return (
     <SafeAreaView>
       <View style={[localStyles.container, !!isHideBack && styles.pr10]}>
@@ -30,16 +44,13 @@ export default function ZHeader(props) {
           {!!isLeftIcon && isLeftIcon}
 
           {!!title && (
-            <ZText
-              numberOfLines={1}
-              style={[
-                styles.pr10,
-                styles.mr10,
-                !!rightIcon && localStyles.titleText,
-              ]}
-              type={'B24'}>
-              {title}
-            </ZText>
+            onTitlePress ? (
+              <TouchableOpacity activeOpacity={1} onPress={onTitlePress}>
+                {titleContent}
+              </TouchableOpacity>
+            ) : (
+              titleContent
+            )
           )}
         </View>
         {!!rightIcon && rightIcon}
