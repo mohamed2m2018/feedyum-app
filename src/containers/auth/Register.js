@@ -34,6 +34,7 @@ import { showErrorToast } from '../../utils/toast';
 import { useStorage } from '../../utils/useStorage';
 import AppInitializer from '../../services/AppInitializer';
 import UserTypeSelectionModal from '../../components/modals/UserTypeSelectionModal';
+import TermsAcceptanceModal from '../../components/modals/TermsAcceptanceModal';
 
 // Debounce timeout ref for email availability check
 let emailCheckTimeout = null;
@@ -75,7 +76,9 @@ const Register = ({ navigation, route }) => {
   const queryClient = useQueryClient();
   const [isLoading, setisLoading] = useState(false);
   const [showUserTypeModal, setShowUserTypeModal] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
   const [pendingAction, setPendingAction] = useState(null); // 'google' or 'password'
+  const [pendingChefSelection, setPendingChefSelection] = useState(false);
 
   useEffect(() => {
     if (route.params?.isGoogleSignInFailed) {
@@ -84,22 +87,31 @@ const Register = ({ navigation, route }) => {
     }
   }, [route]);
 
-  // Handle user type selection from modal
+  // Handle user type selection from modal — show terms acceptance next
   const handleUserTypeSelect = (isChefSelected) => {
     setShowUserTypeModal(false);
-    setIsChef(isChefSelected);
+    setPendingChefSelection(isChefSelected);
+    // Show the terms acceptance modal
+    setShowTermsModal(true);
+  };
+
+  // Handle terms acceptance — proceed with actual registration
+  const handleTermsAccepted = () => {
+    setShowTermsModal(false);
+    setIsChef(pendingChefSelection);
 
     if (pendingAction === 'google') {
-      onPressSignUpWithGoogle(isChefSelected);
+      onPressSignUpWithGoogle(pendingChefSelection);
     } else if (pendingAction === 'password') {
       navigation.navigate(StackNav.SetUpProfile, {
         title: strings.fillYourProfile,
         email,
         password,
-        type: isChefSelected ? 'chef' : 'user',
+        type: pendingChefSelection ? 'chef' : 'user',
       });
     }
     setPendingAction(null);
+    setPendingChefSelection(false);
   };
 
   const BlurredStyle = {
@@ -461,6 +473,17 @@ const Register = ({ navigation, route }) => {
         onClose={() => {
           setShowUserTypeModal(false);
           setPendingAction(null);
+        }}
+      />
+
+      {/* Terms Acceptance Modal */}
+      <TermsAcceptanceModal
+        visible={showTermsModal}
+        onAccept={handleTermsAccepted}
+        onClose={() => {
+          setShowTermsModal(false);
+          setPendingAction(null);
+          setPendingChefSelection(false);
         }}
       />
     </ZSafeAreaView>

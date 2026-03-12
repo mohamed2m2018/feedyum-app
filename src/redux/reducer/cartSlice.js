@@ -37,6 +37,7 @@ export const APPLY_PROMOCODE = 'APPLY_PROMOCODE';
 export const REMOVE_PROMOCODE = 'REMOVE_PROMOCODE';
 export const SET_PENDING_CONFLICT_ITEM = 'SET_PENDING_CONFLICT_ITEM';
 export const CLEAR_PENDING_CONFLICT_ITEM = 'CLEAR_PENDING_CONFLICT_ITEM';
+export const UPDATE_CART_ITEM = 'UPDATE_CART_ITEM';
 
 const initialState = {
   items: [],
@@ -50,9 +51,28 @@ const initialState = {
   pendingConflictItem: null, // { dish, quantity, chefId, chefName } - set when user tries to add from different chef
 };
 
+// Generate a deterministic key from selected options
+const generateCartItemKey = (dishId, selectedOptions) => {
+  if (!selectedOptions || selectedOptions.length === 0) return dishId;
+  const sorted = [...selectedOptions]
+    .sort((a, b) => (a.groupName || '').localeCompare(b.groupName || ''))
+    .map(so => `${so.groupName}:${(so.optionNames || []).sort().join(',')}`)
+    .join('|');
+  // Simple hash for readability (no crypto in RN — use string-based key)
+  let hash = 0;
+  for (let i = 0; i < sorted.length; i++) {
+    const char = sorted.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash |= 0; // Convert to 32bit integer
+  }
+  return `${dishId}_${Math.abs(hash).toString(36)}`;
+};
+
 const calculateTotals = (items) => {
   const subtotal = items.reduce((total, item) => {
-    return total + (item.dish.price * item.quantity);
+    // Use unitPrice if available (has options), otherwise fall back to dish.price
+    const price = item.unitPrice || item.dish.price;
+    return total + (price * item.quantity);
   }, 0);
 
   const itemCount = items.reduce((total, item) => {
@@ -65,7 +85,7 @@ const calculateTotals = (items) => {
 export default function cartReducer(state = initialState, action) {
   switch (action.type) {
     case ADD_TO_CART: {
-      const { dish, quantity = 1, chefId, chefName } = action.payload;
+      const { dish, quantity = 1, chefId, chefName, selectedOptions } = action.payload;
 
       // Ensure chefId is a string (handle ObjectId objects)
       const normalizedChefId = objectIdToString(chefId);
@@ -85,19 +105,32 @@ export default function cartReducer(state = initialState, action) {
       // Ensure dishId is a string (handle ObjectId objects)
       const dishId = objectIdToString(dish._id);
 
-      // Debug logging
+      // Calculate unitPrice: base price + option adjustments
+      let totalAdjustment = 0;
+      if (Array.isArray(selectedOptions) && selectedOptions.length > 0) {
+        totalAdjustment = selectedOptions.reduce((sum, so) => sum + (so.totalAdjustment || 0), 0);
+      }
+      const unitPrice = dish.price + totalAdjustment;
+
+      // Generate composite cart item key (same dish + different options = different key)
+      const cartItemKey = generateCartItemKey(dishId, selectedOptions);
+
       // If cart is empty or same chef, proceed
       if (!state.chefId || state.chefId === finalChefId) {
 
-        const existingItem = state.items.find(item => item.dishId === dishId);
+        const existingItem = state.items.find(item => {
+          const existingKey = item.cartItemKey || item.dishId;
+          return existingKey === cartItemKey;
+        });
         let newItems;
 
         if (existingItem) {
-          newItems = state.items.map(item =>
-            item.dishId === dishId
+          newItems = state.items.map(item => {
+            const existingKey = item.cartItemKey || item.dishId;
+            return existingKey === cartItemKey
               ? { ...item, quantity: item.quantity + quantity }
-              : item
-          );
+              : item;
+          });
         } else {
           newItems = [
             ...state.items,
@@ -105,6 +138,9 @@ export default function cartReducer(state = initialState, action) {
               dishId: dishId,
               dish: dish,
               quantity: quantity,
+              selectedOptions: selectedOptions || [],
+              unitPrice,
+              cartItemKey,
               addedAt: new Date().toISOString(),
             }
           ];
@@ -130,25 +166,30 @@ export default function cartReducer(state = initialState, action) {
             quantity,
             chefId: finalChefId,
             chefName: chefName || (dish.chef && dish.chef.fullName) || 'Unknown Chef',
+            selectedOptions: selectedOptions || [],
           },
         };
       }
     }
 
     case UPDATE_QUANTITY: {
-      const { dishId, quantity } = action.payload;
-      // Ensure dishId is a string
-      const normalizedDishId = objectIdToString(dishId);
+      const { dishId, quantity, cartItemKey } = action.payload;
+      // Use cartItemKey (preferred) or fall back to dishId
+      const itemKey = cartItemKey || objectIdToString(dishId);
       let newItems;
 
       if (quantity <= 0) {
-        newItems = state.items.filter(item => item.dishId !== normalizedDishId);
+        newItems = state.items.filter(item => {
+          const existingKey = item.cartItemKey || item.dishId;
+          return existingKey !== itemKey;
+        });
       } else {
-        newItems = state.items.map(item =>
-          item.dishId === normalizedDishId
+        newItems = state.items.map(item => {
+          const existingKey = item.cartItemKey || item.dishId;
+          return existingKey === itemKey
             ? { ...item, quantity: quantity }
-            : item
-        );
+            : item;
+        });
       }
 
       const totals = calculateTotals(newItems);
@@ -164,10 +205,13 @@ export default function cartReducer(state = initialState, action) {
     }
 
     case REMOVE_FROM_CART: {
-      const { dishId } = action.payload;
-      // Ensure dishId is a string
-      const normalizedDishId = objectIdToString(dishId);
-      const newItems = state.items.filter(item => item.dishId !== normalizedDishId);
+      const { dishId, cartItemKey } = action.payload;
+      // Use cartItemKey (preferred) or fall back to dishId
+      const itemKey = cartItemKey || objectIdToString(dishId);
+      const newItems = state.items.filter(item => {
+        const existingKey = item.cartItemKey || item.dishId;
+        return existingKey !== itemKey;
+      });
       const totals = calculateTotals(newItems);
 
       return {
@@ -234,6 +278,41 @@ export default function cartReducer(state = initialState, action) {
         ...state,
         pendingConflictItem: null,
       };
+
+    case UPDATE_CART_ITEM: {
+      const { oldCartItemKey, dish, selectedOptions: updatedOptions, quantity: updatedQty } = action.payload;
+
+      // Calculate new unitPrice
+      let totalAdjustment = 0;
+      if (Array.isArray(updatedOptions) && updatedOptions.length > 0) {
+        totalAdjustment = updatedOptions.reduce((sum, so) => sum + (so.totalAdjustment || 0), 0);
+      }
+      const newUnitPrice = dish.price + totalAdjustment;
+      const newCartItemKey = generateCartItemKey(objectIdToString(dish._id), updatedOptions);
+
+      const newItems = state.items.map(item => {
+        const existingKey = item.cartItemKey || item.dishId;
+        if (existingKey === oldCartItemKey) {
+          return {
+            ...item,
+            dish,
+            selectedOptions: updatedOptions || [],
+            unitPrice: newUnitPrice,
+            cartItemKey: newCartItemKey,
+            quantity: updatedQty || item.quantity,
+          };
+        }
+        return item;
+      });
+
+      const totals = calculateTotals(newItems);
+      return {
+        ...state,
+        items: newItems,
+        subtotal: totals.subtotal,
+        itemCount: totals.itemCount,
+      };
+    }
 
     case LOAD_CART_FROM_STORAGE: {
       const savedCart = action.payload;
@@ -313,6 +392,11 @@ export const clearPendingConflictItem = () => ({
   type: CLEAR_PENDING_CONFLICT_ITEM,
 });
 
+export const updateCartItem = (payload) => ({
+  type: UPDATE_CART_ITEM,
+  payload,
+});
+
 // Thunk: Clear cart, add pending item, then clear pending state
 export const clearCartAndAddPending = () => (dispatch, getState) => {
   const { cart } = getState();
@@ -323,12 +407,13 @@ export const clearCartAndAddPending = () => (dispatch, getState) => {
   // Clear the current cart
   dispatch(clearCart());
 
-  // Add the pending item
+  // Add the pending item (with options if any)
   dispatch(addToCart({
     dish: pendingItem.dish,
     quantity: pendingItem.quantity,
     chefId: pendingItem.chefId,
     chefName: pendingItem.chefName,
+    selectedOptions: pendingItem.selectedOptions || [],
   }));
 
   // Clear pending state

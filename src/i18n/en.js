@@ -536,6 +536,9 @@ export default {
   accountTypeWarning: 'Your account type affects your entire app experience. Choose carefully!',
   continueAs: 'Continue as',
   selectAccountType: 'Please select an account type to continue',
+  iAgreeToThe: 'I agree to the',
+  andThe: 'and',
+  youMustAcceptTerms: 'You must accept the Terms of Service and Privacy Policy to continue',
 
   optional: '(optional)',
   switchTo: 'Switch to ',
@@ -625,6 +628,8 @@ export default {
   seeMoreReviews: 'See More ({0} more reviews)',
   quantity: 'Quantity',
   addToCartPrice: 'Add to Cart - {0} {1}',
+  updateCartPrice: 'Update Cart - {0} {1}',
+  cartUpdated: 'Cart updated',
   failedToLoadDish: 'Failed to load dish',
   dishLoadErrorMsg: 'This dish might not be available or there was a connection issue.',
   favoritesAddedTitle: 'Added to Favorites',
@@ -1022,6 +1027,24 @@ export default {
   mainCourses: 'Main Courses',
   desserts: 'Desserts',
   beverages: 'Beverages',
+
+  // Option Groups & Variants
+  optionsAndVariants: 'Options & Variants',
+  optionsDesc: 'Add sizes, extras, or required choices',
+  addOptionGroup: 'Add Group',
+  groupName: 'Group name (e.g. Size, Extras)',
+  requiredChoice: 'Pick One',
+  optionalAddons: 'Add-ons',
+  required: 'Required',
+  addOption: 'Add Option',
+  optionName: 'Option name',
+  extraPrice: '+EGP',
+  customizeYourOrder: 'Customize Your Order',
+  selectOne: 'Select one',
+  selectUpTo: 'Select up to {0}',
+  selectAny: 'Select as many as you like',
+  noExtraCost: 'Free',
+  selectedOptions: 'Selected Options',
 
   // Category Names (for translation)
   categoryItalian: 'Italian',

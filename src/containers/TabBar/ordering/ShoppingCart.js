@@ -129,10 +129,10 @@ const ShoppingCart = () => {
   const cartSummary = useMemo(() => ({
     itemCount: cartItems.length,
     totalItems: cartItems.reduce((sum, item) => sum + item.quantity, 0),
-    formattedSubtotal: subtotal.toFixed(0)
+    formattedSubtotal: (subtotal || 0).toFixed(0)
   }), [cartItems, subtotal]);
 
-  const handleQuantityChange = useCallback((dishId, newQuantity) => {
+  const handleQuantityChange = useCallback((dishId, newQuantity, cartItemKey) => {
     if (newQuantity <= 0) {
       showActionDialog({
         type: ALERT_TYPE.WARNING,
@@ -140,21 +140,21 @@ const ShoppingCart = () => {
         message: strings.areYouSureRemoveItem,
         confirmText: strings.removeFromCart,
         cancelText: strings.cancel,
-        onConfirm: () => dispatch(removeFromCart({ dishId })),
+        onConfirm: () => dispatch(removeFromCart({ dishId, cartItemKey })),
       });
     } else {
-      dispatch(updateQuantity({ dishId, quantity: newQuantity }));
+      dispatch(updateQuantity({ dishId, quantity: newQuantity, cartItemKey }));
     }
   }, [dispatch]);
 
-  const handleRemoveItem = useCallback((dishId, dishName) => {
+  const handleRemoveItem = useCallback((dishId, dishName, cartItemKey) => {
     showActionDialog({
       type: ALERT_TYPE.WARNING,
       title: strings.removeItem,
       message: strings.formatString(strings.removeItemFromCart, { dishName }),
       confirmText: strings.removeFromCart,
       cancelText: strings.cancel,
-      onConfirm: () => dispatch(removeFromCart({ dishId })),
+      onConfirm: () => dispatch(removeFromCart({ dishId, cartItemKey })),
     });
   }, []);
 
@@ -265,6 +265,7 @@ const ShoppingCart = () => {
             items: cartItems.map(item => ({
               dish: item.dishId,
               quantity: item.quantity,
+              selectedOptions: item.selectedOptions || [],
             })),
             deliveryAddress: (() => {
               // Extract city from formatted address if area is not available
@@ -388,6 +389,9 @@ const ShoppingCart = () => {
   };
 
   const renderCartItem = useCallback(({ item }) => {
+    const itemPrice = item.unitPrice || item.dish?.price || item.price || 0;
+    const hasOptions = item.selectedOptions && item.selectedOptions.length > 0;
+
     return (
       <View style={[localStyles.cartItem, { backgroundColor: colors.white }]}>
         <Image
@@ -407,15 +411,21 @@ const ShoppingCart = () => {
               {item.dish?.name || item.name || strings.testDishName}
             </ZText>
             <ZText type="M14" color={colors.primary} style={localStyles.dishPrice}>
-              {item.dish?.price || item.price || 0} {strings.EGP}
+              {itemPrice} {strings.EGP}
             </ZText>
+            {/* Show selected options */}
+            {hasOptions && (
+              <ZText type="R12" color={colors.grayScale7} numberOfLines={2} style={{ marginTop: moderateScale(2) }}>
+                {item.selectedOptions.map(so => so.optionNames?.join(', ')).join(' • ')}
+              </ZText>
+            )}
           </View>
 
           {/* Controls Section */}
           <View style={localStyles.controlsSection}>
             <View style={localStyles.quantityContainer}>
               <TouchableOpacity
-                onPress={() => handleQuantityChange(item.dishId, item.quantity - 1)}
+                onPress={() => handleQuantityChange(item.dishId, item.quantity - 1, item.cartItemKey)}
                 style={[localStyles.quantityButton, { backgroundColor: colors.inputBg }]}>
                 <Ionicons name="remove" size={moderateScale(14)} color={colors.textColor} />
               </TouchableOpacity>
@@ -427,7 +437,7 @@ const ShoppingCart = () => {
               </View>
 
               <TouchableOpacity
-                onPress={() => handleQuantityChange(item.dishId, item.quantity + 1)}
+                onPress={() => handleQuantityChange(item.dishId, item.quantity + 1, item.cartItemKey)}
                 style={[localStyles.quantityButton, { backgroundColor: colors.primary }]}>
                 <Ionicons name="add" size={moderateScale(14)} color={colors.white} />
               </TouchableOpacity>
@@ -435,10 +445,24 @@ const ShoppingCart = () => {
 
             <View style={localStyles.itemActions}>
               <ZText type="B14" color={colors.textColor} style={localStyles.itemTotal}>
-                {((item.dish?.price || item.price || 0) * item.quantity).toFixed(0)} {strings.EGP}
+                {(itemPrice * item.quantity).toFixed(0)} {strings.EGP}
               </ZText>
+              {hasOptions && (
+                <TouchableOpacity
+                  onPress={() => navigation.navigate(StackNav.DishDetail, {
+                    dishId: item.dishId,
+                    chefId: chef?.id,
+                    chefName: chef?.name,
+                    editCartItemKey: item.cartItemKey,
+                    editSelectedOptions: item.selectedOptions,
+                    editQuantity: item.quantity,
+                  })}
+                  style={localStyles.editButton}>
+                  <Ionicons name="create-outline" size={moderateScale(16)} color={colors.primary} />
+                </TouchableOpacity>
+              )}
               <TouchableOpacity
-                onPress={() => handleRemoveItem(item.dishId, item.dish?.name || item.name || 'Item')}
+                onPress={() => handleRemoveItem(item.dishId, item.dish?.name || item.name || 'Item', item.cartItemKey)}
                 style={localStyles.removeButton}>
                 <Ionicons name="trash-outline" size={moderateScale(16)} color={colors.error} />
               </TouchableOpacity>
@@ -447,7 +471,7 @@ const ShoppingCart = () => {
         </View>
       </View>
     );
-  }, [colors, handleQuantityChange, handleRemoveItem]);
+  }, [colors, handleQuantityChange, handleRemoveItem, chef, navigation]);
 
   const renderHeader = () => (
     <View style={[localStyles.headerContainer, { backgroundColor: colors.backgroundColor }]}>
@@ -702,7 +726,7 @@ const ShoppingCart = () => {
   );
 
   // Move all useCallback hooks before any conditional returns
-  const keyExtractor = useCallback((item) => item.dishId, []);
+  const keyExtractor = useCallback((item) => item.cartItemKey || item.dishId, []);
   const getItemLayout = useCallback((data, index) => ({
     length: moderateScale(100),
     offset: moderateScale(100) * index,
@@ -891,6 +915,9 @@ const localStyles = StyleSheet.create({
     textAlign: 'right',
   },
   removeButton: {
+    padding: moderateScale(4),
+  },
+  editButton: {
     padding: moderateScale(4),
   },
   footerContainer: {

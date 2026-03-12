@@ -147,7 +147,8 @@
         }
       ],
       "expo-web-browser",
-      "./plugins/withOrderAlarmChannel"
+      "./plugins/withOrderAlarmChannel",
+      "./plugins/withNotifeeMaven"
     ],
     "extra": {
       "eas": {

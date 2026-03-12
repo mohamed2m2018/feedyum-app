@@ -35,6 +35,7 @@ import {
   clearCartAndAddPending,
   selectCartItemCount,
   addToCart,
+  updateCartItem,
 } from '../../../redux/reducer/cartSlice';
 import { useStorage } from '../../../utils/useStorage';
 import { useLocation } from '../../../navigation/locationContext';
@@ -49,11 +50,13 @@ const DishDetailScreen = () => {
   const queryClient = useQueryClient();
   const [user] = useStorage('user');
 
-  const { dishId, chefId } = route.params;
-  const [quantity, setQuantity] = useState(1);
+  const { dishId, chefId, editCartItemKey, editSelectedOptions, editQuantity } = route.params;
+  const isEditMode = !!editCartItemKey;
+  const [quantity, setQuantity] = useState(isEditMode ? (editQuantity || 1) : 1);
   const [selectedTab, setSelectedTab] = useState('reviews');
   const [scrollY] = useState(new Animated.Value(0));
   const [showFullDescription, setShowFullDescription] = useState(false);
+  const [selectedOptions, setSelectedOptions] = useState({});  // { groupName: [optionNames] }
 
   // Cart selectors
   const cartItemCount = useSelector(selectCartItemCount);
@@ -203,6 +206,101 @@ const DishDetailScreen = () => {
     },
   );
 
+  // Initialize option selections when dish data loads
+  React.useEffect(() => {
+    if (dishData?.optionGroups && dishData.optionGroups.length > 0) {
+      // In edit mode, restore selections from the cart item
+      if (isEditMode && editSelectedOptions && editSelectedOptions.length > 0) {
+        const restored = {};
+        editSelectedOptions.forEach(so => {
+          if (so.groupName && so.optionNames) {
+            restored[so.groupName] = so.optionNames;
+          }
+        });
+        setSelectedOptions(restored);
+      } else {
+        // Normal mode: pick defaults
+        const defaults = {};
+        dishData.optionGroups.forEach(group => {
+          const defaultOpt = group.options.find(o => o.isDefault);
+          if (defaultOpt) {
+            defaults[group.name] = [defaultOpt.name];
+          } else if (group.required && group.type === 'single' && group.options.length > 0) {
+            defaults[group.name] = [group.options[0].name];
+          }
+        });
+        setSelectedOptions(defaults);
+      }
+    }
+  }, [dishData]);
+
+  // Calculate total price including selected option adjustments
+  const calculateTotalPrice = () => {
+    if (!dishData) return 0;
+    let adjustment = 0;
+    if (dishData.optionGroups) {
+      dishData.optionGroups.forEach(group => {
+        const selectedNames = selectedOptions[group.name] || [];
+        selectedNames.forEach(optName => {
+          const opt = group.options.find(o => o.name === optName);
+          if (opt) adjustment += (opt.priceAdjustment || 0);
+        });
+      });
+    }
+    return (dishData.price + adjustment) * quantity;
+  };
+
+  // Check if all required option groups are satisfied
+  const areRequiredOptionsSatisfied = () => {
+    if (!dishData?.optionGroups) return true;
+    return dishData.optionGroups
+      .filter(g => g.required)
+      .every(group => {
+        const selected = selectedOptions[group.name] || [];
+        const minSelect = group.min || (group.type === 'single' ? 1 : 1);
+        return selected.length >= minSelect;
+      });
+  };
+
+  // Build selectedOptions array for cart dispatch
+  const buildSelectedOptionsForCart = () => {
+    if (!dishData?.optionGroups) return [];
+    return dishData.optionGroups
+      .filter(group => (selectedOptions[group.name] || []).length > 0)
+      .map(group => {
+        const selectedNames = selectedOptions[group.name] || [];
+        let totalAdj = 0;
+        selectedNames.forEach(optName => {
+          const opt = group.options.find(o => o.name === optName);
+          if (opt) totalAdj += (opt.priceAdjustment || 0);
+        });
+        return {
+          groupName: group.name,
+          optionNames: selectedNames,
+          totalAdjustment: totalAdj,
+        };
+      });
+  };
+
+  // Handle option selection (single = radio, multiple = checkbox)
+  const handleOptionSelect = (groupName, optionName, groupType) => {
+    setSelectedOptions(prev => {
+      const current = prev[groupName] || [];
+      if (groupType === 'single') {
+        return { ...prev, [groupName]: [optionName] };
+      } else {
+        // Multiple: toggle
+        const exists = current.includes(optionName);
+        return {
+          ...prev,
+          [groupName]: exists
+            ? current.filter(n => n !== optionName)
+            : [...current, optionName],
+        };
+      }
+    });
+  };
+
   const handleAddToCart = () => {
     if (!dishData) return;
 
@@ -221,12 +319,15 @@ const DishDetailScreen = () => {
     const computedChefName =
       finalChefData?.fullName || route?.params?.chefName || strings.unknownChef;
 
+    const cartSelectedOptions = buildSelectedOptionsForCart();
+
     dispatch(
       addToCart({
         dish: dishData,
         quantity,
         chefId,
         chefName: computedChefName,
+        selectedOptions: cartSelectedOptions,
       }),
     );
 
@@ -262,6 +363,28 @@ const DishDetailScreen = () => {
         }
       },
     });
+  };
+
+  // Handle updating an existing cart item (edit mode)
+  const handleUpdateCartItem = () => {
+    if (!dishData) return;
+
+    const cartSelectedOptions = buildSelectedOptionsForCart();
+
+    dispatch(
+      updateCartItem({
+        oldCartItemKey: editCartItemKey,
+        dish: dishData,
+        selectedOptions: cartSelectedOptions,
+        quantity,
+      }),
+    );
+
+    showSuccessToast(
+      strings.success,
+      strings.cartUpdated || 'Cart updated',
+    );
+    navigation.goBack();
   };
 
   const handleQuantityChange = change => {
@@ -770,15 +893,128 @@ const DishDetailScreen = () => {
     });
   };
 
+  // Render option groups (Talabat-style premium)
+  const renderOptionGroups = () => {
+    if (!dishData?.optionGroups || dishData.optionGroups.length === 0) return null;
+
+    return (
+      <View style={localStyles.optionGroupsContainer}>
+        {/* Section Header */}
+        <View style={localStyles.optionGroupsSectionHeader}>
+          <View style={localStyles.optionGroupsTitleRow}>
+            <Ionicons name="options-outline" size={moderateScale(20)} color="#FF4D67" />
+            <ZText type="B18" color="#1A1A1A" style={{ marginLeft: moderateScale(8) }}>
+              {strings.customizeYourOrder || 'Customize Your Order'}
+            </ZText>
+          </View>
+        </View>
+
+        {dishData.optionGroups.map((group, gIdx) => {
+          const currentSelections = selectedOptions[group.name] || [];
+
+          return (
+            <View key={gIdx} style={localStyles.optionGroupBlock}>
+              {/* Group Header */}
+              <View style={localStyles.optionGroupHeader}>
+                <View style={{ flex: 1 }}>
+                  <ZText type="B16" color="#1A1A1A">
+                    {group.name}
+                  </ZText>
+                  <ZText type="R12" color="#888888" style={{ marginTop: moderateScale(2) }}>
+                    {group.type === 'single'
+                      ? (strings.selectOne || 'Select one')
+                      : group.max > 0
+                        ? strings.formatString(strings.selectUpTo || 'Select up to {0}', group.max)
+                        : (strings.selectAny || 'Select as many as you like')}
+                  </ZText>
+                </View>
+                {group.required && (
+                  <View style={localStyles.requiredBadge}>
+                    <ZText type="B10" color="#FF4D67">
+                      {strings.required || 'Required'}
+                    </ZText>
+                  </View>
+                )}
+              </View>
+
+              {/* Options */}
+              {group.options.map((opt, oIdx) => {
+                const isSelected = currentSelections.includes(opt.name);
+                const isLast = oIdx === group.options.length - 1;
+
+                return (
+                  <TouchableOpacity
+                    key={oIdx}
+                    activeOpacity={0.7}
+                    style={[
+                      localStyles.optionItem,
+                      {
+                        backgroundColor: isSelected ? '#FF4D6710' : '#FFFFFF',
+                        borderColor: isSelected ? '#FF4D67' : '#F0F0F0',
+                      },
+                      !isLast && { marginBottom: moderateScale(8) },
+                    ]}
+                    onPress={() => handleOptionSelect(group.name, opt.name, group.type)}>
+                    {/* Custom Radio / Checkbox */}
+                    <View style={[
+                      localStyles.optionIndicator,
+                      group.type === 'single' ? localStyles.radioOuter : localStyles.checkboxOuter,
+                      {
+                        borderColor: isSelected ? '#FF4D67' : '#CCCCCC',
+                      },
+                    ]}>
+                      {isSelected && (
+                        <View style={[
+                          group.type === 'single' ? localStyles.radioInner : localStyles.checkboxInner,
+                          { backgroundColor: '#FF4D67' },
+                        ]}>
+                          {group.type !== 'single' && (
+                            <Ionicons name="checkmark" size={moderateScale(12)} color="#FFF" />
+                          )}
+                        </View>
+                      )}
+                    </View>
+
+                    {/* Option Name */}
+                    <ZText
+                      type={isSelected ? 'B14' : 'M14'}
+                      color={isSelected ? '#1A1A1A' : '#555555'}
+                      style={{ flex: 1, marginLeft: moderateScale(12) }}>
+                      {opt.name}
+                    </ZText>
+
+                    {/* Price Badge */}
+                    {opt.priceAdjustment > 0 ? (
+                      <View style={localStyles.priceBadge}>
+                        <ZText type="B12" color="#FF4D67">
+                          +{opt.priceAdjustment} {strings.currency}
+                        </ZText>
+                      </View>
+                    ) : (
+                      <ZText type="R12" color="#AAAAAA">
+                        {strings.noExtraCost || 'Free'}
+                      </ZText>
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          );
+        })}
+      </View>
+    );
+  };
+
   const renderBottomSection = () => {
     // Hide cart controls if current user is the chef/owner of the dish
     const currentUserId = user?._id?.toString();
     const dishOwnerId = (dishData?.user_id || chefId)?.toString();
 
-
-
     const isOwner = currentUserId === dishOwnerId;
     if (isOwner) return null;
+
+    const totalPrice = calculateTotalPrice();
+    const requiredSatisfied = areRequiredOptionsSatisfied();
 
     return (
       <View style={[localStyles.bottomSection, { backgroundColor: colors.white }]}>
@@ -825,10 +1061,15 @@ const DishDetailScreen = () => {
         </View>
 
         <ZButton
-          title={strings.formatString(strings.addToCartPrice, (dishData?.price * quantity).toFixed(0), strings.currency)}
-          onPress={handleAddToCart}
-          containerStyle={localStyles.addToCartButton}
-          disabled={!dishData?.visible}
+          title={isEditMode
+            ? strings.formatString(strings.updateCartPrice || 'Update Cart - {0} {1}', totalPrice.toFixed(0), strings.currency)
+            : strings.formatString(strings.addToCartPrice, totalPrice.toFixed(0), strings.currency)}
+          onPress={isEditMode ? handleUpdateCartItem : handleAddToCart}
+          containerStyle={[
+            localStyles.addToCartButton,
+            !requiredSatisfied && { opacity: 0.5 },
+          ]}
+          disabled={!dishData?.visible || !requiredSatisfied}
         />
       </View>
     );
@@ -891,7 +1132,7 @@ const DishDetailScreen = () => {
         scrollEventThrottle={16}>
         {renderHeroSection()}
         {renderDishInfo()}
-
+        {renderOptionGroups()}
         {/* Prominent Add Review Button - Immediately Visible (Hidden for Chefs) */}
         {user?.type !== 'chef' && (
           <View style={localStyles.prominentButtonContainer}>
@@ -960,6 +1201,7 @@ const DishDetailScreen = () => {
 const localStyles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#FFFFFF',
   },
 
   // Animated Header
@@ -1474,6 +1716,80 @@ const localStyles = StyleSheet.create({
     paddingVertical: moderateScale(16),
     borderRadius: moderateScale(12),
     alignItems: 'center',
+  },
+  // Option Groups (Customer-side — Premium)
+  optionGroupsContainer: {
+    paddingHorizontal: moderateScale(20),
+    paddingTop: moderateScale(8),
+    paddingBottom: moderateScale(4),
+    backgroundColor: '#FFFFFF',
+  },
+  optionGroupsSectionHeader: {
+    marginBottom: moderateScale(16),
+  },
+  optionGroupsTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  optionGroupBlock: {
+    borderRadius: moderateScale(16),
+    padding: moderateScale(16),
+    marginBottom: moderateScale(12),
+    backgroundColor: '#F8F9FA',
+  },
+  optionGroupHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: moderateScale(14),
+  },
+  requiredBadge: {
+    paddingHorizontal: moderateScale(10),
+    paddingVertical: moderateScale(4),
+    borderRadius: moderateScale(12),
+    backgroundColor: '#FF4D6715',
+    borderWidth: 1,
+    borderColor: '#FF4D6730',
+  },
+  optionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: moderateScale(14),
+    paddingHorizontal: moderateScale(14),
+    borderRadius: moderateScale(12),
+  },
+  optionIndicator: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  radioOuter: {
+    width: moderateScale(22),
+    height: moderateScale(22),
+    borderRadius: moderateScale(11),
+    borderWidth: 2,
+  },
+  radioInner: {
+    width: moderateScale(12),
+    height: moderateScale(12),
+    borderRadius: moderateScale(6),
+  },
+  checkboxOuter: {
+    width: moderateScale(22),
+    height: moderateScale(22),
+    borderRadius: moderateScale(6),
+    borderWidth: 2,
+  },
+  checkboxInner: {
+    width: moderateScale(18),
+    height: moderateScale(18),
+    borderRadius: moderateScale(4),
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  priceBadge: {
+    paddingHorizontal: moderateScale(10),
+    paddingVertical: moderateScale(4),
+    borderRadius: moderateScale(10),
   },
 });
 

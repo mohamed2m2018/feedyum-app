@@ -547,6 +547,9 @@ export default {
   accountTypeWarning: 'نوع حسابك يؤثر على تجربتك بالكامل. اختر بعناية!',
   continueAs: 'استمر كـ',
   selectAccountType: 'الرجاء اختيار نوع الحساب للمتابعة',
+  iAgreeToThe: 'أوافق على',
+  andThe: 'و',
+  youMustAcceptTerms: 'يجب عليك الموافقة على الشروط والأحكام وسياسة الخصوصية للمتابعة',
 
   optional: 'اختياري',
   switchTo: 'التبديل إلى',
@@ -618,6 +621,8 @@ export default {
   seeMoreReviews: 'شاهد المزيد ({0} مراجعات أخرى)',
   quantity: 'الكمية',
   addToCartPrice: 'أضف للعربة - {0} {1}',
+  updateCartPrice: 'تحديث العربة - {0} {1}',
+  cartUpdated: 'تم تحديث العربة',
   failedToLoadDish: 'فشل تحميل الطبق',
   dishLoadErrorMsg: 'قد لا يكون هذا الطبق متاحاً أو هناك مشكلة في الاتصال.',
   favoritesAddedTitle: 'تمت الإضافة للمفضلة',
@@ -1000,6 +1005,24 @@ export default {
   mainCourses: 'الأطباق الرئيسية',
   desserts: 'الحلويات',
   beverages: 'المشروبات',
+
+  // Option Groups & Variants
+  optionsAndVariants: 'الخيارات والإضافات',
+  optionsDesc: 'أضف أحجام أو إضافات أو اختيارات مطلوبة',
+  addOptionGroup: 'إضافة مجموعة',
+  groupName: 'اسم المجموعة (مثل الحجم، الإضافات)',
+  requiredChoice: 'اختر واحد',
+  optionalAddons: 'إضافات',
+  required: 'مطلوب',
+  addOption: 'إضافة خيار',
+  optionName: 'اسم الخيار',
+  extraPrice: '+ج.م',
+  customizeYourOrder: 'خصّص طلبك',
+  selectOne: 'اختر واحداً',
+  selectUpTo: 'اختر حتى {0}',
+  selectAny: 'اختر ما تشاء',
+  noExtraCost: 'مجاناً',
+  selectedOptions: 'الخيارات المحددة',
 
   // Category Names (for translation)
   categoryItalian: 'إيطالي',

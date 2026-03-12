@@ -114,6 +114,7 @@ const AddEditDishModal = ({
   const [imageUri, setImageUri] = useState('');
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [showSectionModal, setShowSectionModal] = useState(false);
+  const [optionGroups, setOptionGroups] = useState([]);
 
   // Fetch current user first
   const { data: userData } = useQuery('user', () => request.get('/user'));
@@ -175,11 +176,23 @@ const AddEditDishModal = ({
         sectionNameArabic: dish.section?.nameArabic || '',
         sectionNameEnglish: dish.section?.nameEnglish || '',
         image: dish.image || '',
-        cookingTime: dish.cookingTime?.toString() || '',
-        ingredients: dish.ingredients || '',
+        cookingTime: dish.preparationTime?.toString() || '',
+        ingredients: Array.isArray(dish.ingredients) ? dish.ingredients.join(', ') : (dish.ingredients || ''),
         visible: dish.visible !== false,
       });
       setImageUri(dish.image || '');
+      setOptionGroups(Array.isArray(dish.optionGroups) ? dish.optionGroups.map(g => ({
+        name: g.name || '',
+        type: g.type || 'single',
+        required: !!g.required,
+        min: g.min || 0,
+        max: g.max || 0,
+        options: (g.options || []).map(o => ({
+          name: o.name || '',
+          priceAdjustment: o.priceAdjustment || 0,
+          isDefault: !!o.isDefault,
+        })),
+      })) : []);
       // Reset translation states for editing
       setNameTranslationEdited(true);
       setDescTranslationEdited(true);
@@ -204,6 +217,7 @@ const AddEditDishModal = ({
         visible: true,
       });
       setImageUri('');
+      setOptionGroups([]);
       setNameTranslationEdited(false);
       setDescTranslationEdited(false);
     }
@@ -419,7 +433,7 @@ const AddEditDishModal = ({
     const dishData = {
       ...formData,
       price: parseFloat(formData.price),
-      cookingTime: formData.cookingTime
+      preparationTime: formData.cookingTime
         ? parseInt(formData.cookingTime)
         : undefined,
       image: imageUri || formData.image,
@@ -434,6 +448,8 @@ const AddEditDishModal = ({
       // Section bilingual names
       sectionNameArabic: formData.sectionNameArabic || '',
       sectionNameEnglish: formData.sectionNameEnglish || '',
+      // Option groups (variants & add-ons)
+      optionGroups: optionGroups.filter(g => g.name.trim() && g.options.length > 0),
     };
 
     onSave(dishData);
@@ -696,6 +712,170 @@ const AddEditDishModal = ({
             numberOfLines={2}
           />
 
+          {/* ── Options & Variants Section ── */}
+          <View style={[localStyles.optionGroupsSection, { borderColor: colors.bColor }]}>
+            <View style={localStyles.optionGroupsHeader}>
+              <View>
+                <ZText type="B16" color={colors.textColor}>
+                  {strings.optionsAndVariants || 'Options & Variants'}
+                </ZText>
+                <ZText type="R12" color={colors.grayScale7}>
+                  {strings.optionsDesc || 'Add sizes, extras, or required choices'}
+                </ZText>
+              </View>
+              <TouchableOpacity
+                style={[localStyles.addGroupButton, { backgroundColor: colors.primary + '15' }]}
+                onPress={() => setOptionGroups(prev => [...prev, {
+                  name: '',
+                  type: 'single',
+                  required: false,
+                  min: 0,
+                  max: 0,
+                  options: [{ name: '', priceAdjustment: 0, isDefault: false }],
+                }])}>
+                <Ionicons name="add" size={moderateScale(16)} color={colors.primary} />
+                <ZText type="B14" color={colors.primary} style={{ marginLeft: 4 }}>
+                  {strings.addOptionGroup || 'Add Group'}
+                </ZText>
+              </TouchableOpacity>
+            </View>
+
+            {optionGroups.map((group, gIdx) => (
+              <View key={gIdx} style={[localStyles.optionGroupCard, { backgroundColor: colors.inputBg, borderColor: colors.bColor }]}>
+                {/* Group Header */}
+                <View style={localStyles.optionGroupCardHeader}>
+                  <View style={{ flex: 1, marginRight: moderateScale(8) }}>
+                    <ZInput
+                      _value={group.name}
+                      toGetTextFieldValue={(text) => {
+                        const updated = [...optionGroups];
+                        updated[gIdx] = { ...updated[gIdx], name: text };
+                        setOptionGroups(updated);
+                      }}
+                      placeHolder={strings.groupName || 'Group name (e.g. Size, Extras)'}
+                      inputContainerStyle={localStyles.groupNameInput}
+                    />
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => setOptionGroups(prev => prev.filter((_, i) => i !== gIdx))}
+                    style={localStyles.removeGroupBtn}>
+                    <Ionicons name="trash-outline" size={moderateScale(18)} color={colors.redColor || '#FF4D67'} />
+                  </TouchableOpacity>
+                </View>
+
+                {/* Group Settings */}
+                <View style={localStyles.groupSettings}>
+                  {/* Type Toggle */}
+                  <TouchableOpacity
+                    style={[
+                      localStyles.settingChip,
+                      { backgroundColor: group.type === 'single' ? colors.primary : colors.primary + '15' },
+                    ]}
+                    onPress={() => {
+                      const updated = [...optionGroups];
+                      updated[gIdx] = { ...updated[gIdx], type: group.type === 'single' ? 'multiple' : 'single' };
+                      setOptionGroups(updated);
+                    }}>
+                    <Ionicons
+                      name={group.type === 'single' ? 'radio-button-on' : 'checkbox'}
+                      size={moderateScale(14)}
+                      color={group.type === 'single' ? colors.white : colors.primary}
+                    />
+                    <ZText
+                      type="M12"
+                      color={group.type === 'single' ? colors.white : colors.primary}
+                      style={{ marginLeft: 4 }}>
+                      {group.type === 'single'
+                        ? (strings.requiredChoice || 'Pick One')
+                        : (strings.optionalAddons || 'Add-ons')}
+                    </ZText>
+                  </TouchableOpacity>
+
+                  {/* Required Toggle */}
+                  <TouchableOpacity
+                    style={[
+                      localStyles.settingChip,
+                      { backgroundColor: group.required ? colors.primary : colors.primary + '15' },
+                    ]}
+                    onPress={() => {
+                      const updated = [...optionGroups];
+                      updated[gIdx] = { ...updated[gIdx], required: !group.required };
+                      setOptionGroups(updated);
+                    }}>
+                    <Ionicons
+                      name={group.required ? 'checkmark-circle' : 'checkmark-circle-outline'}
+                      size={moderateScale(14)}
+                      color={group.required ? colors.white : colors.primary}
+                    />
+                    <ZText
+                      type="M12"
+                      color={group.required ? colors.white : colors.primary}
+                      style={{ marginLeft: 4 }}>
+                      {strings.required || 'Required'}
+                    </ZText>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Options List */}
+                {group.options.map((opt, oIdx) => (
+                  <View key={oIdx} style={localStyles.optionRow}>
+                    <View style={{ flex: 1, marginRight: moderateScale(8) }}>
+                      <ZInput
+                        _value={opt.name}
+                        toGetTextFieldValue={(text) => {
+                          const updated = [...optionGroups];
+                          updated[gIdx].options[oIdx] = { ...updated[gIdx].options[oIdx], name: text };
+                          setOptionGroups(updated);
+                        }}
+                        placeHolder={strings.optionName || 'Option name'}
+                        inputContainerStyle={localStyles.optionInput}
+                      />
+                    </View>
+                    <View style={{ width: moderateScale(80) }}>
+                      <ZInput
+                        _value={opt.priceAdjustment ? opt.priceAdjustment.toString() : ''}
+                        toGetTextFieldValue={(text) => {
+                          const updated = [...optionGroups];
+                          updated[gIdx].options[oIdx] = {
+                            ...updated[gIdx].options[oIdx],
+                            priceAdjustment: parseFloat(text) || 0,
+                          };
+                          setOptionGroups(updated);
+                        }}
+                        placeHolder={strings.extraPrice || '+EGP'}
+                        keyBoardType="decimal-pad"
+                        inputContainerStyle={localStyles.optionPriceInput}
+                      />
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => {
+                        const updated = [...optionGroups];
+                        updated[gIdx].options = updated[gIdx].options.filter((_, i) => i !== oIdx);
+                        setOptionGroups(updated);
+                      }}
+                      style={localStyles.removeOptionBtn}>
+                      <Ionicons name="close-circle" size={moderateScale(20)} color={colors.grayScale5} />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+
+                {/* Add Option Button */}
+                <TouchableOpacity
+                  style={localStyles.addOptionBtn}
+                  onPress={() => {
+                    const updated = [...optionGroups];
+                    updated[gIdx].options = [...updated[gIdx].options, { name: '', priceAdjustment: 0, isDefault: false }];
+                    setOptionGroups(updated);
+                  }}>
+                  <Ionicons name="add-circle-outline" size={moderateScale(16)} color={colors.primary} />
+                  <ZText type="M12" color={colors.primary} style={{ marginLeft: 4 }}>
+                    {strings.addOption || 'Add Option'}
+                  </ZText>
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
+
           {/* Visibility Toggle */}
           <View style={localStyles.visibilityContainer}>
             <ZText type="M14" color={colors.textColor}>
@@ -954,6 +1134,74 @@ const localStyles = StyleSheet.create({
     marginTop: moderateScale(2),
     marginLeft: moderateScale(4),
     fontStyle: 'italic',
+  },
+  // Option Groups Styles
+  optionGroupsSection: {
+    marginTop: moderateScale(16),
+    paddingTop: moderateScale(12),
+    borderTopWidth: 1,
+  },
+  optionGroupsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: moderateScale(12),
+  },
+  addGroupButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: moderateScale(12),
+    paddingVertical: moderateScale(8),
+    borderRadius: moderateScale(20),
+  },
+  optionGroupCard: {
+    borderRadius: moderateScale(12),
+    borderWidth: 1,
+    padding: moderateScale(12),
+    marginBottom: moderateScale(12),
+  },
+  optionGroupCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  groupNameInput: {
+    marginBottom: 0,
+  },
+  removeGroupBtn: {
+    padding: moderateScale(4),
+  },
+  groupSettings: {
+    flexDirection: 'row',
+    gap: moderateScale(8),
+    marginVertical: moderateScale(8),
+  },
+  settingChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: moderateScale(10),
+    paddingVertical: moderateScale(6),
+    borderRadius: moderateScale(16),
+  },
+  optionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: moderateScale(4),
+  },
+  optionInput: {
+    marginBottom: 0,
+  },
+  optionPriceInput: {
+    marginBottom: 0,
+  },
+  removeOptionBtn: {
+    padding: moderateScale(4),
+    marginLeft: moderateScale(4),
+  },
+  addOptionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: moderateScale(8),
+    marginTop: moderateScale(4),
   },
 });
 

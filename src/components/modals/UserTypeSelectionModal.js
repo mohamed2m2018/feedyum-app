@@ -131,12 +131,17 @@ const SelectionCard = ({
 const UserTypeSelectionModal = ({ visible, onSelect, onClose }) => {
     const colors = useSelector(state => state.theme.theme);
     const [selectedType, setSelectedType] = useState(null);
+    const [showValidationError, setShowValidationError] = useState(false);
     const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
     const fadeAnim = useRef(new Animated.Value(0)).current;
+    const errorFadeAnim = useRef(new Animated.Value(0)).current;
+    const shakeAnim = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
         if (visible) {
-            setSelectedType(null); // Reset selection when modal opens
+            setSelectedType(null);
+            setShowValidationError(false);
+            errorFadeAnim.setValue(0);
             Animated.parallel([
                 Animated.spring(slideAnim, {
                     toValue: 0,
@@ -167,9 +172,34 @@ const UserTypeSelectionModal = ({ visible, onSelect, onClose }) => {
     }, [visible]);
 
     const handleContinue = () => {
-        if (selectedType) {
-            onSelect(selectedType === 'chef');
+        if (!selectedType) {
+            setShowValidationError(true);
+            Animated.parallel([
+                Animated.timing(errorFadeAnim, {
+                    toValue: 1,
+                    duration: 250,
+                    useNativeDriver: true,
+                }),
+                Animated.sequence([
+                    Animated.timing(shakeAnim, { toValue: 12, duration: 50, useNativeDriver: true }),
+                    Animated.timing(shakeAnim, { toValue: -12, duration: 50, useNativeDriver: true }),
+                    Animated.timing(shakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
+                    Animated.timing(shakeAnim, { toValue: -10, duration: 50, useNativeDriver: true }),
+                    Animated.timing(shakeAnim, { toValue: 5, duration: 50, useNativeDriver: true }),
+                    Animated.timing(shakeAnim, { toValue: 0, duration: 50, useNativeDriver: true }),
+                ]),
+            ]).start();
+            // Auto-hide after 3 seconds
+            setTimeout(() => {
+                Animated.timing(errorFadeAnim, {
+                    toValue: 0,
+                    duration: 300,
+                    useNativeDriver: true,
+                }).start(() => setShowValidationError(false));
+            }, 3000);
+            return;
         }
+        onSelect(selectedType === 'chef');
     };
 
     const foodLoverFeatures = [
@@ -277,6 +307,24 @@ const UserTypeSelectionModal = ({ visible, onSelect, onClose }) => {
 
                     {/* Continue Button */}
                     <View style={[localStyles.buttonContainer, { backgroundColor: colors.backgroundColor }]}>
+                        {showValidationError && (
+                            <Animated.View
+                                style={[
+                                    localStyles.errorContainer,
+                                    {
+                                        opacity: errorFadeAnim,
+                                        transform: [
+                                            { translateX: shakeAnim },
+                                            { translateY: errorFadeAnim.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) },
+                                        ],
+                                    },
+                                ]}>
+                                <Ionicons name="alert-circle" size={moderateScale(16)} color={commonColor.red} />
+                                <ZText type="s13" color={commonColor.red} style={styles.ml5}>
+                                    {strings.selectAccountType || 'Please select an account type to continue'}
+                                </ZText>
+                            </Animated.View>
+                        )}
                         <ZButton
                             title={getButtonText()}
                             textType="b18"
@@ -287,7 +335,6 @@ const UserTypeSelectionModal = ({ visible, onSelect, onClose }) => {
                             ]}
                             bgColor={selectedType ? colors.primary : colors.grayScale5}
                             onPress={handleContinue}
-                            disabled={!selectedType}
                         />
                     </View>
                 </Animated.View>
@@ -408,6 +455,16 @@ const localStyles = StyleSheet.create({
     },
     disabledButton: {
         opacity: 0.7,
+    },
+    errorContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: moderateScale(10),
+        paddingVertical: moderateScale(8),
+        paddingHorizontal: moderateScale(14),
+        borderRadius: moderateScale(10),
+        backgroundColor: 'rgba(255, 75, 75, 0.12)',
     },
 });
 

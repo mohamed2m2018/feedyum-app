@@ -275,6 +275,17 @@ export default function MenuManagement() {
         sectionName: dishData.section.trim(),
         menuId: menuId,
         image: imageUrl,
+        // Enhanced fields
+        ingredients: dishData.ingredients,
+        preparationTime: dishData.preparationTime,
+        optionGroups: dishData.optionGroups,
+        // Bilingual fields
+        nameArabic: dishData.nameArabic,
+        nameEnglish: dishData.nameEnglish,
+        descriptionArabic: dishData.descriptionArabic,
+        descriptionEnglish: dishData.descriptionEnglish,
+        sectionNameArabic: dishData.sectionNameArabic,
+        sectionNameEnglish: dishData.sectionNameEnglish,
       };
 
 
@@ -347,9 +358,18 @@ export default function MenuManagement() {
         categories: Array.isArray(dishData.categories) ? dishData.categories : ((dishData.category && dishData.category.trim()) ? [dishData.category.trim()] : []),
         sectionName: dishData.section?.trim(), // Send section name to backend
         image: imageUrl,
-        cookingTime: dishData.cookingTime,
+        visible: dishData.visible,
+        // Enhanced fields
         ingredients: dishData.ingredients,
-        visible: dishData.visible
+        preparationTime: dishData.preparationTime,
+        optionGroups: dishData.optionGroups,
+        // Bilingual fields
+        nameArabic: dishData.nameArabic,
+        nameEnglish: dishData.nameEnglish,
+        descriptionArabic: dishData.descriptionArabic,
+        descriptionEnglish: dishData.descriptionEnglish,
+        sectionNameArabic: dishData.sectionNameArabic,
+        sectionNameEnglish: dishData.sectionNameEnglish,
       };
 
       // Update dish with real API call
