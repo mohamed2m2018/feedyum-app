@@ -508,7 +508,7 @@ export default {
   bestCollection: 'The best collection of food makers, and dishes',
   wideVariety: 'Wide Variety of Dishes, which you will be able to buy',
   withBestPrices: 'With the best prices ever!',
-  showUs: 'If you are a cooker show us what you can make!',
+  showUs: 'If you are a cook show us what you can make!',
   zeroFee: 'We take 0% from you. Free and will remain free',
   next: 'Next',
   seeMoreDescription: 'See More Description',
