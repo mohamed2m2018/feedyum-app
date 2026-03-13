@@ -614,6 +614,36 @@ const OrderTracking = () => {
             </Text>
           </View>
 
+          {/* Delivery Time Info */}
+          <View style={localStyles.infoRow}>
+            <Text style={{ color: '#666666', fontSize: 14 }}>
+              {currentOrder.orderType === 'scheduled'
+                ? (strings.scheduledDelivery || 'Scheduled Delivery')
+                : (strings.estimatedDelivery || 'Estimated Delivery')}
+            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Ionicons
+                name={currentOrder.orderType === 'scheduled' ? 'calendar-outline' : 'flash-outline'}
+                size={moderateScale(16)}
+                color={currentOrder.orderType === 'scheduled' ? '#2196F3' : '#FF9800'}
+                style={{ marginRight: 6 }}
+              />
+              <Text style={{
+                color: currentOrder.orderType === 'scheduled' ? '#2196F3' : '#FF9800',
+                fontSize: 14,
+                fontWeight: 'bold',
+              }}>
+                {currentOrder.orderType === 'scheduled' && currentOrder.scheduledFor
+                  ? (currentOrder.scheduledSlotLabel
+                    ? `${formatDate(currentOrder.scheduledFor, language)}, ${currentOrder.scheduledSlotLabel}`
+                    : formatDateTime(currentOrder.scheduledFor, language))
+                  : currentOrder.estimatedDeliveryTime
+                    ? formatDateTime(currentOrder.estimatedDeliveryTime, language)
+                    : (strings.asap || 'ASAP')}
+              </Text>
+            </View>
+          </View>
+
           {currentOrder.paymentMethod && (
             <View style={localStyles.infoRow}>
               <Text style={{ color: '#666666', fontSize: 14 }}>{strings.paymentMethod}</Text>

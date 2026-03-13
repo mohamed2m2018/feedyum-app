@@ -71,7 +71,10 @@ const formatDateTime = (date, language) => {
   if (!date) return '';
   const dateObj = date instanceof Date ? date : new Date(date);
   const locale = getLocale(language);
-  return dateObj.toLocaleString(locale);
+  return dateObj.toLocaleString(locale, {
+    month: 'numeric', day: 'numeric', year: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  });
 };
 
 export {

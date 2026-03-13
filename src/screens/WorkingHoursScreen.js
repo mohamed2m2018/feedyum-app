@@ -74,6 +74,13 @@ const WorkingHoursScreen = () => {
   const [saving, setSaving] = useState(false);
   const [pickerVisible, setPickerVisible] = useState(false);
   const [pickerContext, setPickerContext] = useState(null); // { dayIndex, field }
+  const initialScheduling = branch?.orderMode ?? pendingBranchData?.orderMode ?? (branch?.allowScheduledOrders ? 'both' : null);
+  const [schedulingChoice, setSchedulingChoice] = useState(
+    initialScheduling || null
+  ); // null = not chosen (create), 'asap'/'scheduled'/'both' = existing value
+  const [schedulingError, setSchedulingError] = useState(false);
+  const scrollViewRef = useRef(null);
+  const schedulingSectionY = useRef(0);
 
   const updateDay = (index, updates) => {
     setHours(prev => {
@@ -97,19 +104,29 @@ const WorkingHoursScreen = () => {
   };
 
   const handleSave = async () => {
+    // In create mode, scheduling choice is required
+    if (isCreateMode && schedulingChoice === null) {
+      setSchedulingError(true);
+      showErrorToast(strings.error || 'Error', strings.acceptScheduledOrders || 'Please choose whether to accept scheduled orders');
+      // Scroll to scheduling section
+      scrollViewRef.current?.scrollTo({ y: schedulingSectionY.current, animated: true });
+      return;
+    }
     setSaving(true);
     try {
       if (isCreateMode && pendingBranchData) {
-        // Create branch with location + hours together (atomic)
+        // Create branch with location + hours + scheduling choice together
         await branchService.addBranch({
           ...pendingBranchData,
           operatingHours: hours,
+          orderMode: schedulingChoice || 'asap',
         });
         showSuccessToast(strings.success, strings.branchAddedSuccess || 'Branch added successfully');
       } else {
-        // Edit existing branch hours
+        // Edit existing branch hours + scheduling
         await branchService.editBranch(branch._id, {
           operatingHours: hours,
+          ...(schedulingChoice !== null && { orderMode: schedulingChoice }),
         });
         showSuccessToast(strings.success, strings.workingHoursSaved);
       }
@@ -232,6 +249,7 @@ const WorkingHoursScreen = () => {
       <ZHeader title={isCreateMode ? strings.setWorkingHours : strings.workingHours} showBack />
 
       <ScrollView
+        ref={scrollViewRef}
         style={{ flex: 1, backgroundColor: colors.backgroundColor }}
         contentContainerStyle={localStyles.scrollContent}
       >
@@ -242,6 +260,56 @@ const WorkingHoursScreen = () => {
             {branch?.branchName || pendingBranchData?.branchName || branch?.addressDetails?.formattedAddress || ''}
           </ZText>
         </View>
+
+        {/* Order mode choice — shown in both create and edit mode */}
+        <View
+          style={[localStyles.schedulingSection, { borderColor: schedulingError ? (colors.alertColor || '#FF5252') : colors.grayScale3 }]}
+          onLayout={(e) => { schedulingSectionY.current = e.nativeEvent.layout.y; }}
+        >
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: moderateScale(6) }}>
+              <Ionicons name="time-outline" size={moderateScale(18)} color={colors.primary} />
+              <ZText type="B16" color={colors.textColor} style={{ marginLeft: moderateScale(8), flex: 1 }}>
+                {strings.orderModeLabel || 'Order Mode'} {isCreateMode && <ZText type="B16" color={colors.alertColor || '#FF5252'}>*</ZText>}
+              </ZText>
+            </View>
+            <ZText type="M13" color={colors.grayScale6} style={{ marginBottom: moderateScale(10) }}>
+              {strings.orderModeDesc || 'How can customers place orders?'}
+            </ZText>
+            <View style={{ gap: moderateScale(8) }}>
+              {[
+                { key: 'asap', icon: 'flash', label: strings.asapOnly || 'ASAP Only', desc: strings.asapOnlyDesc || 'Immediate orders only' },
+                { key: 'scheduled', icon: 'calendar-outline', label: strings.scheduledOnly || 'Scheduled Only', desc: strings.scheduledOnlyDesc || 'Customers must schedule ahead' },
+                { key: 'both', icon: 'time', label: strings.bothModes || 'Both', desc: strings.bothModesDesc || 'ASAP and scheduled orders' },
+              ].map(opt => {
+                const isActive = schedulingChoice === opt.key;
+                return (
+                  <TouchableOpacity
+                    key={opt.key}
+                    style={[
+                      localStyles.choicePill,
+                      { flexDirection: 'row', alignItems: 'center', paddingHorizontal: moderateScale(14) },
+                      isActive && { backgroundColor: colors.primary, borderColor: colors.primary },
+                      !isActive && { backgroundColor: colors.inputBg, borderWidth: 1, borderColor: colors.grayScale3 },
+                    ]}
+                    onPress={() => { setSchedulingChoice(opt.key); setSchedulingError(false); }}
+                  >
+                    <Ionicons name={opt.icon} size={moderateScale(18)} color={isActive ? colors.white : colors.textColor} />
+                    <View style={{ marginLeft: moderateScale(10), flex: 1 }}>
+                      <ZText type="B14" color={isActive ? colors.white : colors.textColor}>
+                        {opt.label}
+                      </ZText>
+                      <ZText type="R11" color={isActive ? colors.white + 'CC' : colors.grayScale6} style={{ marginTop: moderateScale(1) }}>
+                        {opt.desc}
+                      </ZText>
+                    </View>
+                    {isActive && (
+                      <Ionicons name="checkmark-circle" size={moderateScale(18)} color={colors.white} />
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
 
         {/* Days list */}
         <View style={[localStyles.daysContainer, { borderColor: colors.grayScale3 }]}>
@@ -397,6 +465,20 @@ const localStyles = StyleSheet.create({
     paddingHorizontal: moderateScale(20),
     height: moderateScale(50),
     borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  schedulingSection: {
+    marginTop: moderateScale(16),
+    padding: moderateScale(14),
+    borderRadius: moderateScale(12),
+    borderWidth: 1,
+  },
+  choicePill: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: moderateScale(10),
+    borderRadius: moderateScale(10),
   },
 });
 

@@ -582,7 +582,7 @@ const DishDetailScreen = () => {
         {/* Chef Info */}
         <TouchableOpacity
           style={localStyles.chefInfo}
-          onPress={() => navigation.navigate('ChefProfile', { chefId })}>
+          onPress={() => navigation.navigate(StackNav.ChefMenu, { chefId, chefName: finalChefData?.fullName || strings.unknownChef })}>
           <Image
             source={
               finalChefData?.avatar

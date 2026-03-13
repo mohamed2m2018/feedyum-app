@@ -8,7 +8,8 @@ import {
   TextInput,
   Platform,
   KeyboardAvoidingView,
-  ActivityIndicator
+  ActivityIndicator,
+  ScrollView,
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
@@ -77,6 +78,16 @@ const ShoppingCart = () => {
   const [promoError, setPromoError] = useState('');
   const [promoExpanded, setPromoExpanded] = useState(false);
 
+  // Scheduling state
+  const [deliveryMode, setDeliveryMode] = useState('asap'); // 'asap' | 'scheduled'
+  const [allowScheduledOrders, setAllowScheduledOrders] = useState(false);
+  const [branchOrderMode, setBranchOrderMode] = useState('asap'); // 'asap' | 'scheduled' | 'both'
+  const [availableSlots, setAvailableSlots] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedSlot, setSelectedSlot] = useState(null);
+  const [selectedPeriod, setSelectedPeriod] = useState(null); // 'morning' | 'afternoon' | 'evening'
+  const [loadingSlots, setLoadingSlots] = useState(false);
+
   // Load addresses when component mounts and set default if needed
   useEffect(() => {
     dispatch(getAddresses());
@@ -115,14 +126,24 @@ const ShoppingCart = () => {
         if (response.data?.success && response.data?.canDeliver) {
           setCalculatedDeliveryFee(response.data.deliveryFee || 0);
           setCalculatedServiceFee(response.data.serviceFee != null ? response.data.serviceFee : null);
+          const mode = response.data.orderMode || (response.data.allowScheduledOrders ? 'both' : 'asap');
+          setBranchOrderMode(mode);
+          setAllowScheduledOrders(mode !== 'asap');
+          // Auto-select delivery mode based on branch order mode
+          if (mode === 'scheduled') setDeliveryMode('scheduled');
+          else if (mode === 'asap') setDeliveryMode('asap');
         } else {
           setCalculatedDeliveryFee(null);
           setCalculatedServiceFee(null);
+          setAllowScheduledOrders(false);
+          setBranchOrderMode('asap');
         }
       } catch (err) {
         console.log('Failed to fetch delivery fee:', err);
         setCalculatedDeliveryFee(null);
         setCalculatedServiceFee(null);
+        setAllowScheduledOrders(false);
+        setBranchOrderMode('asap');
       } finally {
         setLoadingDeliveryFee(false);
       }
@@ -130,6 +151,39 @@ const ShoppingCart = () => {
 
     fetchDeliveryFee();
   }, [chef?.id, selectedAddress, subtotal]);
+
+  // Fetch available time slots when delivery mode switches to scheduled
+  useEffect(() => {
+    if (deliveryMode !== 'scheduled' || !chef?.id) {
+      setAvailableSlots(null);
+      setSelectedDate(null);
+      setSelectedSlot(null);
+      return;
+    }
+
+    const fetchSlots = async () => {
+      setLoadingSlots(true);
+      try {
+        const response = await request.get(`/orders/available-slots/${chef.id}`);
+        if (response.data?.success) {
+          const slots = response.data.slots;
+          setAvailableSlots(slots);
+          // Auto-select first available date
+          const dates = Object.keys(slots);
+          if (dates.length > 0) {
+            setSelectedDate(dates[0]);
+          }
+        }
+      } catch (err) {
+        console.log('Failed to fetch slots:', err);
+        setAvailableSlots({});
+      } finally {
+        setLoadingSlots(false);
+      }
+    };
+
+    fetchSlots();
+  }, [deliveryMode, chef?.id]);
 
   // Memoize expensive calculations
   const cartSummary = useMemo(() => ({
@@ -221,6 +275,23 @@ const ShoppingCart = () => {
       return;
     }
 
+    // Validate before showing confirmation dialog
+    if (!selectedAddress) {
+      showInfoToast(
+        strings.noDeliveryAddress || 'No Address',
+        strings.selectDeliveryAddress || 'Please select a delivery address'
+      );
+      return;
+    }
+
+    if (deliveryMode === 'scheduled' && (!selectedDate || !selectedSlot)) {
+      showInfoToast(
+        strings.noTimeSlot || 'No Time Slot',
+        strings.selectTimeSlot || 'Please select a delivery time slot'
+      );
+      return;
+    }
+
     showActionDialog({
       type: ALERT_TYPE.INFO,
       title: strings.placeOrderConfirm,
@@ -230,16 +301,6 @@ const ShoppingCart = () => {
       onConfirm: async () => {
         try {
           setIsCheckingOut(true);
-
-          // Check if user has selected a delivery address
-          if (!selectedAddress) {
-            showInfoToast(
-              strings.noDeliveryAddress || 'No Address',
-              strings.selectDeliveryAddress || 'Please select a delivery address'
-            );
-            setIsCheckingOut(false);
-            return;
-          }
 
           // Validate chef ID
           if (!chef?.id) {
@@ -325,6 +386,11 @@ const ShoppingCart = () => {
                 discountAmount: appliedPromo.discountAmount,
                 discountType: appliedPromo.discountType,
               },
+            }),
+            // Scheduling: send scheduledFor ISO string if user picked a time slot
+            ...(deliveryMode === 'scheduled' && selectedDate && selectedSlot && {
+              scheduledFor: new Date(`${selectedDate}T${selectedSlot.time}:00`).toISOString(),
+              scheduledSlotLabel: selectedSlot.label,
             }),
           };
           // Place real order using Redux thunk
@@ -528,6 +594,158 @@ const ShoppingCart = () => {
           </View>
         </TouchableOpacity>
       </View>
+
+      {/* Delivery Time Schedule Section — only if chef allows scheduling */}
+      {allowScheduledOrders && (
+        <View style={[localStyles.scheduleSection, { 
+          backgroundColor: colors.primary + '08',
+          borderWidth: 1,
+          borderColor: colors.primary + '25',
+          borderRadius: moderateScale(16),
+          padding: moderateScale(16),
+          marginTop: moderateScale(16),
+        }]}>
+          {/* Section Header with icon */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: moderateScale(12) }}>
+            <View style={{ 
+              backgroundColor: colors.primary + '20', 
+              borderRadius: moderateScale(10), 
+              padding: moderateScale(8),
+              marginRight: moderateScale(10),
+            }}>
+              <Ionicons name="time" size={moderateScale(20)} color={colors.primary} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <ZText type="B16" color={colors.textColor}>
+                {strings.deliveryTime}
+              </ZText>
+              <ZText type="R12" color={colors.grayScale7} style={{ marginTop: moderateScale(2) }}>
+                {branchOrderMode === 'scheduled' 
+                  ? (strings.scheduledDeliveryOnly || 'This kitchen accepts scheduled orders only')
+                  : (strings.chooseDeliveryTime || 'Choose when to receive your order')}
+              </ZText>
+            </View>
+          </View>
+
+          {/* ASAP / Schedule pills — only show toggle when both modes available */}
+          {branchOrderMode === 'both' && (
+            <View style={localStyles.deliveryModePills}>
+              <TouchableOpacity
+                style={[
+                  localStyles.deliveryModePill,
+                  deliveryMode === 'asap' && { backgroundColor: colors.primary },
+                  deliveryMode !== 'asap' && { backgroundColor: colors.inputBg, borderWidth: 1, borderColor: colors.borderColor || colors.grayScale3 },
+                ]}
+                onPress={() => { setDeliveryMode('asap'); setSelectedSlot(null); }}
+              >
+                <Ionicons name="flash" size={moderateScale(16)} color={deliveryMode === 'asap' ? colors.white : colors.textColor} />
+                <ZText type="B14" color={deliveryMode === 'asap' ? colors.white : colors.textColor} style={{ marginLeft: moderateScale(6) }}>
+                  {strings.asap}
+                </ZText>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  localStyles.deliveryModePill,
+                  deliveryMode === 'scheduled' && { backgroundColor: colors.primary },
+                  deliveryMode !== 'scheduled' && { backgroundColor: colors.inputBg, borderWidth: 1, borderColor: colors.borderColor || colors.grayScale3 },
+                ]}
+                onPress={() => setDeliveryMode('scheduled')}
+              >
+                <Ionicons name="calendar-outline" size={moderateScale(16)} color={deliveryMode === 'scheduled' ? colors.white : colors.textColor} />
+                <ZText type="B14" color={deliveryMode === 'scheduled' ? colors.white : colors.textColor} style={{ marginLeft: moderateScale(6) }}>
+                  {strings.scheduleForLater}
+                </ZText>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* Slot picker — shown when 'scheduled' mode */}
+          {deliveryMode === 'scheduled' && (
+            <View style={[localStyles.slotPickerContainer, { marginTop: moderateScale(14) }]}>
+              {loadingSlots ? (
+                <ActivityIndicator size="small" color={colors.primary} style={{ marginVertical: moderateScale(16) }} />
+              ) : availableSlots && Object.keys(availableSlots).length > 0 ? (
+                <>
+                  {/* Day pills - horizontal scroll */}
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: moderateScale(14) }}>
+                    <View style={localStyles.dayPillsRow}>
+                    {Object.entries(availableSlots).map(([dateStr, dayData]) => {
+                      const isActive = selectedDate === dateStr;
+                      const dayLabel = dayData.dayLabel === 'today' ? strings.today
+                        : dayData.dayLabel === 'tomorrow' ? strings.tomorrow
+                        : dayData.dayLabel.charAt(0).toUpperCase() + dayData.dayLabel.slice(1);
+                      const dayNum = dateStr.split('-')[2];
+
+                      return (
+                        <TouchableOpacity
+                          key={dateStr}
+                          style={[
+                            localStyles.dayPill,
+                            isActive && { backgroundColor: colors.primary },
+                            !isActive && { backgroundColor: colors.inputBg, borderWidth: 1, borderColor: colors.borderColor || colors.grayScale3 },
+                          ]}
+                          onPress={() => { setSelectedDate(dateStr); setSelectedSlot(null); }}
+                        >
+                          <ZText type="R12" color={isActive ? colors.white : colors.grayScale7}>
+                            {dayLabel}
+                          </ZText>
+                          <ZText type="B14" color={isActive ? colors.white : colors.textColor}>
+                            {dayNum}
+                          </ZText>
+                        </TouchableOpacity>
+                      );
+                    })}
+                    </View>
+                  </ScrollView>
+
+                  {/* Time slots — simple horizontal scroll */}
+                  {selectedDate && availableSlots[selectedDate] && (() => {
+                    const seen = new Set();
+                    const slots = availableSlots[selectedDate].slots.filter(slot => {
+                      if (seen.has(slot.time)) return false;
+                      seen.add(slot.time);
+                      return true;
+                    });
+
+                    return (
+                      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                        <View style={{ flexDirection: 'row', gap: moderateScale(8) }}>
+                          {slots.map(slot => {
+                            const isActive = selectedSlot?.time === slot.time;
+                            return (
+                              <TouchableOpacity
+                                key={slot.time}
+                                style={[
+                                  {
+                                    paddingVertical: moderateScale(10), paddingHorizontal: moderateScale(14),
+                                    borderRadius: moderateScale(10),
+                                  },
+                                  isActive && { backgroundColor: colors.primary },
+                                  !isActive && { backgroundColor: colors.inputBg, borderWidth: 1, borderColor: colors.borderColor || colors.grayScale3 },
+                                ]}
+                                onPress={() => setSelectedSlot(slot)}
+                              >
+                                <ZText type={isActive ? 'B13' : 'M13'} color={isActive ? colors.white : colors.textColor}>
+                                  {slot.label}
+                                </ZText>
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </View>
+                      </ScrollView>
+                    );
+                  })()}
+                </>
+              ) : (
+                <ZText type="M14" color={colors.grayScale7} style={{ textAlign: 'center', marginVertical: moderateScale(12) }}>
+                  {strings.noSlotsAvailable}
+                </ZText>
+              )}
+            </View>
+          )}
+        </View>
+      )}
 
       {/* Payment Method Section */}
       <View style={localStyles.paymentMethodSection}>
@@ -1066,6 +1284,49 @@ const localStyles = StyleSheet.create({
     padding: moderateScale(14),
     borderRadius: moderateScale(12),
     borderWidth: 1.5,
+  },
+  // Scheduling styles
+  scheduleSection: {
+    marginTop: moderateScale(16),
+  },
+  deliveryModePills: {
+    flexDirection: 'row',
+    gap: moderateScale(10),
+    marginTop: moderateScale(8),
+  },
+  deliveryModePill: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: moderateScale(10),
+    borderRadius: moderateScale(10),
+  },
+  slotPickerContainer: {
+    marginTop: moderateScale(12),
+  },
+  dayPillsRow: {
+    flexDirection: 'row',
+    gap: moderateScale(8),
+    marginBottom: moderateScale(12),
+  },
+  dayPill: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: moderateScale(8),
+    paddingHorizontal: moderateScale(12),
+    borderRadius: moderateScale(10),
+    minWidth: moderateScale(52),
+  },
+  timeSlotsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: moderateScale(8),
+  },
+  timeSlotChip: {
+    paddingVertical: moderateScale(8),
+    paddingHorizontal: moderateScale(14),
+    borderRadius: moderateScale(8),
   },
 });
 

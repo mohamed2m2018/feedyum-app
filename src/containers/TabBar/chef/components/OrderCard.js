@@ -18,7 +18,7 @@ const StatusBadge = ({ status, colors }) => {
         return {
           color: colors.orange,
           backgroundColor: colors.orange + '20',
-          text: strings.pending,
+          text: strings.pendingChef || strings.pending,
           icon: 'time-outline',
         };
       case 'awaiting_confirmation':
@@ -26,7 +26,7 @@ const StatusBadge = ({ status, colors }) => {
         return {
           color: colors.info || '#2196F3',
           backgroundColor: (colors.info || '#2196F3') + '20',
-          text: strings.awaitingConfirmation || 'Awaiting Confirmation',
+          text: strings.awaitingCustomerConfirmation || 'Awaiting Customer Confirmation',
           icon: 'hourglass-outline',
         };
       case 'confirmed':
@@ -283,6 +283,32 @@ const OrderCard = ({
           </View>
         )}
       </View>
+
+
+      {/* Scheduled Delivery Badge */}
+      {order.orderType === 'scheduled' && order.scheduledFor && (
+        <View style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          backgroundColor: (colors.info || '#2196F3') + '15',
+          borderRadius: moderateScale(8),
+          paddingHorizontal: moderateScale(10),
+          paddingVertical: moderateScale(6),
+          marginBottom: moderateScale(12),
+        }}>
+          <Ionicons
+            name="calendar-outline"
+            size={moderateScale(14)}
+            color={colors.info || '#2196F3'}
+            style={{ marginRight: moderateScale(6) }}
+          />
+          <ZText type="M12" color={colors.info || '#2196F3'}>
+            {order.scheduledSlotLabel
+              ? `${new Date(order.scheduledFor).toLocaleDateString()}, ${order.scheduledSlotLabel}`
+              : new Date(order.scheduledFor).toLocaleString(undefined, { month: 'numeric', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+          </ZText>
+        </View>
+      )}
 
       {/* Order Summary */}
       <View style={localStyles.orderSummary}>

@@ -138,7 +138,7 @@ export default function Orders({ navigation }) {
   const getOrderStatusText = (status) => {
     switch (status) {
       case 'pending':
-        return strings.pending;
+        return strings.pendingCustomer || strings.pending;
       case 'awaiting_confirmation':
         return strings.awaitingConfirmation;
       case 'chef_review':

@@ -7,6 +7,7 @@ import {
   Platform,
   ActivityIndicator,
   ScrollView,
+  TextInput,
 } from 'react-native';
 import { showErrorToast } from '../utils/toast';
 import { useSelector, useDispatch } from 'react-redux';
@@ -105,6 +106,24 @@ const MapLocationPicker = () => {
   const [showBranchForm, setShowBranchForm] = useState(false);
   const [deliveryTiers, setDeliveryTiers] = useState([{ maxDistance: 20, fee: '' }]);
   const [tierErrors, setTierErrors] = useState([]); // indices of tiers with invalid fees
+  const [orderMode, setOrderMode] = useState(
+    editMode && addressToEdit?.orderMode ? addressToEdit.orderMode : null
+  );
+  const savedLeadMinutes = editMode && addressToEdit?.minLeadTime ? addressToEdit.minLeadTime : null;
+  const [leadTimeValue, setLeadTimeValue] = useState(
+    savedLeadMinutes
+      ? (savedLeadMinutes >= 1440 && savedLeadMinutes % 1440 === 0
+          ? String(savedLeadMinutes / 1440)
+          : String(savedLeadMinutes / 60))
+      : ''
+  );
+  const [leadTimeUnit, setLeadTimeUnit] = useState(
+    savedLeadMinutes && savedLeadMinutes >= 1440 && savedLeadMinutes % 1440 === 0
+      ? 'days' : 'hours'
+  );
+  const [slotDuration, setSlotDuration] = useState(
+    editMode && addressToEdit?.slotDuration ? addressToEdit.slotDuration : 60
+  );
 
   // Auto-adjust delivery tiers when radius changes
   useEffect(() => {
@@ -432,6 +451,24 @@ const MapLocationPicker = () => {
       return;
     }
 
+    // Validate order mode is chosen
+    if (!orderMode) {
+      showErrorToast(
+        strings.error,
+        strings.orderModeRequired || 'Please choose an order mode'
+      );
+      return;
+    }
+
+    // Validate minimum lead time is chosen when scheduling is enabled
+    if ((orderMode === 'scheduled' || orderMode === 'both') && (!leadTimeValue || Number(leadTimeValue) <= 0)) {
+      showErrorToast(
+        strings.error,
+        strings.minLeadTimeRequired || 'Please enter a minimum lead time'
+      );
+      return;
+    }
+
     // Validate delivery tiers - all must have a fee > 0
     const invalidIndices = deliveryTiers
       .map((t, i) => (!t.fee || isNaN(Number(t.fee)) || Number(t.fee) <= 0) ? i : -1)
@@ -472,13 +509,16 @@ const MapLocationPicker = () => {
       deliveryTiers: validTiers,
       area: selectedLocation.area,
       city: selectedLocation.city,
+      orderMode: orderMode || 'asap',
+      minLeadTime: (leadTimeUnit === 'days' ? Number(leadTimeValue) * 1440 : Number(leadTimeValue) * 60) || 60,
+      slotDuration: slotDuration || 60,
     };
 
     if (onLocationSelect) {
       onLocationSelect(locationData);
     }
     navigation.goBack();
-  }, [selectedLocation, branchName, deliveryRadius, deliveryTiers, onLocationSelect, navigation]);
+  }, [selectedLocation, branchName, deliveryRadius, deliveryTiers, orderMode, leadTimeValue, leadTimeUnit, slotDuration, onLocationSelect, navigation]);
 
   const handleAddressDetailChange = (field, value) => {
     setAddressDetails(prev => ({
@@ -629,6 +669,8 @@ const MapLocationPicker = () => {
               toolbarEnabled={false}
               scrollEnabled={!showBranchForm}
               zoomEnabled={!showBranchForm}
+              onMapReady={() => console.log('[MAP] Map ready')}
+              onMapLoaded={() => console.log('[MAP] Map tiles loaded')}
             >
               <Marker
                 coordinate={markerPosition}
@@ -749,6 +791,167 @@ const MapLocationPicker = () => {
                 inputContainerStyle={[localStyles.inputContainer, { backgroundColor: colors.inputBg }]}
               />
             </View>
+
+            {/* Order Mode Selector */}
+            <View style={[localStyles.section, { 
+              backgroundColor: colors.inputBg, 
+              padding: moderateScale(14), 
+              borderRadius: moderateScale(12),
+              borderWidth: 1,
+              borderColor: colors.grayScale4,
+            }]}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: moderateScale(10) }}>
+                <Ionicons name="time-outline" size={moderateScale(18)} color={colors.primary} />
+                <ZText type="B16" color={colors.textColor} style={{ marginLeft: moderateScale(8), flex: 1 }}>
+                  {strings.orderModeLabel || 'Order Mode'}
+                </ZText>
+              </View>
+              <View style={{ flexDirection: 'row', gap: moderateScale(8) }}>
+                {[  
+                  { key: 'asap', icon: 'flash', label: strings.asapOnly || 'ASAP Only' },
+                  { key: 'scheduled', icon: 'calendar-outline', label: strings.scheduledOnly || 'Scheduled' },
+                  { key: 'both', icon: 'time', label: strings.bothModes || 'Both' },
+                ].map(opt => {
+                  const isActive = orderMode === opt.key;
+                  return (
+                    <TouchableOpacity
+                      key={opt.key}
+                      style={[
+                        {
+                          flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+                          paddingVertical: moderateScale(10),
+                          borderRadius: moderateScale(10),
+                        },
+                        isActive && { backgroundColor: colors.primary },
+                        !isActive && { backgroundColor: colors.backgroundColor, borderWidth: 1, borderColor: colors.grayScale3 },
+                      ]}
+                      onPress={() => setOrderMode(opt.key)}
+                    >
+                      <Ionicons name={opt.icon} size={moderateScale(14)} color={isActive ? colors.white : colors.textColor} />
+                      <ZText type={isActive ? 'B12' : 'M12'} color={isActive ? colors.white : colors.textColor} style={{ marginLeft: moderateScale(4) }}>
+                        {opt.label}
+                      </ZText>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+
+            {/* Minimum Lead Time — shown when scheduling is enabled */}
+            {(orderMode === 'scheduled' || orderMode === 'both') && (
+              <View style={[localStyles.section, {
+                backgroundColor: colors.inputBg,
+                padding: moderateScale(14),
+                borderRadius: moderateScale(12),
+                borderWidth: 1,
+                borderColor: colors.grayScale4,
+              }]}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: moderateScale(8) }}>
+                  <Ionicons name="hourglass-outline" size={moderateScale(18)} color={colors.primary} />
+                  <ZText type="B16" color={colors.textColor} style={{ marginLeft: moderateScale(8), flex: 1 }}>
+                    {strings.minLeadTimeLabel || 'Minimum Lead Time'} <ZText type="B16" color={colors.alertColor || '#FF5252'}>*</ZText>
+                  </ZText>
+                </View>
+                <ZText type="s12" color={colors.grayScale6} style={{ marginBottom: moderateScale(10) }}>
+                  {strings.minLeadTimeDesc || 'How far ahead must customers schedule?'}
+                </ZText>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: moderateScale(10) }}>
+                  {/* Number input */}
+                  <TextInput
+                    style={{
+                      flex: 1,
+                      backgroundColor: colors.backgroundColor,
+                      borderWidth: 1,
+                      borderColor: colors.grayScale3,
+                      borderRadius: moderateScale(10),
+                      paddingVertical: moderateScale(12),
+                      paddingHorizontal: moderateScale(16),
+                      color: colors.textColor,
+                      fontSize: moderateScale(16),
+                      fontWeight: '600',
+                      textAlign: 'center',
+                    }}
+                    value={leadTimeValue}
+                    onChangeText={(text) => setLeadTimeValue(text.replace(/[^0-9]/g, ''))}
+                    keyboardType="numeric"
+                    placeholder="0"
+                    placeholderTextColor={colors.grayScale5}
+                  />
+                  {/* Unit toggle */}
+                  {[
+                    { key: 'hours', label: strings.hours || 'Hours' },
+                    { key: 'days', label: strings.days || 'Days' },
+                  ].map(unit => {
+                    const isActive = leadTimeUnit === unit.key;
+                    return (
+                      <TouchableOpacity
+                        key={unit.key}
+                        style={[
+                          {
+                            paddingVertical: moderateScale(12), paddingHorizontal: moderateScale(18),
+                            borderRadius: moderateScale(10),
+                          },
+                          isActive && { backgroundColor: colors.primary },
+                          !isActive && { backgroundColor: colors.backgroundColor, borderWidth: 1, borderColor: colors.grayScale3 },
+                        ]}
+                        onPress={() => setLeadTimeUnit(unit.key)}
+                      >
+                        <ZText type={isActive ? 'B14' : 'M14'} color={isActive ? colors.white : colors.textColor}>
+                          {unit.label}
+                        </ZText>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+            )}
+
+            {/* Slot Duration — shown when scheduling is enabled */}
+            {(orderMode === 'scheduled' || orderMode === 'both') && (
+              <View style={[localStyles.section, {
+                backgroundColor: colors.inputBg,
+                padding: moderateScale(14),
+                borderRadius: moderateScale(12),
+                borderWidth: 1,
+                borderColor: colors.grayScale4,
+              }]}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: moderateScale(10) }}>
+                  <Ionicons name="timer-outline" size={moderateScale(18)} color={colors.primary} />
+                  <ZText type="B16" color={colors.textColor} style={{ marginLeft: moderateScale(8), flex: 1 }}>
+                    {strings.slotDurationLabel || 'Time Slot Size'}
+                  </ZText>
+                </View>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: moderateScale(8) }}>
+                  {[
+                    { value: 30, label: strings.thirtyMin || '30 min' },
+                    { value: 60, label: strings.oneHour || '1 hour' },
+                    { value: 120, label: strings.twoHours || '2 hours' },
+                    { value: 180, label: strings.threeHours || '3 hours' },
+                    { value: 360, label: strings.halfDay || 'Half day' },
+                  ].map(opt => {
+                    const isActive = slotDuration === opt.value;
+                    return (
+                      <TouchableOpacity
+                        key={opt.value}
+                        style={[
+                          {
+                            paddingVertical: moderateScale(10), paddingHorizontal: moderateScale(14),
+                            borderRadius: moderateScale(10),
+                          },
+                          isActive && { backgroundColor: colors.primary },
+                          !isActive && { backgroundColor: colors.backgroundColor, borderWidth: 1, borderColor: colors.grayScale3 },
+                        ]}
+                        onPress={() => setSlotDuration(opt.value)}
+                      >
+                        <ZText type={isActive ? 'B12' : 'M12'} color={isActive ? colors.white : colors.textColor}>
+                          {opt.label}
+                        </ZText>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+            )}
 
             {/* Delivery Radius Slider */}
             <View style={localStyles.section}>

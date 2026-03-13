@@ -43,7 +43,7 @@ const OrderDetailsModal = ({
         return {
           color: colors.orange,
           backgroundColor: colors.orange + '20',
-          text: strings.pending,
+          text: strings.pendingChef || strings.pending,
           icon: 'time-outline',
         };
       case 'awaiting_confirmation':
@@ -51,7 +51,7 @@ const OrderDetailsModal = ({
         return {
           color: colors.info || '#2196F3',
           backgroundColor: (colors.info || '#2196F3') + '20',
-          text: strings.awaitingConfirmation || strings.chefReviewing || 'Awaiting Confirmation',
+          text: strings.awaitingCustomerConfirmation || 'Awaiting Customer Confirmation',
           icon: 'hourglass-outline',
         };
       case 'confirmed':
@@ -257,6 +257,31 @@ const OrderDetailsModal = ({
               Placed on {formatDate(order.created_at)}
             </ZText>
           </View>
+
+          {/* Scheduled Delivery Info */}
+          {order.orderType === 'scheduled' && order.scheduledFor && (
+            <View style={[localStyles.section, { marginBottom: 0 }]}>
+              <View style={[localStyles.infoCard, { backgroundColor: (colors.info || '#2196F3') + '15', borderWidth: 1, borderColor: (colors.info || '#2196F3') + '30' }]}>
+                <View style={localStyles.infoRow}>
+                  <Ionicons
+                    name="calendar-outline"
+                    size={moderateScale(20)}
+                    color={colors.info || '#2196F3'}
+                  />
+                  <View style={{ marginLeft: moderateScale(12), flex: 1 }}>
+                    <ZText type="B14" color={colors.info || '#2196F3'}>
+                      {strings.scheduledDelivery || 'Scheduled Delivery'}
+                    </ZText>
+                    <ZText type="M14" color={colors.textColor} style={{ marginTop: moderateScale(2) }}>
+                      {order.scheduledSlotLabel
+                        ? `${new Date(order.scheduledFor).toLocaleDateString()}, ${order.scheduledSlotLabel}`
+                        : new Date(order.scheduledFor).toLocaleString(undefined, { month: 'numeric', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                    </ZText>
+                  </View>
+                </View>
+              </View>
+            </View>
+          )}
 
           {/* Status Timeline */}
           <View style={localStyles.section}>

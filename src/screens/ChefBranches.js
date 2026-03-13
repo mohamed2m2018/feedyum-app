@@ -1,13 +1,11 @@
 import React, { useState, useCallback } from 'react';
 import {
     View,
-    Text,
     StyleSheet,
     TouchableOpacity,
     FlatList,
     ActivityIndicator,
     RefreshControl,
-    Alert,
 } from 'react-native';
 import { useSelector } from 'react-redux';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -97,6 +95,9 @@ const ChefBranchesScreen = () => {
                     deliveryRadius: locationData.deliveryRadius || 20,
                     deliveryTiers: locationData.deliveryTiers || [],
                     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                    orderMode: locationData.orderMode || 'asap',
+                    minLeadTime: locationData.minLeadTime || 60,
+                    slotDuration: locationData.slotDuration || 60,
                 };
 
                 // Delay navigation so it fires AFTER MapLocationPicker's goBack() pops
@@ -136,6 +137,9 @@ const ChefBranchesScreen = () => {
                 contactInfo: branch.contactInfo,
                 deliveryRadius: branch.deliveryRadius,
                 deliveryTiers: branch.deliveryTiers,
+                orderMode: branch.orderMode,
+                minLeadTime: branch.minLeadTime,
+                slotDuration: branch.slotDuration,
             },
             initialLocation: {
                 latitude: parseFloat(branch.location?.lat || branch.lat),
@@ -159,6 +163,9 @@ const ChefBranchesScreen = () => {
                         countryCode: locationData.countryCode || branch.contactInfo?.countryCode || '+20',
                         deliveryRadius: locationData.deliveryRadius || branch.deliveryRadius || 20,
                         deliveryTiers: locationData.deliveryTiers || branch.deliveryTiers || [],
+                        orderMode: locationData.orderMode || branch.orderMode || 'asap',
+                        minLeadTime: locationData.minLeadTime || branch.minLeadTime || 60,
+                        slotDuration: locationData.slotDuration || branch.slotDuration || 60,
                     });
 
                     queryClient.invalidateQueries('myBranches');
@@ -254,82 +261,116 @@ const ChefBranchesScreen = () => {
     const renderBranchCard = ({ item, index }) => {
         const statusInfo = getStatusInfo(item);
         return (
-        <View style={[localStyles.branchCard, { backgroundColor: colors.dark ? colors.inputBg : colors.white }]}>
-            {/* Top row: icon + info + actions */}
-            <View style={localStyles.branchTopRow}>
-                {/* Location Icon with Gradient Background */}
-                <View style={localStyles.iconContainer}>
-                    <LinearGradient
-                        colors={[colors.primary, colors.lightRed || '#FF7B8E']}
-                        style={localStyles.iconGradient}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                    >
-                        <Ionicons name="location" size={moderateScale(20)} color={colors.white} />
-                    </LinearGradient>
+            <View style={[localStyles.branchCard, { backgroundColor: colors.dark ? colors.inputBg : colors.white }]}>
+                {/* Top row: icon + info + actions */}
+                <View style={localStyles.branchTopRow}>
+                    {/* Location Icon with Gradient Background */}
+                    <View style={localStyles.iconContainer}>
+                        <LinearGradient
+                            colors={[colors.primary, colors.lightRed || '#FF7B8E']}
+                            style={localStyles.iconGradient}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                        >
+                            <Ionicons name="location" size={moderateScale(20)} color={colors.white} />
+                        </LinearGradient>
+                    </View>
+
+                    {/* Branch Info */}
+                    <View style={localStyles.branchInfo}>
+                        <ZText type="b16" color={colors.textColor} numberOfLines={1}>
+                            {getBranchName(item)}
+                        </ZText>
+                        <ZText type="m14" color={colors.grayScale5} numberOfLines={2} style={localStyles.addressText}>
+                            {item.addressDetails?.formattedAddress || item.description || strings.noAddressProvided || 'No address provided'}
+                        </ZText>
+                    </View>
+
+                    {/* Action Buttons */}
+                    <View style={localStyles.actionButtons}>
+                        <TouchableOpacity
+                            onPress={() => handleEditBranch(item, index)}
+                            style={[localStyles.actionBtn, { borderColor: colors.primary }]}
+                        >
+                            <MaterialIcon name="pencil" size={moderateScale(16)} color={colors.primary} />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => handleDeleteBranch(item)}
+                            style={[localStyles.actionBtn, localStyles.deleteBtn]}
+                        >
+                            <MaterialIcon name="delete-outline" size={moderateScale(16)} color={colors.redColor} />
+                        </TouchableOpacity>
+                    </View>
                 </View>
 
-                {/* Branch Info */}
-                <View style={localStyles.branchInfo}>
-                    <ZText type="b16" color={colors.textColor} numberOfLines={1}>
-                        {getBranchName(item)}
-                    </ZText>
-                    <ZText type="m14" color={colors.grayScale5} numberOfLines={2} style={localStyles.addressText}>
-                        {item.addressDetails?.formattedAddress || item.description || strings.noAddressProvided || 'No address provided'}
-                    </ZText>
-                </View>
-
-                {/* Action Buttons */}
-                <View style={localStyles.actionButtons}>
+                {/* Status & Working Hours & Scheduling section */}
+                <View style={[localStyles.statusSection, { borderTopColor: colors.grayScale3 }]}>
+                    {/* Status toggle */}
                     <TouchableOpacity
-                        onPress={() => handleEditBranch(item, index)}
-                        style={[localStyles.actionBtn, { borderColor: colors.primary }]}
+                        style={[localStyles.statusToggle, { backgroundColor: statusInfo.color + '15' }]}
+                        onPress={() => handleToggleStatus(item)}
                     >
-                        <MaterialIcon name="pencil" size={moderateScale(16)} color={colors.primary} />
+                        <Ionicons name={statusInfo.icon} size={moderateScale(16)} color={statusInfo.color} />
+                        <ZText type="M12" color={statusInfo.color} style={{ marginLeft: moderateScale(6), flex: 1 }}>
+                            {statusInfo.label}
+                        </ZText>
+                        <Ionicons name="swap-horizontal-outline" size={moderateScale(14)} color={statusInfo.color} />
                     </TouchableOpacity>
+
+                    {/* Working hours button */}
                     <TouchableOpacity
-                        onPress={() => handleDeleteBranch(item)}
-                        style={[localStyles.actionBtn, localStyles.deleteBtn]}
+                        style={[localStyles.hoursButton, { backgroundColor: colors.primary + '10' }]}
+                        onPress={() => navigation.navigate(StackNav.WorkingHours, {
+                            branch: item,
+                            onSave: () => {
+                                queryClient.invalidateQueries('myBranches');
+                                refetch();
+                            },
+                        })}
                     >
-                        <MaterialIcon name="delete-outline" size={moderateScale(16)} color={colors.redColor} />
+                        <Ionicons name="time-outline" size={moderateScale(14)} color={colors.primary} />
+                        <ZText type="M12" color={colors.primary} style={{ marginLeft: moderateScale(6), flex: 1 }} numberOfLines={1}>
+                            {getWorkingHoursSummary(item)}
+                        </ZText>
+                        <Ionicons name="chevron-forward" size={moderateScale(14)} color={colors.primary} />
                     </TouchableOpacity>
                 </View>
-            </View>
 
-            {/* Status & Working Hours section */}
-            <View style={[localStyles.statusSection, { borderTopColor: colors.grayScale3 }]}>
-                {/* Status toggle */}
+                {/* Per-branch order mode display */}
                 <TouchableOpacity
-                    style={[localStyles.statusToggle, { backgroundColor: statusInfo.color + '15' }]}
-                    onPress={() => handleToggleStatus(item)}
-                >
-                    <Ionicons name={statusInfo.icon} size={moderateScale(16)} color={statusInfo.color} />
-                    <ZText type="M12" color={statusInfo.color} style={{ marginLeft: moderateScale(6), flex: 1 }}>
-                        {statusInfo.label}
-                    </ZText>
-                    <Ionicons name="swap-horizontal-outline" size={moderateScale(14)} color={statusInfo.color} />
-                </TouchableOpacity>
-
-                {/* Working hours button */}
-                <TouchableOpacity
-                    style={[localStyles.hoursButton, { backgroundColor: colors.primary + '10' }]}
-                    onPress={() => navigation.navigate(StackNav.WorkingHours, {
-                        branch: item,
-                        onSave: () => {
+                    style={[localStyles.schedulingRow, { borderTopColor: colors.grayScale3 }]}
+                    onPress={async () => {
+                        // Cycle: asap → both → scheduled → asap
+                        const currentMode = item.orderMode || (item.allowScheduledOrders ? 'both' : 'asap');
+                        const nextMode = currentMode === 'asap' ? 'both' : currentMode === 'both' ? 'scheduled' : 'asap';
+                        try {
+                            await branchService.editBranch(item._id, { orderMode: nextMode });
                             queryClient.invalidateQueries('myBranches');
                             refetch();
-                        },
-                    })}
+                        } catch (e) {
+                            console.error('[ORDER_MODE] Failed to update:', e?.response?.data || e.message);
+                        }
+                    }}
+                    activeOpacity={0.7}
                 >
-                    <Ionicons name="time-outline" size={moderateScale(14)} color={colors.primary} />
-                    <ZText type="M12" color={colors.primary} style={{ marginLeft: moderateScale(6), flex: 1 }} numberOfLines={1}>
-                        {getWorkingHoursSummary(item)}
+                    <Ionicons name={(() => {
+                        const m = item.orderMode || (item.allowScheduledOrders ? 'both' : 'asap');
+                        return m === 'asap' ? 'flash' : m === 'scheduled' ? 'calendar' : 'time';
+                    })()} size={moderateScale(14)} color={colors.primary} />
+                    <ZText type="M12" color={colors.primary} style={{ marginLeft: moderateScale(6), flex: 1 }}>
+                        {strings.orderModeLabel || 'Order Mode'}
                     </ZText>
-                    <Ionicons name="chevron-forward" size={moderateScale(14)} color={colors.primary} />
+                    <View style={[localStyles.schedulingBadge, { backgroundColor: colors.primary + '15' }]}>
+                        <ZText type="B10" color={colors.primary}>
+                            {(() => {
+                                const m = item.orderMode || (item.allowScheduledOrders ? 'both' : 'asap');
+                                return m === 'asap' ? (strings.asapOnly || 'ASAP') : m === 'scheduled' ? (strings.scheduledOnly || 'Scheduled') : (strings.bothModes || 'Both');
+                            })()}
+                        </ZText>
+                    </View>
                 </TouchableOpacity>
             </View>
-        </View>
-    );
+        );
     };
 
     const EmptyState = () => (
@@ -531,6 +572,19 @@ const localStyles = StyleSheet.create({
         paddingVertical: moderateScale(8),
         paddingHorizontal: moderateScale(10),
         borderRadius: moderateScale(10),
+    },
+    schedulingRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingTop: moderateScale(10),
+        marginTop: moderateScale(8),
+        borderTopWidth: StyleSheet.hairlineWidth,
+        paddingHorizontal: moderateScale(4),
+    },
+    schedulingBadge: {
+        paddingHorizontal: moderateScale(8),
+        paddingVertical: moderateScale(3),
+        borderRadius: moderateScale(6),
     },
     // Empty State
     emptyContainer: {

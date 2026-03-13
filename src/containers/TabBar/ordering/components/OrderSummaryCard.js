@@ -17,7 +17,7 @@ const formatCurrency = (value) => {
 const StatusPill = ({ status, colors }) => {
   const normalized = String(status || 'pending').toLowerCase();
   const map = {
-    pending: { bg: colors.statusPendingBg, fg: colors.statusPendingFg, icon: 'time-outline', label: strings.pending },
+    pending: { bg: colors.statusPendingBg, fg: colors.statusPendingFg, icon: 'time-outline', label: strings.pendingCustomer || strings.pending },
     awaiting_confirmation: { bg: '#FFF3E0', fg: '#E65100', icon: 'alert-circle-outline', label: strings.awaitingConfirmation || 'Awaiting Confirmation' },
     accepted: { bg: colors.statusAcceptedBg, fg: colors.statusAcceptedFg, icon: 'checkmark-circle-outline', label: strings.accepted },
     confirmed: { bg: colors.statusAcceptedBg, fg: colors.statusAcceptedFg, icon: 'checkmark-circle-outline', label: strings.confirmed },
@@ -196,6 +196,16 @@ const OrderSummaryCard = ({ order, colors, onPressPrimary, initialCollapsed = tr
               </View>
             </View>
           </View>
+
+          {/* Scheduled order badge */}
+          {order?.orderType === 'scheduled' && order?.scheduledFor && (
+            <View style={[styles.scheduledBadge, { backgroundColor: `${colors.primary}15` }]}>
+              <Ionicons name="time-outline" size={moderateScale(12)} color={colors.primary} style={{ marginRight: moderateScale(4) }} />
+              <ZText type="M12" color={colors.primary}>
+                {strings.scheduledFor?.replace('{0}', new Date(order.scheduledFor).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })) || `Scheduled for ${new Date(order.scheduledFor).toLocaleString()}`}
+              </ZText>
+            </View>
+          )}
 
           {/* Bottom row: date + price */}
           <View style={styles.metaRow}>
@@ -376,6 +386,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flex: 1,
     marginRight: moderateScale(8),
+  },
+  scheduledBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: moderateScale(8),
+    paddingHorizontal: moderateScale(8),
+    paddingVertical: moderateScale(4),
+    marginTop: moderateScale(4),
+    alignSelf: 'flex-start',
   },
 });
 

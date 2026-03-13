@@ -81,6 +81,7 @@ export default function ChefDashboard() {
     }
   }, [queryClient]);
 
+
   const onRefresh = async () => {
     setRefreshing(true);
     await Promise.all([refetch(), refetchActivity()]);
@@ -150,106 +151,49 @@ export default function ChefDashboard() {
           </ZText>
         </View>
 
-        {/* Chat Availability Toggle Banner */}
-        <View style={[
-          localStyles.chatToggleBanner,
-          {
-            backgroundColor: chatEnabled
-              ? (colors.success || '#4CAF50') + '12'
-              : (colors.grayScale4 || '#BDBDBD') + '20',
-            borderColor: chatEnabled
-              ? (colors.success || '#4CAF50') + '30'
-              : (colors.grayScale4 || '#BDBDBD') + '40',
-          },
-        ]}>
-          <View style={[
-            localStyles.chatToggleIcon,
-            {
-              backgroundColor: chatEnabled
-                ? (colors.success || '#4CAF50')
-                : (colors.grayScale7 || '#757575'),
-            },
-          ]}>
-            <Ionicons
-              name={chatEnabled ? 'chatbubbles' : 'chatbubbles-outline'}
-              size={moderateScale(22)}
-              color={colors.white}
+        {/* Compact Settings Toggles */}
+        <View style={[localStyles.settingsCard, { backgroundColor: colors.inputBg }]}>
+          {/* Chat */}
+          <View style={localStyles.settingsRow}>
+            <Ionicons name={chatEnabled ? 'chatbubbles' : 'chatbubbles-outline'} size={moderateScale(18)} color={chatEnabled ? (colors.success || '#4CAF50') : colors.grayScale7} />
+            <View style={localStyles.settingsTextCol}>
+              <ZText type="B14" color={colors.textColor}>{strings.customerChat || 'Customer Chat'}</ZText>
+              <ZText type="R12" color={colors.grayScale7}>
+                {chatEnabled
+                  ? (strings.availableForChatDesc || 'Customers can message you about orders')
+                  : (strings.chatPausedDesc || 'Customers cannot send you messages')}
+              </ZText>
+            </View>
+            <Switch
+              value={chatEnabled}
+              onValueChange={handleChatToggle}
+              trackColor={{ false: colors.grayScale3 || '#E0E0E0', true: (colors.success || '#4CAF50') + '80' }}
+              thumbColor={chatEnabled ? (colors.success || '#4CAF50') : colors.grayScale7 || '#757575'}
+              style={{ transform: [{ scale: 0.85 }] }}
             />
           </View>
-          <View style={localStyles.chatToggleInfo}>
-            <ZText
-              type="B16"
-              color={chatEnabled
-                ? (colors.success || '#4CAF50')
-                : (colors.grayScale7 || '#757575')
-              }
-            >
-              {chatEnabled ? strings.availableForChat : strings.chatPaused}
-            </ZText>
-            <ZText type="M12" color={colors.grayScale7}>
-              {chatEnabled ? strings.availableForChatDesc : strings.chatPausedDesc}
-            </ZText>
-          </View>
-          <Switch
-            value={chatEnabled}
-            onValueChange={handleChatToggle}
-            trackColor={{
-              false: colors.grayScale3 || '#E0E0E0',
-              true: (colors.success || '#4CAF50') + '80',
-            }}
-            thumbColor={chatEnabled ? (colors.success || '#4CAF50') : colors.grayScale7 || '#757575'}
-          />
-        </View>
 
-        {/* Customer Confirmation Toggle Banner */}
-        <View style={[
-          localStyles.chatToggleBanner,
-          {
-            backgroundColor: requireConfirmation
-              ? (colors.primary) + '12'
-              : (colors.grayScale4 || '#BDBDBD') + '20',
-            borderColor: requireConfirmation
-              ? (colors.primary) + '30'
-              : (colors.grayScale4 || '#BDBDBD') + '40',
-          },
-        ]}>
-          <View style={[
-            localStyles.chatToggleIcon,
-            {
-              backgroundColor: requireConfirmation
-                ? colors.primary
-                : (colors.grayScale7 || '#757575'),
-            },
-          ]}>
-            <Ionicons
-              name={requireConfirmation ? 'shield-checkmark' : 'shield-checkmark-outline'}
-              size={moderateScale(22)}
-              color={colors.white}
+          <View style={[localStyles.settingsDivider, { backgroundColor: colors.grayScale3 }]} />
+
+          {/* Confirmation */}
+          <View style={localStyles.settingsRow}>
+            <Ionicons name={requireConfirmation ? 'shield-checkmark' : 'shield-checkmark-outline'} size={moderateScale(18)} color={requireConfirmation ? colors.primary : colors.grayScale7} />
+            <View style={localStyles.settingsTextCol}>
+              <ZText type="B14" color={colors.textColor}>{strings.customerConfirmationStep || 'Customer Confirmation Step'}</ZText>
+              <ZText type="R12" color={colors.grayScale7}>
+                {requireConfirmation
+                  ? (strings.confirmationRequiredDesc || 'Customers must confirm after you accept')
+                  : (strings.confirmationSkippedDesc || 'Orders start immediately after you accept')}
+              </ZText>
+            </View>
+            <Switch
+              value={requireConfirmation}
+              onValueChange={handleConfirmationToggle}
+              trackColor={{ false: colors.grayScale3 || '#E0E0E0', true: (colors.primary) + '80' }}
+              thumbColor={requireConfirmation ? colors.primary : colors.grayScale7 || '#757575'}
+              style={{ transform: [{ scale: 0.85 }] }}
             />
           </View>
-          <View style={localStyles.chatToggleInfo}>
-            <ZText
-              type="B16"
-              color={requireConfirmation
-                ? colors.primary
-                : (colors.grayScale7 || '#757575')
-              }
-            >
-              {requireConfirmation ? (strings.confirmationRequired || 'Confirmation Required') : (strings.confirmationSkipped || 'Auto-Confirm Orders')}
-            </ZText>
-            <ZText type="M12" color={colors.grayScale7}>
-              {requireConfirmation ? (strings.confirmationRequiredDesc || 'Customers must confirm after you accept') : (strings.confirmationSkippedDesc || 'Orders are confirmed when you accept')}
-            </ZText>
-          </View>
-          <Switch
-            value={requireConfirmation}
-            onValueChange={handleConfirmationToggle}
-            trackColor={{
-              false: colors.grayScale3 || '#E0E0E0',
-              true: (colors.primary) + '80',
-            }}
-            thumbColor={requireConfirmation ? colors.primary : colors.grayScale7 || '#757575'}
-          />
         </View>
 
         {/* Wallet Card */}
@@ -286,6 +230,20 @@ export default function ChefDashboard() {
           <View style={localStyles.actionsGrid}>
             <TouchableOpacity
               style={[localStyles.actionCard, { backgroundColor: colors.inputBg }]}
+              onPress={() => navigation.navigate(StackNav.ChefBranches)}>
+              <View style={[localStyles.actionIcon, { backgroundColor: '#26A69A' }]}>
+                <Ionicons name="location-outline" size={moderateScale(24)} color={colors.white} />
+              </View>
+              <ZText type="S16" style={localStyles.actionTitle}>
+                {strings.branchesAndSchedules}
+              </ZText>
+              <ZText type="M12" color={colors.grayScale7} align="center">
+                {strings.manageBranchesDesc}
+              </ZText>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[localStyles.actionCard, { backgroundColor: colors.inputBg }]}
               onPress={() => navigateToSection('Menu')}>
               <View style={[localStyles.actionIcon, { backgroundColor: colors.primary }]}>
                 <Ionicons name="restaurant-outline" size={moderateScale(24)} color={colors.white} />
@@ -297,7 +255,9 @@ export default function ChefDashboard() {
                 {strings.addEditRemoveDishes}
               </ZText>
             </TouchableOpacity>
+          </View>
 
+          <View style={localStyles.actionsGrid}>
             <TouchableOpacity
               style={[localStyles.actionCard, { backgroundColor: colors.inputBg }]}
               onPress={() => navigateToSection('Orders')}>
@@ -311,9 +271,7 @@ export default function ChefDashboard() {
                 {strings.managePendingOrders}
               </ZText>
             </TouchableOpacity>
-          </View>
 
-          <View style={localStyles.actionsGrid}>
             <TouchableOpacity
               style={[localStyles.actionCard, { backgroundColor: colors.inputBg }]}
               onPress={() => navigation.navigate(StackNav.ChatList)}>
@@ -327,7 +285,9 @@ export default function ChefDashboard() {
                 {strings.chatWithCustomers}
               </ZText>
             </TouchableOpacity>
+          </View>
 
+          <View style={localStyles.actionsGrid}>
             <TouchableOpacity
               style={[localStyles.actionCard, { backgroundColor: colors.inputBg }]}
               onPress={() => navigateToSection('Analytics')}>
@@ -585,24 +545,22 @@ const localStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  chatToggleBanner: {
+  settingsCard: {
+    borderRadius: moderateScale(14),
+    padding: moderateScale(12),
+    marginBottom: moderateScale(16),
+  },
+  settingsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: moderateScale(14),
-    borderRadius: moderateScale(14),
-    marginBottom: moderateScale(20),
-    borderWidth: 1,
+    paddingVertical: moderateScale(6),
+    gap: moderateScale(10),
   },
-  chatToggleIcon: {
-    width: moderateScale(42),
-    height: moderateScale(42),
-    borderRadius: moderateScale(21),
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: moderateScale(12),
-  },
-  chatToggleInfo: {
+  settingsTextCol: {
     flex: 1,
-    marginRight: moderateScale(8),
+  },
+  settingsDivider: {
+    height: StyleSheet.hairlineWidth,
+    marginVertical: moderateScale(4),
   },
 });
