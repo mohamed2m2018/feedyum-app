@@ -151,6 +151,7 @@ const Register = ({ navigation, route }) => {
     email,
     type,
     selectImage,
+    googleIdToken,
   ) => {
     setisLoading(true);
     request
@@ -163,8 +164,7 @@ const Register = ({ navigation, route }) => {
         password,
         type,
         avatar: selectImage,
-        isGoogleSignIn: true,
-        // categories,
+        googleIdToken,
       })
       .then(async res => {
         setAccessToken(res?.data?.token);
@@ -206,17 +206,27 @@ const Register = ({ navigation, route }) => {
       const userInfo = await GoogleSignin.signIn();
       console.log('Google Sign In Response:', userInfo);
       const user = userInfo?.data?.user || userInfo?.user || userInfo;
+      const idToken = userInfo?.data?.idToken || userInfo?.idToken;
       const { accessToken } = await GoogleSignin.getTokens();
       const phone = await getPhoneNumber(accessToken);
-      // Use the information as needed
+
+      if (!idToken) {
+        setisLoading(false);
+        console.error('[Register] No idToken received from Google');
+        showErrorToast(strings.error, strings.googleSignInFailed);
+        return;
+      }
+
+      // Send verified Google ID token to backend for server-side verification
       handleSubmit(
         user.name,
         phone,
         '',
         '',
         user.email,
-        isChefParam ? 'chef' : 'user', // Use param
+        isChefParam ? 'chef' : 'user',
         user.photo,
+        idToken,
       );
     } catch (error) {
       setisLoading(false);

@@ -71,16 +71,22 @@ const Login = ({ navigation }) => {
       const response = await GoogleSignin.signIn();
       console.log('[Login] signIn full response:', JSON.stringify(response, null, 2));
       const user = response.data?.user || response.user; // Handle both v13 structure and potential legacy/different structure
+      const idToken = response.data?.idToken || response.idToken;
 
       console.log('[Login] Extracted user:', user);
 
-      // Use the information as needed
-      console.log('[Login] Calling mutate login...');
+      if (!idToken) {
+        console.error('[Login] No idToken received from Google');
+        showErrorToast(strings.error, strings.googleSignInFailed);
+        return;
+      }
+
+      // Send verified Google ID token to backend for server-side verification
+      console.log('[Login] Calling mutate login with googleIdToken...');
       await mutate(
         {
           email: user?.email,
-          password: '',
-          isGoogleSignIn: true,
+          googleIdToken: idToken,
         },
         {
           onSuccess: async res => {
@@ -89,7 +95,6 @@ const Login = ({ navigation }) => {
             setAccessToken(res?.data?.token);
             setUser(res?.data?.user);
             await AppInitializer.handleUserLogin(res?.data?.user, res?.data?.token);
-            // Clear React Query cache to force fresh data fetch for this device
             // Clear React Query cache to force fresh data fetch for this device
             await queryClient.clear();
             navigation.reset({
