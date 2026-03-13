@@ -1634,6 +1634,7 @@ export default {
   helpfulCount: 'Helpful ({0})',
   viewAllReviews: 'View All Reviews ({0})',
   loadingMoreReviews: 'Loading more reviews...',
+  loadingMoreKitchens: 'Loading more kitchens...',
   noReviewsYetTitle: 'No Reviews Yet',
   beTheFirstToReview: 'Be the first to share your experience!',
   failedToDeleteReview: 'Failed to delete review',

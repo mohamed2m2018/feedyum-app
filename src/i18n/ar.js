@@ -1617,6 +1617,7 @@ export default {
   helpfulCount: 'مفيد ({0})',
   viewAllReviews: 'عرض كل المراجعات ({0})',
   loadingMoreReviews: 'جاري تحميل المزيد من المراجعات...',
+  loadingMoreKitchens: 'جاري تحميل المزيد من المطابخ...',
   noReviewsYetTitle: 'لا توجد مراجعات بعد',
   beTheFirstToReview: 'كن أول من يشارك تجربته!',
   failedToDeleteReview: 'فشل حذف المراجعة',

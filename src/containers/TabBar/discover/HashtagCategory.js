@@ -21,8 +21,6 @@ import ZText from '../../../components/common/ZText';
 import { styles } from '../../../themes';
 import ReelComponent from '../../../components/ReelComponent';
 import { StackNav, TabNav } from '../../../navigation/NavigationKeys';
-import { useInfiniteQuery, useQuery, useQueryClient } from 'react-query';
-import request from '../../../api/request';
 import ZLoader from '../../../components/common/ZLoader';
 import { useStorage } from '../../../utils/useStorage';
 import images from '../../../assets/images';
@@ -30,7 +28,7 @@ import strings from '../../../i18n/strings';
 import { useLocation } from '../../../navigation/locationContext';
 import StarRating from '../../../components/StarRating';
 import { optimizeImageUrl, ImagePresets } from '../../../utils/imageOptimizer';
-import { useDiscoverCategory } from '../../../hooks/useDiscoverBatch';
+import { useDiscoverCategoryPaginated } from '../../../hooks/useDiscoverBatch';
 
 export default function HashtagCategory({ selectedTag, isLocationChanging }) {
   const colors = useSelector(state => state.theme.theme);
@@ -41,94 +39,17 @@ export default function HashtagCategory({ selectedTag, isLocationChanging }) {
   // State to track which tab is selected for each kitchen
   const [kitchenTabs, setKitchenTabs] = useState({});
 
-  // OPTIMIZED BATCH LOADING - Single API call for all data
+  // UNIFIED PAGINATED LOADING — batch page 1 + paginated page 2+
   const {
-    users: batchUsers,
-    dishes: batchDishes,
-    isLoading: isBatchLoading,
-    error: batchError,
-    hasData
-  } = useDiscoverCategory(selectedTag, location, user?._id && typeof user._id === 'string' ? user._id : undefined);
-
-  // Fallback to individual API calls if batch fails or for pagination
-  const {
-    isLoading: isLoadingUsers,
-    isFetching: isFetchingUsers,
-    isFetchingNextPage: isFetchingNextPageUsers,
-    data: userPages,
-    fetchNextPage,
+    users: finalUsers,
+    dishes: finalDishes,
+    isLoading: isInitialLoading,
+    isFetchingNextPage,
     hasNextPage,
-  } = useInfiniteQuery(
-    ['discover-users-fallback', selectedTag, location?.latitude, location?.longitude],
-    async ({ pageParam = 1 }) => {
-      const response = await request.get(`/user/tag/${selectedTag}`, {
-        params: {
-          page: pageParam,
-          limit: 10,
-          lat: location?.latitude,
-          long: location?.longitude,
-        }
-      });
-      return response.data;
-    },
-    {
-      getNextPageParam: (lastPage) =>
-        lastPage?.currentPage < lastPage?.totalPages
-          ? lastPage.currentPage + 1
-          : undefined,
-      enabled: !!selectedTag && (!hasData || !!batchError), // Only use fallback if batch fails
-      staleTime: 1 * 60 * 1000,
-      cacheTime: 5 * 60 * 1000,
-      refetchOnWindowFocus: false,
-    }
-  );
-
-  const {
-    data: categoryDishes,
-    isLoading: isLoadingCategoryDishes,
-    isFetching: isFetchingCategoryDishes,
-  } = useQuery(
-    ['discover-dishes-fallback', selectedTag, location?.latitude, location?.longitude],
-    async () => {
-      const response = await request.get(`/dishes/category/${selectedTag}`, {
-        params: {
-          page: 1,
-          limit: 20,
-          lat: location?.latitude,
-          long: location?.longitude,
-        }
-      });
-      return response.data;
-    },
-    {
-      enabled: !!selectedTag && (!hasData || !!batchError), // Only use fallback if batch fails
-      staleTime: 1 * 60 * 1000,
-      cacheTime: 5 * 60 * 1000,
-      refetchOnWindowFocus: false,
-    }
-  );
-
-  // Safely extract users from paginated response in case some pages are undefined
-  const fallbackUsers = React.useMemo(() => {
-    const pages = userPages?.pages;
-    if (!Array.isArray(pages)) return [];
-    return pages.flatMap(page => {
-      if (!page) return [];
-      const users = Array.isArray(page?.users)
-        ? page.users
-        : Array.isArray(page?.data?.users)
-          ? page.data.users
-          : [];
-      return users;
-    });
-  }, [userPages]);
-
-  // Use batch data if available, otherwise fallback to individual calls
-  const finalUsers = hasData && !batchError ? batchUsers : fallbackUsers;
-  const finalDishes = hasData && !batchError ? batchDishes : (categoryDishes || []);
-
-  // Show loading until we have at least some data
-  const isInitialLoading = isBatchLoading || (!!batchError && (isLoadingUsers || isLoadingCategoryDishes));
+    fetchNextPage,
+    error: dataError,
+    hasData
+  } = useDiscoverCategoryPaginated(selectedTag, location, user?._id && typeof user._id === 'string' ? user._id : undefined);
 
   // Combine users and dishes based on the logic you described
   const kitchensWithTaggedContent = React.useMemo(() => {
@@ -260,7 +181,7 @@ export default function HashtagCategory({ selectedTag, isLocationChanging }) {
   const RenderChefDishes = ({ chefId, chefName }) => {
     const dishes = getChefDishes(chefId);
 
-    if (isBatchLoading || (!!batchError && isLoadingCategoryDishes)) {
+    if (isInitialLoading) {
       return (
         <View style={localStyles.loadingContainer}>
           <ZLoader />
@@ -558,16 +479,12 @@ export default function HashtagCategory({ selectedTag, isLocationChanging }) {
         </View>
       );
     },
-    [colors, navigation, styles, kitchenTabs, selectedTag, kitchensWithTaggedContent, isBatchLoading, !!batchError, isLoadingCategoryDishes, isFetchingCategoryDishes],
+    [colors, navigation, styles, kitchenTabs, selectedTag, kitchensWithTaggedContent, isInitialLoading],
   );
 
-  // Show loading during initial load, location changes, or when refetching due to location changes
-  // BUT NOT during pagination (isFetchingNextPageUsers)
-  const isInitialOrLocationLoading = isInitialLoading ||
-    (!!batchError && ((isFetchingUsers && !isFetchingNextPageUsers) || isFetchingCategoryDishes)) ||
-    isLocationChanging;
-
-  if (isInitialOrLocationLoading) {
+  // Show loading during initial load or location changes
+  // BUT NOT during pagination (isFetchingNextPage)
+  if (isInitialLoading || isLocationChanging) {
     return <ZLoader absolute height={80} top={300} />;
   }
 
@@ -604,17 +521,17 @@ export default function HashtagCategory({ selectedTag, isLocationChanging }) {
       )}
       showsVerticalScrollIndicator={false}
       bounces={false}
-      keyExtractor={(item, index) => item._id.toString()}
+      keyExtractor={(item) => item._id.toString()}
       onEndReached={() => {
-        // Only enable pagination for fallback mode (when batch fails)
-        if (!!batchError && hasNextPage && !isFetchingNextPageUsers) {
+        // Guard: only fetch if there are more pages and we're not already loading
+        if (hasNextPage && !isFetchingNextPage) {
           fetchNextPage();
         }
       }}
       onEndReachedThreshold={0.5}
       ListEmptyComponent={renderEmptyState}
       ListFooterComponent={
-        !!batchError && isFetchingNextPageUsers ? (
+        isFetchingNextPage ? (
           <View style={localStyles.paginationLoader}>
             <ZLoader height={50} />
           </View>
