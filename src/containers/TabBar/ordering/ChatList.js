@@ -106,13 +106,25 @@ export default function ChatList({ navigation }) {
     // Use chatPartner (new) or chef (old) for backwards compatibility
     const partner = orderChat.chatPartner || orderChat.chef;
     if (!partner?._id) {
-      console.warn('Chat partner not found:', orderChat);
+      console.warn('[ChatList] Chat partner not found:', orderChat);
       return;
     }
-    navigation.navigate(StackNav.Chat, {
-      chefId: partner._id,
-      orderId: orderChat.orderId,
-    });
+    // Use getParent() because this tab is named "Chat" which conflicts with
+    // the Stack screen also named "Chat". navigate('Chat') resolves to the tab
+    // itself (no-op). getParent() reaches the parent Stack navigator.
+    const parentNav = navigation.getParent();
+    if (parentNav) {
+      parentNav.navigate(StackNav.Chat, {
+        chefId: partner._id,
+        orderId: orderChat.orderId,
+      });
+    } else {
+      // Fallback: try direct navigation
+      navigation.navigate(StackNav.Chat, {
+        chefId: partner._id,
+        orderId: orderChat.orderId,
+      });
+    }
   };
 
   const formatTimestamp = timestamp => {
