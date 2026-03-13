@@ -1391,8 +1391,8 @@ export default {
   lastPayment: 'Last Payment:',
   recentTransactions: 'Recent Transactions',
   noTransactions: 'No transactions yet',
-  serviceFeeLimitExceeded: 'Your service fee balance has exceeded EGP 2,000. Please make a payment to continue receiving orders.',
-  serviceFeeLimitExceededShort: 'Your service fee balance has exceeded EGP 2,000',
+  serviceFeeLimitExceeded: 'Your welcome credit has been used up. Please top up your wallet to continue receiving orders.',
+  serviceFeeLimitExceededShort: 'Your welcome credit has been used up',
   balanceDescription: 'This represents accumulated service fees from your orders',
   paymentDueDescription: 'Pay this amount to continue receiving orders',
   warningMessage: 'You cannot receive new orders until this payment is made. Existing orders can still be completed.',
@@ -1481,7 +1481,7 @@ export default {
   createPromocode: 'Create Promocode',
   walletInformation: 'Wallet Information',
   paymentThreshold: 'Payment Threshold',
-  paymentThresholdMessage: 'Payment required when balance reaches -EGP 2,000',
+  paymentThresholdMessage: 'Orders are paused when your balance reaches 0 EGP',
   lastPayment: 'Last Payment',
 
   // Chef Dashboard translations

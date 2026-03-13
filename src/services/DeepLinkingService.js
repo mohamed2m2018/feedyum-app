@@ -920,14 +920,24 @@ class DeepLinkingService {
 
   // Generate shareable links with fallback
   static generateShareableLink(type, id, params = {}) {
-    // Use your deployed domain for sharing
+    // Filter out non-routing params that shouldn't be in the URL
+    const NON_ROUTING_KEYS = ['title', 'creator', 'description', 'name', 'avatar', 'shareText', 'hashtags', 'chefName', 'price', 'type', 'streamerName'];
+    const routingParams = {};
+    for (const [key, value] of Object.entries(params)) {
+      if (!NON_ROUTING_KEYS.includes(key) && value !== undefined && value !== null) {
+        routingParams[key] = value;
+      }
+    }
+
+    const deepLink = DeepLinkingService.generateDeepLink(type, id, routingParams);
+    // Derive the universal link from the deep link by replacing the scheme
     const DOMAIN = 'https://feedyum.com';
-    const queryString = Object.keys(params).length > 0 ? '?' + new URLSearchParams(params).toString() : '';
+    const universalLink = deepLink.replace(/^feedyum:\/\//, DOMAIN);
 
     return {
-      deepLink: DeepLinkingService.generateDeepLink(type, id, params),
-      universalLink: `${DOMAIN}/${type}/${id}${queryString}`,
-      webFallback: `${DOMAIN}/${type}/${id}${queryString}`
+      deepLink,
+      universalLink,
+      webFallback: universalLink,
     };
   }
 

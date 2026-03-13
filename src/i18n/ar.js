@@ -1221,7 +1221,7 @@ export default {
   createPromocode: 'إنشاء كود خصم',
   walletInformation: 'معلومات المحفظة',
   paymentThreshold: 'حد الدفع',
-  paymentThresholdMessage: 'الدفع مطلوب عندما يصل الرصيد إلى -٢,٠٠٠ ج.م',
+  paymentThresholdMessage: 'يتم إيقاف الطلبات عندما يصل رصيدك إلى ٠ ج.م',
   lastPayment: 'آخر دفعة',
 
   // Chef Dashboard translations
@@ -1397,8 +1397,8 @@ export default {
   lastPayment: 'آخر دفعة:',
   recentTransactions: 'المعاملات الأخيرة',
   noTransactions: 'لا توجد معاملات بعد',
-  serviceFeeLimitExceeded: 'تجاوز رصيد رسوم الخدمة ٢,٠٠٠ ج.م. يرجى الدفع لمواصلة تلقي الطلبات.',
-  serviceFeeLimitExceededShort: 'تجاوز رصيد رسوم الخدمة ٢,٠٠٠ ج.م',
+  serviceFeeLimitExceeded: 'تم استهلاك رصيدك الترحيبي. يرجى شحن محفظتك لمواصلة تلقي الطلبات.',
+  serviceFeeLimitExceededShort: 'تم استهلاك رصيدك الترحيبي',
   balanceDescription: 'يمثل هذا رسوم الخدمة المتراكمة من طلباتك',
   paymentDueDescription: 'ادفع هذا المبلغ لمواصلة تلقي الطلبات',
   warningMessage: 'لا يمكنك تلقي طلبات جديدة حتى يتم سداد هذا المبلغ. لا يزال بإمكانك إكمال الطلبات الحالية.',
