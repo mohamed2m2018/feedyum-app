@@ -1221,7 +1221,7 @@ export default {
   createPromocode: 'إنشاء كود خصم',
   walletInformation: 'معلومات المحفظة',
   paymentThreshold: 'حد الدفع',
-  paymentThresholdMessage: 'يتم إيقاف الطلبات عندما يصل رصيدك إلى ٠ ج.م',
+  paymentThresholdMessage: 'عندما يصل رصيدك إلى ٠ ج.م، سيتم إيقاف الطلبات وإخفاء حسابك عن العملاء. يرجى إعادة شحن محفظتك للبقاء ظاهرًا.',
   lastPayment: 'آخر دفعة',
 
   // Chef Dashboard translations
@@ -1971,5 +1971,10 @@ export default {
   threeHours: '٣ ساعات',
   halfDay: 'نصف يوم',
   slots: 'فترات',
+
+  // Force update
+  updateRequired: 'تحديث مطلوب',
+  updateRequiredMessage: 'يتوفر إصدار جديد من FeedYum. يرجى التحديث للاستمرار في استخدام التطبيق.',
+  updateNow: 'تحديث الآن',
 
 };

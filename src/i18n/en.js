@@ -1481,7 +1481,7 @@ export default {
   createPromocode: 'Create Promocode',
   walletInformation: 'Wallet Information',
   paymentThreshold: 'Payment Threshold',
-  paymentThresholdMessage: 'Orders are paused when your balance reaches 0 EGP',
+  paymentThresholdMessage: 'When your balance reaches 0 EGP, orders will stop and your profile will be hidden from customers. Please recharge your wallet to stay visible.',
   lastPayment: 'Last Payment',
 
   // Chef Dashboard translations
@@ -1988,5 +1988,10 @@ export default {
   threeHours: '3 hours',
   halfDay: 'Half day',
   slots: 'slots',
+
+  // Force update
+  updateRequired: 'Update Required',
+  updateRequiredMessage: 'A new version of FeedYum is available. Please update to continue using the app.',
+  updateNow: 'Update Now',
 
 };

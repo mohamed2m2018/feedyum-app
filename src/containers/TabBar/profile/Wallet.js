@@ -963,11 +963,11 @@ export default function Wallet({ navigation }) {
             size={moderateScale(24)}
             color={colors.warning}
           />
-          <View style={styles.ml15}>
+          <View style={[styles.ml15, {flex: 1}]}>
             <ZText type="m14" color={colors.textColor}>
               {strings.paymentThreshold}
             </ZText>
-            <ZText type="m12" color={colors.grayScale7}>
+            <ZText type="m12" color={colors.grayScale7} style={{flexShrink: 1}}>
               {strings.paymentThresholdMessage}
             </ZText>
           </View>
@@ -1321,10 +1321,12 @@ const localStyles = StyleSheet.create({
     padding: moderateScale(16),
     borderRadius: moderateScale(12),
     marginBottom: moderateScale(10),
+    overflow: 'hidden',
   },
   settingLeft: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
   },
   paymentWarning: {
     backgroundColor: 'rgba(255,255,255,0.2)',
