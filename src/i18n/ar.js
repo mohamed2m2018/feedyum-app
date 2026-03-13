@@ -839,7 +839,7 @@ export default {
   menuDataMissing: 'بيانات القائمة مفقودة. يرجى المحاولة مرة أخرى.',
 
   // General Actions & Buttons
-  continueShoppingButton: 'متابعة التسوق',
+  continueShoppingButton: 'تصفح القائمة',
   viewCart: 'عرض العربة',
   removeFromCart: 'إزالة من العربة',
   clearAll: 'مسح الكل',
@@ -1600,7 +1600,7 @@ export default {
   addedToCartTitle: 'تم الإضافة للسلة!',
   addedToCartMsg: 'تم إضافة {0} x {1} إلى سلتك',
   great: 'رائع!',
-  continueShoppingButton: 'متابعة التسوق',
+  continueShoppingButton: 'تصفح القائمة',
   viewCart: 'عرض السلة',
   ok: 'حسناً',
   discard: 'تجاهل',

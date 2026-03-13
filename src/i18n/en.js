@@ -848,7 +848,7 @@ export default {
   menuDataMissing: 'Menu data is missing. Please try again.',
 
   // General Actions & Buttons
-  continueShoppingButton: 'Continue Shopping',
+  continueShoppingButton: 'Browse Menu',
   viewCart: 'View Cart',
   removeFromCart: 'Remove',
   clearAll: 'Clear All',
@@ -1617,7 +1617,7 @@ export default {
   addedToCartTitle: 'Added to Cart!',
   addedToCartMsg: '{0} x {1} added to your cart',
   great: 'Great!',
-  continueShoppingButton: 'Continue Shopping',
+  continueShoppingButton: 'Browse Menu',
   viewCart: 'View Cart',
   ok: 'OK',
   discard: 'Discard',
