@@ -338,7 +338,33 @@ export default function Wallet({ navigation }) {
           {formatCurrency(balance)}
         </ZText>
 
-        {walletData?.summary?.isPaymentRequired && (
+        {walletData?.summary?.isOrderBlocked && (
+          <View style={[localStyles.paymentWarning, { backgroundColor: 'rgba(0,0,0,0.3)' }]}>
+            <ZText type="m12" color={colors.white} style={styles.mb5}>
+              🚫 {strings.ordersBlocked}
+            </ZText>
+            <ZText type="m10" color={colors.white}>
+              {strings.ordersBlockedMessage}
+            </ZText>
+          </View>
+        )}
+
+        {walletData?.summary?.isInGracePeriod && !walletData?.summary?.isOrderBlocked && (
+          <View style={[localStyles.paymentWarning, { backgroundColor: 'rgba(255,165,0,0.4)' }]}>
+            <ZText type="m12" color={colors.white} style={styles.mb5}>
+              ⚠️ {strings.gracePeriodWarning}
+            </ZText>
+            <ZText type="m10" color={colors.white}>
+              {strings.gracePeriodWarningMessage.replace('{date}',
+                walletData.summary.gracePeriodEndsAt
+                  ? new Date(walletData.summary.gracePeriodEndsAt).toLocaleDateString()
+                  : ''
+              )}
+            </ZText>
+          </View>
+        )}
+
+        {walletData?.summary?.isPaymentRequired && !walletData?.summary?.isOrderBlocked && !walletData?.summary?.isInGracePeriod && (
           <View style={localStyles.paymentWarning}>
             <ZText type="m12" color={colors.white} style={styles.mb5}>
               ⚠️ {strings.paymentRequired}
@@ -350,7 +376,7 @@ export default function Wallet({ navigation }) {
         )}
 
         <View style={localStyles.balanceActions}>
-          {walletData?.summary?.isPaymentRequired ? (
+          {(walletData?.summary?.isOrderBlocked || walletData?.summary?.isInGracePeriod || walletData?.summary?.isPaymentRequired) ? (
             <TouchableOpacity
               style={[
                 localStyles.actionButton,
