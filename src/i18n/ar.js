@@ -908,7 +908,7 @@ export default {
   serviceFee: 'رسوم الخدمة',
   serviceFees: 'رسوم الخدمة',
   serviceFeeRate: 'معدل رسوم الخدمة',
-  serviceFeePercentage: 'رسوم المنصة (4 ج.م)',
+  serviceFeePercentage: 'رسوم المنصة ({fee} ج.م)',
   loading: 'جاري التحميل...',
   thankYou: 'شكراً لك!',
   reviewsSubmittedSuccessfully: 'تم إرسال مراجعاتك بنجاح.',

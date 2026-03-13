@@ -19,6 +19,7 @@ import { moderateScale } from '../common/constants';
 import { styles } from '../themes';
 import request from '../api/request';
 import images from '../assets/images';
+import strings from '../i18n/strings';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -154,7 +155,7 @@ const ReviewReelDetailView = ({ reviewReel, onClose }) => {
 
             {!isMenu && item.price && (
               <ZText type="B14" color={colors.primary} style={styles.mt8}>
-                {item.price} EGP
+                {item.price} {strings.currency}
               </ZText>
             )}
           </View>

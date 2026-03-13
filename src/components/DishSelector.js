@@ -116,7 +116,7 @@ const DishSelector = ({
                             </ZText>
                             {selectedDish.price && (
                                 <ZText type="M12" color={colors.primary}>
-                                    EGP {selectedDish.price}
+                                    {strings.currency} {selectedDish.price}
                                 </ZText>
                             )}
                         </View>
@@ -209,7 +209,7 @@ const DishSelector = ({
                                                     {item.title || item.name}
                                                 </ZText>
                                                 <ZText type="M12" color={colors.primary}>
-                                                    EGP {item.price}
+                                                    {strings.currency} {item.price}
                                                 </ZText>
                                             </View>
                                         </TouchableOpacity>

@@ -923,7 +923,7 @@ export default function Wallet({ navigation }) {
               {strings.platformFeeRate}
             </ZText>
             <ZText type="m12" color={colors.grayScale7}>
-              {walletData?.summary?.orderFee || 4} {strings.egpPerOrder}
+              {walletData?.summary?.orderFee ?? '-'} {strings.egpPerOrder}
             </ZText>
           </View>
         </View>

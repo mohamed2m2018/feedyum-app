@@ -266,7 +266,7 @@ export default function ChefDashboard() {
                 {strings.wallet}
               </ZText>
               <ZText type="B28" color={colors.white}>
-                {strings.currency} {formatCurrency(stats?.walletBalance || 500)}
+                {strings.currency} {formatCurrency(stats?.walletBalance || 0)}
               </ZText>
             </View>
             <Ionicons name="chevron-forward" size={moderateScale(24)} color={colors.white} />

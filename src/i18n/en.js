@@ -919,7 +919,7 @@ export default {
   serviceFee: 'Service Fee',
   serviceFees: 'Service Fees',
   serviceFeeRate: 'Service Fee Rate',
-  serviceFeePercentage: 'Platform Fee (4 EGP)',
+  serviceFeePercentage: 'Platform Fee ({fee} EGP)',
   loading: 'Loading...',
   thankYou: 'Thank You!',
   reviewsSubmittedSuccessfully:

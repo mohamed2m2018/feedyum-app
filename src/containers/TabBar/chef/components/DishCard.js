@@ -9,6 +9,7 @@ import ZText from '../../../../components/common/ZText';
 import { moderateScale } from '../../../../common/constants';
 import { styles } from '../../../../themes';
 import StarRating from '../../../../components/StarRating';
+import strings from '../../../../i18n/strings';
 
 const DishCard = ({
   dish,
@@ -93,7 +94,7 @@ const DishCard = ({
         />
         <View style={localStyles.priceRow}>
           <ZText type="B16" color={colors.primary}>
-            {dish.price} EGP
+            {dish.price} {strings.currency}
           </ZText>
           {dish.cookingTime && (
             <ZText type="M12" color={colors.grayScale7}>
