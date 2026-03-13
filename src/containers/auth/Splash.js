@@ -71,11 +71,24 @@ const Splash = ({ navigation }) => {
       console.log('🐞 [Splash] Checking pending deep link:', deepLinkResult);
 
       if (deepLinkResult.handled) {
-        // Deep link wants us to navigate to a specific tab with params
         if (deepLinkResult.targetTab) {
+          // Reel deep link - navigate to specific tab with params
           targetTab = deepLinkResult.targetTab;
           targetParams = deepLinkResult.params;
           console.log('🐞 [Splash] Deep link handled, navigating to:', targetTab, targetParams);
+        } else if (deepLinkResult.navigateAfterTabBar) {
+          // Non-reel deep link (menu, profile, chat, etc.) — reset to TabBar then navigate
+          console.log('🐞 [Splash] Deep link deferred, will navigate after TabBar loads');
+          setIsNavigating(true);
+          navigation.reset({
+            index: 0,
+            routes: [{
+              name: StackNav.TabBar,
+              params: { initialTab: TabNav.Discover }
+            }],
+          });
+          deepLinkResult.navigateAfterTabBar();
+          return;
         }
       }
 

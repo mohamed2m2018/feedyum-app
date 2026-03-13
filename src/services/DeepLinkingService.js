@@ -18,26 +18,10 @@ class DeepLinkingService {
     DeepLinkingService.navigationRef = ref;
     DeepLinkingService.isNavigationReady = true;
 
-    // Process pending deep link if exists
-    // Note: Reel deep links are handled by Splash.js via handlePendingDeepLink
-    // so we should NOT process them here - just leave pendingDeepLink for Splash to handle
+    // All pending deep links from cold start are handled by Splash.js
+    // via handlePendingDeepLink(). We just store the ref here.
     if (DeepLinkingService.pendingDeepLink) {
-      const pending = DeepLinkingService.pendingDeepLink;
-
-      // Check if this is a reel type - if so, leave it for Splash to handle
-      const parsed = DeepLinkingService.getInstance().parseDeepLink(pending);
-      if (parsed && ['reel', 'video', 'story', 'reels'].includes(parsed.type)) {
-        console.log('🐞 [DeepLinkingService] setNavigationRef: Reel deep link will be handled by Splash, leaving pendingDeepLink intact');
-        // DO NOT clear pendingDeepLink - Splash will handle it
-        return;
-      }
-
-      // For non-reel deep links, handle them here
-      DeepLinkingService.pendingDeepLink = null;
-      // Small delay to ensure navigation is fully ready
-      setTimeout(() => {
-        DeepLinkingService.getInstance().handleDeepLink(pending);
-      }, 100);
+      console.log('🐞 [DeepLinkingService] setNavigationRef: pendingDeepLink exists, will be handled by Splash');
     }
   }
 
@@ -53,17 +37,18 @@ class DeepLinkingService {
       const url = await Linking.getInitialURL();
       console.log('🐞 [DeepLinkingService] getInitialURL called, url:', url);
       if (url) {
-        // Check if this is a reel/story URL that we handle manually
         const parsed = this.parseDeepLink(url);
         console.log('🐞 [DeepLinkingService] getInitialURL parsed:', JSON.stringify(parsed));
-        if (parsed && ['reel', 'video', 'story', 'reels'].includes(parsed.type)) {
-          // Store for later processing when navigation is ready
+        if (parsed) {
+          // Store ALL recognized deep links for manual handling after Splash.
+          // React Navigation's linking config would try to navigate immediately,
+          // but Splash.js calls navigation.reset() which wipes that state.
+          // So we store the URL and process it after Splash finishes.
           DeepLinkingService.pendingDeepLink = url;
-          console.log('🐞 [DeepLinkingService] Reel deep link stored for manual handling:', url);
-          // Return null so React Navigation doesn't try to handle it
+          console.log('🐞 [DeepLinkingService] Deep link stored for post-Splash handling:', parsed.type, url);
           return null;
         }
-        // For other URLs, let React Navigation handle them
+        // Unrecognized URL — let React Navigation try
         return url;
       }
       return null;
@@ -515,12 +500,12 @@ class DeepLinkingService {
       return { handled: false };
     }
 
+    // Clear the pending deep link
+    DeepLinkingService.pendingDeepLink = null;
+
     // Handle reel/video/story deep links - navigate to FollowingTab with storyId
     if (['reel', 'video', 'story', 'reels'].includes(parsed.type)) {
       const reelId = parsed.id;
-      // Clear the pending deep link
-      DeepLinkingService.pendingDeepLink = null;
-
       console.log('🐞 [DeepLinkingService] Reel deep link handled, storyId:', reelId);
 
       return {
@@ -534,9 +519,16 @@ class DeepLinkingService {
       };
     }
 
-    // For other deep link types, let the normal flow handle them
-    // But don't clear pendingDeepLink - setNavigationRef will process it
-    return { handled: false };
+    // For all other deep link types (chefMenu, profile, chat, order, etc.),
+    // defer navigation until after TabBar loads
+    console.log('🐞 [DeepLinkingService] Non-reel deep link handled, deferring navigation for type:', parsed.type);
+    return {
+      handled: true,
+      navigateAfterTabBar: () => {
+        console.log('🐞 [DeepLinkingService] Executing deferred deep link navigation:', parsed.type);
+        this.navigateToScreen(parsed);
+      }
+    };
   }
 
   /**
