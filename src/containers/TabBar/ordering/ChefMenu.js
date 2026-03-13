@@ -10,7 +10,6 @@ import {
   InteractionManager,
   ActivityIndicator,
   I18nManager,
-  ScrollView,
 } from 'react-native';
 import { showErrorToast, showActionDialog, showSuccessToast, ALERT_TYPE } from '../../../utils/toast';
 import { useSelector, useDispatch } from 'react-redux';
@@ -65,6 +64,7 @@ const ChefMenu = () => {
   const [scrollRetryCount, setScrollRetryCount] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const [quantities, setQuantities] = useState({}); // Track quantities for each dish
+  const [selectedBranchId, setSelectedBranchId] = useState(null);
 
   const cartItemCount = useSelector(selectCartItemCount);
   const pendingConflictItem = useSelector(selectPendingConflictItem);
@@ -125,6 +125,77 @@ const ChefMenu = () => {
       staleTime: 1000 * 60 * 10, // 10 minutes
     }
   );
+
+  // Fetch open/closed status for this kitchen
+  const { data: openStatusData } = useQuery(
+    ['chefOpenStatus', chefId],
+    () => branchService.getChefOpenStatus(chefId),
+    {
+      enabled: !!chefId,
+      staleTime: 1000 * 60 * 2, // 2 minutes (check frequently)
+    }
+  );
+  const isChefClosedByApi = openStatusData?.success === true && !openStatusData?.isOpen;
+
+  // Compute branch locations at component level (used by header + bottom sheet + schedule check)
+  const branchLocations = React.useMemo(() => {
+    return (branchesData?.branches || [])
+      .filter(b => b.isActive)
+      .map(b => ({
+        _id: b._id,
+        description: b.addressDetails?.formattedAddress || b.branchName,
+        lat: b.location?.lat,
+        long: b.location?.long,
+        operatingHours: b.operatingHours || [],
+        manualOverride: b.manualOverride || 'auto',
+      }));
+  }, [branchesData]);
+
+  // Client-side operating hours check (works without API)
+  const isChefClosedBySchedule = React.useMemo(() => {
+    console.log('[HOURS DEBUG] branchLocations count:', branchLocations?.length);
+    if (!branchLocations || branchLocations.length === 0) {
+      console.log('[HOURS DEBUG] No branches -> open (backward compat)');
+      return false;
+    }
+
+    const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const now = new Date();
+    const todayKey = dayNames[now.getDay()];
+    const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    console.log('[HOURS DEBUG] todayKey:', todayKey, 'currentTime:', currentTime);
+
+    // Check if ANY branch is open right now
+    const anyBranchOpen = branchLocations.some(branch => {
+      console.log('[HOURS DEBUG] Branch:', branch.description, 'override:', branch.manualOverride, 'hours:', JSON.stringify(branch.operatingHours));
+      // Check manual override first
+      if (branch.manualOverride === 'forceOpen') return true;
+      if (branch.manualOverride === 'forceClosed') return false;
+
+      const hours = branch.operatingHours || [];
+      if (hours.length === 0) {
+        console.log('[HOURS DEBUG] No hours set -> always open');
+        return true;
+      }
+
+      const todaySchedule = hours.find(h => h.day === todayKey);
+      console.log('[HOURS DEBUG] todaySchedule:', JSON.stringify(todaySchedule));
+      if (!todaySchedule || !todaySchedule.isOpen) return false;
+      if (!todaySchedule.openTime || !todaySchedule.closeTime) return true;
+
+      const isInRange = currentTime >= todaySchedule.openTime && currentTime < todaySchedule.closeTime;
+      console.log('[HOURS DEBUG] isInRange:', isInRange, `(${currentTime} >= ${todaySchedule.openTime} && ${currentTime} < ${todaySchedule.closeTime})`);
+      return isInRange;
+    });
+
+    console.log('[HOURS DEBUG] anyBranchOpen:', anyBranchOpen, '-> isClosedBySchedule:', !anyBranchOpen);
+    return !anyBranchOpen;
+  }, [branchLocations]);
+
+  // Combined: closed if EITHER API says closed OR client-side schedule says closed
+  console.log('[HOURS DEBUG] isChefClosedByApi:', isChefClosedByApi, 'isChefClosedBySchedule:', isChefClosedBySchedule, 'openStatusData:', JSON.stringify(openStatusData));
+  const isChefClosed = isChefClosedByApi || isChefClosedBySchedule;
+  console.log('[HOURS DEBUG] FINAL isChefClosed:', isChefClosed);
 
   // Get user's location for delivery check - use current location (respects delivery address)
   const location = useLocation();
@@ -309,6 +380,15 @@ const ChefMenu = () => {
 
   const handleAddToCart = async (dish, quantity = 1) => {
     if (!dish || quantity <= 0) return;
+
+    // Block if restaurant is currently closed
+    if (isChefClosed) {
+      showErrorToast(
+        strings.restaurantClosed,
+        strings.restaurantClosedCannotOrder
+      );
+      return;
+    }
 
     // Block if kitchen doesn't deliver to user's location
     if (deliveryData && !deliveryData.canDeliver) {
@@ -518,6 +598,12 @@ const ChefMenu = () => {
                         { backgroundColor: colors.primary },
                       ]}
                       onPress={() => {
+                        // Block if restaurant is closed
+                        if (isChefClosed) {
+                          showErrorToast(strings.restaurantClosed, strings.restaurantClosedCannotOrder);
+                          console.log('[CART DEBUG] BLOCKED - restaurant closed');
+                          return;
+                        }
                         // Block if kitchen doesn't deliver
                         if (deliveryData && !deliveryData.canDeliver) {
                           const distanceInfo = deliveryData.nearestDistance
@@ -547,6 +633,12 @@ const ChefMenu = () => {
                       { backgroundColor: colors.primary },
                     ]}
                     onPress={() => {
+                      // Block if restaurant is closed
+                      if (isChefClosed) {
+                        showErrorToast(strings.restaurantClosed, strings.restaurantClosedCannotOrder);
+                        console.log('[CART DEBUG] BLOCKED - restaurant closed');
+                        return;
+                      }
                       // Block if kitchen doesn't deliver
                       if (deliveryData && !deliveryData.canDeliver) {
                         const distanceInfo = deliveryData.nearestDistance
@@ -734,14 +826,6 @@ const ChefMenu = () => {
       rating = Math.round((total / ratedCount) * 10) / 10;
     }
 
-    // Compute branches
-    const branchLocations = (branchesData?.branches || [])
-      .filter(b => b.isActive)
-      .map(b => ({
-        description: b.addressDetails?.formattedAddress || b.branchName,
-        lat: b.location?.lat,
-        long: b.location?.long,
-      }));
 
     const isOwnProfile = user?._id?.toString() === chefId?.toString();
 
@@ -750,6 +834,32 @@ const ChefMenu = () => {
 
     return (
       <View style={{ backgroundColor: colors.backgroundColor }}>
+        {/* Closed Banner */}
+        {isChefClosed && (
+          <View style={{
+            backgroundColor: '#FF525215',
+            paddingVertical: moderateScale(10),
+            paddingHorizontal: moderateScale(16),
+            flexDirection: 'row',
+            alignItems: 'center',
+            borderBottomWidth: 1,
+            borderBottomColor: '#FF525230',
+          }}>
+            <Ionicons name="close-circle" size={moderateScale(20)} color="#FF5252" />
+            <View style={{ marginLeft: moderateScale(10), flex: 1 }}>
+              <ZText type="B14" color="#FF5252">
+                {strings.restaurantClosed}
+              </ZText>
+              {openStatusData?.nextOpenTime && (
+                <ZText type="M12" color={colors.grayScale6}>
+                  {openStatusData?.nextOpenDay
+                    ? strings.formatString(strings.opensOnDay, strings[openStatusData.nextOpenDay] || openStatusData.nextOpenDay, openStatusData.nextOpenTime)
+                    : strings.formatString(strings.opensAt, openStatusData.nextOpenTime)}
+                </ZText>
+              )}
+            </View>
+          </View>
+        )}
         {/* Hero Banner */}
         {heroImage && (
           <ImageBackground
@@ -1080,16 +1190,12 @@ const ChefMenu = () => {
       {/* Branches Modal */}
       <Locations
         SheetRef={locationsSheetRef}
-        selectedGov={
-          (branchesData?.branches || [])
-            .filter(b => b.isActive)
-            .map(b => ({
-              description: b.addressDetails?.formattedAddress || b.branchName,
-              lat: b.location?.lat,
-              long: b.location?.long,
-            }))
-        }
+        selectedGov={branchLocations}
         onClose={() => { }}
+        selectedBranchId={selectedBranchId}
+        onBranchSelect={(branch) => {
+          setSelectedBranchId(branch?._id);
+        }}
       />
 
       {/* Share Menu Sheet */}

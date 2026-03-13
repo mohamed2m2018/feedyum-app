@@ -77,6 +77,7 @@ import EditAddress from '../containers/TabBar/profile/EditAddress';
 import MapLocationPicker from '../components/MapLocationPicker';
 import ChefOrderDetails from '../containers/TabBar/chef/ChefOrderDetails';
 import ChefBranches from '../screens/ChefBranches';
+import WorkingHoursScreen from '../screens/WorkingHoursScreen';
 import EditReel from '../containers/TabBar/add/EditReel';
 import SupportChat from '../containers/TabBar/profile/SupportChat';
 
@@ -155,6 +156,7 @@ export const StackRoute = {
   EditAddress,
   MapLocationPicker,
   ChefBranches,
+  WorkingHours: WorkingHoursScreen,
   Orders,
   EditReel,
   SupportChat,

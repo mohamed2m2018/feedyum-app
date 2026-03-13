@@ -334,6 +334,10 @@ export default function StackNavigation() {
         component={StackRoute.ChefBranches}
       />
       <Stack.Screen
+        name={StackNav.WorkingHours}
+        component={StackRoute.WorkingHours}
+      />
+      <Stack.Screen
         name={StackNav.Orders}
         component={StackRoute.Orders}
       />

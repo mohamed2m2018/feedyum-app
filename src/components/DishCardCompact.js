@@ -21,6 +21,7 @@ import strings from '../i18n/strings';
 import images from '../assets/images';
 import request from '../api/request';
 import { useLocation } from '../navigation/locationContext';
+import branchService from '../api/branchService';
 import {
     addToCart,
     selectCartItems,
@@ -80,6 +81,17 @@ function DishCardCompact({
         }
     );
 
+    // Check if chef is currently open
+    const { data: openStatusData } = useQuery(
+        ['chefOpenStatus', effectiveChefId],
+        () => branchService.getChefOpenStatus(effectiveChefId),
+        {
+            enabled: !!effectiveChefId,
+            staleTime: 1000 * 60 * 2,
+        }
+    );
+    const isChefClosed = openStatusData?.success === true && !openStatusData?.isOpen;
+
     // Handle cart conflict
     useEffect(() => {
         if (pendingConflictItem) {
@@ -102,6 +114,14 @@ function DishCardCompact({
     }, [pendingConflictItem, dispatch, navigation]);
 
     const handleAddPress = () => {
+        // Block if restaurant is closed
+        if (isChefClosed) {
+            showErrorToast(
+                strings.restaurantClosed || 'Restaurant Closed',
+                strings.restaurantClosedCannotOrder || 'This restaurant is currently closed'
+            );
+            return;
+        }
         // Block if kitchen doesn't deliver
         if (deliveryData && !deliveryData.canDeliver) {
             const distanceInfo = deliveryData.nearestDistance

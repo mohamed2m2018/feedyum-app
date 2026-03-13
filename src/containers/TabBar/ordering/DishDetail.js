@@ -39,6 +39,7 @@ import {
 } from '../../../redux/reducer/cartSlice';
 import { useStorage } from '../../../utils/useStorage';
 import { useLocation } from '../../../navigation/locationContext';
+import branchService from '../../../api/branchService';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -159,6 +160,17 @@ const DishDetailScreen = () => {
       staleTime: 1000 * 60 * 5, // 5 minutes
     }
   );
+
+  // Check if chef is currently open
+  const { data: openStatusData } = useQuery(
+    ['chefOpenStatus', effectiveChefId],
+    () => branchService.getChefOpenStatus(effectiveChefId),
+    {
+      enabled: !!effectiveChefId,
+      staleTime: 1000 * 60 * 2,
+    }
+  );
+  const isChefClosed = openStatusData?.success === true && !openStatusData?.isOpen;
 
   // Add to favorites mutation
   const addToFavoritesMutation = useMutation(
@@ -303,6 +315,15 @@ const DishDetailScreen = () => {
 
   const handleAddToCart = () => {
     if (!dishData) return;
+
+    // Block if restaurant is closed
+    if (isChefClosed) {
+      showErrorToast(
+        strings.restaurantClosed || 'Restaurant Closed',
+        strings.restaurantClosedCannotOrder || 'This restaurant is currently closed'
+      );
+      return;
+    }
 
     // Block if kitchen doesn't deliver to user's location
     if (deliveryData && !deliveryData.canDeliver) {

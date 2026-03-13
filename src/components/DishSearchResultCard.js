@@ -21,6 +21,7 @@ import strings from '../i18n/strings';
 import images from '../assets/images';
 import request from '../api/request';
 import { useLocation } from '../navigation/locationContext';
+import branchService from '../api/branchService';
 import {
     addToCart,
     selectCartItems,
@@ -73,6 +74,17 @@ function DishSearchResultCard({ dish, style }) {
         }
     );
 
+    // Check if chef is currently open
+    const { data: openStatusData } = useQuery(
+        ['chefOpenStatus', chefId],
+        () => branchService.getChefOpenStatus(chefId),
+        {
+            enabled: !!chefId,
+            staleTime: 1000 * 60 * 2,
+        }
+    );
+    const isChefClosed = openStatusData?.success === true && !openStatusData?.isOpen;
+
     // Handle cart conflict
     useEffect(() => {
         if (pendingConflictItem) {
@@ -109,6 +121,14 @@ function DishSearchResultCard({ dish, style }) {
     };
 
     const handleAddPress = () => {
+        // Block if restaurant is closed
+        if (isChefClosed) {
+            showErrorToast(
+                strings.restaurantClosed || 'Restaurant Closed',
+                strings.restaurantClosedCannotOrder || 'This restaurant is currently closed'
+            );
+            return;
+        }
         if (deliveryData && !deliveryData.canDeliver) {
             const distanceInfo = deliveryData.nearestDistance
                 ? ` (${(strings.distanceAway || '{0} km').replace('{0}', deliveryData.nearestDistance)})`

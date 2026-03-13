@@ -7,7 +7,23 @@ import ZText from '../common/ZText';
 import strings from '../../i18n/strings';
 import { moderateScale } from '../../common/constants';
 
-export default function Locations({ SheetRef, selectedGov, onClose }) {
+const DAY_KEYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+
+const formatTime12h = (timeStr) => {
+  if (!timeStr) return '--:--';
+  const [h, m] = timeStr.split(':').map(Number);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const hour12 = h % 12 || 12;
+  return `${hour12}:${String(m).padStart(2, '0')} ${ampm}`;
+};
+
+const getTodayHours = (operatingHours) => {
+  if (!operatingHours || operatingHours.length === 0) return null;
+  const todayKey = DAY_KEYS[new Date().getDay()];
+  return operatingHours.find(h => h.day === todayKey) || null;
+};
+
+export default function Locations({ SheetRef, selectedGov, onClose, onBranchSelect, selectedBranchId }) {
   const colors = useSelector(state => state.theme.theme);
 
   const itemAnims = useRef(
@@ -39,21 +55,24 @@ export default function Locations({ SheetRef, selectedGov, onClose }) {
       android: `geo:${lat},${lng}?q=${lat},${lng}(${encodedLabel})`,
     });
     Linking.openURL(url).catch(() => {
-      // Fallback to Google Maps web
       Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`);
     });
   };
 
   const renderItem = ({ item, index }) => {
     const animValue = itemAnims[index] || new Animated.Value(1);
+    const todaySchedule = getTodayHours(item?.operatingHours);
+    const isSelected = selectedBranchId && item?._id === selectedBranchId;
+    const canSelect = !!onBranchSelect;
 
-    return (
+    const cardContent = (
       <Animated.View
         style={[
           localStyles.branchCard,
           {
             backgroundColor: colors.inputBg || colors.grayScale2,
-            borderColor: colors.bColor || colors.grayScale3 + '30',
+            borderColor: isSelected ? colors.primary : (colors.bColor || colors.grayScale3 + '30'),
+            borderWidth: isSelected ? 1.5 : 1,
             opacity: animValue,
             transform: [{
               translateY: animValue.interpolate({
@@ -64,21 +83,58 @@ export default function Locations({ SheetRef, selectedGov, onClose }) {
           },
         ]}
       >
-        {/* Simple location dot */}
+        {/* Location dot */}
         <View style={[localStyles.locationDot, { backgroundColor: colors.primary + '15' }]}>
           <Ionicons name="location" size={moderateScale(20)} color={colors.primary} />
         </View>
 
-        {/* Address */}
+        {/* Address + today's hours */}
         <View style={localStyles.textContainer}>
           <ZText type="b16" color={colors.textColor} numberOfLines={2}>
             {item?.description}
           </ZText>
+
+          {/* Today's working hours */}
+          {todaySchedule ? (
+            <View style={localStyles.hoursRow}>
+              <Ionicons name="time-outline" size={moderateScale(12)} color={todaySchedule.isOpen ? (colors.success || '#4CAF50') : '#FF5252'} />
+              <ZText
+                type="M11"
+                color={todaySchedule.isOpen ? (colors.success || '#4CAF50') : '#FF5252'}
+                style={{ marginLeft: moderateScale(4) }}
+              >
+                {todaySchedule.isOpen
+                  ? `${formatTime12h(todaySchedule.openTime)} - ${formatTime12h(todaySchedule.closeTime)}`
+                  : (strings.closedNow || strings.closed)
+                }
+              </ZText>
+            </View>
+          ) : (
+            <View style={localStyles.hoursRow}>
+              <Ionicons name="time-outline" size={moderateScale(12)} color={colors.grayScale6} />
+              <ZText type="M11" color={colors.grayScale6} style={{ marginLeft: moderateScale(4) }}>
+                {strings.openAllDay || 'Open'}
+              </ZText>
+            </View>
+          )}
+
+          {/* Selected indicator */}
+          {isSelected && (
+            <View style={[localStyles.selectedBadge, { backgroundColor: colors.primary + '15' }]}>
+              <Ionicons name="checkmark-circle" size={moderateScale(12)} color={colors.primary} />
+              <ZText type="M10" color={colors.primary} style={{ marginLeft: moderateScale(4) }}>
+                {strings.selected || 'Selected'}
+              </ZText>
+            </View>
+          )}
         </View>
 
         {/* Navigate arrow */}
         <TouchableOpacity
-          onPress={() => openMaps(item?.lat, item?.long, item?.description)}
+          onPress={(e) => {
+            e.stopPropagation?.();
+            openMaps(item?.lat, item?.long, item?.description);
+          }}
           activeOpacity={0.7}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
@@ -88,6 +144,22 @@ export default function Locations({ SheetRef, selectedGov, onClose }) {
         </TouchableOpacity>
       </Animated.View>
     );
+
+    if (canSelect) {
+      return (
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={() => {
+            onBranchSelect(item);
+            SheetRef?.current?.hide();
+          }}
+        >
+          {cardContent}
+        </TouchableOpacity>
+      );
+    }
+
+    return cardContent;
   };
 
   return (
@@ -107,7 +179,7 @@ export default function Locations({ SheetRef, selectedGov, onClose }) {
       gestureEnabled
     >
       <View style={localStyles.content}>
-        {/* Clean header */}
+        {/* Header */}
         <View style={localStyles.header}>
           <Ionicons name="storefront-outline" size={moderateScale(22)} color={colors.primary} />
           <ZText type="B20" color={colors.textColor} style={localStyles.headerTitle}>
@@ -119,6 +191,13 @@ export default function Locations({ SheetRef, selectedGov, onClose }) {
             </ZText>
           </View>
         </View>
+
+        {/* Hint for selection */}
+        {onBranchSelect && selectedGov?.length > 1 && (
+          <ZText type="M12" color={colors.grayScale6} style={{ marginBottom: moderateScale(12), marginTop: moderateScale(-10) }}>
+            {strings.selectBranchHint || 'Tap a branch to order from it'}
+          </ZText>
+        )}
 
         {/* List */}
         {(!selectedGov || selectedGov.length === 0) ? (
@@ -132,7 +211,7 @@ export default function Locations({ SheetRef, selectedGov, onClose }) {
           <FlatList
             data={selectedGov}
             renderItem={renderItem}
-            keyExtractor={(_, index) => index.toString()}
+            keyExtractor={(item, index) => item?._id || index.toString()}
             contentContainerStyle={localStyles.listContent}
             showsVerticalScrollIndicator={false}
           />
@@ -189,6 +268,20 @@ const localStyles = StyleSheet.create({
   textContainer: {
     flex: 1,
     marginRight: moderateScale(8),
+  },
+  hoursRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: moderateScale(4),
+  },
+  selectedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    paddingHorizontal: moderateScale(8),
+    paddingVertical: moderateScale(3),
+    borderRadius: moderateScale(8),
+    marginTop: moderateScale(4),
   },
   arrowBtn: {
     width: moderateScale(32),

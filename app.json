@@ -154,7 +154,8 @@
         }
       ],
       "./plugins/withOrderAlarmChannel",
-      "./plugins/withNotifeeMaven"
+      "./plugins/withNotifeeMaven",
+      "@react-native-community/datetimepicker"
     ],
     "extra": {
       "eas": {

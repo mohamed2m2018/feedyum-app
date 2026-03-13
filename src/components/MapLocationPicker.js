@@ -48,6 +48,9 @@ const MapLocationPicker = () => {
   const location = useLocation();
   const mapRef = useRef(null);
   const phoneInputRef = useRef(null);
+  const branchFormRef = useRef(null);
+  const tiersSectionRef = useRef(null);
+  const tiersSectionY = useRef(0);
 
   const { onLocationSelect, initialLocation, editMode, addressToEdit, isChefBranch } = route.params || {};
 
@@ -101,6 +104,7 @@ const MapLocationPicker = () => {
   const [loadingAreas, setLoadingAreas] = useState(false);
   const [showBranchForm, setShowBranchForm] = useState(false);
   const [deliveryTiers, setDeliveryTiers] = useState([{ maxDistance: 20, fee: '' }]);
+  const [tierErrors, setTierErrors] = useState([]); // indices of tiers with invalid fees
 
   // Auto-adjust delivery tiers when radius changes
   useEffect(() => {
@@ -429,14 +433,25 @@ const MapLocationPicker = () => {
     }
 
     // Validate delivery tiers - all must have a fee > 0
-    const hasInvalidFee = deliveryTiers.some(t => !t.fee || isNaN(Number(t.fee)) || Number(t.fee) <= 0);
-    if (hasInvalidFee) {
+    const invalidIndices = deliveryTiers
+      .map((t, i) => (!t.fee || isNaN(Number(t.fee)) || Number(t.fee) <= 0) ? i : -1)
+      .filter(i => i !== -1);
+    if (invalidIndices.length > 0) {
+      setTierErrors(invalidIndices);
       showErrorToast(
         strings.invalidDeliveryFee || 'Invalid Delivery Fee',
         strings.allTiersMustHaveFee || 'All delivery tiers must have a fee greater than 0'
       );
+      // Auto-scroll to the delivery fee section so user sees the error
+      if (branchFormRef.current && tiersSectionY.current > 0) {
+        const scrollFn = branchFormRef.current.scrollToPosition || branchFormRef.current.scrollTo;
+        if (scrollFn) {
+          scrollFn.call(branchFormRef.current, 0, tiersSectionY.current - 20, true);
+        }
+      }
       return;
     }
+    setTierErrors([]);
 
     // Format delivery tiers
     const validTiers = deliveryTiers.map(t => ({
@@ -715,6 +730,7 @@ const MapLocationPicker = () => {
         {/* Chef Branch Form - shown when adding a branch location */}
         {showBranchForm && (
           <KeyboardAwareScrollView
+            ref={branchFormRef}
             style={localStyles.formContainer}
             contentContainerStyle={localStyles.formContent}
             showsVerticalScrollIndicator={false}
@@ -767,7 +783,10 @@ const MapLocationPicker = () => {
             </View>
 
             {/* Delivery Fee Tiers */}
-            <View style={localStyles.section}>
+            <View
+              style={localStyles.section}
+              onLayout={(e) => { tiersSectionY.current = e.nativeEvent.layout.y; }}
+            >
               <ZText type="B16" color={colors.textColor} style={localStyles.sectionTitle}>
                 {strings.deliveryTiers}
               </ZText>
@@ -831,9 +850,22 @@ const MapLocationPicker = () => {
                           const updated = [...deliveryTiers];
                           updated[index] = { ...updated[index], fee: val };
                           setDeliveryTiers(updated);
+                          // Clear error for this tier if value is now valid
+                          if (val && !isNaN(Number(val)) && Number(val) > 0) {
+                            setTierErrors(prev => prev.filter(i => i !== index));
+                          }
                         }}
-                        inputContainerStyle={[localStyles.tierFeeInput, { backgroundColor: colors.backgroundColor, borderColor: colors.grayScale4 }]}
+                        inputContainerStyle={[localStyles.tierFeeInput, {
+                          backgroundColor: colors.backgroundColor,
+                          borderColor: tierErrors.includes(index) ? '#FF5252' : colors.grayScale4,
+                          borderWidth: tierErrors.includes(index) ? 1.5 : 1,
+                        }]}
                       />
+                      {tierErrors.includes(index) && (
+                        <ZText type="s10" color="#FF5252" style={{ marginTop: moderateScale(2) }}>
+                          {strings.invalidDeliveryFee || 'Required'}
+                        </ZText>
+                      )}
                     </View>
                   </View>
                   {deliveryTiers.length > 1 && (

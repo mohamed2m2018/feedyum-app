@@ -177,6 +177,40 @@ class BranchService {
       errors
     };
   }
+
+  /**
+   * Toggle branch open/close status (manual override).
+   * @param {string} branchId - Branch ID (or null if allBranches)
+   * @param {string} manualOverride - 'auto' | 'forceOpen' | 'forceClosed'
+   * @param {boolean} allBranches - Apply to all branches
+   */
+  async toggleBranchStatus(branchId, manualOverride, allBranches = false) {
+    try {
+      const response = await request.put('/branches/toggle-status', {
+        branchId,
+        manualOverride,
+        allBranches,
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error toggling branch status:', error?.response?.data || error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Get open/closed status for a chef's branches.
+   * @param {string} chefId
+   */
+  async getChefOpenStatus(chefId) {
+    try {
+      const response = await request.get(`/branches/status/${chefId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error getting chef open status:', error?.response?.data || error.message);
+      throw error;
+    }
+  }
 }
 
 export default new BranchService(); 

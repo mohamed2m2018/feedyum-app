@@ -78,6 +78,7 @@ export const StackNav = {
   EditAddress: 'EditAddress',
   MapLocationPicker: 'MapLocationPicker',
   ChefBranches: 'ChefBranches',
+  WorkingHours: 'WorkingHours',
   Orders: 'Orders',
   EditReel: 'EditReel',
   SupportChat: 'SupportChat',

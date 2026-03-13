@@ -79,34 +79,37 @@ const ChefBranchesScreen = () => {
     const handleAddBranch = () => {
         navigation.navigate(StackNav.MapLocationPicker, {
             isChefBranch: true,
-            onLocationSelect: async (locationData) => {
-                try {
-                    // Use branch API to add new branch
-                    await branchService.addBranch({
-                        branchName: locationData.branchName || `${locationData.city || 'New'} Branch`,
-                        streetName: locationData.streetName || locationData.formattedAddress?.split(',')[0] || 'Street',
-                        buildingNumber: locationData.buildingNumber || '1',
-                        area: locationData.area || locationData.city || 'Area',
-                        city: locationData.city || 'City',
-                        state: locationData.state || 'State',
-                        country: locationData.country || 'Egypt',
-                        postalCode: locationData.postalCode || '00000',
-                        lat: parseFloat(locationData.lat || locationData.latitude),
-                        long: parseFloat(locationData.long || locationData.longitude),
-                        phoneNumber: locationData.phoneNumber || '0000000000',
-                        countryCode: locationData.countryCode || '+20',
-                        deliveryRadius: locationData.deliveryRadius || 20,
-                        deliveryTiers: locationData.deliveryTiers || [],
-                    });
+            onLocationSelect: (locationData) => {
+                // Don't save yet — navigate to WorkingHoursScreen to collect hours first
+                const pendingBranchData = {
+                    branchName: locationData.branchName || `${locationData.city || 'New'} Branch`,
+                    streetName: locationData.streetName || locationData.formattedAddress?.split(',')[0] || 'Street',
+                    buildingNumber: locationData.buildingNumber || '1',
+                    area: locationData.area || locationData.city || 'Area',
+                    city: locationData.city || 'City',
+                    state: locationData.state || 'State',
+                    country: locationData.country || 'Egypt',
+                    postalCode: locationData.postalCode || '00000',
+                    lat: parseFloat(locationData.lat || locationData.latitude),
+                    long: parseFloat(locationData.long || locationData.longitude),
+                    phoneNumber: locationData.phoneNumber || '0000000000',
+                    countryCode: locationData.countryCode || '+20',
+                    deliveryRadius: locationData.deliveryRadius || 20,
+                    deliveryTiers: locationData.deliveryTiers || [],
+                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                };
 
-                    // Invalidate and refetch
-                    queryClient.invalidateQueries('myBranches');
-                    refetch();
-                    showSuccessToast(strings.success, strings.branchAddedSuccess || 'Branch added successfully');
-                } catch (error) {
-                    console.log('Add branch error:', error);
-                    showErrorToast(strings.error, error?.response?.data?.message || error?.message || strings.somethingWentWrong);
-                }
+                // Delay navigation so it fires AFTER MapLocationPicker's goBack() pops
+                setTimeout(() => {
+                    navigation.navigate(StackNav.WorkingHours, {
+                        mode: 'create',
+                        pendingBranchData,
+                        onSave: () => {
+                            queryClient.invalidateQueries('myBranches');
+                            refetch();
+                        },
+                    });
+                }, 100);
             },
         });
     };
@@ -199,47 +202,135 @@ const ChefBranchesScreen = () => {
         });
     };
 
-    const renderBranchCard = ({ item, index }) => (
+    const handleToggleStatus = async (branch) => {
+        // Cycle through: auto -> forceClosed -> forceOpen -> auto
+        const currentOverride = branch.manualOverride || 'auto';
+        let newOverride;
+        if (currentOverride === 'auto') newOverride = 'forceClosed';
+        else if (currentOverride === 'forceClosed') newOverride = 'forceOpen';
+        else newOverride = 'auto';
+
+        try {
+            await branchService.toggleBranchStatus(branch._id, newOverride);
+            queryClient.invalidateQueries('myBranches');
+            refetch();
+            showSuccessToast(strings.success, strings.branchStatusUpdated);
+        } catch (error) {
+            showErrorToast(strings.error, error?.response?.data?.message || error?.message || strings.somethingWentWrong);
+        }
+    };
+
+    const getStatusInfo = (branch) => {
+        const override = branch.manualOverride || 'auto';
+        if (override === 'forceOpen') return { label: strings.forceOpen, color: '#4CAF50', icon: 'checkmark-circle' };
+        if (override === 'forceClosed') return { label: strings.forceClosed, color: '#FF5252', icon: 'close-circle' };
+        return { label: strings.autoSchedule, color: colors.primary, icon: 'time-outline' };
+    };
+
+    const formatTime12h = (timeStr) => {
+        if (!timeStr) return '--:--';
+        const [h, m] = timeStr.split(':').map(Number);
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        const hour12 = h % 12 || 12;
+        return `${hour12}:${String(m).padStart(2, '0')} ${ampm}`;
+    };
+
+    const getWorkingHoursSummary = (branch) => {
+        const hours = branch.operatingHours || [];
+        if (hours.length === 0) return strings.noWorkingHoursSet;
+
+        // Get today's day name
+        const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        const todayKey = dayNames[new Date().getDay()];
+        const todaySchedule = hours.find(h => h.day === todayKey);
+
+        if (!todaySchedule || !todaySchedule.isOpen) {
+            return `${strings.closedNow || strings.closed}`;
+        }
+
+        return `${formatTime12h(todaySchedule.openTime)} - ${formatTime12h(todaySchedule.closeTime)}`;
+    };
+
+    const renderBranchCard = ({ item, index }) => {
+        const statusInfo = getStatusInfo(item);
+        return (
         <View style={[localStyles.branchCard, { backgroundColor: colors.dark ? colors.inputBg : colors.white }]}>
-            {/* Location Icon with Gradient Background */}
-            <View style={localStyles.iconContainer}>
-                <LinearGradient
-                    colors={[colors.primary, colors.lightRed || '#FF7B8E']}
-                    style={localStyles.iconGradient}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                >
-                    <Ionicons name="location" size={moderateScale(20)} color={colors.white} />
-                </LinearGradient>
+            {/* Top row: icon + info + actions */}
+            <View style={localStyles.branchTopRow}>
+                {/* Location Icon with Gradient Background */}
+                <View style={localStyles.iconContainer}>
+                    <LinearGradient
+                        colors={[colors.primary, colors.lightRed || '#FF7B8E']}
+                        style={localStyles.iconGradient}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                    >
+                        <Ionicons name="location" size={moderateScale(20)} color={colors.white} />
+                    </LinearGradient>
+                </View>
+
+                {/* Branch Info */}
+                <View style={localStyles.branchInfo}>
+                    <ZText type="b16" color={colors.textColor} numberOfLines={1}>
+                        {getBranchName(item)}
+                    </ZText>
+                    <ZText type="m14" color={colors.grayScale5} numberOfLines={2} style={localStyles.addressText}>
+                        {item.addressDetails?.formattedAddress || item.description || strings.noAddressProvided || 'No address provided'}
+                    </ZText>
+                </View>
+
+                {/* Action Buttons */}
+                <View style={localStyles.actionButtons}>
+                    <TouchableOpacity
+                        onPress={() => handleEditBranch(item, index)}
+                        style={[localStyles.actionBtn, { borderColor: colors.primary }]}
+                    >
+                        <MaterialIcon name="pencil" size={moderateScale(16)} color={colors.primary} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        onPress={() => handleDeleteBranch(item)}
+                        style={[localStyles.actionBtn, localStyles.deleteBtn]}
+                    >
+                        <MaterialIcon name="delete-outline" size={moderateScale(16)} color={colors.redColor} />
+                    </TouchableOpacity>
+                </View>
             </View>
 
-            {/* Branch Info */}
-            <View style={localStyles.branchInfo}>
-                <ZText type="b16" color={colors.textColor} numberOfLines={1}>
-                    {getBranchName(item)}
-                </ZText>
-                <ZText type="m14" color={colors.grayScale5} numberOfLines={2} style={localStyles.addressText}>
-                    {item.addressDetails?.formattedAddress || item.description || strings.noAddressProvided || 'No address provided'}
-                </ZText>
-            </View>
-
-            {/* Action Buttons */}
-            <View style={localStyles.actionButtons}>
+            {/* Status & Working Hours section */}
+            <View style={[localStyles.statusSection, { borderTopColor: colors.grayScale3 }]}>
+                {/* Status toggle */}
                 <TouchableOpacity
-                    onPress={() => handleEditBranch(item, index)}
-                    style={[localStyles.actionBtn, { borderColor: colors.primary }]}
+                    style={[localStyles.statusToggle, { backgroundColor: statusInfo.color + '15' }]}
+                    onPress={() => handleToggleStatus(item)}
                 >
-                    <MaterialIcon name="pencil" size={moderateScale(16)} color={colors.primary} />
+                    <Ionicons name={statusInfo.icon} size={moderateScale(16)} color={statusInfo.color} />
+                    <ZText type="M12" color={statusInfo.color} style={{ marginLeft: moderateScale(6), flex: 1 }}>
+                        {statusInfo.label}
+                    </ZText>
+                    <Ionicons name="swap-horizontal-outline" size={moderateScale(14)} color={statusInfo.color} />
                 </TouchableOpacity>
+
+                {/* Working hours button */}
                 <TouchableOpacity
-                    onPress={() => handleDeleteBranch(item)}
-                    style={[localStyles.actionBtn, localStyles.deleteBtn]}
+                    style={[localStyles.hoursButton, { backgroundColor: colors.primary + '10' }]}
+                    onPress={() => navigation.navigate(StackNav.WorkingHours, {
+                        branch: item,
+                        onSave: () => {
+                            queryClient.invalidateQueries('myBranches');
+                            refetch();
+                        },
+                    })}
                 >
-                    <MaterialIcon name="delete-outline" size={moderateScale(16)} color={colors.redColor} />
+                    <Ionicons name="time-outline" size={moderateScale(14)} color={colors.primary} />
+                    <ZText type="M12" color={colors.primary} style={{ marginLeft: moderateScale(6), flex: 1 }} numberOfLines={1}>
+                        {getWorkingHoursSummary(item)}
+                    </ZText>
+                    <Ionicons name="chevron-forward" size={moderateScale(14)} color={colors.primary} />
                 </TouchableOpacity>
             </View>
         </View>
     );
+    };
 
     const EmptyState = () => (
         <View style={localStyles.emptyContainer}>
@@ -372,8 +463,6 @@ const localStyles = StyleSheet.create({
     },
     // Branch Card
     branchCard: {
-        flexDirection: 'row',
-        alignItems: 'center',
         padding: moderateScale(16),
         borderRadius: moderateScale(16),
         marginBottom: moderateScale(12),
@@ -382,6 +471,10 @@ const localStyles = StyleSheet.create({
         shadowOpacity: 0.08,
         shadowRadius: 8,
         elevation: 3,
+    },
+    branchTopRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
     },
     iconContainer: {
         marginRight: moderateScale(14),
@@ -415,6 +508,29 @@ const localStyles = StyleSheet.create({
     },
     deleteBtn: {
         backgroundColor: 'rgba(247, 85, 85, 0.1)',
+    },
+    statusSection: {
+        marginTop: moderateScale(12),
+        paddingTop: moderateScale(12),
+        borderTopWidth: StyleSheet.hairlineWidth,
+        flexDirection: 'row',
+        gap: moderateScale(8),
+    },
+    statusToggle: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: moderateScale(8),
+        paddingHorizontal: moderateScale(10),
+        borderRadius: moderateScale(10),
+    },
+    hoursButton: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: moderateScale(8),
+        paddingHorizontal: moderateScale(10),
+        borderRadius: moderateScale(10),
     },
     // Empty State
     emptyContainer: {
