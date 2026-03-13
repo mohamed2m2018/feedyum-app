@@ -297,7 +297,7 @@ export default function ChatList({ navigation }) {
   if (chatsLoading && !orderChats.length) {
     return (
       <ZSafeAreaView>
-        <ZHeader title={strings.orderChats} showBack />
+        <ZHeader title={strings.orderChats} isHideBack />
         <ZLoader />
       </ZSafeAreaView>
     );
@@ -305,7 +305,7 @@ export default function ChatList({ navigation }) {
 
   return (
     <ZSafeAreaView>
-      <ZHeader title={strings.orderChats} showBack />
+      <ZHeader title={strings.orderChats} isHideBack />
       <FlatList
         data={orderChats}
         renderItem={renderChatItem}

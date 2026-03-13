@@ -359,6 +359,7 @@ export default function OrderManagement() {
   return (
     <ZSafeAreaView>
       <ZHeader
+        isHideBack
         title={strings.orderManagement}
         rightIcon={
           <TouchableOpacity
