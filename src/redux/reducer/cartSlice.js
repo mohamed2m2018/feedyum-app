@@ -425,10 +425,15 @@ export const clearCartAndAddPending = () => (dispatch, getState) => {
 export const selectCartItems = (state) => state.cart.items;
 export const selectCartSubtotal = (state) => state.cart.subtotal;
 export const selectCartItemCount = (state) => state.cart.itemCount;
-export const selectCartChef = (state) => ({
-  id: state.cart.chefId,
-  name: state.cart.chefName,
-});
+// Memoized to prevent unnecessary rerenders (returns stable reference)
+let _cachedChef = { id: null, name: null };
+export const selectCartChef = (state) => {
+  const id = state.cart.chefId;
+  const name = state.cart.chefName;
+  if (_cachedChef.id === id && _cachedChef.name === name) return _cachedChef;
+  _cachedChef = { id, name };
+  return _cachedChef;
+};
 export const selectCartError = (state) => state.cart.error;
 export const selectCartLoading = (state) => state.cart.isLoading;
 export const selectCartPromocode = (state) => state.cart.promocode;
