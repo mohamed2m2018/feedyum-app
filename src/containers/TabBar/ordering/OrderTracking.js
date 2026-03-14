@@ -835,7 +835,20 @@ const OrderTracking = () => {
       </Text>
 
       {currentOrder?.deliveryAddress && (
-        <View style={localStyles.addressContainer}>
+        <TouchableOpacity
+          style={localStyles.addressContainer}
+          activeOpacity={0.7}
+          onPress={() => {
+            const { lat, long } = currentOrder.deliveryAddress.location || {};
+            if (lat && long) {
+              const label = encodeURIComponent(currentOrder.deliveryAddress.nameLine || 'Delivery Location');
+              const url = Platform.OS === 'ios'
+                ? `maps:0,0?q=${label}@${lat},${long}`
+                : `geo:${lat},${long}?q=${lat},${long}(${label})`;
+              Linking.openURL(url);
+            }
+          }}
+        >
           <Ionicons
             name="location"
             size={moderateScale(20)}
@@ -849,10 +862,12 @@ const OrderTracking = () => {
               </Text>
             )}
             {currentOrder.deliveryAddress.location && (
-              <Text style={{ fontSize: 12, color: '#666666' }}>
-                Lat: {currentOrder.deliveryAddress.location.lat}, Long:{' '}
-                {currentOrder.deliveryAddress.location.long}
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: moderateScale(4) }}>
+                <Ionicons name="navigate-outline" size={moderateScale(14)} color="#FF4D67" style={{ marginRight: moderateScale(4) }} />
+                <Text style={{ fontSize: 12, color: '#FF4D67', fontWeight: '600' }}>
+                  {strings.openInMaps || 'Open in Maps'}
+                </Text>
+              </View>
             )}
             {currentOrder.deliveryAddress.isPrimary && (
               <Text style={{ fontSize: 12, color: '#FF4D67' }}>
@@ -860,7 +875,8 @@ const OrderTracking = () => {
               </Text>
             )}
           </View>
-        </View>
+          <Ionicons name="open-outline" size={moderateScale(16)} color="#999" />
+        </TouchableOpacity>
       )}
 
       {!currentOrder?.deliveryAddress && (

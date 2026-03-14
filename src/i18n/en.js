@@ -603,6 +603,7 @@ export default {
   pricingSummary: 'Pricing Summary',
   deliveryInformation: 'Delivery Information',
   noSpecialInstructions: 'No special instructions provided',
+  openInMaps: 'Open in Maps',
   noDeliveryAddress: 'No delivery address provided',
   noTimeSlot: 'No Time Slot Selected',
   selectTimeSlot: 'Please select a delivery time slot',

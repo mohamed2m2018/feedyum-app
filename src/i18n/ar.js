@@ -449,6 +449,7 @@ export default {
   pricingSummary: 'ملخص السعر',
   deliveryInformation: 'معلومات التوصيل',
   noSpecialInstructions: 'لا توجد تعليمات خاصة',
+  openInMaps: 'فتح في الخرائط',
   noDeliveryAddress: 'لا يوجد عنوان توصيل',
   noTimeSlot: 'لم يتم اختيار موعد',
   selectTimeSlot: 'يرجى اختيار موعد التوصيل',
