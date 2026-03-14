@@ -220,8 +220,12 @@ const Login = ({ navigation }) => {
       }
 
       if (userId && userId !== '[object Object]') {
-        OneSignal.logout(); // Clear stale identity from previous user on this device
-        OneSignal.login(String(userId));
+        try {
+          OneSignal.logout(); // Clear stale identity from previous user on this device
+          OneSignal.login(String(userId));
+        } catch (e) {
+          console.warn('[Login] OneSignal identity switch failed:', e);
+        }
       } else {
         console.warn('[Login] Invalid User ID for OneSignal:', rawId);
       }
