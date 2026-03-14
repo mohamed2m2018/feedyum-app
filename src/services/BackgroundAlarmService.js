@@ -86,6 +86,13 @@ class BackgroundAlarmService {
     if (Platform.OS !== 'android') return;
 
     try {
+      // Clear any existing alarm interval before starting a new one
+      // Prevents overlapping loops when multiple notifications arrive
+      if (this.alarmInterval) {
+        clearInterval(this.alarmInterval);
+        this.alarmInterval = null;
+      }
+
       // Display the notification (this triggers the channel sound)
       await this._displayAlarmNotification();
 
@@ -124,9 +131,9 @@ class BackgroundAlarmService {
           id: 'default',
           launchActivity: 'default',
         },
-        // Keep notification ongoing until chef interacts
-        ongoing: true,
-        autoCancel: false,
+        // Auto-dismiss on tap so the notification doesn't stick
+        ongoing: false,
+        autoCancel: true,
       },
     });
   }
