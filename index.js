@@ -18,6 +18,10 @@ import { store } from './src/redux/store';
 import { createClient, AnalyticsProvider } from '@segment/analytics-react-native';
 import { createOptimizedQueryClient } from './src/config/queryClient';
 import { FollowStateProvider } from './src/context/FollowStateContext';
+import UpdateService from './src/services/UpdateService';
+
+// Initialize silent OTA update checker
+UpdateService.initialize();
 
 const queryClient = createOptimizedQueryClient();
 

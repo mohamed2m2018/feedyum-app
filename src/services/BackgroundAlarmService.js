@@ -199,26 +199,26 @@ class BackgroundAlarmService {
 
 console.log('[BackgroundAlarm] Module loaded');
 
+// Create the singleton early so background handler can reference it
+const backgroundAlarmInstance = new BackgroundAlarmService();
+
 // Register background event handler (runs even when app is killed)
 try {
   notifee.onBackgroundEvent(async ({ type, detail }) => {
     console.log('[BackgroundAlarm] Background event:', type, detail.notification?.id);
 
-    if (type === EventType.PRESS) {
-      if (detail.notification?.id) {
-        await notifee.cancelNotification(detail.notification.id);
-      }
-    }
-
-    if (type === EventType.DISMISSED) {
-      if (detail.notification?.id) {
-        await notifee.cancelNotification(detail.notification.id);
-      }
+    if (type === EventType.PRESS || type === EventType.DISMISSED) {
+      // Full stop: clear the 15-second re-trigger interval + cancel all alarm notifications
+      // When app is backgrounded (same JS context), this stops the loop.
+      // When app is killed, the interval doesn't survive anyway.
+      await backgroundAlarmInstance.stopForegroundAlarm();
+      // Also stop the in-app alarm sound/vibration if running
+      OrderAlarmService.stopAlarm();
     }
   });
 } catch (e) {
   console.error('[BackgroundAlarm] Failed to register background handler:', e);
 }
 
-// Singleton
-export default new BackgroundAlarmService();
+// Singleton — used by both the background handler above and all consumers
+export default backgroundAlarmInstance;

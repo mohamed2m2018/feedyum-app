@@ -128,13 +128,17 @@ export const useChefSocket = (userId) => {
       }
       // Stop alarm if playing when hook unmounts
       OrderAlarmService.stopAlarm();
+      BackgroundAlarmService.stopForegroundAlarm();
     };
   }, [userId, userType, handleDashboardUpdate]);
 
   return {
     socket: socketRef.current,
     isConnected: socketRef.current?.connected || false,
-    stopAlarm: () => OrderAlarmService.stopAlarm(),
+    stopAlarm: () => {
+      OrderAlarmService.stopAlarm();
+      BackgroundAlarmService.stopForegroundAlarm();
+    },
   };
 };
 
