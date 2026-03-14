@@ -146,7 +146,8 @@ export default function OrderManagement() {
   const statusOptions = [
     { label: strings.all, value: 'all', color: colors.textColor, count: 0 },
     { label: strings.pending, value: 'pending', color: colors.orange, count: 0 },
-    { label: strings.accepted, value: 'confirmed', color: colors.green, count: 0 }, // Backend status is confirmed
+    { label: strings.awaitingCustomerConfirmation || 'Awaiting', value: 'awaiting_confirmation', color: colors.info || '#2196F3', count: 0 },
+    { label: strings.accepted, value: 'confirmed', color: colors.green, count: 0 },
     { label: strings.preparing, value: 'preparing', color: colors.blue, count: 0 },
     { label: strings.ready, value: 'ready', color: colors.yellow, count: 0 },
     { label: strings.outForDelivery || 'Out for Delivery', value: 'out_for_delivery', color: colors.blue, count: 0 },
@@ -235,10 +236,12 @@ export default function OrderManagement() {
         queryClient.invalidateQueries('chefOrders');
         showSuccessToast(strings.success, strings.orderUpdatedSuccess);
 
-        // Auto-switch tab and scroll
-        if (variables.status !== 'cancelled') {
-          setSelectedStatus(variables.status);
-          scrollToTab(variables.status);
+        // Auto-switch tab using the ACTUAL status from API response
+        // (backend may redirect e.g. confirmed → awaiting_confirmation)
+        const actualStatus = data?.order?.status || variables.status;
+        if (actualStatus !== 'cancelled') {
+          setSelectedStatus(actualStatus);
+          scrollToTab(actualStatus);
         }
       },
       onError: error => {
