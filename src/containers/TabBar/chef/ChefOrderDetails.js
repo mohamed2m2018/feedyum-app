@@ -627,18 +627,28 @@ const ChefOrderDetailsScreen = () => {
                 <View style={[localStyles.footer, {
                     flexDirection: 'row',
                     alignItems: 'center',
-                    backgroundColor: (colors.info || '#2196F3') + '10',
+                    backgroundColor: colors.backgroundColor,
                     paddingBottom: insets.bottom + 16,
                 }]}>
-                    <Ionicons
-                        name="hourglass-outline"
-                        size={moderateScale(20)}
-                        color={colors.info || '#2196F3'}
-                        style={{ marginRight: moderateScale(10) }}
-                    />
-                    <ZText type="M14" color={colors.info || '#2196F3'} style={{ flex: 1 }}>
-                        {strings.waitingForCustomerConfirmation || 'Waiting for customer to confirm'}
-                    </ZText>
+                    <View style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        backgroundColor: (colors.info || '#2196F3') + '15',
+                        borderRadius: moderateScale(12),
+                        paddingHorizontal: moderateScale(14),
+                        paddingVertical: moderateScale(12),
+                        flex: 1,
+                    }}>
+                        <Ionicons
+                            name="hourglass-outline"
+                            size={moderateScale(20)}
+                            color={colors.info || '#2196F3'}
+                            style={{ marginRight: moderateScale(10) }}
+                        />
+                        <ZText type="M14" color={colors.info || '#2196F3'} style={{ flex: 1 }}>
+                            {strings.waitingForCustomerConfirmation || 'Waiting for customer to confirm'}
+                        </ZText>
+                    </View>
                 </View>
             )}
 
