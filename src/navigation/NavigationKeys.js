@@ -66,7 +66,7 @@ export const StackNav = {
   ShoppingCart: 'ShoppingCart',
   OrderTracking: 'OrderTracking',
   ChefOrderDetails: 'ChefOrderDetails',
-  Chat: 'Chat',
+  Chat: 'ChatScreen',
   ChatList: 'ChatList',
   Wallet: 'Wallet',
   PaymobCheckout: 'PaymobCheckout',

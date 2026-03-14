@@ -347,7 +347,7 @@ class DeepLinkingService {
     // It also supports 'orderId' if provided
     console.log('🐞 [DeepLinkingService] Navigating to ChatScreen:', userId, params);
     DeepLinkingService.navigationRef?.dispatch(
-      CommonActions.navigate('Chat', {
+      CommonActions.navigate('ChatScreen', {
         chefId: userId, // Map userId to chefId as expected by ChatScreen
         orderId: params?.orderId || null,
         ...params

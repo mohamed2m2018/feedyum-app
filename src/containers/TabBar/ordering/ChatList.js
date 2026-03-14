@@ -109,9 +109,8 @@ export default function ChatList({ navigation }) {
       console.warn('[ChatList] Chat partner not found:', orderChat);
       return;
     }
-    // Use getParent() because this tab is named "Chat" which conflicts with
-    // the Stack screen also named "Chat". navigate('Chat') resolves to the tab
-    // itself (no-op). getParent() reaches the parent Stack navigator.
+    // StackNav.Chat = 'ChatScreen' (distinct from TabNav.Chat = 'Chat')
+    // Use getParent() to navigate from within the Tab to the Stack screen
     const parentNav = navigation.getParent();
     if (parentNav) {
       parentNav.navigate(StackNav.Chat, {
