@@ -82,7 +82,7 @@ class BackgroundAlarmService {
    * The notification is re-displayed every 15 seconds to re-trigger the sound,
    * creating a looping alarm effect without needing a foreground service.
    */
-  async showAlarmNotification() {
+  async showAlarmNotification(alarmType = 'newOrder') {
     if (Platform.OS !== 'android') return;
 
     try {
@@ -94,33 +94,58 @@ class BackgroundAlarmService {
       }
 
       // Display the notification (this triggers the channel sound)
-      await this._displayAlarmNotification();
+      await this._displayAlarmNotification(alarmType);
 
       // Re-display every 15 seconds to re-trigger the alarm sound
       // This creates a looping effect — each re-display plays the sound again
       this.alarmInterval = setInterval(async () => {
         try {
-          await this._displayAlarmNotification();
+          await this._displayAlarmNotification(alarmType);
           console.log('[BackgroundAlarm] Re-triggered alarm notification');
         } catch (err) {
           console.error('[BackgroundAlarm] Re-trigger error:', err);
         }
       }, 15000);
 
-      console.log('[BackgroundAlarm] Alarm notification shown with repeat');
+      console.log('[BackgroundAlarm] Alarm notification shown with repeat, type:', alarmType);
     } catch (error) {
       console.error('[BackgroundAlarm] Failed to show notification:', error);
     }
   }
 
+  _getNotificationContent(alarmType) {
+    switch (alarmType) {
+      case 'orderConfirmed':
+        return {
+          id: 'order_confirmed_alarm',
+          title: '✅ Order Confirmed!',
+          body: 'A customer confirmed their order. Tap to view.',
+        };
+      case 'awaitingConfirmation':
+        return {
+          id: 'awaiting_confirmation_alarm',
+          title: '⏳ Awaiting Confirmation',
+          body: 'An order is waiting for customer confirmation.',
+        };
+      case 'newOrder':
+      default:
+        return {
+          id: 'order_alarm',
+          title: '🔔 New Order!',
+          body: 'You have a new order. Tap to view.',
+        };
+    }
+  }
+
   /**
-   * Display the actual notification
+   * Display the actual notification with correct content per alarm type
    */
-  async _displayAlarmNotification() {
+  async _displayAlarmNotification(alarmType = 'newOrder') {
+    const content = this._getNotificationContent(alarmType);
     await notifee.displayNotification({
-      id: 'order_alarm',
-      title: '🔔 New Order!',
-      body: 'You have a new order. Tap to view.',
+      id: content.id,
+      title: content.title,
+      body: content.body,
       android: {
         channelId: CHANNEL_ID,
         importance: AndroidImportance.HIGH,
@@ -149,7 +174,10 @@ class BackgroundAlarmService {
         this.alarmInterval = null;
       }
 
+      // Cancel all possible alarm notification IDs
       await notifee.cancelNotification('order_alarm');
+      await notifee.cancelNotification('order_confirmed_alarm');
+      await notifee.cancelNotification('awaiting_confirmation_alarm');
       console.log('[BackgroundAlarm] Alarm notification cancelled');
     } catch (error) {
       console.error('[BackgroundAlarm] Failed to cancel notification:', error);
