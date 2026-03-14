@@ -32,17 +32,16 @@ const firebaseConfig = {
   storageBucket: '',
 };
 
+// Initialize TimeAgo locales (must run once at module level, not per render)
+TimeAgo.addDefaultLocale(en);
+TimeAgo.addLocale(ar);
+
 // Initialize OneSignal globally before App mounts
 const notificationService = NotificationService.getInstance();
 notificationService.initialize('8f642b9d-8d10-4b66-b43a-c1d0345ef13f');
 
 const App = () => {
   const colors = useSelector(state => state.theme.theme);
-  if (I18nManager.isRTL) {
-    TimeAgo.addDefaultLocale(ar);
-  } else {
-    TimeAgo.addDefaultLocale(en);
-  }
   const [language] = useStorage('language');
 
   LogBox.ignoreAllLogs(true);
