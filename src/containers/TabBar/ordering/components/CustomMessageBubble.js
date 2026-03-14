@@ -395,6 +395,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: moderateScale(2),
+    direction: 'ltr', // Force LTR so own messages stay on right (like WhatsApp)
   },
   wrapperRight: {
     justifyContent: 'flex-end',
