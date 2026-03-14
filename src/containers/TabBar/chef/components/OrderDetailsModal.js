@@ -107,6 +107,9 @@ const OrderDetailsModal = ({
     switch (order.status) {
       case 'pending':
         return 'preparing';
+      case 'awaiting_confirmation':
+      case 'chef_review':
+        return null; // Customer must confirm — no chef action
       case 'preparing':
         return 'ready';
       case 'ready':
@@ -120,6 +123,9 @@ const OrderDetailsModal = ({
     switch (order.status) {
       case 'pending':
         return strings.startPreparing;
+      case 'awaiting_confirmation':
+      case 'chef_review':
+        return null; // Customer must confirm — no chef action
       case 'preparing':
         return strings.markAsReady;
       case 'ready':
@@ -217,7 +223,10 @@ const OrderDetailsModal = ({
       presentationStyle="pageSheet"
       onRequestClose={onClose}>
       <View style={[localStyles.container, { backgroundColor: colors.backgroundColor }]}>
-        {/* Header */}
+        {/* Header with drag handle for pageSheet dismiss affordance */}
+        <View style={localStyles.dragHandleContainer}>
+          <View style={localStyles.dragHandle} />
+        </View>
         <View style={localStyles.header}>
           <TouchableOpacity onPress={onClose} style={localStyles.closeButton}>
             <Ionicons
@@ -234,7 +243,10 @@ const OrderDetailsModal = ({
 
         <ScrollView
           style={localStyles.content}
-          showsVerticalScrollIndicator={false}>
+          contentContainerStyle={{ paddingBottom: moderateScale(100) }}
+          showsVerticalScrollIndicator={false}
+          nestedScrollEnabled
+          bounces={false}>
 
           {/* Order Status */}
           <View style={localStyles.statusSection}>
@@ -410,6 +422,21 @@ const OrderDetailsModal = ({
           </View>
         </ScrollView>
 
+        {/* Awaiting customer confirmation info banner */}
+        {(order.status === 'awaiting_confirmation' || order.status === 'chef_review') && (
+          <View style={[localStyles.footer, { flexDirection: 'row', alignItems: 'center', backgroundColor: (colors.info || '#2196F3') + '10' }]}>
+            <Ionicons
+              name="hourglass-outline"
+              size={moderateScale(20)}
+              color={colors.info || '#2196F3'}
+              style={{ marginRight: moderateScale(10) }}
+            />
+            <ZText type="M14" color={colors.info || '#2196F3'} style={{ flex: 1 }}>
+              {strings.waitingForCustomerConfirmation || 'Waiting for customer to confirm'}
+            </ZText>
+          </View>
+        )}
+
         {/* Footer Actions */}
         {nextStatus && statusButtonText && (
           <View style={localStyles.footer}>
@@ -433,6 +460,17 @@ const OrderDetailsModal = ({
 const localStyles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  dragHandleContainer: {
+    alignItems: 'center',
+    paddingTop: moderateScale(8),
+    paddingBottom: moderateScale(4),
+  },
+  dragHandle: {
+    width: moderateScale(36),
+    height: moderateScale(4),
+    borderRadius: moderateScale(2),
+    backgroundColor: '#D1D5DB',
   },
   header: {
     flexDirection: 'row',

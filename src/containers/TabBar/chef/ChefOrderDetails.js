@@ -379,7 +379,10 @@ const ChefOrderDetailsScreen = () => {
 
             <ScrollView
                 style={localStyles.content}
-                showsVerticalScrollIndicator={false}>
+                contentContainerStyle={{ paddingBottom: moderateScale(120) }}
+                showsVerticalScrollIndicator={false}
+                nestedScrollEnabled
+                bounces={false}>
 
                 {/* Order Status */}
                 <View style={localStyles.statusSection}>
@@ -618,6 +621,26 @@ const ChefOrderDetailsScreen = () => {
                 {/* Spacer for footer */}
                 <View style={{ height: 100 }} />
             </ScrollView>
+
+            {/* Awaiting customer confirmation info banner */}
+            {(order.status === 'awaiting_confirmation' || order.status === 'chef_review') && (
+                <View style={[localStyles.footer, {
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    backgroundColor: (colors.info || '#2196F3') + '10',
+                    paddingBottom: insets.bottom + 16,
+                }]}>
+                    <Ionicons
+                        name="hourglass-outline"
+                        size={moderateScale(20)}
+                        color={colors.info || '#2196F3'}
+                        style={{ marginRight: moderateScale(10) }}
+                    />
+                    <ZText type="M14" color={colors.info || '#2196F3'} style={{ flex: 1 }}>
+                        {strings.waitingForCustomerConfirmation || 'Waiting for customer to confirm'}
+                    </ZText>
+                </View>
+            )}
 
             {/* Footer Actions */}
             {nextStatus && statusButtonText && (

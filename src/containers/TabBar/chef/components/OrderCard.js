@@ -104,7 +104,31 @@ const StatusBadge = ({ status, colors }) => {
 };
 
 const StatusUpdateButtons = ({ order, onStatusChange, onReject, onAccept, colors }) => {
-  if (order.status === 'pending' || order.status === 'awaiting_confirmation' || order.status === 'chef_review') {
+  // awaiting_confirmation: customer must confirm — show info only, no chef action
+  if (order.status === 'awaiting_confirmation' || order.status === 'chef_review') {
+    return (
+      <View style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: (colors.info || '#2196F3') + '15',
+        borderRadius: moderateScale(12),
+        paddingHorizontal: moderateScale(12),
+        paddingVertical: moderateScale(10),
+      }}>
+        <Ionicons
+          name="hourglass-outline"
+          size={moderateScale(18)}
+          color={colors.info || '#2196F3'}
+          style={{ marginRight: moderateScale(8) }}
+        />
+        <ZText type="M14" color={colors.info || '#2196F3'} style={{ flex: 1 }}>
+          {strings.waitingForCustomerConfirmation || 'Waiting for customer to confirm'}
+        </ZText>
+      </View>
+    );
+  }
+
+  if (order.status === 'pending') {
     return (
       <View style={{ flexDirection: 'row', gap: moderateScale(8) }}>
         <ZButton

@@ -159,6 +159,7 @@ export default {
   // Order Confirmation
   awaitingConfirmation: 'Confirm Your Order',
   awaitingCustomerConfirmation: 'Awaiting Customer Confirmation',
+  waitingForCustomerConfirmation: 'Waiting for customer to confirm',
   awaitingConfirmationDesc: 'The chef has accepted your order. Please review and confirm.',
   orderNeedsConfirmation: 'You have an order waiting for your confirmation!',
   confirmNow: 'Confirm Now',

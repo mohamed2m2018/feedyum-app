@@ -73,6 +73,7 @@ export default {
   // Order Confirmation
   awaitingConfirmation: 'أكّد طلبك',
   awaitingCustomerConfirmation: 'في انتظار تأكيد العميل',
+  waitingForCustomerConfirmation: 'في انتظار تأكيد العميل للطلب',
   awaitingConfirmationDesc: 'الشيف قبل طلبك. يرجى المراجعة والتأكيد.',
   orderNeedsConfirmation: 'لديك طلب ينتظر تأكيدك!',
   confirmNow: 'أكّد الآن',
