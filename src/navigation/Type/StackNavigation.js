@@ -284,7 +284,7 @@ export default function StackNavigation() {
         component={StackRoute.ChefOrderDetails}
         options={{
           presentation: 'modal',
-          gestureEnabled: true,
+          gestureEnabled: false, // Disable swipe-to-dismiss — it intercepts ScrollView touches
           ...TransitionPresets.ModalPresentationIOS,
         }}
       />
