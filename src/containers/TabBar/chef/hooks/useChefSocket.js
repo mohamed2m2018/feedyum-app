@@ -47,7 +47,7 @@ export const useChefSocket = (userId) => {
         OrderAlarmService.startAlarm();
 
         // Show persistent notification via notifee (works even if app goes to background)
-        BackgroundAlarmService.showAlarmNotification();
+        BackgroundAlarmService.showAlarmNotification(data.type, { orderId: data?.orderId });
         break;
 
       case 'orderStatusUpdate':

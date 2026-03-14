@@ -17,6 +17,7 @@ import notifee, {
 } from '@notifee/react-native';
 import { Platform, AppState } from 'react-native';
 import OrderAlarmService from './OrderAlarmService';
+import DeepLinkingService from './DeepLinkingService';
 
 const CHANNEL_ID = 'order_alarm_channel';
 const CHANNEL_NAME_EN = 'Order Alerts';
@@ -54,6 +55,17 @@ class BackgroundAlarmService {
           // Chef tapped the notification — stop the alarm
           this.stopForegroundAlarm();
           OrderAlarmService.stopAlarm();
+
+          // Navigate to order details if orderId is available
+          const orderId = detail?.notification?.data?.orderId;
+          if (orderId) {
+            try {
+              const deepLink = DeepLinkingService.getInstance();
+              deepLink.navigateToChefOrderDetails(orderId);
+            } catch (navError) {
+              console.warn('[BackgroundAlarm] Navigation failed:', navError?.message);
+            }
+          }
         }
         if (type === EventType.DISMISSED) {
           this.stopForegroundAlarm();
@@ -82,7 +94,7 @@ class BackgroundAlarmService {
    * The notification is re-displayed every 15 seconds to re-trigger the sound,
    * creating a looping alarm effect without needing a foreground service.
    */
-  async showAlarmNotification(alarmType = 'newOrder') {
+  async showAlarmNotification(alarmType = 'newOrder', notificationData = {}) {
     if (Platform.OS !== 'android') return;
 
     try {
@@ -93,14 +105,17 @@ class BackgroundAlarmService {
         this.alarmInterval = null;
       }
 
+      // Store notification data for use in display
+      this._currentNotificationData = notificationData;
+
       // Display the notification (this triggers the channel sound)
-      await this._displayAlarmNotification(alarmType);
+      await this._displayAlarmNotification(alarmType, notificationData);
 
       // Re-display every 15 seconds to re-trigger the alarm sound
       // This creates a looping effect — each re-display plays the sound again
       this.alarmInterval = setInterval(async () => {
         try {
-          await this._displayAlarmNotification(alarmType);
+          await this._displayAlarmNotification(alarmType, notificationData);
           console.log('[BackgroundAlarm] Re-triggered alarm notification');
         } catch (err) {
           console.error('[BackgroundAlarm] Re-trigger error:', err);
@@ -140,12 +155,13 @@ class BackgroundAlarmService {
   /**
    * Display the actual notification with correct content per alarm type
    */
-  async _displayAlarmNotification(alarmType = 'newOrder') {
+  async _displayAlarmNotification(alarmType = 'newOrder', notificationData = {}) {
     const content = this._getNotificationContent(alarmType);
     await notifee.displayNotification({
       id: content.id,
       title: content.title,
       body: content.body,
+      data: { orderId: notificationData.orderId || '', alarmType },
       android: {
         channelId: CHANNEL_ID,
         importance: AndroidImportance.HIGH,
@@ -207,12 +223,24 @@ try {
   notifee.onBackgroundEvent(async ({ type, detail }) => {
     console.log('[BackgroundAlarm] Background event:', type, detail.notification?.id);
 
-    if (type === EventType.PRESS || type === EventType.DISMISSED) {
+    if (type === EventType.PRESS) {
       // Full stop: clear the 15-second re-trigger interval + cancel all alarm notifications
-      // When app is backgrounded (same JS context), this stops the loop.
-      // When app is killed, the interval doesn't survive anyway.
       await backgroundAlarmInstance.stopForegroundAlarm();
-      // Also stop the in-app alarm sound/vibration if running
+      OrderAlarmService.stopAlarm();
+
+      // Navigate to order details if orderId is available
+      const orderId = detail?.notification?.data?.orderId;
+      if (orderId) {
+        try {
+          const deepLink = DeepLinkingService.getInstance();
+          deepLink.navigateToChefOrderDetails(orderId);
+        } catch (navError) {
+          console.warn('[BackgroundAlarm] Background navigation failed:', navError?.message);
+        }
+      }
+    }
+    if (type === EventType.DISMISSED) {
+      await backgroundAlarmInstance.stopForegroundAlarm();
       OrderAlarmService.stopAlarm();
     }
   });

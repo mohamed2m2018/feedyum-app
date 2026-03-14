@@ -939,9 +939,10 @@ class DeepLinkingService {
     DeepLinkingService.lastNotification = notificationData;
     console.log('🐞 [DeepLinkingService] Stored lastNotification:', notificationData);
 
-    // For new order notifications, navigate directly to the order details modal
-    if (notificationData.action === 'new_order' && notificationData.orderId) {
-      console.log('🐞 [DeepLinkingService] New order notification, navigating to ChefOrderDetails screen');
+    // For chef dashboard notifications with orderId, navigate directly to the order details
+    // Covers: new_order, orderConfirmed, awaitingConfirmation, etc.
+    if (notificationData.orderId && (notificationData.action === 'new_order' || notificationData.type === 'chefDashboard' || notificationData.alarmType)) {
+      console.log('🐞 [DeepLinkingService] Chef order notification, navigating to ChefOrderDetails:', notificationData.orderId);
       this.navigateToChefOrderDetails(notificationData.orderId);
       return;
     }
