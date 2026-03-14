@@ -69,10 +69,10 @@ class NotificationService {
       const notification = event.notification;
       const data = notification.additionalData;
 
-      // If it's a new order alarm, display via notifee on high-priority channel
-      if (data?.alarmType === 'newOrder' || data?.alarmType === 'awaitingConfirmation' || data?.alarmType === 'orderConfirmed' || data?.type === 'chefDashboard') {
-        console.log('🐞 [NotificationService] Order alarm — displaying via notifee, type:', data?.alarmType);
-        BackgroundAlarmService.showAlarmNotification(data?.alarmType || 'newOrder', { orderId: data?.orderId });
+      // If it has an explicit alarmType, display via notifee alarm (order-related notifications)
+      if (data?.alarmType) {
+        console.log('🐞 [NotificationService] Order alarm — displaying via notifee, type:', data.alarmType);
+        BackgroundAlarmService.showAlarmNotification(data.alarmType, { orderId: data?.orderId });
         return;
       }
 
