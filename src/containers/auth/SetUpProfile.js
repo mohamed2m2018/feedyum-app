@@ -6,8 +6,6 @@ import {
   Image,
   TouchableOpacity,
   ActivityIndicator,
-  I18nManager,
-  ScrollView,
 } from 'react-native';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import React, { createRef, useEffect, useState, useRef } from 'react';
