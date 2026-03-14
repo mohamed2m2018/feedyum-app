@@ -102,6 +102,8 @@ class NotificationService {
   // Set user ID for targeting notifications
   async setUserId(userId) {
     try {
+      // Clear any stale identity from a previous user before setting the new one
+      OneSignal.logout();
       OneSignal.login(userId.toString());
       await AsyncStorage.setItem('onesignal_user_id', userId.toString());
 

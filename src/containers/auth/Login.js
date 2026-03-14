@@ -220,6 +220,7 @@ const Login = ({ navigation }) => {
       }
 
       if (userId && userId !== '[object Object]') {
+        OneSignal.logout(); // Clear stale identity from previous user on this device
         OneSignal.login(String(userId));
       } else {
         console.warn('[Login] Invalid User ID for OneSignal:', rawId);

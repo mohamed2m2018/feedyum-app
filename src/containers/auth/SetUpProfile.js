@@ -156,6 +156,7 @@ const SetUpProfile = props => {
       });
 
       setAccessToken(res?.data?.token);
+      OneSignal.logout(); // Clear stale identity from previous user on this device
       OneSignal.login(String(res?.data?.user?._id));
 
       // If chef with locations, create branches using ChefBranch API
