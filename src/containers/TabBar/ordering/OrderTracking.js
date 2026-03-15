@@ -23,7 +23,7 @@ import ZLoader from '../../../components/common/ZLoader';
 import { moderateScale } from '../../../common/constants';
 import { styles } from '../../../themes';
 import strings from '../../../i18n/strings';
-import { formatTime, formatDate, formatDateTime } from '../../../utils/helpers';
+import { formatTime, formatDate, formatDateTime, formatSlotLabel } from '../../../utils/helpers';
 import {
   fetchOrderById,
   selectCurrentOrder,
@@ -635,7 +635,7 @@ const OrderTracking = () => {
               }}>
                 {currentOrder.orderType === 'scheduled' && currentOrder.scheduledFor
                   ? (currentOrder.scheduledSlotLabel
-                    ? `${formatDate(currentOrder.scheduledFor, language)}, ${currentOrder.scheduledSlotLabel}`
+                    ? `${formatDate(currentOrder.scheduledFor, language)}, ${formatSlotLabel(currentOrder.scheduledSlotLabel, language)}`
                     : formatDateTime(currentOrder.scheduledFor, language))
                   : currentOrder.estimatedDeliveryTime
                     ? formatDateTime(currentOrder.estimatedDeliveryTime, language)

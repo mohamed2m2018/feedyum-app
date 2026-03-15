@@ -77,6 +77,32 @@ const formatDateTime = (date, language) => {
   });
 };
 
+// Re-format a slot label like "11:00 AM – 1:00 PM" to the current locale
+const formatSlotLabel = (label, language) => {
+  if (!label) return '';
+  const locale = getLocale(language);
+  // Match "HH:MM AM/PM – HH:MM AM/PM" pattern
+  const match = label.match(/(\d{1,2}:\d{2}\s*[APap][Mm])\s*[–\-]\s*(\d{1,2}:\d{2}\s*[APap][Mm])/);
+  if (!match) return label; // fallback to original if can't parse
+  try {
+    const today = new Date();
+    const parseTime = (timeStr) => {
+      const [time, period] = timeStr.trim().split(/\s+/);
+      const [hours, minutes] = time.split(':').map(Number);
+      let h = hours;
+      if (period.toUpperCase() === 'PM' && h !== 12) h += 12;
+      if (period.toUpperCase() === 'AM' && h === 12) h = 0;
+      return new Date(today.getFullYear(), today.getMonth(), today.getDate(), h, minutes);
+    };
+    const start = parseTime(match[1]);
+    const end = parseTime(match[2]);
+    const opts = { hour: 'numeric', minute: '2-digit' };
+    return `${start.toLocaleTimeString(locale, opts)} – ${end.toLocaleTimeString(locale, opts)}`;
+  } catch (e) {
+    return label;
+  }
+};
+
 export {
   getAsyncStorageData,
   setAsyncStorageData,
@@ -87,4 +113,5 @@ export {
   formatTime,
   formatDate,
   formatDateTime,
+  formatSlotLabel,
 };

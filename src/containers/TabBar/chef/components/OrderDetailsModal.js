@@ -17,6 +17,7 @@ import ZButton from '../../../../components/common/ZButton';
 import { styles } from '../../../../themes';
 import { moderateScale } from '../../../../common/constants';
 import strings from '../../../../i18n/strings';
+import { formatDate as formatDateHelper, formatSlotLabel } from '../../../../utils/helpers';
 
 const OrderDetailsModal = ({
   visible,
@@ -25,6 +26,7 @@ const OrderDetailsModal = ({
   onStatusChange,
 }) => {
   const colors = useSelector(state => state.theme.theme);
+  const language = useSelector(state => state.profile?.language);
 
   if (!order) return null;
 
@@ -286,8 +288,8 @@ const OrderDetailsModal = ({
                     </ZText>
                     <ZText type="M14" color={colors.textColor} style={{ marginTop: moderateScale(2) }}>
                       {order.scheduledSlotLabel
-                        ? `${new Date(order.scheduledFor).toLocaleDateString()}, ${order.scheduledSlotLabel}`
-                        : new Date(order.scheduledFor).toLocaleString(undefined, { month: 'numeric', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        ? `${formatDateHelper(order.scheduledFor, language)}, ${formatSlotLabel(order.scheduledSlotLabel, language)}`
+                        : formatDateHelper(order.scheduledFor, language)}
                     </ZText>
                   </View>
                 </View>

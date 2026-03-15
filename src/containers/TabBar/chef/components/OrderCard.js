@@ -10,6 +10,7 @@ import ZButton from '../../../../components/common/ZButton';
 import { moderateScale } from '../../../../common/constants';
 import { styles } from '../../../../themes';
 import strings from '../../../../i18n/strings';
+import { formatDate as formatDateHelper, formatSlotLabel } from '../../../../utils/helpers';
 
 const StatusBadge = ({ status, colors }) => {
   const getStatusConfig = () => {
@@ -224,6 +225,7 @@ const OrderCard = ({
   containerStyle,
 }) => {
   const colors = useSelector(state => state.theme.theme);
+  const language = useSelector(state => state.profile?.language);
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -328,8 +330,8 @@ const OrderCard = ({
           />
           <ZText type="M12" color={colors.info || '#2196F3'}>
             {order.scheduledSlotLabel
-              ? `${new Date(order.scheduledFor).toLocaleDateString()}, ${order.scheduledSlotLabel}`
-              : new Date(order.scheduledFor).toLocaleString(undefined, { month: 'numeric', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+              ? `${formatDateHelper(order.scheduledFor, language)}, ${formatSlotLabel(order.scheduledSlotLabel, language)}`
+              : formatDateHelper(order.scheduledFor, language)}
           </ZText>
         </View>
       )}

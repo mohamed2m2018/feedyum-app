@@ -7,24 +7,19 @@ import {
   TouchableOpacity,
   View,
   RefreshControl,
-  Alert,
 } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
 
 // Local import
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
 import { useSelector } from 'react-redux';
-import { styles } from '../../../themes';
-import { getHeight, moderateScale } from '../../../common/constants';
+import { moderateScale } from '../../../common/constants';
 import ZText from '../../../components/common/ZText';
 import { StackNav, TabNav } from '../../../navigation/NavigationKeys';
 import strings from '../../../i18n/strings';
 import images from '../../../assets/images';
-import ZButton from '../../../components/common/ZButton';
-import { Inbox_Dark } from '../../../assets/svgs';
 import ReelComponent from '../../../components/ReelComponent';
 import { useQuery } from 'react-query';
 import request from '../../../api/request';
@@ -190,16 +185,16 @@ export default function Profile({ navigation }) {
           localStyles.statItem,
           {
             backgroundColor: colors.dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
-            borderRadius: moderateScale(8),
-            paddingVertical: moderateScale(6),
-            paddingHorizontal: moderateScale(4),
+            borderRadius: moderateScale(10),
+            paddingVertical: moderateScale(10),
+            paddingHorizontal: moderateScale(6),
           }
         ]}
       >
-        <ZText type="b16" align={'center'} color={accent} style={{ fontWeight: '800' }}>
+        <ZText type="b18" align={'center'} color={accent} style={{ fontWeight: '800' }}>
           {item.value}
         </ZText>
-        <ZText type="m10" align={'center'} color={colors.grayScale5}>
+        <ZText type="m12" align={'center'} color={colors.grayScale5}>
           {item.title}
         </ZText>
       </TouchableOpacity>
@@ -617,12 +612,13 @@ const localStyles = StyleSheet.create({
   statsContainer: {
     flex: 1,
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'space-evenly',
     alignItems: 'center',
     marginLeft: moderateScale(10),
-    gap: moderateScale(8),
+    gap: moderateScale(4),
   },
   statItem: {
+    flex: 1,
     alignItems: 'center',
   },
 

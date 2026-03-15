@@ -82,7 +82,20 @@ export default Setting = ({ navigation }) => {
           {
             text: strings.switchConfirm,
             style: targetEnv === 'staging' ? 'destructive' : 'default',
-            onPress: () => {
+            onPress: async () => {
+              try {
+                // Clear all auth state before switching environment
+                setToken();
+                setUser();
+                await queryClient.removeQueries();
+                delete request.defaults.headers.common.Authorization;
+                await persistor.purge();
+                await AppInitializer.handleUserLogout();
+                await googleSignOut();
+                OneSignal.logout();
+              } catch (e) {
+                console.log('[Setting] Env switch cleanup error:', e);
+              }
               switchEnvironment(targetEnv);
               setCurrentEnv(targetEnv);
               // Restart the app so all connections use the new base URL

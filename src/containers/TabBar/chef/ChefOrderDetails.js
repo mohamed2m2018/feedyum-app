@@ -25,6 +25,7 @@ import { moderateScale } from '../../../common/constants';
 import strings from '../../../i18n/strings';
 import request from '../../../api/request';
 import { showSuccessToast, showErrorToast } from '../../../utils/toast';
+import { formatDate as formatDateHelper, formatSlotLabel } from '../../../utils/helpers';
 import RejectReasonModal from '../ordering/components/RejectReasonModal';
 
 /**
@@ -33,6 +34,7 @@ import RejectReasonModal from '../ordering/components/RejectReasonModal';
  */
 const ChefOrderDetailsScreen = () => {
     const colors = useSelector(state => state.theme.theme);
+    const language = useSelector(state => state.profile?.language);
     const navigation = useNavigation();
     const route = useRoute();
     const queryClient = useQueryClient();
@@ -432,8 +434,8 @@ const ChefOrderDetailsScreen = () => {
                                 {order.orderType === 'scheduled' && order.scheduledFor && (
                                     <ZText type="M14" color={colors.textColor} style={{ marginTop: moderateScale(2) }}>
                                         {order.scheduledSlotLabel
-                                            ? `${new Date(order.scheduledFor).toLocaleDateString()}, ${order.scheduledSlotLabel}`
-                                            : new Date(order.scheduledFor).toLocaleString(undefined, { month: 'numeric', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                            ? `${formatDateHelper(order.scheduledFor, language)}, ${formatSlotLabel(order.scheduledSlotLabel, language)}`
+                                            : formatDateHelper(order.scheduledFor, language)}
                                     </ZText>
                                 )}
                             </View>
