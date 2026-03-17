@@ -169,7 +169,7 @@ function DishSearchResultCard({ dish, style }) {
         >
             {/* Dish Image */}
             <Image
-                source={imageUri ? { uri: imageUri } : images.post}
+                source={imageUri ? { uri: imageUri } : images.dishPlaceholder}
                 style={localStyles.image}
                 resizeMode="cover"
             />

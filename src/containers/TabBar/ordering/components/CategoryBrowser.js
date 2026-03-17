@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useRef } from 'react';
+import React, { useMemo, useRef, useEffect } from 'react';
 import { View, Image, ScrollView, TouchableOpacity, I18nManager, Dimensions } from 'react-native';
 import { useSelector } from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -37,9 +37,8 @@ const getSectionDisplayName = (sectionObj) => {
  * Groups dishes by their menu section (chef's custom grouping).
  * Highlights the selected section with a primary-colored border.
  */
-const CategoryBrowser = ({ dishes, flatListRef, onScrollStart }) => {
+const CategoryBrowser = ({ dishes, flatListRef, onScrollStart, selectedKey, onSelectedKeyChange }) => {
   const colors = useSelector(state => state.theme.theme);
-  const [selectedKey, setSelectedKey] = useState(null);
   const scrollViewRef = useRef(null);
   const cardLayoutsRef = useRef({});
   const screenWidth = Dimensions.get('window').width;
@@ -67,6 +66,16 @@ const CategoryBrowser = ({ dishes, flatListRef, onScrollStart }) => {
     return { sections: orderedSections, sectionMap: map };
   }, [dishes]);
 
+  // Auto-scroll horizontal browser when selectedKey changes externally (from scroll)
+  useEffect(() => {
+    if (!selectedKey || !scrollViewRef.current) return;
+    const layout = cardLayoutsRef.current[selectedKey];
+    if (layout) {
+      const centerX = layout.x + layout.width / 2 - screenWidth / 2;
+      scrollViewRef.current.scrollTo({ x: Math.max(0, centerX), animated: true });
+    }
+  }, [selectedKey, screenWidth]);
+
   if (!dishes || dishes.length === 0 || sections.length <= 1) return null;
 
   const handleSectionPress = (sectionKey) => {
@@ -75,7 +84,7 @@ const CategoryBrowser = ({ dishes, flatListRef, onScrollStart }) => {
 
     // Toggle: deselect if already selected
     const newKey = selectedKey === sectionKey ? null : sectionKey;
-    setSelectedKey(newKey);
+    onSelectedKeyChange(newKey);
 
     // Auto-scroll the horizontal browser to center the selected card
     const layout = cardLayoutsRef.current[sectionKey];

@@ -93,8 +93,6 @@ const ChefMenu = () => {
   }, []);
 
   const handleScroll = useCallback((e) => {
-    // Don't toggle sticky bar during programmatic scrolls (section tap)
-    if (isProgrammaticScrollRef.current) return;
     const offsetY = e.nativeEvent.contentOffset.y;
     const shouldShow = offsetY >= searchBarYRef.current;
     setShowStickyBar(prev => prev !== shouldShow ? shouldShow : prev);
@@ -107,6 +105,25 @@ const ChefMenu = () => {
       isProgrammaticScrollRef.current = false;
     }, 600);
   }, []);
+
+  // Lifted state for section selection — shared between header and sticky CategoryBrowser
+  const [selectedSectionKey, setSelectedSectionKey] = useState(null);
+
+  // Auto-select section based on visible dishes during manual scroll
+  const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 50 }).current;
+  const onViewableItemsChanged = useRef(({ viewableItems }) => {
+    // Skip during programmatic scroll (section tap)
+    if (isProgrammaticScrollRef.current) return;
+    if (!viewableItems || viewableItems.length === 0) return;
+
+    // Get the first visible dish and its section key
+    const firstDish = viewableItems[0]?.item;
+    if (!firstDish) return;
+    const sectionKey = firstDish.section?._id || firstDish.section || null;
+    if (sectionKey) {
+      setSelectedSectionKey(prev => prev !== sectionKey ? sectionKey : prev);
+    }
+  }).current;
 
   if (isLoading) {
     return (
@@ -188,6 +205,7 @@ const ChefMenu = () => {
     </View>
   );
 
+
   // Shared search + sections bar (used in header and as sticky overlay)
   const renderSearchAndSections = (isSticky = false) => (
     <View style={{ backgroundColor: colors.backgroundColor }}>
@@ -233,7 +251,7 @@ const ChefMenu = () => {
           </ZText>
         )}
       </View>
-      <CategoryBrowser dishes={menuData?.dishes} flatListRef={flatListRef} onScrollStart={handleProgrammaticScroll} />
+      <CategoryBrowser dishes={menuData?.dishes} flatListRef={flatListRef} onScrollStart={handleProgrammaticScroll} selectedKey={selectedSectionKey} onSelectedKeyChange={setSelectedSectionKey} />
     </View>
   );
 
@@ -284,6 +302,8 @@ const ChefMenu = () => {
         showsVerticalScrollIndicator={false}
         onScroll={handleScroll}
         scrollEventThrottle={16}
+        onViewableItemsChanged={onViewableItemsChanged}
+        viewabilityConfig={viewabilityConfig}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.primary} />
         }
