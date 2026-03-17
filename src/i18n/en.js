@@ -968,7 +968,7 @@ export default {
   removeItem: 'Remove Item',
   areYouSureRemoveItem:
     'Are you sure you want to remove this item from your cart?',
-  removeItemFromCart: 'Remove ${dishName} from your cart?',
+  removeItemFromCart: 'Remove {dishName} from your cart?',
   clearCart: 'Clear Cart',
   areYouSureClearCart:
     'Are you sure you want to remove all items from your cart?',

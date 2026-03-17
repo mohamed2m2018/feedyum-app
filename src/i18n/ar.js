@@ -954,7 +954,7 @@ export default {
   mainCourse: 'الطبق الرئيسي',
   removeItem: 'إزالة العنصر',
   areYouSureRemoveItem: 'هل أنت متأكد أنك تريد إزالة هذا العنصر من عربة التسوق؟',
-  removeItemFromCart: 'إزالة ${dishName} من عربة التسوق؟',
+  removeItemFromCart: 'إزالة {dishName} من عربة التسوق؟',
   clearCart: 'مسح العربة',
   areYouSureClearCart: 'هل أنت متأكد أنك تريد إزالة جميع العناصر من عربة التسوق؟',
   placeOrderConfirm: 'تأكيد الطلب',
