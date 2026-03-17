@@ -1,0 +1,201 @@
+import React from 'react';
+import { View, ImageBackground, TouchableOpacity } from 'react-native';
+import { useSelector } from 'react-redux';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import { showErrorToast } from '../../../../utils/toast';
+import { formatDistance } from '../../../../utils/helpers';
+import { moderateScale } from '../../../../common/constants';
+import ZText from '../../../../components/common/ZText';
+import FollowButton from '../../../../components/common/FollowButton';
+import FeaturedReelsSection from '../../../../components/common/FeaturedReelsSection';
+import FeaturedReviewsSection from '../../../../components/common/FeaturedReviewsSection';
+import strings from '../../../../i18n/strings';
+import styles from '../chefMenuStyles';
+
+/**
+ * Chef profile header: banner, name, stats, delivery status, featured content.
+ */
+const ChefMenuHeader = ({
+  menuData,
+  chefId,
+  chefName,
+  isChefClosed,
+  openStatusData,
+  branchLocations,
+  deliveryData,
+  locationsSheetRef,
+  user,
+}) => {
+  const colors = useSelector(state => state.theme.theme);
+
+  const chefProfile = {
+    _id: chefId,
+    fullName: menuData?.chef?.fullName || chefName,
+    avatar: menuData?.chef?.avatar,
+  };
+
+  // Compute rating from dishes
+  const dishes = menuData?.dishes || [];
+  const ratedDishes = dishes.filter(d =>
+    typeof d.average_rating === 'number' && d.average_rating >= 1
+  );
+  const ratedCount = ratedDishes.length;
+  let rating = 0;
+  if (ratedCount > 0) {
+    const total = ratedDishes.reduce((sum, d) => sum + d.average_rating, 0);
+    rating = Math.round((total / ratedCount) * 10) / 10;
+  }
+
+  const isOwnProfile = user?._id?.toString() === chefId?.toString();
+  const heroImage = menuData?.chef?.cover || menuData?.chef?.avatar || dishes.find(d => d.image)?.image;
+
+  return (
+    <View style={{ backgroundColor: colors.backgroundColor }}>
+      {/* Closed Banner */}
+      {isChefClosed && (
+        <View style={{
+          backgroundColor: '#FF525215',
+          paddingVertical: moderateScale(10),
+          paddingHorizontal: moderateScale(16),
+          flexDirection: 'row',
+          alignItems: 'center',
+          borderBottomWidth: 1,
+          borderBottomColor: '#FF525230',
+        }}>
+          <Ionicons name="close-circle" size={moderateScale(20)} color="#FF5252" />
+          <View style={{ marginLeft: moderateScale(10), flex: 1 }}>
+            <ZText type="B14" color="#FF5252">
+              {strings.restaurantClosed}
+            </ZText>
+            {openStatusData?.nextOpenTime && (
+              <ZText type="M12" color={colors.grayScale6}>
+                {openStatusData?.nextOpenDay
+                  ? strings.formatString(strings.opensOnDay, strings[openStatusData.nextOpenDay] || openStatusData.nextOpenDay, openStatusData.nextOpenTime)
+                  : strings.formatString(strings.opensAt, openStatusData.nextOpenTime)}
+              </ZText>
+            )}
+          </View>
+        </View>
+      )}
+
+      {/* Hero Banner */}
+      {heroImage && (
+        <ImageBackground
+          source={{ uri: heroImage }}
+          style={styles.heroBanner}
+          imageStyle={{ resizeMode: 'cover' }}
+        >
+          <View style={styles.heroBannerGradient} />
+        </ImageBackground>
+      )}
+
+      {/* Restaurant Info Section */}
+      <View style={styles.restaurantHeader}>
+        {/* Name + Follow */}
+        <View style={styles.nameFollowRow}>
+          <ZText type="B24" color={colors.textColor} numberOfLines={1} style={{ flex: 1 }}>
+            {menuData?.chef?.fullName || chefName}
+          </ZText>
+          {chefId && !isOwnProfile && (
+            <FollowButton
+              userId={chefId}
+              isFollowed={menuData?.chef?.currentUserFollowed}
+              compact={true}
+              size="medium"
+              style={{ marginLeft: moderateScale(12) }}
+            />
+          )}
+        </View>
+
+        {/* Bio */}
+        {menuData?.chef?.bio && (
+          <ZText type="M14" color={colors.grayScale6} numberOfLines={2} style={{ marginTop: moderateScale(6) }}>
+            {menuData.chef.bio}
+          </ZText>
+        )}
+
+        {/* Stat Cards */}
+        <View style={styles.statCardsRow}>
+          {/* Rating Card */}
+          {rating >= 1 && (
+            <View style={[styles.statCard, { borderColor: colors.grayScale4 }]}>
+              <Ionicons name="star" size={18} color="#FFD700" />
+              <View style={{ marginLeft: moderateScale(8) }}>
+                <ZText type="B16" color={colors.textColor}>{rating.toFixed(1)}</ZText>
+                <ZText type="M10" color={colors.grayScale6}>
+                  {strings.rating || 'Rating'} ({ratedCount})
+                </ZText>
+              </View>
+            </View>
+          )}
+
+          {/* Dishes Card */}
+          <View style={[styles.statCard, { borderColor: colors.grayScale4 }]}>
+            <Ionicons name="restaurant" size={18} color={colors.primary} />
+            <View style={{ marginLeft: moderateScale(8) }}>
+              <ZText type="B16" color={colors.textColor}>{menuData?.dishes?.length || 0}</ZText>
+              <ZText type="M10" color={colors.grayScale6}>{strings.dishes || 'Dishes'}</ZText>
+            </View>
+          </View>
+
+          {/* Branches Card */}
+          {branchLocations.length > 0 && (
+            <TouchableOpacity onPress={() => locationsSheetRef.current?.show()} activeOpacity={0.7}>
+              <View style={[styles.statCard, { borderColor: colors.grayScale4 }]}>
+                <Ionicons name="location" size={18} color={colors.primary} />
+                <View style={{ marginLeft: moderateScale(8) }}>
+                  <ZText type="B16" color={colors.textColor}>{branchLocations.length}</ZText>
+                  <ZText type="M10" color={colors.grayScale6}>
+                    {branchLocations.length === 1 ? strings.branch : strings.branches}
+                  </ZText>
+                </View>
+                <Ionicons name="chevron-forward" size={14} color={colors.grayScale6} style={{ marginLeft: moderateScale(4) }} />
+              </View>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* Delivery Status */}
+        {deliveryData && (() => {
+          const distanceInfo = deliveryData.nearestDistance
+            ? ` (${(strings.distanceAway || '{0} km').replace('{0}', formatDistance(deliveryData.nearestDistance))})`
+            : '';
+          const Wrapper = deliveryData.canDeliver ? View : TouchableOpacity;
+          const wrapperProps = deliveryData.canDeliver ? {} : {
+            onPress: () => showErrorToast(
+              strings.doesNotDeliverHere,
+              (strings.kitchenDoesNotDeliverMessage) + distanceInfo
+            ),
+            activeOpacity: 0.7,
+          };
+
+          return (
+            <Wrapper {...wrapperProps} style={{ flexDirection: 'row', alignItems: 'center', marginTop: moderateScale(8) }}>
+              <Ionicons
+                name={deliveryData.canDeliver ? 'checkmark-circle' : 'alert-circle'}
+                size={16}
+                color={deliveryData.canDeliver ? '#4CAF50' : '#FF9800'}
+              />
+              <ZText
+                type="M14"
+                color={deliveryData.canDeliver ? '#4CAF50' : '#FF9800'}
+                style={{ marginLeft: moderateScale(6) }}
+              >
+                {deliveryData.canDeliver ? strings.deliversToYou : strings.noDelivery}
+                {distanceInfo}
+              </ZText>
+            </Wrapper>
+          );
+        })()}
+      </View>
+
+      {/* Featured Reels */}
+      <FeaturedReelsSection chefId={chefId} chefProfile={chefProfile} limit={5} />
+
+      {/* Featured Reviews */}
+      <FeaturedReviewsSection chefId={chefId} chefProfile={chefProfile} limit={5} />
+    </View>
+  );
+};
+
+export default React.memo(ChefMenuHeader);
