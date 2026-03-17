@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Animated,
   Dimensions,
+  I18nManager,
 } from 'react-native';
 import { showSuccessToast, showErrorToast, showSuccessDialog, showActionDialog, ALERT_TYPE } from '../../../utils/toast';
 import { formatDistance } from '../../../utils/helpers';
@@ -489,7 +490,7 @@ const DishDetailScreen = () => {
           style={[localStyles.headerButton, { backgroundColor: colors.white }]}
           onPress={handleBack}>
           <Ionicons
-            name="arrow-back"
+            name={I18nManager.isRTL ? 'arrow-forward' : 'arrow-back'}
             size={moderateScale(24)}
             color="#1A1A1A"
           />
@@ -532,7 +533,7 @@ const DishDetailScreen = () => {
           style={localStyles.floatingButton}
           onPress={handleBack}>
           <Ionicons
-            name="arrow-back"
+            name={I18nManager.isRTL ? 'arrow-forward' : 'arrow-back'}
             size={moderateScale(24)}
             color="#1A1A1A"
           />

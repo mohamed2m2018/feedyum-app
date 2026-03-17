@@ -59,7 +59,6 @@ const chefMenuStyles = StyleSheet.create({
     gap: moderateScale(8),
   },
   statCard: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: moderateScale(10),

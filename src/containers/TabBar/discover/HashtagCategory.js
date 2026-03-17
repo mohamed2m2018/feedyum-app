@@ -177,6 +177,50 @@ export default function HashtagCategory({ selectedTag, isLocationChanging }) {
     }));
   };
 
+  // Pick diverse, representative dishes for the grid preview.
+  // Groups by section, sorts each group by price (main courses first),
+  // then round-robins across groups for maximum variety.
+  const diversifyDishes = (dishes, limit = 6) => {
+    if (dishes.length <= limit) return dishes;
+
+    // Group by section (granular), fallback to category
+    const groups = {};
+    dishes.forEach(d => {
+      const key = d.section?._id || d.section || d.category || 'Other';
+      const groupKey = typeof key === 'object' ? key.toString() : key;
+      if (!groups[groupKey]) groups[groupKey] = [];
+      groups[groupKey].push(d);
+    });
+
+    // Sort each group by price descending (main courses > sides)
+    Object.values(groups).forEach(arr =>
+      arr.sort((a, b) => (b.price || 0) - (a.price || 0))
+    );
+
+    const groupKeys = Object.keys(groups);
+    if (groupKeys.length <= 1) return dishes.sort((a, b) => (b.price || 0) - (a.price || 0)).slice(0, limit);
+
+    // Sort groups by their top dish price (most premium sections first)
+    groupKeys.sort((a, b) => (groups[b][0]?.price || 0) - (groups[a][0]?.price || 0));
+
+    // Round-robin pick from each group
+    const result = [];
+    let round = 0;
+    while (result.length < limit) {
+      let added = false;
+      for (const key of groupKeys) {
+        if (result.length >= limit) break;
+        if (groups[key][round]) {
+          result.push(groups[key][round]);
+          added = true;
+        }
+      }
+      if (!added) break;
+      round++;
+    }
+    return result;
+  };
+
   // Component to render dishes for a specific chef
   const RenderChefDishes = ({ chefId, chefName }) => {
     const dishes = getChefDishes(chefId);
@@ -210,7 +254,7 @@ export default function HashtagCategory({ selectedTag, isLocationChanging }) {
 
     return (
       <FlatList
-        data={dishes.slice(0, 6)} // Show max 6 dishes
+        data={diversifyDishes(dishes, 6)}
         renderItem={({ item }) => (
           <TouchableOpacity
             style={[

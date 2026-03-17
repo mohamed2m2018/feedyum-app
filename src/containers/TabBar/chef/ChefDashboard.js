@@ -102,7 +102,7 @@ export default function ChefDashboard() {
         navigation.navigate(StackNav.MenuManagement, { fromTabs: true });
         break;
       case 'Orders':
-        navigation.navigate(StackNav.OrderManagement);
+        navigation.navigate(StackNav.OrderManagement, { fromStack: true });
         break;
       case 'Analytics':
         navigation.navigate(StackNav.Analytics);
@@ -125,12 +125,12 @@ export default function ChefDashboard() {
           <HeaderIconWithBadge
             name="reader-outline"
             count={unseenOrdersCount}
-            onPress={() => navigation.navigate(StackNav.OrderManagement)}
+            onPress={() => navigation.navigate(StackNav.OrderManagement, { fromStack: true })}
           />
           <HeaderIconWithBadge
             name="chatbubbles-outline"
             count={unreadChatsCount}
-            onPress={() => navigation.navigate(StackNav.ChatList)}
+            onPress={() => navigation.navigate(StackNav.ChatList, { fromStack: true })}
           />
         </View>
       </View>

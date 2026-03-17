@@ -1827,7 +1827,7 @@ export default {
   ratedDishes: 'مقيّم',
   trySearching: 'جرب البحث عن:',
   delivers: 'يوصّل',
-  noDelivery: 'لا يوصّل',
+  noDelivery: 'لا يوصّل لمنطقتك',
   moreDishes: 'أطباق أخرى',
 
   // Translation & Bilingual Support

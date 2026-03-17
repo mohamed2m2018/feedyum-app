@@ -1844,7 +1844,7 @@ export default {
   ratedDishes: 'rated',
   trySearching: 'Try searching:',
   delivers: 'Delivers',
-  noDelivery: 'No delivery',
+  noDelivery: 'Does not deliver to your area',
   moreDishes: 'more dishes',
 
   // Translation & Bilingual Support

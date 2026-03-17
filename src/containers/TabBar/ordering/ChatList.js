@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { useSelector } from 'react-redux';
 import { useQuery, useInfiniteQuery } from 'react-query';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useRoute } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
 import ZHeader from '../../../components/common/ZHeader';
@@ -24,6 +24,7 @@ import { formatTime as formatTimeHelper, formatDate } from '../../../utils/helpe
 export default function ChatList({ navigation }) {
   const colors = useSelector(state => state.theme.theme);
   const language = useSelector(state => state.profile?.language);
+  const route = useRoute();
   const [refreshing, setRefreshing] = useState(false);
 
   // Get current user
@@ -308,7 +309,7 @@ export default function ChatList({ navigation }) {
   if (chatsLoading && !orderChats.length) {
     return (
       <ZSafeAreaView>
-        <ZHeader title={strings.orderChats} isHideBack />
+        <ZHeader title={strings.orderChats} isHideBack={!route.params?.fromStack} />
         <ZLoader />
       </ZSafeAreaView>
     );
@@ -316,7 +317,7 @@ export default function ChatList({ navigation }) {
 
   return (
     <ZSafeAreaView>
-      <ZHeader title={strings.orderChats} isHideBack />
+      <ZHeader title={strings.orderChats} isHideBack={!route.params?.fromStack} />
       <FlatList
         data={orderChats}
         renderItem={renderChatItem}

@@ -51,16 +51,26 @@ const DishCard = ({
       ]}
       onPress={() => onPress && onPress(dish)}
       activeOpacity={0.8}>
-      {/* Dish Image */}
+      {/* Dish Image or Add Photo CTA */}
       <View style={localStyles.imageContainer}>
-        <Image
-          source={{
-            uri:
-              dish.image || 'https://via.placeholder.com/150x150?text=No+Image',
-          }}
-          style={localStyles.dishImage}
-          resizeMode="cover"
-        />
+        {dish.image && !dish.image.includes('placeholder') ? (
+          <Image
+            source={{ uri: dish.image }}
+            style={localStyles.dishImage}
+            resizeMode="cover"
+          />
+        ) : (
+          <TouchableOpacity
+            style={[localStyles.addPhotoCta, { backgroundColor: colors.dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)' }]}
+            onPress={handleEdit}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="camera-outline" size={moderateScale(32)} color={colors.grayScale5} />
+            <ZText type="M13" color={colors.grayScale5} style={{ marginTop: moderateScale(4) }}>
+              {strings.addPhoto || 'Add Photo'}
+            </ZText>
+          </TouchableOpacity>
+        )}
         {dish.visible === false && (
           <View style={localStyles.hiddenOverlay}>
             <ZText type="S12" color={colors.white}>
@@ -164,6 +174,12 @@ const localStyles = StyleSheet.create({
   dishImage: {
     width: '100%',
     height: moderateScale(140),
+  },
+  addPhotoCta: {
+    width: '100%',
+    height: moderateScale(140),
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   hiddenOverlay: {
     position: 'absolute',

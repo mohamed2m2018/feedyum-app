@@ -174,25 +174,13 @@ export default function Profile({ navigation }) {
 
   // Render User Detail - Clean Style
   const RenderUserDetail = ({ item, index }) => {
-    // Different accent colors for each stat
-    const accentColors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4'];
-    const accent = accentColors[index % accentColors.length];
-
     return (
       <TouchableOpacity
         onPress={item.onPress}
-        style={[
-          localStyles.statItem,
-          {
-            backgroundColor: colors.dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
-            borderRadius: moderateScale(10),
-            paddingVertical: moderateScale(10),
-            paddingHorizontal: moderateScale(6),
-          }
-        ]}
+        style={localStyles.statItem}
       >
-        <ZText type="b18" align={'center'} color={accent} style={{ fontWeight: '800' }}>
-          {item.value}
+        <ZText type="b18" align={'center'} color={colors.textColor} style={{ fontWeight: '800' }}>
+          {item.value ?? 0}
         </ZText>
         <ZText type="m12" align={'center'} color={colors.grayScale5}>
           {item.title}
@@ -373,7 +361,7 @@ export default function Profile({ navigation }) {
                 backgroundColor: colors.dark ? 'rgba(255,142,83,0.15)' : 'rgba(255,142,83,0.1)',
                 borderColor: '#FF8E53',
               }]}
-              onPress={() => navigation.navigate(StackNav.Orders)}
+              onPress={() => navigation.navigate(StackNav.Orders, { fromStack: true })}
               activeOpacity={0.7}
             >
               <Ionicons name="receipt" size={moderateScale(14)} color="#FF8E53" style={{ marginRight: moderateScale(4) }} />
@@ -387,7 +375,7 @@ export default function Profile({ navigation }) {
                 backgroundColor: colors.dark ? 'rgba(78,205,196,0.15)' : 'rgba(78,205,196,0.1)',
                 borderColor: '#4ECDC4',
               }]}
-              onPress={() => navigation.navigate(StackNav.ChatList)}
+              onPress={() => navigation.navigate(StackNav.ChatList, { fromStack: true })}
               activeOpacity={0.7}
             >
               <Ionicons name="chatbubbles" size={moderateScale(14)} color="#4ECDC4" style={{ marginRight: moderateScale(4) }} />
