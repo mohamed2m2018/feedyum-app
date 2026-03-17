@@ -26,7 +26,6 @@ import ZLoader from '../../../components/common/ZLoader';
 import ZButton from '../../../components/common/ZButton';
 import CartFloatingButton from '../../../components/common/CartFloatingButton';
 import { moderateScale, getHeight } from '../../../common/constants';
-import { styles } from '../../../themes';
 import request from '../../../api/request';
 import branchService from '../../../api/branchService';
 import images from '../../../assets/images';
@@ -35,9 +34,12 @@ import strings from '../../../i18n/strings';
 import {
   addToCart,
   selectCartItemCount,
+  selectCartItems,
   selectPendingConflictItem,
   clearCartAndAddPending,
   clearPendingConflictItem,
+  updateQuantity,
+  removeFromCart,
 } from '../../../redux/reducer/cartSlice';
 import { useStorage } from '../../../utils/useStorage';
 import { useLocation } from '../../../navigation/locationContext';
@@ -64,10 +66,10 @@ const ChefMenu = () => {
   const hasAttemptedScrollRef = useRef(false);
   const [scrollRetryCount, setScrollRetryCount] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
-  const [quantities, setQuantities] = useState({}); // Track quantities for each dish
   const [selectedBranchId, setSelectedBranchId] = useState(null);
 
   const cartItemCount = useSelector(selectCartItemCount);
+  const cartItems = useSelector(selectCartItems);
   const pendingConflictItem = useSelector(selectPendingConflictItem);
 
   // Fetch chef/menu info (Static)
@@ -355,11 +357,26 @@ const ChefMenu = () => {
     setRefreshing(false);
   };
 
-  const handleQuantityChange = (dishId, delta) => {
-    setQuantities(prev => ({
-      ...prev,
-      [dishId]: Math.max(0, (prev[dishId] || 0) + delta),
-    }));
+  const handleQuantityChange = (dish, delta) => {
+    const dishId = dish._id;
+    // Find all cart entries for this dish and sum their quantities
+    const dishCartEntries = cartItems.filter(item => item.dishId === dishId);
+    const totalQty = dishCartEntries.reduce((sum, item) => sum + item.quantity, 0);
+
+    if (delta > 0) {
+      // Adding: dispatch addToCart (handles same-chef check, conflict, etc.)
+      handleAddToCart(dish, 1);
+    } else if (delta < 0 && totalQty > 0) {
+      // Subtracting: find the first (simplest) cart entry for this dish
+      const entry = dishCartEntries[0];
+      if (entry.quantity <= 1) {
+        // Remove the entry entirely
+        dispatch(removeFromCart({ dishId, cartItemKey: entry.cartItemKey }));
+      } else {
+        // Decrement by 1
+        dispatch(updateQuantity({ dishId, quantity: entry.quantity - 1, cartItemKey: entry.cartItemKey }));
+      }
+    }
   };
 
   const handleAddToCart = async (dish, quantity = 1) => {
@@ -461,7 +478,10 @@ const ChefMenu = () => {
   };
 
   const renderDishCard = ({ item: dish }) => {
-    const currentQuantity = quantities[dish._id] || 0;
+    // Read quantity from Redux cart (sum all entries for this dish)
+    const currentQuantity = cartItems
+      .filter(item => item.dishId === dish._id)
+      .reduce((sum, item) => sum + item.quantity, 0);
     const isAvailable = dish.visible !== false;
 
     return (
@@ -562,7 +582,7 @@ const ChefMenu = () => {
                         localStyles.quantityControl,
                         { backgroundColor: colors.grayScale4 },
                       ]}
-                      onPress={() => handleQuantityChange(dish._id, -1)}
+                      onPress={() => handleQuantityChange(dish, -1)}
                       activeOpacity={0.7}>
                       <Ionicons
                         name="remove"
@@ -600,8 +620,7 @@ const ChefMenu = () => {
                           );
                           return;
                         }
-                        handleQuantityChange(dish._id, 1);
-                        handleAddToCart(dish, 1);
+                        handleQuantityChange(dish, 1);
                       }}
                       activeOpacity={0.7}>
                       <Ionicons
@@ -635,8 +654,7 @@ const ChefMenu = () => {
                         );
                         return;
                       }
-                      handleQuantityChange(dish._id, 1);
-                      handleAddToCart(dish, 1);
+                      handleQuantityChange(dish, 1);
                     }}
                     activeOpacity={0.8}>
                     <Ionicons
