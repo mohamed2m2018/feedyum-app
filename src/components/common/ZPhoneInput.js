@@ -1,7 +1,22 @@
-import React, { useRef, useImperativeHandle, forwardRef, useState, useEffect } from 'react';
+import React, { useRef, useImperativeHandle, forwardRef, useState, useEffect, useMemo } from 'react';
 import { StyleSheet, View, I18nManager } from 'react-native';
 import { useSelector } from 'react-redux';
 import PhoneInput from 'react-native-phone-number-input';
+import { PhoneNumberUtil } from 'google-libphonenumber';
+
+const phoneUtil = PhoneNumberUtil.getInstance();
+
+/** Get max national number length for a country code (e.g. 'EG' -> 10) */
+const getMaxLengthForCountry = (countryCode) => {
+  try {
+    const exampleNumber = phoneUtil.getExampleNumber(countryCode);
+    const nationalNumber = exampleNumber.getNationalNumber().toString();
+    // Add 1 buffer digit to handle formatting variations
+    return nationalNumber.length + 1;
+  } catch {
+    return 15; // E.164 fallback
+  }
+};
 import { getHeight, moderateScale } from '../../common/constants';
 import { styles } from '../../themes';
 import typography from '../../themes/typography';
@@ -52,6 +67,8 @@ const ZPhoneInput = forwardRef(({
     // react-native-phone-number-input's defaultValue is not reactive
     const [internalValue, setInternalValue] = useState(value || '');
     const [inputKey, setInputKey] = useState(0);
+    const [selectedCountry, setSelectedCountry] = useState(defaultCode);
+    const maxPhoneLength = useMemo(() => getMaxLengthForCountry(selectedCountry), [selectedCountry]);
 
     // Sync internal value with external value prop when it changes from outside
     useEffect(() => {
@@ -103,6 +120,9 @@ const ZPhoneInput = forwardRef(({
     };
 
     const handleCountryChange = (country) => {
+        // Update selected country to recalculate max length
+        setSelectedCountry(country.cca2);
+
         if (onChangeCountryCode) {
             onChangeCountryCode(`+${country.callingCode[0]}`);
         }
@@ -171,6 +191,7 @@ const ZPhoneInput = forwardRef(({
                     textInputProps={{
                         placeholderTextColor: colors.placeHolderColor,
                         textAlign: I18nManager.isRTL ? 'right' : 'left',
+                        maxLength: maxPhoneLength,
                         onBlur: onBlur,
                     }}
                     countryPickerProps={{
