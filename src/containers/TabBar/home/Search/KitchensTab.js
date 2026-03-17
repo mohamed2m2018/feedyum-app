@@ -1,5 +1,5 @@
 // Library import
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo, useState, useEffect } from 'react';
 import {
     View,
     StyleSheet,
@@ -86,12 +86,48 @@ export default function KitchensTab({ searchQuery = '', useSemanticSearch = true
         },
     );
 
-    const kitchens =
+    const kitchensRaw =
         data?.pages?.flatMap(page => {
             const users = page?.data?.users || page?.users || page?.results || [];
             // Filter to ensure only chefs
             return users.filter(u => u?.type === 'chef' || u?.isChef);
         }) || [];
+
+    // Batch check delivery eligibility for all kitchens
+    const [deliveryMap, setDeliveryMap] = useState({});
+    useEffect(() => {
+        if (!kitchensRaw.length || !userLocation?.lat) return;
+
+        const checkDelivery = async () => {
+            const newMap = {};
+            await Promise.all(
+                kitchensRaw.map(async (kitchen) => {
+                    if (deliveryMap[kitchen._id] !== undefined) {
+                        newMap[kitchen._id] = deliveryMap[kitchen._id];
+                        return;
+                    }
+                    try {
+                        const res = await request.get(`/orders/check-delivery/${kitchen._id}`, {
+                            params: { lat: userLocation.lat, long: userLocation.lng },
+                        });
+                        newMap[kitchen._id] = res.data?.canDeliver ?? false;
+                    } catch {
+                        newMap[kitchen._id] = false;
+                    }
+                })
+            );
+            setDeliveryMap(prev => ({ ...prev, ...newMap }));
+        };
+        checkDelivery();
+    }, [kitchensRaw.map(k => k._id).join(','), userLocation?.lat]);
+
+    // Sort: deliverable kitchens first
+    const kitchens = useMemo(() => {
+        if (!userLocation?.lat || Object.keys(deliveryMap).length === 0) return kitchensRaw;
+        const deliverable = kitchensRaw.filter(k => deliveryMap[k._id] === true);
+        const nonDeliverable = kitchensRaw.filter(k => deliveryMap[k._id] !== true);
+        return [...deliverable, ...nonDeliverable];
+    }, [kitchensRaw, deliveryMap, userLocation?.lat]);
 
     const handleKitchenPress = useCallback(kitchen => {
         Keyboard.dismiss();
