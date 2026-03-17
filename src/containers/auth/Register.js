@@ -35,6 +35,7 @@ import { useStorage } from '../../utils/useStorage';
 import AppInitializer from '../../services/AppInitializer';
 import UserTypeSelectionModal from '../../components/modals/UserTypeSelectionModal';
 import TermsAcceptanceModal from '../../components/modals/TermsAcceptanceModal';
+import ChefBrandSetupModal from '../../components/modals/ChefBrandSetupModal';
 
 // Debounce timeout ref for email availability check
 let emailCheckTimeout = null;
@@ -77,6 +78,8 @@ const Register = ({ navigation, route }) => {
   const [isLoading, setisLoading] = useState(false);
   const [showUserTypeModal, setShowUserTypeModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
+  const [showBrandSetup, setShowBrandSetup] = useState(false);
+  const [pendingGoogleData, setPendingGoogleData] = useState(null);
   const [pendingAction, setPendingAction] = useState(null); // 'google' or 'password'
   const [pendingChefSelection, setPendingChefSelection] = useState(false);
 
@@ -217,17 +220,24 @@ const Register = ({ navigation, route }) => {
         return;
       }
 
-      // Send verified Google ID token to backend for server-side verification
-      handleSubmit(
-        user.name,
-        phone,
-        '',
-        '',
-        user.email,
-        isChefParam ? 'chef' : 'user',
-        user.photo,
-        idToken,
-      );
+      // Chef: show brand setup modal first to collect name + photo before creating account
+      if (isChefParam) {
+        setisLoading(false);
+        setPendingGoogleData({ user, phone, idToken });
+        setShowBrandSetup(true);
+      } else {
+        // Regular user: create account directly with Google data
+        handleSubmit(
+          user.name,
+          phone,
+          '',
+          '',
+          user.email,
+          'user',
+          user.photo,
+          idToken,
+        );
+      }
     } catch (error) {
       setisLoading(false);
       console.log('Google Sign In Error:', error);
@@ -494,6 +504,33 @@ const Register = ({ navigation, route }) => {
           setShowTermsModal(false);
           setPendingAction(null);
           setPendingChefSelection(false);
+        }}
+      />
+
+      {/* Chef Brand Setup Modal — shown BEFORE account creation for Google chefs */}
+      <ChefBrandSetupModal
+        visible={showBrandSetup}
+        onComplete={(kitchenName, kitchenPhoto) => {
+          setShowBrandSetup(false);
+          if (pendingGoogleData) {
+            const { user, phone, idToken } = pendingGoogleData;
+            // Create account with the chef's chosen brand name + photo
+            handleSubmit(
+              kitchenName,
+              phone,
+              '',
+              '',
+              user.email,
+              'chef',
+              kitchenPhoto,
+              idToken,
+            );
+            setPendingGoogleData(null);
+          }
+        }}
+        onDismiss={() => {
+          setShowBrandSetup(false);
+          setPendingGoogleData(null);
         }}
       />
     </ZSafeAreaView>
