@@ -16,6 +16,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useQueryClient } from 'react-query';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { showActionDialog, showErrorToast, showInfoToast, showSuccessToast } from '../../../utils/toast';
+import { formatDistance } from '../../../utils/helpers';
 import { ALERT_TYPE } from 'react-native-alert-notification';
 import ZText from '../../../components/common/ZText';
 import ZHeader from '../../../components/common/ZHeader';
@@ -426,8 +427,8 @@ const ShoppingCart = () => {
             const { nearestDistance, maxDistance } = errorData;
             if (nearestDistance && maxDistance) {
               errorMessage = strings.kitchenTooFar
-                .replace('{distance}', nearestDistance)
-                .replace('{max}', maxDistance);
+                .replace('{distance}', formatDistance(nearestDistance))
+                .replace('{max}', formatDistance(maxDistance));
             } else {
               errorMessage = errorData.message || strings.failedToPlaceOrder;
             }

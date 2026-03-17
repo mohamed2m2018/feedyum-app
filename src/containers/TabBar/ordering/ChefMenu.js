@@ -12,6 +12,7 @@ import {
   I18nManager,
 } from 'react-native';
 import { showErrorToast, showActionDialog, showSuccessToast, ALERT_TYPE } from '../../../utils/toast';
+import { formatDistance } from '../../../utils/helpers';
 import { useSelector, useDispatch } from 'react-redux';
 import { useQuery, useInfiniteQuery } from 'react-query';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -376,7 +377,7 @@ const ChefMenu = () => {
     // Block if kitchen doesn't deliver to user's location
     if (deliveryData && !deliveryData.canDeliver) {
       const distanceInfo = deliveryData.nearestDistance
-        ? ` (${(strings.distanceAway || '{0} km').replace('{0}', deliveryData.nearestDistance)})`
+        ? ` (${(strings.distanceAway || '{0} km').replace('{0}', formatDistance(deliveryData.nearestDistance))})`
         : '';
       showErrorToast(
         strings.doesNotDeliverHere || 'Does not deliver here',
@@ -591,7 +592,7 @@ const ChefMenu = () => {
                         // Block if kitchen doesn't deliver
                         if (deliveryData && !deliveryData.canDeliver) {
                           const distanceInfo = deliveryData.nearestDistance
-                            ? ` (${(strings.distanceAway || '{0} km').replace('{0}', deliveryData.nearestDistance)})`
+                            ? ` (${(strings.distanceAway || '{0} km').replace('{0}', formatDistance(deliveryData.nearestDistance))})`
                             : '';
                           showErrorToast(
                             strings.doesNotDeliverHere || 'Does not deliver here',
@@ -626,7 +627,7 @@ const ChefMenu = () => {
                       // Block if kitchen doesn't deliver
                       if (deliveryData && !deliveryData.canDeliver) {
                         const distanceInfo = deliveryData.nearestDistance
-                          ? ` (${(strings.distanceAway || '{0} km').replace('{0}', deliveryData.nearestDistance)})`
+                          ? ` (${(strings.distanceAway || '{0} km').replace('{0}', formatDistance(deliveryData.nearestDistance))})`
                           : '';
                         showErrorToast(
                           strings.doesNotDeliverHere || 'Does not deliver here',
@@ -911,23 +912,37 @@ const ChefMenu = () => {
             </View>
 
             {/* Delivery Card */}
-            {deliveryData && (
-              <View style={[localStyles.statCard, { borderColor: colors.grayScale4 }]}>
-                <Ionicons
-                  name={deliveryData.canDeliver ? 'checkmark-circle' : 'alert-circle'}
-                  size={18}
-                  color={deliveryData.canDeliver ? '#4CAF50' : '#FF9800'}
-                />
-                <View style={{ marginLeft: moderateScale(8), flex: 1 }}>
-                  <ZText type="B12" color={deliveryData.canDeliver ? '#4CAF50' : '#FF9800'} numberOfLines={1}>
-                    {deliveryData.canDeliver ? strings.deliversToYou : strings.doesNotDeliverHere}
-                  </ZText>
-                  <ZText type="M10" color={colors.grayScale6}>
-                    {strings.delivery || 'Delivery'}
-                  </ZText>
-                </View>
-              </View>
-            )}
+            {deliveryData && (() => {
+              const distanceInfo = deliveryData.nearestDistance
+                ? ` (${(strings.distanceAway || '{0} km').replace('{0}', formatDistance(deliveryData.nearestDistance))})`
+                : '';
+              const CardWrapper = deliveryData.canDeliver ? View : TouchableOpacity;
+              const wrapperProps = deliveryData.canDeliver ? {} : {
+                onPress: () => showErrorToast(
+                  strings.doesNotDeliverHere,
+                  (strings.kitchenDoesNotDeliverMessage) + distanceInfo
+                ),
+                activeOpacity: 0.7,
+              };
+
+              return (
+                <CardWrapper {...wrapperProps} style={[localStyles.statCard, { borderColor: colors.grayScale4 }]}>
+                  <Ionicons
+                    name={deliveryData.canDeliver ? 'checkmark-circle' : 'alert-circle'}
+                    size={18}
+                    color={deliveryData.canDeliver ? '#4CAF50' : '#FF9800'}
+                  />
+                  <View style={{ marginLeft: moderateScale(8), flex: 1 }}>
+                    <ZText type="B12" color={deliveryData.canDeliver ? '#4CAF50' : '#FF9800'} numberOfLines={1}>
+                      {deliveryData.canDeliver ? strings.deliversToYou : strings.noDelivery}
+                    </ZText>
+                    <ZText type="M10" color={colors.grayScale6}>
+                      {strings.delivery || 'Delivery'}
+                    </ZText>
+                  </View>
+                </CardWrapper>
+              );
+            })()}
 
             {/* Branches Card */}
             {branchLocations.length > 0 && (
@@ -1039,6 +1054,17 @@ const ChefMenu = () => {
             {strings.noDishesSub}
           </ZText>
         </View>
+
+        {/* Branches Modal — must be mounted for the ref to work */}
+        <Locations
+          SheetRef={locationsSheetRef}
+          selectedGov={branchLocations}
+          onClose={() => { }}
+          selectedBranchId={selectedBranchId}
+          onBranchSelect={(branch) => {
+            setSelectedBranchId(branch?._id);
+          }}
+        />
       </ZSafeAreaView>
     );
   }

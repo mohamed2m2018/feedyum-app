@@ -103,6 +103,17 @@ const formatSlotLabel = (label, language) => {
   }
 };
 
+// Format distance number for user-friendly display (number only, no unit)
+// e.g. 0.3 -> "0.3", 5.25 -> "5.3", 12017.7 -> "12,018"
+const formatDistance = (distanceKm) => {
+  if (distanceKm == null || isNaN(distanceKm)) return '';
+  const num = Number(distanceKm);
+  if (num < 100) {
+    return num.toFixed(1);
+  }
+  return Math.round(num).toLocaleString();
+};
+
 export {
   getAsyncStorageData,
   setAsyncStorageData,
@@ -114,4 +125,5 @@ export {
   formatDate,
   formatDateTime,
   formatSlotLabel,
+  formatDistance,
 };

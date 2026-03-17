@@ -30,6 +30,7 @@ import {
     clearPendingConflictItem,
 } from '../redux/reducer/cartSlice';
 import { showActionDialog, showSuccessToast, showErrorToast, ALERT_TYPE } from '../utils/toast';
+import { formatDistance } from '../utils/helpers';
 import { StackNav } from '../navigation/NavigationKeys';
 
 /**
@@ -131,7 +132,7 @@ function DishSearchResultCard({ dish, style }) {
         }
         if (deliveryData && !deliveryData.canDeliver) {
             const distanceInfo = deliveryData.nearestDistance
-                ? ` (${(strings.distanceAway || '{0} km').replace('{0}', deliveryData.nearestDistance)})`
+                ? ` (${(strings.distanceAway || '{0} km').replace('{0}', formatDistance(deliveryData.nearestDistance))})`
                 : '';
             showErrorToast(
                 strings.doesNotDeliverHere || 'Does not deliver here',

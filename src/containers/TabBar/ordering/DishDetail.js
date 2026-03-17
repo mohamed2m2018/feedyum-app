@@ -9,6 +9,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { showSuccessToast, showErrorToast, showSuccessDialog, showActionDialog, ALERT_TYPE } from '../../../utils/toast';
+import { formatDistance } from '../../../utils/helpers';
 import { useSelector, useDispatch } from 'react-redux';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { useNavigation, useRoute, CommonActions } from '@react-navigation/native';
@@ -328,7 +329,7 @@ const DishDetailScreen = () => {
     // Block if kitchen doesn't deliver to user's location
     if (deliveryData && !deliveryData.canDeliver) {
       const distanceInfo = deliveryData.nearestDistance
-        ? ` (${(strings.distanceAway || '{0} km').replace('{0}', deliveryData.nearestDistance)})`
+        ? ` (${(strings.distanceAway || '{0} km').replace('{0}', formatDistance(deliveryData.nearestDistance))})`
         : '';
       showErrorToast(
         strings.doesNotDeliverHere || 'Does not deliver here',
