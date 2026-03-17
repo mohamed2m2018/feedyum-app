@@ -713,6 +713,7 @@ export default {
   cookingTimeTooLong: 'Cooking time cannot exceed 8 hours (480 minutes)',
   dishImageRequired: 'Please add a dish image',
   dishImage: 'Dish Image',
+  dishImageOptional: '(Optional)',
   tapToAddImage: 'Tap to add image',
   addingDish: 'Adding dish...',
   updatingDish: 'Updating dish...',

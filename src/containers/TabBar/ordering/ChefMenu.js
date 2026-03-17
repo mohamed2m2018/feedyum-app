@@ -395,6 +395,7 @@ const ChefMenu = () => {
           chefName: chefName || strings.unknownChef,
         }),
       );
+      showSuccessToast(strings.dishAddedTitle, strings.formatString(strings.dishAddedMessage, dish?.name));
     } catch (error) {
       showErrorToast(strings.error, strings.failedToAddItemToCart);
     }

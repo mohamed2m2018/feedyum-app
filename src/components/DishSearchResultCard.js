@@ -151,6 +151,7 @@ function DishSearchResultCard({ dish, style }) {
             chefName: chefName,
             quantity: 1,
         }));
+        showSuccessToast(strings.dishAddedTitle, strings.formatString(strings.dishAddedMessage, dish?.name));
     };
 
     const price = dish?.price || 0;

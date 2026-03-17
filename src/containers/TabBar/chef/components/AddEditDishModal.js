@@ -366,10 +366,7 @@ const AddEditDishModal = ({
   const validateForm = () => {
     const newErrors = {};
 
-    // Image validation
-    if (!imageUri && !formData.image) {
-      newErrors.image = strings.dishImageRequired || 'Dish image is required';
-    }
+    // Image is optional — dishes without photos will show placeholder
 
     // Name validation
     if (!formData.name.trim()) {
@@ -532,7 +529,7 @@ const AddEditDishModal = ({
               type="M14"
               color={colors.textColor}
               style={localStyles.label}>
-              {strings.dishImage || 'Dish Image'} *
+              {strings.dishImage || 'Dish Image'} {strings.dishImageOptional || '(Optional)'}
             </ZText>
             <TouchableOpacity
               style={[

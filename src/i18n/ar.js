@@ -706,6 +706,7 @@ export default {
   cookingTimeTooLong: 'وقت الطبخ لا يمكن أن يتجاوز ٨ ساعات (٤٨٠ دقيقة)',
   dishImageRequired: 'يرجى إضافة صورة للطبق',
   dishImage: 'صورة الطبق',
+  dishImageOptional: '(اختياري)',
   tapToAddImage: 'اضغط لإضافة صورة',
   addingDish: 'جاري إضافة الطبق...',
   updatingDish: 'جاري تحديث الطبق...',

@@ -154,6 +154,7 @@ function DishCardCompact({
             chefName: chef?.fullName || chef?.username || 'Unknown Kitchen',
             quantity: 1,
         }));
+        showSuccessToast(strings.dishAddedTitle, strings.formatString(strings.dishAddedMessage, dish?.name));
 
         onAddToCart?.(dish);
     };
