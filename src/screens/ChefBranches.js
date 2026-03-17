@@ -98,6 +98,7 @@ const ChefBranchesScreen = () => {
                     orderMode: locationData.orderMode || 'asap',
                     minLeadTime: locationData.minLeadTime || 60,
                     slotDuration: locationData.slotDuration || 60,
+                    excludedAreas: locationData.excludedAreas || [],
                 };
 
                 // Delay navigation so it fires AFTER MapLocationPicker's goBack() pops
@@ -140,6 +141,7 @@ const ChefBranchesScreen = () => {
                 orderMode: branch.orderMode,
                 minLeadTime: branch.minLeadTime,
                 slotDuration: branch.slotDuration,
+                excludedAreas: branch.excludedAreas || [],
             },
             initialLocation: {
                 latitude: parseFloat(branch.location?.lat || branch.lat),
@@ -166,6 +168,7 @@ const ChefBranchesScreen = () => {
                         orderMode: locationData.orderMode || branch.orderMode || 'asap',
                         minLeadTime: locationData.minLeadTime || branch.minLeadTime || 60,
                         slotDuration: locationData.slotDuration || branch.slotDuration || 60,
+                        excludedAreas: locationData.excludedAreas || branch.excludedAreas || [],
                     });
 
                     queryClient.invalidateQueries('myBranches');

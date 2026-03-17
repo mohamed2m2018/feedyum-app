@@ -375,7 +375,9 @@ const ShoppingCart = () => {
                 location: location,
                 // Also include direct lat/long as fallback
                 lat: location.lat,
-                long: location.long
+                long: location.long,
+                // Delivery area place_id for exclusion check
+                deliveryAreaPlaceId: selectedAddress.deliveryArea?.placeId || '',
               };
             })(),
             notes: specialInstructions || '', // Backend expects 'notes' not 'specialInstructions'
@@ -429,6 +431,9 @@ const ShoppingCart = () => {
             } else {
               errorMessage = errorData.message || strings.failedToPlaceOrder;
             }
+          } else if (errorData?.error === 'excluded_area') {
+            // Kitchen doesn't deliver to this specific area
+            errorMessage = strings.chefDoesntDeliverToArea;
           } else if (errorData?.error === 'no_active_branches') {
             // Kitchen has no delivery locations
             errorMessage = strings.noActiveBranches;

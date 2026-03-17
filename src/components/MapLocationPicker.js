@@ -101,12 +101,17 @@ const MapLocationPicker = () => {
   // Chef branch specific state
   const [deliveryRadius, setDeliveryRadius] = useState(20); // Default 20km
   const [branchName, setBranchName] = useState('');
-  const [coverageAreas, setCoverageAreas] = useState([]);
+  const [coverageAreas, setCoverageAreas] = useState([]); // Array of { name, placeId }
   const [loadingAreas, setLoadingAreas] = useState(false);
+  const [excludedAreas, setExcludedAreas] = useState(
+    editMode && addressToEdit?.excludedAreas ? addressToEdit.excludedAreas : []
+  ); // Array of { name, placeId } chef excluded
   const [showBranchForm, setShowBranchForm] = useState(false);
   const [deliveryTiers, setDeliveryTiers] = useState([{ maxDistance: 20, fee: '' }]);
   const [tierErrors, setTierErrors] = useState([]); // indices of tiers with invalid fees
+  const [orderModeError, setOrderModeError] = useState(false);
   const [orderMode, setOrderMode] = useState(
+
     editMode && addressToEdit?.orderMode ? addressToEdit.orderMode : null
   );
   const savedLeadMinutes = editMode && addressToEdit?.minLeadTime ? addressToEdit.minLeadTime : null;
@@ -454,9 +459,10 @@ const MapLocationPicker = () => {
     // Validate order mode is chosen
     if (!orderMode) {
       showErrorToast(
-        strings.error,
-        strings.orderModeRequired || 'Please choose an order mode'
+        strings.orderModeRequiredTitle || 'Order Mode Required',
+        strings.orderModeRequired || 'Choose how you receive orders: ASAP, Scheduled, or Both'
       );
+      setOrderModeError(true);
       return;
     }
 
@@ -507,6 +513,7 @@ const MapLocationPicker = () => {
       branchName: branchName.trim() || `${selectedLocation.area || 'New'} Branch`,
       deliveryRadius: deliveryRadius,
       deliveryTiers: validTiers,
+      excludedAreas: excludedAreas,
       area: selectedLocation.area,
       city: selectedLocation.city,
       orderMode: orderMode || 'asap',
@@ -518,7 +525,7 @@ const MapLocationPicker = () => {
       onLocationSelect(locationData);
     }
     navigation.goBack();
-  }, [selectedLocation, branchName, deliveryRadius, deliveryTiers, orderMode, leadTimeValue, leadTimeUnit, slotDuration, onLocationSelect, navigation]);
+  }, [selectedLocation, branchName, deliveryRadius, deliveryTiers, excludedAreas, orderMode, leadTimeValue, leadTimeUnit, slotDuration, onLocationSelect, navigation]);
 
   const handleAddressDetailChange = (field, value) => {
     setAddressDetails(prev => ({
@@ -798,7 +805,7 @@ const MapLocationPicker = () => {
               padding: moderateScale(14), 
               borderRadius: moderateScale(12),
               borderWidth: 1,
-              borderColor: colors.grayScale4,
+              borderColor: orderModeError ? colors.alertColor || '#FF4D4D' : colors.grayScale4,
             }]}>
               <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: moderateScale(10) }}>
                 <Ionicons name="time-outline" size={moderateScale(18)} color={colors.primary} />
@@ -806,6 +813,9 @@ const MapLocationPicker = () => {
                   {strings.orderModeLabel || 'Order Mode'}
                 </ZText>
               </View>
+              <ZText type="s12" color={orderModeError ? colors.alertColor || '#FF4D4D' : colors.grayScale6} style={{ marginBottom: moderateScale(10) }}>
+                {strings.orderModeDesc || 'How can customers place orders?'}
+              </ZText>
               <View style={{ flexDirection: 'row', gap: moderateScale(8) }}>
                 {[  
                   { key: 'asap', icon: 'flash', label: strings.asapOnly || 'ASAP Only' },
@@ -825,7 +835,7 @@ const MapLocationPicker = () => {
                         isActive && { backgroundColor: colors.primary },
                         !isActive && { backgroundColor: colors.backgroundColor, borderWidth: 1, borderColor: colors.grayScale3 },
                       ]}
-                      onPress={() => setOrderMode(opt.key)}
+                      onPress={() => { setOrderMode(opt.key); setOrderModeError(false); }}
                     >
                       <Ionicons name={opt.icon} size={moderateScale(14)} color={isActive ? colors.white : colors.textColor} />
                       <ZText type={isActive ? 'B12' : 'M12'} color={isActive ? colors.white : colors.textColor} style={{ marginLeft: moderateScale(4) }}>
@@ -1029,7 +1039,11 @@ const MapLocationPicker = () => {
                         _value={String(tier.maxDistance)}
                         keyBoardType="numeric"
                         toGetTextFieldValue={(val) => {
-                          const num = Math.min(parseInt(val) || 0, deliveryRadius);
+                          const num = parseInt(val) || 0;
+                          // Auto-expand delivery radius if tier exceeds it
+                          if (num > deliveryRadius) {
+                            setDeliveryRadius(num);
+                          }
                           let updated = [...deliveryTiers];
                           updated[index] = { ...updated[index], maxDistance: num };
                           // Remove downstream tiers that become zero-range (From >= To)
@@ -1089,19 +1103,13 @@ const MapLocationPicker = () => {
                 style={[localStyles.addTierButton, { borderColor: colors.primary }]}
                 onPress={() => {
                   const lastTier = deliveryTiers[deliveryTiers.length - 1];
-                  const prevFrom = deliveryTiers.length > 1
-                    ? deliveryTiers[deliveryTiers.length - 2].maxDistance
-                    : 0;
-                  const lastRange = lastTier.maxDistance - prevFrom;
-
-                  if (lastRange > 1) {
-                    // Split the last tier's range in half
-                    const splitPoint = prevFrom + Math.floor(lastRange / 2);
-                    const updated = [...deliveryTiers];
-                    updated[updated.length - 1] = { ...lastTier, maxDistance: splitPoint };
-                    updated.push({ maxDistance: lastTier.maxDistance, fee: '' });
-                    setDeliveryTiers(updated);
+                  const newMax = lastTier.maxDistance + 5;
+                  // Auto-expand delivery radius to match
+                  if (newMax > deliveryRadius) {
+                    setDeliveryRadius(newMax);
                   }
+                  const updated = [...deliveryTiers, { maxDistance: newMax, fee: '' }];
+                  setDeliveryTiers(updated);
                 }}
               >
                 <Feather name="plus" size={moderateScale(16)} color={colors.primary} />
@@ -1111,11 +1119,37 @@ const MapLocationPicker = () => {
               </TouchableOpacity>
             </View>
 
-            {/* Coverage Areas */}
+            {/* Coverage Areas — tappable to exclude */}
             <View style={localStyles.section}>
               <ZText type="B16" color={colors.textColor} style={localStyles.sectionTitle}>
                 {strings.areasYouCanDeliverTo}
               </ZText>
+              <ZText type="s12" color={colors.grayScale6} style={{ marginBottom: moderateScale(8) }}>
+                {strings.tapToExcludeArea || 'Press ✕ to stop delivering to an area'}
+              </ZText>
+
+              {/* Excluded count badge */}
+              {excludedAreas.length > 0 && (
+                <View style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  backgroundColor: '#FF4D4D15',
+                  paddingHorizontal: moderateScale(12),
+                  paddingVertical: moderateScale(6),
+                  borderRadius: moderateScale(8),
+                  marginBottom: moderateScale(10),
+                  borderWidth: 1,
+                  borderColor: '#FF4D4D30',
+                }}>
+                  <Ionicons name="warning-outline" size={moderateScale(14)} color="#FF4D4D" />
+                  <ZText type="s12" color="#FF4D4D" style={{ marginLeft: moderateScale(6) }}>
+                    {strings.youWontDeliverTo || "You won't deliver to"} {excludedAreas.length} {excludedAreas.length === 1
+                      ? (strings.areaWord || 'area')
+                      : (strings.areasWord || 'areas')}
+                  </ZText>
+                </View>
+              )}
+
               {loadingAreas ? (
                 <View style={localStyles.loadingAreasContainer}>
                   <ActivityIndicator size="small" color={colors.primary} />
@@ -1125,17 +1159,58 @@ const MapLocationPicker = () => {
                 </View>
               ) : coverageAreas.length > 0 ? (
                 <View style={localStyles.areasContainer}>
-                  {coverageAreas.map((area, index) => (
-                    <View
-                      key={index}
-                      style={[localStyles.areaTag, { backgroundColor: colors.primary + '15', borderColor: colors.primary + '40' }]}
-                    >
-                      <Ionicons name="location-outline" size={moderateScale(14)} color={colors.primary} />
-                      <ZText type="s14" color={colors.primary} style={{ marginLeft: moderateScale(4) }}>
-                        {area}
-                      </ZText>
-                    </View>
-                  ))}
+                  {coverageAreas.map((area, index) => {
+                    const isExcluded = excludedAreas.some(ex => ex.placeId === area.placeId);
+                    return (
+                      <TouchableOpacity
+                        key={area.placeId || index}
+                        style={[
+                          localStyles.areaTag,
+                          isExcluded
+                            ? { backgroundColor: colors.alertColor + '12', borderColor: colors.alertColor + '40' }
+                            : { backgroundColor: colors.primary + '15', borderColor: colors.primary + '40' },
+                        ]}
+                        onPress={() => {
+                          if (isExcluded) {
+                            setExcludedAreas(prev => prev.filter(ex => ex.placeId !== area.placeId));
+                          } else {
+                            setExcludedAreas(prev => [...prev, { name: area.name, placeId: area.placeId }]);
+                          }
+                        }}
+                        activeOpacity={0.7}
+                      >
+                        {isExcluded ? (
+                          <>
+                            <ZText
+                              type="s14"
+                              color={colors.alertColor}
+                              style={{ textDecorationLine: 'line-through', opacity: 0.7 }}
+                            >
+                              {area.name}
+                            </ZText>
+                            <Ionicons
+                              name="arrow-undo-outline"
+                              size={moderateScale(14)}
+                              color={colors.alertColor}
+                              style={{ marginLeft: moderateScale(6) }}
+                            />
+                          </>
+                        ) : (
+                          <>
+                            <ZText type="s14" color={colors.primary}>
+                              {area.name}
+                            </ZText>
+                            <Ionicons
+                              name="close"
+                              size={moderateScale(16)}
+                              color={colors.primary}
+                              style={{ marginLeft: moderateScale(6), opacity: 0.6 }}
+                            />
+                          </>
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })}
                 </View>
               ) : (
                 <ZText type="s14" color={colors.grayScale6}>
