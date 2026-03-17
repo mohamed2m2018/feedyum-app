@@ -929,39 +929,6 @@ const ChefMenu = () => {
               </View>
             </View>
 
-            {/* Delivery Card */}
-            {deliveryData && (() => {
-              const distanceInfo = deliveryData.nearestDistance
-                ? ` (${(strings.distanceAway || '{0} km').replace('{0}', formatDistance(deliveryData.nearestDistance))})`
-                : '';
-              const CardWrapper = deliveryData.canDeliver ? View : TouchableOpacity;
-              const wrapperProps = deliveryData.canDeliver ? {} : {
-                onPress: () => showErrorToast(
-                  strings.doesNotDeliverHere,
-                  (strings.kitchenDoesNotDeliverMessage) + distanceInfo
-                ),
-                activeOpacity: 0.7,
-              };
-
-              return (
-                <CardWrapper {...wrapperProps} style={[localStyles.statCard, { borderColor: colors.grayScale4 }]}>
-                  <Ionicons
-                    name={deliveryData.canDeliver ? 'checkmark-circle' : 'alert-circle'}
-                    size={18}
-                    color={deliveryData.canDeliver ? '#4CAF50' : '#FF9800'}
-                  />
-                  <View style={{ marginLeft: moderateScale(8), flex: 1 }}>
-                    <ZText type="B12" color={deliveryData.canDeliver ? '#4CAF50' : '#FF9800'} numberOfLines={1}>
-                      {deliveryData.canDeliver ? strings.deliversToYou : strings.noDelivery}
-                    </ZText>
-                    <ZText type="M10" color={colors.grayScale6}>
-                      {strings.delivery || 'Delivery'}
-                    </ZText>
-                  </View>
-                </CardWrapper>
-              );
-            })()}
-
             {/* Branches Card */}
             {branchLocations.length > 0 && (
               <TouchableOpacity
@@ -983,6 +950,39 @@ const ChefMenu = () => {
               </TouchableOpacity>
             )}
           </View>
+
+          {/* Delivery Status - text line below stat cards */}
+          {deliveryData && (() => {
+            const distanceInfo = deliveryData.nearestDistance
+              ? ` (${(strings.distanceAway || '{0} km').replace('{0}', formatDistance(deliveryData.nearestDistance))})`
+              : '';
+            const Wrapper = deliveryData.canDeliver ? View : TouchableOpacity;
+            const wrapperProps = deliveryData.canDeliver ? {} : {
+              onPress: () => showErrorToast(
+                strings.doesNotDeliverHere,
+                (strings.kitchenDoesNotDeliverMessage) + distanceInfo
+              ),
+              activeOpacity: 0.7,
+            };
+
+            return (
+              <Wrapper {...wrapperProps} style={{ flexDirection: 'row', alignItems: 'center', marginTop: moderateScale(8) }}>
+                <Ionicons
+                  name={deliveryData.canDeliver ? 'checkmark-circle' : 'alert-circle'}
+                  size={16}
+                  color={deliveryData.canDeliver ? '#4CAF50' : '#FF9800'}
+                />
+                <ZText
+                  type="M14"
+                  color={deliveryData.canDeliver ? '#4CAF50' : '#FF9800'}
+                  style={{ marginLeft: moderateScale(6) }}
+                >
+                  {deliveryData.canDeliver ? strings.deliversToYou : strings.noDelivery}
+                  {distanceInfo}
+                </ZText>
+              </Wrapper>
+            );
+          })()}
         </View>
 
         {/* Featured Reels Section */}
