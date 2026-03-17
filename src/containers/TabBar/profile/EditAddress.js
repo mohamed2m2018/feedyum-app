@@ -306,6 +306,7 @@ const EditAddress = () => {
                   placeHolder={strings.apartmentNumber}
                   _value={formData.apartmentNumber}
                   toGetTextFieldValue={(value) => handleInputChange('apartmentNumber', value)}
+                  keyBoardType="numeric"
                   inputContainerStyle={[localStyles.inputContainer, { backgroundColor: colors.inputBg }]}
                 />
               </View>
@@ -314,6 +315,7 @@ const EditAddress = () => {
                   placeHolder={strings.floorNumber}
                   _value={formData.floorNumber}
                   toGetTextFieldValue={(value) => handleInputChange('floorNumber', value)}
+                  keyBoardType="numeric"
                   inputContainerStyle={[localStyles.inputContainer, { backgroundColor: colors.inputBg }]}
                 />
               </View>

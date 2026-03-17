@@ -1279,6 +1279,7 @@ const MapLocationPicker = () => {
                     placeHolder={strings.apartmentNumberPlaceholder}
                     _value={addressDetails.apartmentNumber}
                     toGetTextFieldValue={(value) => handleAddressDetailChange('apartmentNumber', value)}
+                    keyBoardType="numeric"
                     inputContainerStyle={[localStyles.inputContainer, { backgroundColor: colors.inputBg }]}
                   />
                 </View>
@@ -1287,6 +1288,7 @@ const MapLocationPicker = () => {
                     placeHolder={strings.floorNumberPlaceholder}
                     _value={addressDetails.floorNumber}
                     toGetTextFieldValue={(value) => handleAddressDetailChange('floorNumber', value)}
+                    keyBoardType="numeric"
                     inputContainerStyle={[localStyles.inputContainer, { backgroundColor: colors.inputBg }]}
                   />
                 </View>
