@@ -314,8 +314,8 @@ export default function Profile({ navigation }) {
             end={{ x: 1, y: 0 }}
             style={localStyles.gradientButton}
           >
-            <Ionicons name="pencil" size={moderateScale(14)} color={colors.white} style={{ marginRight: moderateScale(4) }} />
-            <ZText type="b13" color={colors.white}>
+            <Ionicons name="pencil" size={moderateScale(14)} color={colors.white} style={{ marginHorizontal: moderateScale(4) }} />
+            <ZText type="b13" color={colors.white} numberOfLines={1} adjustsFontSizeToFit style={{ flexShrink: 1 }}>
               {strings.editProfile}
             </ZText>
           </LinearGradient>
@@ -332,8 +332,8 @@ export default function Profile({ navigation }) {
               onPress={() => navigation.navigate(StackNav.ChefBranches)}
               activeOpacity={0.7}
             >
-              <Ionicons name="location" size={moderateScale(14)} color={colors.primary} style={{ marginRight: moderateScale(4) }} />
-              <ZText type="b13" color={colors.primary}>
+              <Ionicons name="location" size={moderateScale(14)} color={colors.primary} style={{ marginHorizontal: moderateScale(4) }} />
+              <ZText type="b13" color={colors.primary} numberOfLines={1} adjustsFontSizeToFit style={{ flexShrink: 1 }}>
                 {strings.branches || 'Branches'}
               </ZText>
             </TouchableOpacity>
@@ -347,8 +347,8 @@ export default function Profile({ navigation }) {
               onPress={() => navigation.navigate(StackNav.Wallet)}
               activeOpacity={0.7}
             >
-              <Ionicons name="wallet" size={moderateScale(14)} color="#4ECDC4" style={{ marginRight: moderateScale(4) }} />
-              <ZText type="b13" color="#4ECDC4">
+              <Ionicons name="wallet" size={moderateScale(14)} color="#4ECDC4" style={{ marginHorizontal: moderateScale(4) }} />
+              <ZText type="b13" color="#4ECDC4" numberOfLines={1} adjustsFontSizeToFit style={{ flexShrink: 1 }}>
                 {strings.wallet || 'Wallet'}
               </ZText>
             </TouchableOpacity>
@@ -364,8 +364,8 @@ export default function Profile({ navigation }) {
               onPress={() => navigation.navigate(StackNav.Orders, { fromStack: true })}
               activeOpacity={0.7}
             >
-              <Ionicons name="receipt" size={moderateScale(14)} color="#FF8E53" style={{ marginRight: moderateScale(4) }} />
-              <ZText type="b13" color="#FF8E53">
+              <Ionicons name="receipt" size={moderateScale(14)} color="#FF8E53" style={{ marginHorizontal: moderateScale(4) }} />
+              <ZText type="b13" color="#FF8E53" numberOfLines={1} adjustsFontSizeToFit style={{ flexShrink: 1 }}>
                 {strings.orders || 'Orders'}
               </ZText>
             </TouchableOpacity>
@@ -378,8 +378,8 @@ export default function Profile({ navigation }) {
               onPress={() => navigation.navigate(StackNav.ChatList, { fromStack: true })}
               activeOpacity={0.7}
             >
-              <Ionicons name="chatbubbles" size={moderateScale(14)} color="#4ECDC4" style={{ marginRight: moderateScale(4) }} />
-              <ZText type="b13" color="#4ECDC4">
+              <Ionicons name="chatbubbles" size={moderateScale(14)} color="#4ECDC4" style={{ marginHorizontal: moderateScale(4) }} />
+              <ZText type="b13" color="#4ECDC4" numberOfLines={1} adjustsFontSizeToFit style={{ flexShrink: 1 }}>
                 {strings.chats || 'Chats'}
               </ZText>
             </TouchableOpacity>

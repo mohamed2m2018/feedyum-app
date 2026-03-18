@@ -9,6 +9,7 @@ import {
   Switch,
   ActivityIndicator,
   Modal,
+  Linking,
 } from 'react-native';
 import { showSuccessToast, showErrorToast, showInfoToast } from '../../../utils/toast';
 import { useSelector } from 'react-redux';
@@ -997,6 +998,30 @@ export default function Wallet({ navigation }) {
           </View>
         </View>
       )}
+
+      {/* Withdraw Funds Request */}
+      <TouchableOpacity
+        style={[localStyles.settingItem, { backgroundColor: colors.inputBg }]}
+        onPress={() => Linking.openURL(`mailto:${strings.supportEmail}?subject=Withdrawal Request - Wallet Balance (Kitchen: ${user?.name})`)}>
+        <View style={localStyles.settingLeft}>
+          <MaterialIcon
+            name="cash-refund"
+            size={moderateScale(24)}
+            color={colors.primary}
+          />
+          <View style={[styles.ml15, { flex: 1 }]}>
+            <ZText type="B16" color={colors.textColor}>
+              {strings.withdrawBalance}
+            </ZText>
+            <ZText type="M12" color={colors.grayScale7} style={{ marginTop: moderateScale(4), flexShrink: 1 }}>
+              {strings.withdrawBalanceDescription}
+            </ZText>
+            <ZText type="M12" color={colors.primary} style={{ marginTop: moderateScale(2), flexShrink: 1 }}>
+              {strings.supportEmail}
+            </ZText>
+          </View>
+        </View>
+      </TouchableOpacity>
 
       <TouchableOpacity
         style={[localStyles.settingItem, { backgroundColor: colors.inputBg }]}

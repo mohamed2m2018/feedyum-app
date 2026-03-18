@@ -259,8 +259,8 @@ const localStyles = StyleSheet.create({
     paddingRight: moderateScale(16),
   },
   attachedDishCard: {
-    width: moderateScale(120),
-    height: moderateScale(140),
+    width: moderateScale(130),
+    height: moderateScale(165),
     borderRadius: moderateScale(12),
     marginRight: moderateScale(12),
     borderWidth: 1,
@@ -269,7 +269,7 @@ const localStyles = StyleSheet.create({
   },
   attachedDishImage: {
     width: '100%',
-    height: moderateScale(90),
+    height: moderateScale(100),
   },
   attachedDishOverlay: {
     position: 'absolute',
@@ -292,8 +292,8 @@ const localStyles = StyleSheet.create({
     marginBottom: moderateScale(4),
   },
   addDishButton: {
-    width: moderateScale(120),
-    height: moderateScale(140),
+    width: moderateScale(130),
+    height: moderateScale(165),
     borderRadius: moderateScale(12),
     borderWidth: 2,
     borderStyle: 'dashed',

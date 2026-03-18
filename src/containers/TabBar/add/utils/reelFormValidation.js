@@ -119,13 +119,11 @@ export const buildReelSubmitData = (formValues, options = {}) => {
     } else {
       dataToBeSent.dishName = formValues.selectedDish?.name;
     }
+  }
 
-    // Rating (only include if > 0)
-    if (formValues.rating > 0) {
-      dataToBeSent.rating = formValues.rating;
-    } else {
-      delete dataToBeSent.rating;
-    }
+  // Rating (only include if > 0)
+  if (dataToBeSent.rating < 1 || !dataToBeSent.rating) {
+    delete dataToBeSent.rating;
   }
 
   // Set category if derived from dishes

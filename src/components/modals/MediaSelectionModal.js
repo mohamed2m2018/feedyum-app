@@ -8,6 +8,7 @@ import {
     Dimensions,
     Platform,
     ActivityIndicator,
+    I18nManager,
 } from 'react-native';
 import { useSelector } from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -82,7 +83,7 @@ const MediaSelectionModal = ({
                 )}
             </View>
             <Ionicons
-                name="chevron-forward"
+                name={I18nManager.isRTL ? "chevron-back" : "chevron-forward"}
                 size={moderateScale(20)}
                 color={colors.grayScale5}
             />

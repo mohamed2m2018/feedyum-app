@@ -166,7 +166,7 @@ export default function PostDetail() {
 
   // Fetch chef branches
   const { data: branchesData } = useQuery(
-    ['chefBranches', user?._id],
+    'myBranches',
     () => branchService.getBranches(user?._id),
     {
       retry: 0,
@@ -246,7 +246,12 @@ export default function PostDetail() {
     });
 
     handleDataToBeSent(dataToBeSent);
-    handleEditUser(data.phone, locations);
+
+    // FIX: Only send locations to handleEditUser if we actually WANT to update branches
+    // i.e., the user had no branches, and they just added some in this form.
+    const shouldUpdateBranches = !branchesData?.branches?.length && locations?.length > 0;
+    handleEditUser(data.phone, shouldUpdateBranches ? locations : undefined);
+    
     setisFormFilled(true);
 
     setTimeout(() => {

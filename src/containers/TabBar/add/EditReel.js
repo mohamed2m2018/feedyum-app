@@ -124,7 +124,7 @@ export default function EditPost() {
 
     // Fetch chef branches if user is chef
     const { data: branchesData } = useQuery(
-        ['chefBranches', user?._id],
+        'myBranches',
         () => branchService.getBranches(user?._id),
         {
             retry: 0,
@@ -357,7 +357,10 @@ export default function EditPost() {
         });
 
         handleDataToBeSent(dataToBeSent);
-        handleEditUser(data.phone, locations);
+
+        const shouldUpdateBranches = !branchesData?.branches?.length && locations?.length > 0;
+        handleEditUser(data.phone, shouldUpdateBranches ? locations : undefined);
+
         setisFormFilled(true);
 
         setTimeout(() => {
