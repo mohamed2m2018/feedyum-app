@@ -720,6 +720,7 @@ export default {
   sectionRequired: 'القسم مطلوب',
   validCookingTime: 'يرجى إدخال وقت طبخ صحيح',
   cookingTimeTooLong: 'وقت الطبخ لا يمكن أن يتجاوز ٨ ساعات (٤٨٠ دقيقة)',
+  pleaseFixErrors: 'يرجى تصحيح الأخطاء',
   dishImageRequired: 'يرجى إضافة صورة للطبق',
   dishImage: 'صورة الطبق',
   dishImageOptional: '(اختياري)',
@@ -762,6 +763,11 @@ export default {
   noSectionsFound: 'لا توجد أقسام',
   startTypingSection: 'ابدأ بالكتابة لإنشاء قسم',
   confirm: 'تأكيد',
+  deleteSection: 'حذف القسم',
+  deleteSectionConfirmation: 'هل أنت متأكد أنك تريد حذف هذا القسم؟',
+  sectionDeletedSuccess: 'تم حذف القسم بنجاح',
+  sectionInUse: 'القسم قيد الاستخدام',
+  sectionInUseMessage: 'هذا القسم مستخدم في {count} طبق/أطباق. قم بإزالة الأطباق من هذا القسم أولاً.',
 
   // Wallet & Payment
   wallet: 'المحفظة',

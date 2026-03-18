@@ -727,6 +727,7 @@ export default {
   sectionRequired: 'Section is required',
   validCookingTime: 'Please enter a valid cooking time',
   cookingTimeTooLong: 'Cooking time cannot exceed 8 hours (480 minutes)',
+  pleaseFixErrors: 'Please fix errors',
   dishImageRequired: 'Please add a dish image',
   dishImage: 'Dish Image',
   dishImageOptional: '(Optional)',
@@ -769,6 +770,11 @@ export default {
   noSectionsFound: 'No sections found',
   startTypingSection: 'Start typing to create a section',
   confirm: 'Confirm',
+  deleteSection: 'Delete Section',
+  deleteSectionConfirmation: 'Are you sure you want to delete this section?',
+  sectionDeletedSuccess: 'Section deleted successfully',
+  sectionInUse: 'Section In Use',
+  sectionInUseMessage: 'This section is used by {count} dish(es). Remove dishes from this section first.',
 
   // Wallet & Payment
   wallet: 'Wallet',

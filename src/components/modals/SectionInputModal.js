@@ -23,6 +23,8 @@ import ZButton from '../common/ZButton';
 import ZInput from '../common/ZInput';
 import strings from '../../i18n/strings';
 import request from '../../api/request';
+import { showActionDialog, showErrorToast, showSuccessToast } from '../../utils/toast';
+import { ALERT_TYPE } from 'react-native-alert-notification';
 
 const { height: screenHeight } = Dimensions.get('window');
 
@@ -31,6 +33,7 @@ const SectionInputModal = ({
   onClose,
   availableSections = [],
   onSelectSection,
+  onDeleteSection,
   selectedSection = '',
   title = strings.selectSection,
   subtitle = strings.chooseSectionForDish,
@@ -172,6 +175,39 @@ const SectionInputModal = ({
     }
   };
 
+  // Delete section with confirmation
+  const handleDeleteSection = useCallback((section) => {
+    showActionDialog({
+      type: ALERT_TYPE.WARNING,
+      title: strings.deleteSection,
+      message: strings.deleteSectionConfirmation,
+      confirmText: strings.Delete,
+      cancelText: strings.cancel,
+      onConfirm: async () => {
+        try {
+          await request.delete(`/sections/${section._id}`);
+          showSuccessToast(strings.sectionDeletedSuccess);
+          if (onDeleteSection) onDeleteSection(section._id);
+          // Clear selection if the deleted section was selected
+          if (customSection === section.name) {
+            setCustomSection('');
+            setTranslatedName('');
+          }
+        } catch (error) {
+          const errorData = error?.response?.data;
+          if (errorData?.code === 'SECTION_IN_USE') {
+            showErrorToast(
+              strings.sectionInUse,
+              (strings.sectionInUseMessage || 'This section is used by {count} dish(es). Remove dishes from this section first.').replace('{count}', errorData.dishCount)
+            );
+          } else {
+            showErrorToast(strings.errorOccured, errorData?.message || error.message);
+          }
+        }
+      },
+    });
+  }, [customSection, onDeleteSection]);
+
   const getSectionIcon = (sectionName) => {
     const iconMap = {
       'Appetizers': '🥗',
@@ -249,6 +285,23 @@ const SectionInputModal = ({
                 color={colors.primary}
               />
             </View>
+          )}
+
+          {/* Delete button */}
+          {item._id && (
+            <TouchableOpacity
+              style={styles.deleteButton}
+              onPress={(e) => {
+                e.stopPropagation?.();
+                handleDeleteSection(item);
+              }}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <Ionicons
+                name="trash-outline"
+                size={moderateScale(18)}
+                color={colors.redColor || '#FF4444'}
+              />
+            </TouchableOpacity>
           )}
         </View>
       </TouchableOpacity>
@@ -623,6 +676,10 @@ const styles = StyleSheet.create({
   },
   selectedIndicator: {
     marginLeft: moderateScale(12),
+  },
+  deleteButton: {
+    marginLeft: moderateScale(8),
+    padding: moderateScale(6),
   },
   separator: {
     height: moderateScale(8),

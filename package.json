@@ -52,6 +52,7 @@
     "millify": "^6.1.0",
     "pluralize": "^8.0.0",
     "react": "19.0.0",
+    "react-hook-form": "^7.71.2",
     "react-native": "0.79.6",
     "react-native-actions-sheet": "^0.9.7",
     "react-native-admob-native-ads": "^0.7.6",

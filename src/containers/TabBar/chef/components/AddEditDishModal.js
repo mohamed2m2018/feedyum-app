@@ -1,5 +1,5 @@
 // Library imports
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   StyleSheet,
@@ -9,13 +9,14 @@ import {
   Image,
   ActivityIndicator,
 } from 'react-native';
-import { showActionDialog } from '../../../../utils/toast';
+import { showActionDialog, showWarningToast } from '../../../../utils/toast';
 import { ALERT_TYPE } from 'react-native-alert-notification';
 import { useSelector } from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import ImageCropPicker from 'react-native-image-crop-picker';
-import { useQuery } from 'react-query';
+import { useQuery, useQueryClient } from 'react-query';
 import debounce from 'lodash/debounce';
+import { useForm } from 'react-hook-form';
 
 // Local imports
 import ZText from '../../../../components/common/ZText';
@@ -74,6 +75,14 @@ const PickerButton = ({ label, value, onPress, error, colors }) => (
   </View>
 );
 
+const DEFAULT_FORM_VALUES = {
+  name: '', nameArabic: '', nameEnglish: '',
+  description: '', descriptionArabic: '', descriptionEnglish: '',
+  price: '', category: '', categories: [],
+  section: '', sectionNameArabic: '', sectionNameEnglish: '',
+  image: '', cookingTime: '', ingredients: '', visible: true,
+};
+
 const AddEditDishModal = ({
   visible,
   onClose,
@@ -84,25 +93,69 @@ const AddEditDishModal = ({
   const colors = useSelector(state => state.theme.theme);
   const isEditing = !!dish;
 
-  // Form state with bilingual fields
-  const [formData, setFormData] = useState({
-    name: '',
-    nameArabic: '',
-    nameEnglish: '',
-    description: '',
-    descriptionArabic: '',
-    descriptionEnglish: '',
-    price: '',
-    category: '',
-    categories: [],
-    section: '',
-    sectionNameArabic: '',
-    sectionNameEnglish: '',
-    image: '',
-    cookingTime: '',
-    ingredients: '',
-    visible: true,
+  // Custom resolver — validates controlled inputs (ZInput uses value + onChange, not refs)
+  const formResolver = useCallback((values) => {
+    const errors = {};
+    // Name
+    if (!values.name || !values.name.trim()) {
+      errors.name = { type: 'required', message: strings.dishNameRequired };
+    } else if (values.name.trim().length < 2) {
+      errors.name = { type: 'minLength', message: strings.dishNameTooShort };
+    } else if (values.name.trim().length > 100) {
+      errors.name = { type: 'maxLength', message: strings.dishNameTooLong };
+    }
+    // Description
+    if (!values.description || !values.description.trim()) {
+      errors.description = { type: 'required', message: strings.descriptionRequired };
+    } else if (values.description.trim().length < 10) {
+      errors.description = { type: 'minLength', message: strings.descriptionTooShort };
+    } else if (values.description.trim().length > 500) {
+      errors.description = { type: 'maxLength', message: strings.descriptionTooLong };
+    }
+    // Price
+    if (!values.price || !values.price.toString().trim()) {
+      errors.price = { type: 'required', message: strings.priceRequired };
+    } else {
+      const priceNum = parseFloat(values.price);
+      if (isNaN(priceNum) || priceNum <= 0) {
+        errors.price = { type: 'validate', message: strings.validPriceRequired };
+      } else if (priceNum > 99999) {
+        errors.price = { type: 'validate', message: strings.priceTooHigh };
+      }
+    }
+    // Categories
+    if ((!Array.isArray(values.categories) || values.categories.length === 0) &&
+        (!values.category || !values.category.trim())) {
+      errors.categories = { type: 'required', message: strings.categoryRequired };
+    }
+    // Section
+    if (!values.section || !values.section.trim()) {
+      errors.section = { type: 'required', message: strings.sectionRequired };
+    }
+    // Cooking time (optional)
+    if (values.cookingTime && values.cookingTime.toString().trim()) {
+      const ctNum = parseInt(values.cookingTime);
+      if (isNaN(ctNum) || ctNum < 0) {
+        errors.cookingTime = { type: 'validate', message: strings.validCookingTime };
+      } else if (ctNum > 480) {
+        errors.cookingTime = { type: 'validate', message: strings.cookingTimeTooLong };
+      }
+    }
+    return { values: Object.keys(errors).length === 0 ? values : {}, errors };
+  }, []);
+
+  // React Hook Form — single source of truth for form state + validation
+  const {
+    setValue, watch, reset,
+    handleSubmit: rhfHandleSubmit,
+    formState: { errors: formErrors },
+  } = useForm({
+    defaultValues: DEFAULT_FORM_VALUES,
+    mode: 'onChange',
+    resolver: formResolver,
   });
+
+  const formData = watch();
 
   // Translation states
   const [isTranslatingName, setIsTranslatingName] = useState(false);
@@ -110,7 +163,6 @@ const AddEditDishModal = ({
   const [nameTranslationEdited, setNameTranslationEdited] = useState(false);
   const [descTranslationEdited, setDescTranslationEdited] = useState(false);
 
-  const [errors, setErrors] = useState({});
   const [imageUri, setImageUri] = useState('');
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [showSectionModal, setShowSectionModal] = useState(false);
@@ -119,6 +171,7 @@ const AddEditDishModal = ({
   // Fetch current user first
   const { data: userData } = useQuery('user', () => request.get('/user'));
   const userId = userData?.data?.user?._id;
+  const queryClient = useQueryClient();
 
   // Fetch categories and sections - using real API calls
   const { data: categoriesData } = useQuery('categories', async () => {
@@ -159,10 +212,11 @@ const AddEditDishModal = ({
     )
   ];
 
+
   // Initialize form data when dish prop changes
   useEffect(() => {
     if (dish) {
-      setFormData({
+      reset({
         name: dish.name || '',
         nameArabic: dish.nameArabic || '',
         nameEnglish: dish.nameEnglish || '',
@@ -193,46 +247,23 @@ const AddEditDishModal = ({
           isDefault: !!o.isDefault,
         })),
       })) : []);
-      // Reset translation states for editing
       setNameTranslationEdited(true);
       setDescTranslationEdited(true);
     } else {
-      // Reset form for new dish
-      setFormData({
-        name: '',
-        nameArabic: '',
-        nameEnglish: '',
-        description: '',
-        descriptionArabic: '',
-        descriptionEnglish: '',
-        price: '',
-        category: '',
-        categories: [],
-        section: '',
-        sectionNameArabic: '',
-        sectionNameEnglish: '',
-        image: '',
-        cookingTime: '',
-        ingredients: '',
-        visible: true,
-      });
+      reset(DEFAULT_FORM_VALUES);
       setImageUri('');
       setOptionGroups([]);
       setNameTranslationEdited(false);
       setDescTranslationEdited(false);
     }
-    setErrors({});
     setIsTranslatingName(false);
     setIsTranslatingDesc(false);
-  }, [dish, visible]);
+  }, [dish, visible, reset]);
 
-  const updateFormData = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
-    }
-  };
+  // Update a form field with real-time validation
+  const updateFormData = useCallback((field, value) => {
+    setValue(field, value, { shouldValidate: true });
+  }, [setValue]);
 
   // Detect language from text (Arabic vs English)
   const detectLanguage = useCallback((text) => {
@@ -273,11 +304,8 @@ const AddEditDishModal = ({
       const translation = await translateText(name, targetLang);
 
       if (translation) {
-        setFormData(prev => ({
-          ...prev,
-          nameArabic: detectedLang === 'ar' ? name : translation,
-          nameEnglish: detectedLang === 'en' ? name : translation,
-        }));
+        setValue('nameArabic', detectedLang === 'ar' ? name : translation);
+        setValue('nameEnglish', detectedLang === 'en' ? name : translation);
       }
       setIsTranslatingName(false);
     }, 700),
@@ -297,11 +325,8 @@ const AddEditDishModal = ({
       const translation = await translateText(description, targetLang);
 
       if (translation) {
-        setFormData(prev => ({
-          ...prev,
-          descriptionArabic: detectedLang === 'ar' ? description : translation,
-          descriptionEnglish: detectedLang === 'en' ? description : translation,
-        }));
+        setValue('descriptionArabic', detectedLang === 'ar' ? description : translation);
+        setValue('descriptionEnglish', detectedLang === 'en' ? description : translation);
       }
       setIsTranslatingDesc(false);
     }, 700),
@@ -310,42 +335,34 @@ const AddEditDishModal = ({
 
   // Handle name change with translation
   const handleNameChange = useCallback((text) => {
-    updateFormData('name', text);
+    setValue('name', text, { shouldValidate: true });
     setNameTranslationEdited(false);
     debouncedTranslateName(text);
-  }, [debouncedTranslateName]);
+  }, [setValue, debouncedTranslateName]);
 
   // Handle description change with translation
   const handleDescriptionChange = useCallback((text) => {
-    updateFormData('description', text);
+    setValue('description', text, { shouldValidate: true });
     setDescTranslationEdited(false);
     debouncedTranslateDesc(text);
-  }, [debouncedTranslateDesc]);
+  }, [setValue, debouncedTranslateDesc]);
 
   // Handle manual edit of translated name
   const handleTranslatedNameChange = useCallback((text, isArabic) => {
     setNameTranslationEdited(true);
-    if (isArabic) {
-      updateFormData('nameArabic', text);
-    } else {
-      updateFormData('nameEnglish', text);
-    }
-  }, []);
+    setValue(isArabic ? 'nameArabic' : 'nameEnglish', text);
+  }, [setValue]);
 
   // Handle manual edit of translated description
   const handleTranslatedDescChange = useCallback((text, isArabic) => {
     setDescTranslationEdited(true);
-    if (isArabic) {
-      updateFormData('descriptionArabic', text);
-    } else {
-      updateFormData('descriptionEnglish', text);
-    }
-  }, []);
+    setValue(isArabic ? 'descriptionArabic' : 'descriptionEnglish', text);
+  }, [setValue]);
 
   const handleSectionSelection = (sectionName, translations = {}) => {
-    updateFormData('section', sectionName);
-    if (translations.nameArabic) updateFormData('sectionNameArabic', translations.nameArabic);
-    if (translations.nameEnglish) updateFormData('sectionNameEnglish', translations.nameEnglish);
+    setValue('section', sectionName, { shouldValidate: true });
+    if (translations.nameArabic) setValue('sectionNameArabic', translations.nameArabic);
+    if (translations.nameEnglish) setValue('sectionNameEnglish', translations.nameEnglish);
 
     // Add to custom sections if it's not already in available sections
     const existingSection = availableSections.find(section =>
@@ -363,94 +380,35 @@ const AddEditDishModal = ({
     }
   };
 
-  const validateForm = () => {
-    const newErrors = {};
-
-    // Image is optional — dishes without photos will show placeholder
-
-    // Name validation
-    if (!formData.name.trim()) {
-      newErrors.name = strings.dishNameRequired;
-    } else if (formData.name.trim().length < 2) {
-      newErrors.name = strings.dishNameTooShort || 'Dish name must be at least 2 characters';
-    } else if (formData.name.trim().length > 100) {
-      newErrors.name = strings.dishNameTooLong || 'Dish name must be less than 100 characters';
-    }
-
-    // Description validation
-    if (!formData.description.trim()) {
-      newErrors.description = strings.descriptionRequired;
-    } else if (formData.description.trim().length < 10) {
-      newErrors.description = strings.descriptionTooShort || 'Description must be at least 10 characters';
-    } else if (formData.description.trim().length > 500) {
-      newErrors.description = strings.descriptionTooLong || 'Description must be less than 500 characters';
-    }
-
-    // Price validation
-    if (!formData.price.trim()) {
-      newErrors.price = strings.priceRequired;
-    } else if (
-      isNaN(parseFloat(formData.price)) ||
-      parseFloat(formData.price) <= 0
-    ) {
-      newErrors.price = strings.validPriceRequired;
-    } else if (parseFloat(formData.price) > 99999) {
-      newErrors.price = strings.priceTooHigh || 'Price cannot exceed 99,999 EGP';
-    }
-
-    // Category validation
-    if ((!Array.isArray(formData.categories) || formData.categories.length === 0) && !formData.category.trim()) {
-      newErrors.category = strings.categoryRequired;
-    }
-
-    // Section validation
-    if (!formData.section.trim()) {
-      newErrors.section = strings.sectionRequired;
-    }
-
-    // Cooking time validation (optional but must be valid if provided)
-    if (formData.cookingTime) {
-      const cookingTimeNum = parseInt(formData.cookingTime);
-      if (isNaN(cookingTimeNum) || cookingTimeNum < 0) {
-        newErrors.cookingTime = strings.validCookingTime;
-      } else if (cookingTimeNum > 480) {
-        newErrors.cookingTime = strings.cookingTimeTooLong || 'Cooking time cannot exceed 8 hours (480 minutes)';
-      }
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSave = () => {
-    if (!validateForm()) {
-      return;
-    }
-
+  // RHF submit handler — called only when all validations pass
+  const onFormSubmit = useCallback((data) => {
     const dishData = {
-      ...formData,
-      price: parseFloat(formData.price),
-      preparationTime: formData.cookingTime
-        ? parseInt(formData.cookingTime)
-        : undefined,
-      image: imageUri || formData.image,
-      // Ensure both single and multi are present for backward compatibility
-      category: formData.category || formData.categories?.[0] || '',
-      categories: formData.categories || (formData.category ? [formData.category] : []),
-      // Bilingual fields
-      nameArabic: formData.nameArabic || '',
-      nameEnglish: formData.nameEnglish || '',
-      descriptionArabic: formData.descriptionArabic || '',
-      descriptionEnglish: formData.descriptionEnglish || '',
-      // Section bilingual names
-      sectionNameArabic: formData.sectionNameArabic || '',
-      sectionNameEnglish: formData.sectionNameEnglish || '',
-      // Option groups (variants & add-ons)
+      ...data,
+      price: parseFloat(data.price),
+      preparationTime: data.cookingTime ? parseInt(data.cookingTime) : undefined,
+      image: imageUri || data.image,
+      category: data.category || data.categories?.[0] || '',
+      categories: data.categories || (data.category ? [data.category] : []),
+      nameArabic: data.nameArabic || '',
+      nameEnglish: data.nameEnglish || '',
+      descriptionArabic: data.descriptionArabic || '',
+      descriptionEnglish: data.descriptionEnglish || '',
+      sectionNameArabic: data.sectionNameArabic || '',
+      sectionNameEnglish: data.sectionNameEnglish || '',
       optionGroups: optionGroups.filter(g => g.name.trim() && g.options.length > 0),
     };
-
     onSave(dishData);
-  };
+  }, [imageUri, optionGroups, onSave]);
+
+  // RHF error handler — shows toast with first validation error
+  const onFormError = useCallback((errors) => {
+    const firstError = Object.values(errors)[0];
+    if (firstError?.message) {
+      showWarningToast(strings.pleaseFixErrors, firstError.message);
+    }
+  }, []);
+
+  const handleSave = rhfHandleSubmit(onFormSubmit, onFormError);
 
   const handleImagePicker = () => {
     showActionDialog({
@@ -536,7 +494,7 @@ const AddEditDishModal = ({
                 localStyles.imageContainer,
                 {
                   backgroundColor: colors.inputBg,
-                  borderColor: errors.image ? colors.redColor : colors.bColor,
+                  borderColor: formErrors.image ? colors.redColor : colors.bColor,
                 },
               ]}
               onPress={handleImagePicker}>
@@ -547,20 +505,20 @@ const AddEditDishModal = ({
                   <Ionicons
                     name="camera-outline"
                     size={moderateScale(32)}
-                    color={errors.image ? colors.redColor : colors.grayScale7}
+                    color={formErrors.image ? colors.redColor : colors.grayScale7}
                   />
                   <ZText
                     type="M14"
-                    color={errors.image ? colors.redColor : colors.grayScale7}
+                    color={formErrors.image ? colors.redColor : colors.grayScale7}
                     style={localStyles.imageText}>
                     {strings.tapToAddImage || 'Tap to add image'}
                   </ZText>
                 </View>
               )}
             </TouchableOpacity>
-            {errors.image && (
+            {formErrors.image && (
               <ZText type="R12" color={colors.redColor} style={localStyles.imageErrorText}>
-                {errors.image}
+                {formErrors.image?.message}
               </ZText>
             )}
           </View>
@@ -572,7 +530,7 @@ const AddEditDishModal = ({
             _value={formData.name}
             toGetTextFieldValue={handleNameChange}
             placeHolder={strings.enterNameInYourLanguage || 'Enter dish name in your language'}
-            _errorText={errors.name}
+            _errorText={formErrors.name?.message}
           />
 
           {/* Translated Name (Auto-generated, Editable) */}
@@ -620,7 +578,7 @@ const AddEditDishModal = ({
             placeHolder={strings.describeDish}
             multiline
             numberOfLines={3}
-            _errorText={errors.description}
+            _errorText={formErrors.description?.message}
           />
 
           {/* Translated Description (Auto-generated, Editable) */}
@@ -668,7 +626,7 @@ const AddEditDishModal = ({
             toGetTextFieldValue={text => updateFormData('price', text)}
             placeHolder="0.00"
             keyBoardType="decimal-pad"
-            _errorText={errors.price}
+            _errorText={formErrors.price?.message}
           />
 
           {/* Category Picker (now supports multi-select) */}
@@ -677,7 +635,7 @@ const AddEditDishModal = ({
             value={(formData.categories && formData.categories.length > 0)
               ? formData.categories.map(translateCategoryName).join(', ')
               : translateCategoryName(formData.category)}
-            error={errors.category}
+            error={formErrors.categories?.message}
             colors={colors}
             onPress={() => setShowCategoryModal(true)}
           />
@@ -686,7 +644,7 @@ const AddEditDishModal = ({
           <PickerButton
             label={strings.section}
             value={formData.section}
-            error={errors.section}
+            error={formErrors.section?.message}
             colors={colors}
             onPress={() => setShowSectionModal(true)}
           />
@@ -697,7 +655,7 @@ const AddEditDishModal = ({
             toGetTextFieldValue={text => updateFormData('cookingTime', text)}
             placeHolder="15"
             keyBoardType="numeric"
-            _errorText={errors.cookingTime}
+            _errorText={formErrors.cookingTime?.message}
           />
 
           <ZInput
@@ -935,16 +893,11 @@ const AddEditDishModal = ({
         selectedCategory={formData.category}
         onToggleCategory={(category) => {
           const name = category.name;
-          setFormData(prev => {
-            const current = Array.isArray(prev.categories) ? prev.categories : [];
-            const exists = current.includes(name);
-            const next = exists ? current.filter(c => c !== name) : [...current, name];
-            return {
-              ...prev,
-              categories: next,
-              category: next[0] || '',
-            };
-          });
+          const current = Array.isArray(formData.categories) ? formData.categories : [];
+          const exists = current.includes(name);
+          const next = exists ? current.filter(c => c !== name) : [...current, name];
+          setValue('categories', next, { shouldValidate: true });
+          setValue('category', next[0] || '');
         }}
         onDone={() => setShowCategoryModal(false)}
         onSelectCategory={(category) => updateFormData('category', category.name)}
@@ -958,6 +911,7 @@ const AddEditDishModal = ({
         onClose={() => setShowSectionModal(false)}
         availableSections={availableSections || []}
         onSelectSection={handleSectionSelection}
+        onDeleteSection={() => queryClient.invalidateQueries(['menuSections', userId])}
         selectedSection={formData.section}
         title={strings.selectSection}
         subtitle={strings.chooseSectionForDish}

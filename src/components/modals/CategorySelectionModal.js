@@ -57,8 +57,10 @@ const CategorySelectionModal = ({
 
   const filteredCategories = useMemo(() => {
     if (!searchQuery.trim()) return categories;
+    const q = searchQuery.toLowerCase();
     return categories.filter(category =>
-      category.name.toLowerCase().includes(searchQuery.toLowerCase())
+      category.name.toLowerCase().includes(q) ||
+      (category.nameArabic && category.nameArabic.includes(searchQuery))
     );
   }, [categories, searchQuery]);
 
@@ -111,14 +113,14 @@ const CategorySelectionModal = ({
               type="B16"
               color={isSelected ? colors.white : colors.textColor}
               style={styles.categoryName}>
-              {translateCategoryName(item.name)}
+              {getLocalizedName(item)}
             </ZText>
             {item.description && (
               <ZText
                 type="R12"
                 color={isSelected ? colors.white + '80' : colors.grayScale7}
                 style={styles.categoryDescription}>
-                {item.description}
+                {getLocalizedDescription(item)}
               </ZText>
             )}
           </View>
@@ -163,19 +165,21 @@ const CategorySelectionModal = ({
     return iconMap[categoryName] || '🍴';
   };
 
-  // Translate category name based on current language
-  const translateCategoryName = (englishName) => {
-    if (!englishName) return '';
+  // Get the localized category name based on app language
+  // Uses nameArabic from the API instead of building i18n keys
+  const getLocalizedName = (item) => {
+    if (!item) return '';
+    const isArabic = strings.getLanguage() === 'ar';
+    if (isArabic && item.nameArabic) return item.nameArabic;
+    return item.name || '';
+  };
 
-    // Create a key from the English name (e.g., "Main Course" -> "categoryMainCourse")
-    const key = 'category' + englishName
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-      .join('')
-      .replace(/[^a-zA-Z]/g, '');
-
-    // Return translated string if available, otherwise return original
-    return strings[key] || englishName;
+  // Get the localized category description
+  const getLocalizedDescription = (item) => {
+    if (!item?.description) return '';
+    const isArabic = strings.getLanguage() === 'ar';
+    if (isArabic && item.descriptionArabic) return item.descriptionArabic;
+    return item.description;
   };
 
   return (
