@@ -6,6 +6,7 @@ import {
     FlatList,
     ActivityIndicator,
     RefreshControl,
+    I18nManager,
 } from 'react-native';
 import { useSelector } from 'react-redux';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -335,7 +336,7 @@ const ChefBranchesScreen = () => {
                         <ZText type="M12" color={colors.primary} style={{ marginLeft: moderateScale(6), flex: 1 }} numberOfLines={1}>
                             {getWorkingHoursSummary(item)}
                         </ZText>
-                        <Ionicons name="chevron-forward" size={moderateScale(14)} color={colors.primary} />
+                        <Ionicons name={I18nManager.isRTL ? 'chevron-back' : 'chevron-forward'} size={moderateScale(14)} color={colors.primary} />
                     </TouchableOpacity>
                 </View>
 

@@ -222,13 +222,13 @@ export const updateOrderStatusAsync = (orderId, status, deliveryFee) => async (d
     }
 
     const response = await request.put(`/orders/${orderId}/status`, updateData);
-    const updatedOrder = response.data;
+    const updatedOrder = response.data?.order || response.data;
 
     dispatch(updateOrderStatus({
       orderId,
       status: updatedOrder.status,
       deliveryFee: updatedOrder.deliveryFee,
-      totalAmount: updatedOrder.totalAmount,
+      totalAmount: updatedOrder.totalAmount || updatedOrder.totalPrice,
     }));
 
     return updatedOrder;

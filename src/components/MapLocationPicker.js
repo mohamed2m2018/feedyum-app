@@ -1060,7 +1060,7 @@ const MapLocationPicker = () => {
                     <View style={localStyles.tierInputWrapper}>
                       <ZText type="s12" color={colors.grayScale6}>{strings.tierFeeEgp}</ZText>
                       <ZInput
-                        placeHolder="0"
+                        placeHolder="10"
                         _value={String(tier.fee)}
                         keyBoardType="numeric"
                         toGetTextFieldValue={(val) => {
