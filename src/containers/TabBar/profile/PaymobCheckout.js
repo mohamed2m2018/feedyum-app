@@ -94,15 +94,7 @@ export default function PaymobCheckout({ navigation, route }) {
         <ZSafeAreaView>
             <ZHeader
                 title={strings.paymentTitle}
-                isLeftIcon={
-                    <TouchableOpacity onPress={() => navigation.goBack()}>
-                        <Ionicons
-                            name="arrow-back"
-                            size={moderateScale(24)}
-                            color={colors.textColor}
-                        />
-                    </TouchableOpacity>
-                }
+                showBack
             />
 
             <View style={localStyles.amountBanner}>

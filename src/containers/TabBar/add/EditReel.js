@@ -11,7 +11,8 @@ import {
     Linking,
 } from 'react-native';
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
+import { useForm } from 'react-hook-form';
 
 import { useSelector } from 'react-redux';
 import ImagePicker from 'react-native-image-crop-picker';
@@ -37,7 +38,8 @@ import {
 import { StackNav, TabNav } from '../../../navigation/NavigationKeys';
 import { useQuery } from 'react-query';
 import request from '../../../api/request';
-import { showErrorToast, showSuccessToast } from '../../../utils/toast';
+import { showErrorToast, showSuccessToast, showWarningToast } from '../../../utils/toast';
+import { reelFormResolver, buildReelSubmitData } from './utils/reelFormValidation';
 import BottomActionSheet from '../../../components/models/BottomActionSheet';
 import images from '../../../assets/images';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
@@ -55,26 +57,24 @@ import branchService from '../../../api/branchService';
  * Properly initializes review fields (selectedRestaurant, selectedDish, rating)
  * from existing post data that PostDetail.js was missing.
  */
+// Default form values
+const DEFAULT_FORM_VALUES = {
+    title: '',
+    caption: '',
+    attachedDishes: [],
+    phone: '',
+    selectedRestaurant: null,
+    selectedDish: null,
+    rating: 0,
+    locations: [],
+};
+
 export default function EditPost() {
     const colors = useSelector(state => state.theme.theme);
     const navigation = useNavigation();
     const route = useRoute();
 
     const postDataToBeEdited = route?.params?.postDataToBeEdited;
-
-    // Form state
-    const [postedData, setpostedData] = useState({});
-    const [localUri, setlocalUri] = useState('');
-    const [isPhotoUploading, setisPhotoUploading] = useState(false);
-    const [mediaIsEdited, setmediaIsEdited] = useState(false);
-    const [phone, setPhone] = useState();
-    const [locations, setLocations] = useState([]);
-    const [modalState, setModalState] = useState({ visible: false, title: '', message: '' });
-
-    // Review-specific state - these need to be initialized from edit data
-    const [selectedRestaurant, setSelectedRestaurant] = useState(null);
-    const [selectedDish, setSelectedDish] = useState(null);
-    const [rating, setRating] = useState(0);
 
     const {
         handleDataToBeSent,
@@ -92,6 +92,35 @@ export default function EditPost() {
         },
     });
     const user = queryResult?.data?.user;
+
+    // ─── React Hook Form ──────────────────────────────────────────────────────────
+    const {
+        setValue, watch, reset,
+        handleSubmit: rhfHandleSubmit,
+        formState: { errors: formErrors },
+    } = useForm({
+        defaultValues: DEFAULT_FORM_VALUES,
+        mode: 'onTouched',
+        resolver: (values) => reelFormResolver(values, {
+            userType: user?.type || 'chef',
+            isEditing: true, // Always true for EditReel
+            userHasPhone: !!user?.phone,
+            hasBranches: !!(branchesData?.branches?.length),
+        }),
+    });
+
+    const formData = watch();
+
+    const updateField = useCallback((field, value) => {
+        setValue(field, value, { shouldValidate: false });
+    }, [setValue]);
+
+    // ─── Non-form UI state ────────────────────────────────────────────────────────
+    const [localUri, setlocalUri] = useState('');
+    const [isPhotoUploading, setisPhotoUploading] = useState(false);
+    const [mediaIsEdited, setmediaIsEdited] = useState(false);
+    const [locations, setLocations] = useState([]);
+    const [modalState, setModalState] = useState({ visible: false, title: '', message: '' });
 
     // Fetch chef branches if user is chef
     const { data: branchesData } = useQuery(
@@ -118,79 +147,76 @@ export default function EditPost() {
         },
     );
 
-    /**
-     * Initialize form from existing post data
-     * This is the key difference from PostDetail.js - we reconstruct review fields
-     */
+    // ─── Initialize form from edit data ──────────────────────────────────────────
     useEffect(() => {
-        if (!postDataToBeEdited) {
-            return;
-        }
+        if (!postDataToBeEdited) return;
 
-        // Initialize basic form data
         const editData = {
             ...postDataToBeEdited,
             attachedDishes: postDataToBeEdited.dishes || postDataToBeEdited.attachedDishes || [],
         };
-        setpostedData(editData);
         setlocalUri(editData?.poster || editData?.avatarUri || '');
 
-        // Initialize rating
-        if (postDataToBeEdited.rating) {
-            setRating(postDataToBeEdited.rating);
-        }
+        // Reconstruct review fields
+        let reconstructedRestaurant = null;
+        let reconstructedDish = null;
 
-        // Reconstruct selectedRestaurant from stored data
         if (postDataToBeEdited.isReview) {
             if (postDataToBeEdited.reviewedChef) {
-                // Partner chef restaurant
                 const chef = postDataToBeEdited.reviewedChef;
-                setSelectedRestaurant({
+                reconstructedRestaurant = {
                     type: 'partner',
                     id: chef._id || chef,
                     chefId: chef._id || chef,
                     name: chef.fullName || chef.username || postDataToBeEdited.restaurantName || strings.partnerChef,
                     description: chef.bio || strings.partnerChefLabel,
                     avatar: chef.avatar,
-                });
+                };
             } else if (postDataToBeEdited.googlePlaceId || postDataToBeEdited.restaurantName) {
-                // Google Places restaurant
-                setSelectedRestaurant({
+                reconstructedRestaurant = {
                     type: 'google',
                     id: postDataToBeEdited.googlePlaceId || 'manual',
                     placeId: postDataToBeEdited.googlePlaceId,
                     name: postDataToBeEdited.restaurantName || strings.unknownRestaurant,
                     description: postDataToBeEdited.restaurantAddress || '',
                     address: postDataToBeEdited.restaurantAddress,
-                });
+                };
             }
 
-            // Reconstruct selectedDish from stored data
             const dishesArray = postDataToBeEdited.dishes || [];
             if (dishesArray.length > 0 && typeof dishesArray[0] === 'object') {
-                // Dish is populated with full object
                 const dish = dishesArray[0];
-                setSelectedDish({
+                reconstructedDish = {
                     type: 'menu',
                     id: dish._id,
                     dishId: dish._id,
                     name: dish.title || dish.name,
                     price: dish.price,
                     image: dish.image,
-                });
+                };
             } else if (postDataToBeEdited.dishName) {
-                // Manual dish name entry
-                setSelectedDish({
+                reconstructedDish = {
                     type: 'manual',
                     name: postDataToBeEdited.dishName,
-                });
+                };
             }
         }
 
-        // Notify background upload provider
+        // Populate RHF with all data at once
+        reset({
+            title: editData.title || '',
+            caption: editData.caption || '',
+            attachedDishes: editData.attachedDishes || [],
+            phone: '',
+            selectedRestaurant: reconstructedRestaurant,
+            selectedDish: reconstructedDish,
+            rating: postDataToBeEdited.rating || 0,
+            locations: [],
+        });
+
         handleEditedData({
             ...editData,
-            isImage: postDataToBeEdited.avatarUri ? true : false,
+            isImage: !!postDataToBeEdited.avatarUri,
             isEdit: true,
             mediaIsEdited: false,
         });
@@ -320,106 +346,18 @@ export default function EditPost() {
             .catch(() => { });
     };
 
-    // Submit edit
-    const onPressSubmit = async () => {
-        // Validation for chef users
-        const validationChef =
-            !postedData?.title ||
-            !postedData?.caption ||
-            (!user?.phone && !phone);
+    // ─── RHF Submit Handlers ───────────────────────────────────────────────────────
 
-        // Validation for regular users (reviews)
-        const validationUser =
-            !postedData?.caption ||
-            !selectedRestaurant ||
-            !selectedDish;
-
-        const validation = user?.type === 'chef' ? validationChef : validationUser;
-        if (validation) {
-            showErrorToast(
-                strings.error,
-                user?.type === 'chef' ? strings.pleaseFillAllInputs : strings.selectRestaurantAndDish
-            );
-            return;
-        }
-
-        if (postedData.caption?.length < 5) {
-            showErrorToast(strings.error, strings.descriptionTooShort);
-            return;
-        }
-        if (postedData.title?.length > 45) {
-            showErrorToast(strings.error, strings.tooLargeTitle);
-            return;
-        }
-
-        // Build data to send
-        const derivedCategories = Array.from(
-            new Set(
-                (postedData?.attachedDishes || [])
-                    .flatMap(dish => {
-                        const cats = Array.isArray(dish?.categories) && dish.categories.length
-                            ? dish.categories
-                            : [dish?.category];
-                        return cats.map(cat => {
-                            if (!cat) return null;
-                            if (typeof cat === 'object' && cat._id) return cat._id;
-                            if (typeof cat === 'string' && /^[a-fA-F0-9]{24}$/.test(cat)) return cat;
-                            return null;
-                        });
-                    })
-                    .filter(Boolean),
-            ),
-        );
-
-        const dataToBeSent = {
-            ...postedData,
-            phone: user?.phone || phone,
+    const onFormSubmit = useCallback(async (data) => {
+        const valuesWithLocations = { ...data, locations };
+        const dataToBeSent = buildReelSubmitData(valuesWithLocations, {
+            user,
             mediaIsEdited,
-            dishes: postedData?.attachedDishes?.map(dish => dish._id) || [],
-        };
-
-        // For regular users, add review-specific fields
-        if (user?.type !== 'chef') {
-            dataToBeSent.isReview = true;
-            dataToBeSent.title = selectedDish?.name || dataToBeSent.title;
-
-            // Restaurant info
-            if (selectedRestaurant?.type === 'partner') {
-                dataToBeSent.reviewedChefId = selectedRestaurant.chefId;
-            } else {
-                dataToBeSent.googlePlaceId = selectedRestaurant.placeId;
-                dataToBeSent.restaurantName = selectedRestaurant.name;
-                dataToBeSent.restaurantAddress = selectedRestaurant.address;
-            }
-
-            // Dish info
-            if (selectedDish?.type === 'menu') {
-                dataToBeSent.reviewedDishId = selectedDish.dishId;
-                dataToBeSent.dishes = [selectedDish.dishId];
-            } else {
-                dataToBeSent.dishName = selectedDish.name;
-            }
-
-            // Rating
-            if (rating > 0) {
-                dataToBeSent.rating = rating;
-            }
-        }
-
-        if (derivedCategories.length > 0) {
-            dataToBeSent.category = derivedCategories;
-        } else {
-            delete dataToBeSent.category;
-        }
-
-        // Clean up
-        delete dataToBeSent.attachedDishes;
-        delete dataToBeSent.price;
-        delete dataToBeSent.duration;
-        delete dataToBeSent.linkToGo;
+            postDataToBeEdited,
+        });
 
         handleDataToBeSent(dataToBeSent);
-        handleEditUser(phone, locations);
+        handleEditUser(data.phone, locations);
         setisFormFilled(true);
 
         setTimeout(() => {
@@ -429,7 +367,19 @@ export default function EditPost() {
                 navigation.navigate(StackNav.TabBar, { screen: TabNav.ForYou });
             }
         }, 100);
-    };
+    }, [user, mediaIsEdited, postDataToBeEdited, locations, handleDataToBeSent, handleEditUser, setisFormFilled, navigation]);
+
+    const onFormError = useCallback((errors) => {
+        const firstError = Object.values(errors)[0];
+        if (firstError?.message) {
+            showWarningToast(strings.error, firstError.message);
+        }
+    }, []);
+
+    const onPressSubmit = useCallback(async () => {
+        setValue('locations', locations, { shouldValidate: false });
+        await rhfHandleSubmit(onFormSubmit, onFormError)();
+    }, [locations, setValue, rhfHandleSubmit, onFormSubmit, onFormError]);
 
     return (
         <ZSafeAreaView>
@@ -450,7 +400,6 @@ export default function EditPost() {
                     <TouchableOpacity
                         onPress={() => {
                             setlocalUri('');
-                            postedData.uri = '';
                         }}>
                         {isPhotoUploading ? (
                             <ActivityIndicator
@@ -490,26 +439,18 @@ export default function EditPost() {
                             <ZInput
                                 label={strings.title}
                                 placeholder={strings.titlePlaceholder}
-                                _value={postedData?.title}
-                                toGetTextFieldValue={input =>
-                                    setpostedData(currentState => ({
-                                        ...currentState,
-                                        title: input,
-                                    }))
-                                }
+                                _value={formData.title}
+                                toGetTextFieldValue={input => updateField('title', input)}
+                                _errorText={formErrors.title?.message}
                                 required
                             />
 
                             <ZInput
                                 label={strings.caption}
                                 placeholder={strings.captionPlaceholder}
-                                _value={postedData?.caption}
-                                toGetTextFieldValue={input =>
-                                    setpostedData(currentState => ({
-                                        ...currentState,
-                                        caption: input,
-                                    }))
-                                }
+                                _value={formData.caption}
+                                toGetTextFieldValue={input => updateField('caption', input)}
+                                _errorText={formErrors.caption?.message}
                                 multiline={true}
                                 inputContainerStyle={{ height: moderateScale(100) }}
                                 required
@@ -525,11 +466,13 @@ export default function EditPost() {
                                         {strings.whereIsThisFrom}
                                     </ZText>
                                     <RestaurantSearch
-                                        selectedRestaurant={selectedRestaurant}
-                                        onRestaurantSelect={setSelectedRestaurant}
+                                        selectedRestaurant={formData.selectedRestaurant}
+                                        onRestaurantSelect={(restaurant) => {
+                                            updateField('selectedRestaurant', restaurant);
+                                        }}
                                         onClear={() => {
-                                            setSelectedRestaurant(null);
-                                            setSelectedDish(null);
+                                            updateField('selectedRestaurant', null);
+                                            updateField('selectedDish', null);
                                         }}
                                         userLocation={{
                                             lat: locations?.[0]?.lat,
@@ -540,26 +483,26 @@ export default function EditPost() {
                                 </View>
 
                                 {/* Dish Selector - only show if restaurant selected */}
-                                {selectedRestaurant && (
+                                {formData.selectedRestaurant && (
                                     <View style={localStyles.reviewSection}>
                                         <ZText type="B18" color={colors.textColor} style={localStyles.sectionTitle}>
                                             {strings.whatDidYouOrder}
                                         </ZText>
                                         <DishSelector
-                                            restaurant={selectedRestaurant}
-                                            selectedDish={selectedDish}
-                                            onDishSelect={setSelectedDish}
-                                            onClear={() => setSelectedDish(null)}
+                                            restaurant={formData.selectedRestaurant}
+                                            selectedDish={formData.selectedDish}
+                                            onDishSelect={(dish) => updateField('selectedDish', dish)}
+                                            onClear={() => updateField('selectedDish', null)}
                                         />
                                     </View>
                                 )}
 
                                 {/* Rating - only show if dish selected */}
-                                {selectedDish && (
+                                {formData.selectedDish && (
                                     <View style={localStyles.reviewSection}>
                                         <RatingInput
-                                            rating={rating}
-                                            onRatingChange={setRating}
+                                            rating={formData.rating}
+                                            onRatingChange={(val) => updateField('rating', val)}
                                             label={strings.rateThisDishOptional}
                                         />
                                     </View>
@@ -581,13 +524,8 @@ export default function EditPost() {
                                 <AttachedDishesComponent
                                     colors={colors}
                                     userId={user?._id}
-                                    attachedDishes={postedData?.attachedDishes || []}
-                                    onDishesChange={dishes =>
-                                        setpostedData(currentState => ({
-                                            ...currentState,
-                                            attachedDishes: dishes,
-                                        }))
-                                    }
+                                    attachedDishes={formData.attachedDishes || []}
+                                    onDishesChange={dishes => updateField('attachedDishes', dishes)}
                                 />
                             </View>
                         )}
@@ -596,10 +534,10 @@ export default function EditPost() {
                         {user?.type === 'chef' && !user?.phone && (
                             <ZPhoneInput
                                 label={strings.phoneNumber}
-                                value={phone}
+                                value={formData.phone}
                                 defaultCode="EG"
                                 placeholder={strings.addPhoneNumberPlaceholder}
-                                onChangeText={setPhone}
+                                onChangeText={(val) => updateField('phone', val)}
                                 containerStyle={{ marginTop: moderateScale(10) }}
                             />
                         )}

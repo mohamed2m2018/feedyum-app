@@ -12,7 +12,8 @@ import {
   Linking,
 } from 'react-native';
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
+import { useForm } from 'react-hook-form';
 
 import { useSelector } from 'react-redux';
 import ImagePicker from 'react-native-image-crop-picker';
@@ -38,7 +39,8 @@ import {
 import { StackNav, TabNav } from '../../../navigation/NavigationKeys';
 import { useQuery } from 'react-query';
 import request from '../../../api/request';
-import { showErrorToast, showSuccessToast, showInfoToast } from '../../../utils/toast';
+import { showErrorToast, showSuccessToast, showInfoToast, showWarningToast } from '../../../utils/toast';
+import { reelFormResolver, buildReelSubmitData } from './utils/reelFormValidation';
 import BottomActionSheet from '../../../components/models/BottomActionSheet';
 import images from '../../../assets/images';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
@@ -52,19 +54,28 @@ import RatingInput from '../../../components/RatingInput';
 import ZPhoneInput from '../../../components/common/ZPhoneInput';
 import branchService from '../../../api/branchService';
 
+// Default form values for RHF
+const DEFAULT_FORM_VALUES = {
+  title: '',
+  caption: '',
+  attachedDishes: [],
+  phone: '',
+  selectedRestaurant: null,
+  selectedDish: null,
+  rating: 0,
+  locations: [],
+};
+
 export default function PostDetail() {
 
   const colors = useSelector(state => state.theme.theme);
   const navigation = useNavigation();
-  const [postedData, setpostedData] = useState({});
-
-
   const route = useRoute();
 
   const { currentScreen: previousScreen } = useScreen();
   const postDataToBeEdited = route?.params?.postDataToBeEdited;
   const isImage = route.params?.isImage;
-  const mediaData = route.params?.mediaData; // Pre-captured media from modal
+  const mediaData = route.params?.mediaData;
   const [mediaIsEdited, setmediaIsEdited] = useState(false);
   const {
     handleDataToBeSent,
@@ -73,56 +84,87 @@ export default function PostDetail() {
     setisFormFilled,
     handleEditedData,
   } = useBackgroundUpload();
-  useEffect(() => {
-    if (postDataToBeEdited) {
-      // Map backend 'dishes' field to frontend 'attachedDishes'
-      const editData = {
-        ...postDataToBeEdited,
-        attachedDishes: postDataToBeEdited.dishes || postDataToBeEdited.attachedDishes || [],
-      };
-      setpostedData(editData);
-      handleEditedData({
-        ...editData,
-        isImage: isImage || editData.avatarUri,
-        isEdit: true,
-        mediaIsEdited,
-      });
 
-      setlocalUri(
-        editData?.poster || editData?.avatarUri || '',
-      );
-    }
-  }, [postDataToBeEdited, mediaIsEdited]);
-
-  // Handle pre-captured media from modal (mediaData passed via navigation)
-  useEffect(() => {
-    if (mediaData && mediaData.path) {
-      // Process the media
-      if (mediaData.duration && mediaData.duration > 60000) {
-        showErrorToast(strings.error, strings.maxDuration);
-        return;
-      }
-      setlocalUri(mediaData.path);
-      const isMediaImage = !mediaData.duration;
-      uploadData(
-        mediaData,
-        setisPhotoUploading,
-        setlocalUri,
-        isMediaImage,
-        false,
-      );
-    }
-  }, [mediaData]);
+  // Fetch current user
   const { data: queryResult } = useQuery('user', () => request.get('/user'), {
     retry: 1,
     onError: err => {
       showErrorToast(strings.error, err[Object.keys(err)?.[0]] || strings.errorOccured);
     },
   });
-
   const user = queryResult?.data?.user;
 
-  // Fetch chef branches using ChefBranch API (not legacy User.locations)
+  // ─── React Hook Form ──────────────────────────────────────────────────────────
+  const {
+    setValue, watch, reset,
+    handleSubmit: rhfHandleSubmit,
+    formState: { errors: formErrors },
+  } = useForm({
+    defaultValues: DEFAULT_FORM_VALUES,
+    mode: 'onTouched',
+    resolver: (values) => reelFormResolver(values, {
+      userType: user?.type || 'chef',
+      isEditing: !!postDataToBeEdited,
+      userHasPhone: !!user?.phone,
+      hasBranches: !!(branchesData?.branches?.length),
+    }),
+  });
+
+  const formData = watch();
+
+  // Convenience: update a field with validation
+  const updateField = useCallback((field, value) => {
+    setValue(field, value, { shouldValidate: false });
+  }, [setValue]);
+
+  // ─── Non-form UI state ────────────────────────────────────────────────────────
+  const [isPhotoUploading, setisPhotoUploading] = useState(false);
+  const [localUri, setlocalUri] = useState('');
+  const [locations, setLocations] = useState([]);
+  const [modalState, setModalState] = useState({ visible: false, title: '', message: '' });
+
+  // ─── Initialize edit mode ────────────────────────────────────────────────────
+  useEffect(() => {
+    if (postDataToBeEdited) {
+      const editData = {
+        ...postDataToBeEdited,
+        attachedDishes: postDataToBeEdited.dishes || postDataToBeEdited.attachedDishes || [],
+      };
+      // Populate RHF
+      reset({
+        title: editData.title || '',
+        caption: editData.caption || '',
+        attachedDishes: editData.attachedDishes || [],
+        phone: '',
+        selectedRestaurant: null,
+        selectedDish: null,
+        rating: editData.rating || 0,
+        locations: [],
+      });
+      handleEditedData({
+        ...editData,
+        isImage: isImage || editData.avatarUri,
+        isEdit: true,
+        mediaIsEdited,
+      });
+      setlocalUri(editData?.poster || editData?.avatarUri || '');
+    }
+  }, [postDataToBeEdited, mediaIsEdited]);
+
+  // Handle pre-captured media from modal
+  useEffect(() => {
+    if (mediaData && mediaData.path) {
+      if (mediaData.duration && mediaData.duration > 60000) {
+        showErrorToast(strings.error, strings.maxDuration);
+        return;
+      }
+      setlocalUri(mediaData.path);
+      const isMediaImage = !mediaData.duration;
+      uploadData(mediaData, setisPhotoUploading, setlocalUri, isMediaImage, false);
+    }
+  }, [mediaData]);
+
+  // Fetch chef branches
   const { data: branchesData } = useQuery(
     ['chefBranches', user?._id],
     () => branchService.getBranches(user?._id),
@@ -131,7 +173,6 @@ export default function PostDetail() {
       enabled: !!user?._id && user?.type === 'chef',
       refetchOnMount: true,
       onSuccess: res => {
-        // Adapt ChefBranch format to the local locations state format
         const adaptedLocations = (res?.branches || []).map(branch => ({
           _id: branch._id,
           description: branch.addressDetails?.formattedAddress || branch.branchName,
@@ -147,17 +188,6 @@ export default function PostDetail() {
       onError: () => { },
     },
   );
-
-  const [isPhotoUploading, setisPhotoUploading] = useState(false);
-  const [localUri, setlocalUri] = useState('');
-  const [phone, setPhone] = useState();
-  const [locations, setLocations] = useState([]);
-  const [modalState, setModalState] = useState({ visible: false, title: '', message: '' });
-
-  // Review-specific state for regular users
-  const [selectedRestaurant, setSelectedRestaurant] = useState(null);
-  const [selectedDish, setSelectedDish] = useState(null);
-  const [rating, setRating] = useState(0);
 
 
 
@@ -202,7 +232,43 @@ export default function PostDetail() {
     });
   };
 
-  const onPressHome = async () => {
+  // ─── RHF Submit Handlers ───────────────────────────────────────────────────────
+
+  // Called only when validation passes
+  const onFormSubmit = useCallback(async (data) => {
+    // Include locations from separate state into the data for buildReelSubmitData
+    const valuesWithLocations = { ...data, locations };
+
+    const dataToBeSent = buildReelSubmitData(valuesWithLocations, {
+      user,
+      mediaIsEdited,
+      postDataToBeEdited,
+    });
+
+    handleDataToBeSent(dataToBeSent);
+    handleEditUser(data.phone, locations);
+    setisFormFilled(true);
+
+    setTimeout(() => {
+      console.log('[PostDetail] User type:', user?.type, 'Navigating to:', user?.type === 'chef' ? 'ProfileTab' : 'ForYou');
+      if (user?.type === 'chef') {
+        navigation.navigate(StackNav.TabBar, { screen: TabNav.ProfileTab });
+      } else {
+        navigation.navigate(StackNav.TabBar, { screen: TabNav.ForYou });
+      }
+    }, 100);
+  }, [user, mediaIsEdited, postDataToBeEdited, locations, handleDataToBeSent, handleEditUser, setisFormFilled, navigation]);
+
+  // Called when validation fails — shows first error as toast
+  const onFormError = useCallback((errors) => {
+    const firstError = Object.values(errors)[0];
+    if (firstError?.message) {
+      showWarningToast(strings.error, firstError.message);
+    }
+  }, []);
+
+  // Main submit — checks menu first (for chef), then runs RHF validation + submit
+  const onPressHome = useCallback(async () => {
     // If chef, ensure they have at least one dish in menu before posting
     if (user?.type === 'chef') {
       try {
@@ -228,7 +294,6 @@ export default function PostDetail() {
           return;
         }
       } catch (e) {
-        // If fetching fails, fail safe with prompt to manage menu
         setModalState({
           visible: true,
           title: strings.noDishesFound,
@@ -238,121 +303,12 @@ export default function PostDetail() {
       }
     }
 
-    // For chef users: require title, caption, phone, locations (skip locations check in edit mode)
-    const isEditMode = !!postDataToBeEdited;
-    const validationChef =
-      !postedData?.title ||
-      !postedData?.caption ||
-      (!user?.phone && !phone) ||
-      (!isEditMode && !locations.length); // Skip locations check in edit mode
+    // Inject locations into form values for the resolver (since locations are separate state)
+    setValue('locations', locations, { shouldValidate: false });
 
-    // For regular users: require restaurant and dish, but not phone/locations
-    const validationUser =
-      !postedData?.caption ||
-      !selectedRestaurant ||
-      !selectedDish;
-    const validation = user?.type === 'chef' ? validationChef : validationUser;
-    if (validation) {
-      showErrorToast(
-        strings.error,
-        user?.type === 'chef' ? strings.pleaseFillAllInputs : strings.selectRestaurantAndDish
-      );
-      return;
-    }
-    if (postedData.caption?.length < 5) {
-      showErrorToast(strings.error, strings.descriptionTooShort);
-      return;
-    }
-    if (postedData.title?.length > 45) {
-      showErrorToast(strings.error, strings.tooLargeTitle);
-      return;
-    }
-
-
-
-    // Derive categories from attached dishes (fallback to backend default if none)
-    // Extract category IDs, handling both ObjectId and object references
-    const derivedCategories = Array.from(
-      new Set(
-        (postedData?.attachedDishes || [])
-          .flatMap(dish => {
-            const cats = Array.isArray(dish?.categories) && dish.categories.length
-              ? dish.categories
-              : [dish?.category];
-            // Extract _id if it's an object, or use value if it looks like ObjectId
-            return cats.map(cat => {
-              if (!cat) return null;
-              if (typeof cat === 'object' && cat._id) return cat._id;
-              // Check if it's a valid ObjectId string (24 hex chars)
-              if (typeof cat === 'string' && /^[a-fA-F0-9]{24}$/.test(cat)) return cat;
-              return null; // Skip plain string names like "Burger"
-            });
-          })
-          .filter(Boolean),
-      ),
-    );
-
-    const dataToBeSent = {
-      ...postedData,
-      phone: user?.phone || phone,
-      mediaIsEdited: postDataToBeEdited?.title && mediaIsEdited,
-      dishes: postedData?.attachedDishes?.map(dish => dish._id) || [],
-    };
-
-    // For regular users, add review-specific fields and mark as review
-    if (user?.type !== 'chef') {
-      dataToBeSent.isReview = true;
-      dataToBeSent.title = selectedDish?.name || dataToBeSent.title; // Use dish name as title
-
-      // Restaurant info
-      if (selectedRestaurant?.type === 'partner') {
-        dataToBeSent.reviewedChefId = selectedRestaurant.chefId;
-      } else {
-        dataToBeSent.googlePlaceId = selectedRestaurant.placeId;
-        dataToBeSent.restaurantName = selectedRestaurant.name;
-        dataToBeSent.restaurantAddress = selectedRestaurant.address;
-      }
-
-      // Dish info
-      if (selectedDish?.type === 'menu') {
-        dataToBeSent.reviewedDishId = selectedDish.dishId;
-        dataToBeSent.dishes = [selectedDish.dishId];
-      } else {
-        dataToBeSent.dishName = selectedDish.name;
-      }
-
-      // Rating (optional)
-      if (rating > 0) {
-        dataToBeSent.rating = rating;
-      }
-    }
-
-    // Only set category if derived from dishes; otherwise let backend/use existing
-    if (derivedCategories.length > 0) {
-      dataToBeSent.category = derivedCategories;
-    } else {
-      delete dataToBeSent.category;
-    }
-
-    // Remove fields not needed anymore
-    delete dataToBeSent.attachedDishes;
-    delete dataToBeSent.price;
-    delete dataToBeSent.duration;
-    delete dataToBeSent.linkToGo;
-    handleDataToBeSent(dataToBeSent);
-    handleEditUser(phone, locations);
-    setisFormFilled(true);
-
-    setTimeout(() => {
-      // Navigate chefs to their profile, regular users to ForYou
-      console.log('[PostDetail] User type:', user?.type, 'Navigating to:', user?.type === 'chef' ? 'ProfileTab' : 'ForYou');
-      if (user?.type === 'chef') {
-        navigation.navigate(StackNav.TabBar, { screen: TabNav.ProfileTab });
-      } else {
-        navigation.navigate(StackNav.TabBar, { screen: TabNav.ForYou });
-      }
-    }, 100);
-  };
+    // RHF handles validation + calls onFormSubmit or onFormError
+    await rhfHandleSubmit(onFormSubmit, onFormError)();
+  }, [user, locations, setValue, rhfHandleSubmit, onFormSubmit, onFormError]);
 
   const handleMedia = value => {
     setmediaIsEdited(true);
@@ -577,7 +533,6 @@ export default function PostDetail() {
           <TouchableOpacity
             onPress={() => {
               setlocalUri('');
-              postedData.uri = '';
             }}>
             {isPhotoUploading ? (
               <ActivityIndicator
@@ -617,26 +572,18 @@ export default function PostDetail() {
               <ZInput
                 label={strings.title}
                 placeholder={strings.titlePlaceholder}
-                _value={postedData?.title}
-                toGetTextFieldValue={input =>
-                  setpostedData(currentState => ({
-                    ...currentState,
-                    title: input,
-                  }))
-                }
+                _value={formData.title}
+                toGetTextFieldValue={input => updateField('title', input)}
+                _errorText={formErrors.title?.message}
                 required
               />
 
               <ZInput
                 label={strings.caption}
                 placeholder={strings.captionPlaceholder}
-                _value={postedData?.caption}
-                toGetTextFieldValue={input =>
-                  setpostedData(currentState => ({
-                    ...currentState,
-                    caption: input,
-                  }))
-                }
+                _value={formData.caption}
+                toGetTextFieldValue={input => updateField('caption', input)}
+                _errorText={formErrors.caption?.message}
                 multiline={true}
                 inputContainerStyle={{ height: moderateScale(100) }}
                 required
@@ -652,11 +599,13 @@ export default function PostDetail() {
                     {strings.whereIsThisFrom}
                   </ZText>
                   <RestaurantSearch
-                    selectedRestaurant={selectedRestaurant}
-                    onRestaurantSelect={setSelectedRestaurant}
+                    selectedRestaurant={formData.selectedRestaurant}
+                    onRestaurantSelect={(restaurant) => {
+                      updateField('selectedRestaurant', restaurant);
+                    }}
                     onClear={() => {
-                      setSelectedRestaurant(null);
-                      setSelectedDish(null);
+                      updateField('selectedRestaurant', null);
+                      updateField('selectedDish', null);
                     }}
                     userLocation={{
                       lat: locations?.[0]?.lat,
@@ -667,26 +616,26 @@ export default function PostDetail() {
                 </View>
 
                 {/* Dish Selector - only show if restaurant selected */}
-                {selectedRestaurant && (
+                {formData.selectedRestaurant && (
                   <View style={localStyles.reviewSection}>
                     <ZText type="B18" color={colors.textColor} style={localStyles.sectionTitle}>
                       {strings.whatDidYouOrder}
                     </ZText>
                     <DishSelector
-                      restaurant={selectedRestaurant}
-                      selectedDish={selectedDish}
-                      onDishSelect={setSelectedDish}
-                      onClear={() => setSelectedDish(null)}
+                      restaurant={formData.selectedRestaurant}
+                      selectedDish={formData.selectedDish}
+                      onDishSelect={(dish) => updateField('selectedDish', dish)}
+                      onClear={() => updateField('selectedDish', null)}
                     />
                   </View>
                 )}
 
                 {/* Rating - only show if dish selected */}
-                {selectedDish && (
+                {formData.selectedDish && (
                   <View style={localStyles.reviewSection}>
                     <RatingInput
-                      rating={rating}
-                      onRatingChange={setRating}
+                      rating={formData.rating}
+                      onRatingChange={(val) => updateField('rating', val)}
                       label={strings.rateThisDishOptional}
                     />
                   </View>
@@ -709,13 +658,8 @@ export default function PostDetail() {
                   <AttachedDishesComponent
                     colors={colors}
                     userId={user?._id}
-                    attachedDishes={postedData?.attachedDishes || []}
-                    onDishesChange={dishes =>
-                      setpostedData(currentState => ({
-                        ...currentState,
-                        attachedDishes: dishes,
-                      }))
-                    }
+                    attachedDishes={formData.attachedDishes || []}
+                    onDishesChange={dishes => updateField('attachedDishes', dishes)}
                   />
                 </View>
               </>
@@ -725,10 +669,10 @@ export default function PostDetail() {
             {user?.type === 'chef' && !user?.phone && (
               <ZPhoneInput
                 label={strings.phoneNumber}
-                value={phone}
+                value={formData.phone}
                 defaultCode="EG"
                 placeholder={strings.addPhoneNumberPlaceholder}
-                onChangeText={setPhone}
+                onChangeText={(val) => updateField('phone', val)}
                 containerStyle={{ marginTop: moderateScale(10) }}
               />
             )}

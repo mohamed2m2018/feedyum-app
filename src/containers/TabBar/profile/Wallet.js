@@ -16,6 +16,7 @@ import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { useFocusEffect } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
 import ZHeader from '../../../components/common/ZHeader';
@@ -1199,7 +1200,13 @@ export default function Wallet({ navigation }) {
     <ZSafeAreaView>
       <ZHeader title={strings.wallet} showBack />
 
-      <ScrollView style={styles.flex} showsVerticalScrollIndicator={false}>
+      <KeyboardAwareScrollView 
+        style={styles.flex} 
+        showsVerticalScrollIndicator={false}
+        enableOnAndroid={true}
+        keyboardShouldPersistTaps="handled"
+        extraScrollHeight={50}
+      >
         {renderBalanceCard()}
 
         {/* Commission info banner */}
@@ -1225,7 +1232,7 @@ export default function Wallet({ navigation }) {
           {selectedTab === 'promocodes' && renderPromocodes()}
           {selectedTab === 'settings' && renderSettings()}
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       {renderChargeModal()}
     </ZSafeAreaView>
