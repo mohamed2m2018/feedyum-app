@@ -434,7 +434,7 @@ export default function HashtagCategory({ selectedTag, isLocationChanging }) {
                   type={currentTab === 0 ? 'b14' : 'm14'}
                   color={currentTab === 0 ? colors.primary : colors.grayScale7}
                   style={styles.ml5}>
-                  Reels
+                  {strings.reelsTab}
                 </ZText>
               </TouchableOpacity>
 
@@ -455,7 +455,7 @@ export default function HashtagCategory({ selectedTag, isLocationChanging }) {
                   type={currentTab === 1 ? 'b14' : 'm14'}
                   color={currentTab === 1 ? colors.primary : colors.grayScale7}
                   style={styles.ml5}>
-                  Dishes
+                  {strings.dishesTab}
                 </ZText>
               </TouchableOpacity>
             </View>
