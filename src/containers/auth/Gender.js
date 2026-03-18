@@ -19,10 +19,14 @@ const Gender = ({navigation}) => {
   const [isSelected, setIsSelected] = useState(false);
 
   const onPressContinue = () => {
-    navigation.navigate(StackNav.Birthday);
+    navigation.navigate(StackNav.SetUpProfile, {
+      title: strings.fillYourProfile,
+    });
   };
   const onPressSkip = () => {
-    navigation.navigate(StackNav.Birthday);
+    navigation.navigate(StackNav.SetUpProfile, {
+      title: strings.fillYourProfile,
+    });
   };
 
   const onPressMale = itm => setIsSelected(itm);

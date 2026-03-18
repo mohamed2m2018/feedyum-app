@@ -18,6 +18,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { Calendar } from 'react-native-calendars';
 
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
 import ZHeader from '../../../components/common/ZHeader';
@@ -51,6 +52,7 @@ export default function Wallet({ navigation }) {
   const [hasUsageLimit, setHasUsageLimit] = useState(false);
   const [hasMaxDiscount, setHasMaxDiscount] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   // Charge wallet state
   const [showChargeModal, setShowChargeModal] = useState(false);
@@ -899,19 +901,55 @@ export default function Wallet({ navigation }) {
         <ZText type="m14" color={colors.textColor} style={styles.mb5}>
           {strings.validUntil} * (YYYY-MM-DD)
         </ZText>
-        <TextInput
+        <TouchableOpacity
           style={[
             localStyles.textInput,
-            { backgroundColor: colors.white, color: '#000000' },
+            { backgroundColor: colors.white, justifyContent: 'center' },
           ]}
-          placeholder="2024-12-31"
-          value={promocodeForm.validUntil}
-          onChangeText={value =>
-            handlePromocodeInputChange('validUntil', value)
-          }
-        />
+          onPress={() => setShowDatePicker(true)}>
+          <ZText type="m14" color={promocodeForm.validUntil ? '#000000' : colors.grayScale7}>
+            {promocodeForm.validUntil || '2024-12-31'}
+          </ZText>
+        </TouchableOpacity>
       </View>
 
+      <Modal
+        visible={showDatePicker}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowDatePicker(false)}>
+        <TouchableOpacity
+          style={localStyles.calendarOverlay}
+          activeOpacity={1}
+          onPress={() => setShowDatePicker(false)}>
+          <View
+            style={[localStyles.calendarModal, { backgroundColor: colors.backgroundColor }]}
+            onStartShouldSetResponder={() => true}>
+            <Calendar
+              onDayPress={(day) => {
+                handlePromocodeInputChange('validUntil', day.dateString);
+                setShowDatePicker(false);
+              }}
+              minDate={new Date().toISOString().split('T')[0]}
+              markedDates={{
+                [promocodeForm.validUntil]: { selected: true, selectedColor: colors.primary },
+              }}
+              theme={{
+                backgroundColor: colors.backgroundColor,
+                calendarBackground: colors.backgroundColor,
+                textSectionTitleColor: colors.textColor,
+                selectedDayBackgroundColor: colors.primary,
+                selectedDayTextColor: colors.white,
+                todayTextColor: colors.primary,
+                dayTextColor: colors.textColor,
+                textDisabledColor: colors.grayScale4,
+                arrowColor: colors.primary,
+                monthTextColor: colors.textColor,
+              }}
+            />
+          </View>
+        </TouchableOpacity>
+      </Modal>
       {/* Create Button */}
       <TouchableOpacity
         style={[
@@ -1471,6 +1509,19 @@ const localStyles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: moderateScale(8),
+  },
+  // Calendar modal styles
+  calendarOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+  },
+  calendarModal: {
+    margin: moderateScale(20),
+    borderRadius: moderateScale(16),
+    overflow: 'hidden',
+    alignSelf: 'center',
+    width: '90%',
   },
   // Charge wallet modal styles
   modalOverlay: {

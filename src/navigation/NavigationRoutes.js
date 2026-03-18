@@ -17,7 +17,6 @@ import SetSecure from '../containers/auth/SetSecure';
 import ForgotPassword from '../containers/auth/ForgotPassword';
 import ForgotPasswordOtp from '../containers/auth/ForgotPasswordOtp';
 import CreateNewPassword from '../containers/auth/CreateNewPassword';
-import Birthday from '../containers/auth/Birthday';
 import Gender from '../containers/auth/Gender';
 import Privacy from '../containers/TabBar/profile/Privacy';
 import PrivacyPolicy from '../containers/TabBar/profile/PrivacyPolicy';
@@ -106,7 +105,6 @@ export const StackRoute = {
   ForgotPassword,
   ForgotPasswordOtp,
   CreateNewPassword,
-  Birthday,
   Gender,
   Setting,
   Privacy,

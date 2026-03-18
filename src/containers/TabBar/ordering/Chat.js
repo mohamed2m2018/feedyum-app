@@ -999,6 +999,28 @@ export default function ChatScreen({ route }) {
 
 
   const renderInputToolbar = useCallback((props) => {
+    // Disable chat if locked (older than 48 hours after completed order)
+    if (messagesData?.data?.isLocked) {
+      return (
+        <View style={{
+          paddingVertical: moderateScale(14),
+          paddingHorizontal: moderateScale(20),
+          backgroundColor: colors.inputBg,
+          borderTopWidth: 1,
+          borderTopColor: colors.bColor,
+          alignItems: 'center',
+          flexDirection: 'row',
+          justifyContent: 'center',
+          gap: moderateScale(8),
+        }}>
+          <Ionicons name="lock-closed-outline" size={moderateScale(18)} color={colors.grayScale6} />
+          <ZText type="M14" color={colors.grayScale6}>
+            {strings.chatLockedMessage || 'Chat is locked 48 hours after order completion'}
+          </ZText>
+        </View>
+      );
+    }
+
     // Disable chat for cancelled/expired orders
     if (order?.status === 'cancelled' || order?.status === 'expired') {
       return (
@@ -1118,7 +1140,7 @@ export default function ChatScreen({ route }) {
         />
       </View>
     );
-  }, [colors, showVoiceRecorder, handleVoiceMessage, replyingTo, handleCancelReply, isRTL, order?.status]);
+  }, [colors, showVoiceRecorder, handleVoiceMessage, replyingTo, handleCancelReply, isRTL, order?.status, messagesData?.data?.isLocked]);
 
   const renderComposer = useCallback((props) => (
     <Composer

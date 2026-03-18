@@ -60,6 +60,7 @@
     "react-native-audio-record": "^0.2.2",
     "react-native-aws3": "^0.0.9",
     "react-native-background-upload": "^6.6.0",
+    "react-native-calendars": "^1.1314.0",
     "react-native-compressor": "^1.13.0",
     "react-native-create-thumbnail": "^2.1.1",
     "react-native-crisp-chat-sdk": "^0.23.1",

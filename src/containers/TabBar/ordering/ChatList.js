@@ -256,9 +256,14 @@ export default function ChatList({ navigation }) {
         <View style={localStyles.chatInfo}>
           <View style={localStyles.chatHeader}>
             <View style={localStyles.chefInfo}>
-              <ZText type="B16" color={colors.textColor} numberOfLines={1}>
-                {partner?.fullName || partner?.username || 'Chef'}
-              </ZText>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                <ZText type="B16" color={colors.textColor} numberOfLines={1} style={{ flexShrink: 1 }}>
+                  {partner?.fullName || partner?.username || 'Chef'}
+                </ZText>
+                {item.isLocked && (
+                  <Ionicons name="lock-closed" size={moderateScale(14)} color={colors.grayScale6} />
+                )}
+              </View>
               <ZText type="M12" color={colors.grayScale7} numberOfLines={1}>
                 Order #{item.orderId?.slice(-6) || item.orderId}
               </ZText>
