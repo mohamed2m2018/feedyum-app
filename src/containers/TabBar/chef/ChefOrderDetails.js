@@ -647,14 +647,64 @@ const ChefOrderDetailsScreen = () => {
                 <View style={{ height: 100 }} />
             </ScrollView>
 
-            {/* Awaiting customer confirmation info banner */}
+            {/* Awaiting customer confirmation info banner — enhanced with deposit */}
             {(order.status === 'awaiting_confirmation' || order.status === 'chef_review') && (
                 <View style={[localStyles.footer, {
-                    flexDirection: 'row',
-                    alignItems: 'center',
                     backgroundColor: colors.backgroundColor,
                     paddingBottom: insets.bottom + 16,
                 }]}>
+                    {/* Deposit status (if applicable) */}
+                    {order.depositRequired && (
+                        <View style={{
+                            backgroundColor: order.depositConfirmedByChef ? (colors.success || '#4CAF50') + '15' : '#FF980015',
+                            borderRadius: moderateScale(12),
+                            paddingHorizontal: moderateScale(14),
+                            paddingVertical: moderateScale(12),
+                            marginBottom: moderateScale(8),
+                            borderWidth: 1,
+                            borderColor: order.depositConfirmedByChef ? (colors.success || '#4CAF50') + '30' : '#FF980030',
+                        }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: moderateScale(6) }}>
+                                <Ionicons
+                                    name={order.depositConfirmedByChef ? 'checkmark-circle' : 'cash-outline'}
+                                    size={moderateScale(20)}
+                                    color={order.depositConfirmedByChef ? (colors.success || '#4CAF50') : '#FF9800'}
+                                    style={{ marginRight: moderateScale(8) }}
+                                />
+                                <ZText type="B14" color={order.depositConfirmedByChef ? (colors.success || '#4CAF50') : '#FF9800'}>
+                                    {order.depositConfirmedByChef ? strings.depositConfirmed : strings.waitingForDeposit}
+                                </ZText>
+                            </View>
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <ZText type="M14" color={colors.grayScale7}>{strings.depositAmount}</ZText>
+                                <ZText type="B16" color={colors.textColor}>{order.depositAmount || 0} {strings.currency}</ZText>
+                            </View>
+                            {!order.depositConfirmedByChef && (
+                                <TouchableOpacity
+                                    style={{
+                                        marginTop: moderateScale(10),
+                                        backgroundColor: '#FF9800',
+                                        paddingVertical: moderateScale(10),
+                                        borderRadius: moderateScale(10),
+                                        alignItems: 'center',
+                                    }}
+                                    onPress={async () => {
+                                        try {
+                                            await request.put(`/orders/${order._id}/confirm-deposit`);
+                                            showSuccessToast(strings.success, strings.depositConfirmed);
+                                            queryClient.invalidateQueries(['order', orderId]);
+                                            queryClient.invalidateQueries('chefOrders');
+                                        } catch (err) {
+                                            showErrorToast(strings.error || 'Error', err?.message || strings.failedToUpdateOrder);
+                                        }
+                                    }}
+                                    activeOpacity={0.7}
+                                >
+                                    <ZText type="B14" color="#FFFFFF">{strings.confirmDepositReceived}</ZText>
+                                </TouchableOpacity>
+                            )}
+                        </View>
+                    )}
                     <View style={{
                         flexDirection: 'row',
                         alignItems: 'center',
@@ -662,7 +712,6 @@ const ChefOrderDetailsScreen = () => {
                         borderRadius: moderateScale(12),
                         paddingHorizontal: moderateScale(14),
                         paddingVertical: moderateScale(12),
-                        flex: 1,
                     }}>
                         <Ionicons
                             name="hourglass-outline"

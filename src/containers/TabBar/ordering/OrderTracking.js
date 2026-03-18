@@ -9,6 +9,7 @@ import {
   Text,
   TouchableOpacity,
   Linking,
+  Clipboard,
 } from 'react-native';
 import { showErrorToast, showSuccessToast, showActionDialog } from '../../../utils/toast';
 import { ALERT_TYPE } from 'react-native-alert-notification';
@@ -996,6 +997,39 @@ const OrderTracking = () => {
               </View>
             </View>
 
+            {/* Deposit Info — shown when chef requires deposit */}
+            {currentOrder.depositRequired && (
+              <View style={localStyles.depositInfoCard}>
+                <View style={localStyles.depositInfoHeader}>
+                  <Ionicons name="cash-outline" size={moderateScale(18)} color="#FF9800" />
+                  <ZText type="B14" color="#FF9800" style={{ marginLeft: moderateScale(6) }}>
+                    {strings.depositRequired}
+                  </ZText>
+                </View>
+                <ZText type="R12" color="rgba(255,255,255,0.85)" style={{ marginTop: moderateScale(6) }}>
+                  {strings.sendDepositInstruction}
+                </ZText>
+                <View style={localStyles.depositInfoRow}>
+                  <ZText type="M14" color="rgba(255,255,255,0.7)">{strings.depositAmount}</ZText>
+                  <ZText type="B16" color="#FFD54F">{currentOrder.depositAmount || 0} {strings.currency || 'EGP'}</ZText>
+                </View>
+                <View style={localStyles.depositInfoRow}>
+                  <ZText type="M14" color="rgba(255,255,255,0.7)">{strings.instapayHandle}</ZText>
+                  <TouchableOpacity
+                    style={localStyles.copyInstapayButton}
+                    onPress={() => {
+                      Clipboard.setString(currentOrder.depositInstapayHandle || '');
+                      showSuccessToast(strings.copiedToClipboard);
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <ZText type="B14" color="#FFFFFF">{currentOrder.depositInstapayHandle}</ZText>
+                    <Ionicons name="copy-outline" size={moderateScale(14)} color="rgba(255,255,255,0.7)" style={{ marginLeft: moderateScale(6) }} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+
             <View style={localStyles.confirmationButtons}>
               <TouchableOpacity
                 style={localStyles.confirmButton}
@@ -1005,7 +1039,11 @@ const OrderTracking = () => {
               >
                 <Ionicons name="checkmark-circle" size={moderateScale(20)} color="#2E7D32" />
                 <ZText type="B16" color="#2E7D32" style={{ marginLeft: moderateScale(8) }}>
-                  {confirming ? (strings.confirming || 'Confirming...') : (strings.confirmOrder || 'Confirm Order')}
+                  {confirming
+                    ? (strings.confirming || 'Confirming...')
+                    : currentOrder.depositRequired
+                      ? strings.iveSentDeposit
+                      : (strings.confirmOrder || 'Confirm Order')}
                 </ZText>
               </TouchableOpacity>
 
@@ -1417,6 +1455,36 @@ const localStyles = StyleSheet.create({
     padding: moderateScale(20),
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  // Deposit info styles (inside confirmation banner)
+  depositInfoCard: {
+    marginHorizontal: moderateScale(16),
+    marginTop: moderateScale(10),
+    paddingVertical: moderateScale(10),
+    paddingHorizontal: moderateScale(12),
+    backgroundColor: 'rgba(255,152,0,0.15)',
+    borderRadius: moderateScale(10),
+    borderWidth: 1,
+    borderColor: 'rgba(255,152,0,0.3)',
+  },
+  depositInfoHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  depositInfoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: moderateScale(4),
+    marginTop: moderateScale(4),
+  },
+  copyInstapayButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    paddingVertical: moderateScale(4),
+    paddingHorizontal: moderateScale(10),
+    borderRadius: moderateScale(8),
   },
 });
 
