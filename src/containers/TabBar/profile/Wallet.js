@@ -702,8 +702,8 @@ export default function Wallet({ navigation }) {
               <ZText type="m14" color={colors.textColor} style={styles.mt5}>
                 {promocode.discountType === 'percentage'
                   ? `${promocode.discountValue}% ${strings.off}`
-                  : `£${promocode.discountValue} ${strings.off}`}
-                {promocode.maxDiscount && ` (${strings.max} £${promocode.maxDiscount})`}
+                  : `${promocode.discountValue} ${strings.currency} ${strings.off}`}
+                {promocode.maxDiscount && ` (${strings.max} ${promocode.maxDiscount} ${strings.currency})`}
               </ZText>
 
               <View style={localStyles.promocodeDetails}>
@@ -717,7 +717,7 @@ export default function Wallet({ navigation }) {
 
               {promocode.minOrderAmount > 0 && (
                 <ZText type="m12" color={colors.grayScale7} style={styles.mt5}>
-                  {strings.minOrder}: £{promocode.minOrderAmount}
+                  {strings.minOrder}: {promocode.minOrderAmount} {strings.currency}
                 </ZText>
               )}
             </View>
