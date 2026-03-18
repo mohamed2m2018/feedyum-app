@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { showPersistentClickableToast } from '../utils/toast';
 import DeepLinkingService from './DeepLinkingService';
 import BackgroundAlarmService from './BackgroundAlarmService';
+import OrderAlarmService from './OrderAlarmService';
 
 class NotificationService {
   static instance = null;
@@ -73,6 +74,20 @@ class NotificationService {
       if (data?.alarmType) {
         console.log('🐞 [NotificationService] Order alarm — displaying via notifee, type:', data.alarmType);
         BackgroundAlarmService.showAlarmNotification(data.alarmType, { orderId: data?.orderId });
+
+        // Also show an in-app clickable toast — clicking it stops the alarm
+        showPersistentClickableToast(
+          notification.title || '🔔 New Order!',
+          notification.body || '',
+          () => {
+            console.log('🐞 [NotificationService] Alarm toast clicked — stopping alarm');
+            OrderAlarmService.stopAlarm();
+            BackgroundAlarmService.stopForegroundAlarm();
+            if (data) {
+              this.handleNotificationTap(data);
+            }
+          }
+        );
         return;
       }
 
@@ -82,6 +97,9 @@ class NotificationService {
         notification.body || '',
         () => {
           console.log('🐞 [NotificationService] Toast clicked!', data);
+          // Stop any active alarm in case one is playing
+          OrderAlarmService.stopAlarm();
+          BackgroundAlarmService.stopForegroundAlarm();
           if (data) {
             this.handleNotificationTap(data);
           }

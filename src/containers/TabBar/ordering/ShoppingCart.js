@@ -596,7 +596,7 @@ const ShoppingCart = () => {
                 strings.noAddressSelected
               }
             </ZText>
-            <Ionicons name="chevron-forward" size={16} color={colors.grayScale7} />
+            <Ionicons name={require('react-native').I18nManager.isRTL ? 'chevron-back' : 'chevron-forward'} size={16} color={colors.grayScale7} />
           </View>
         </TouchableOpacity>
       </View>
@@ -678,9 +678,15 @@ const ShoppingCart = () => {
                     <View style={localStyles.dayPillsRow}>
                     {Object.entries(availableSlots).map(([dateStr, dayData]) => {
                       const isActive = selectedDate === dateStr;
-                      const dayLabel = dayData.dayLabel === 'today' ? strings.today
-                        : dayData.dayLabel === 'tomorrow' ? strings.tomorrow
-                        : dayData.dayLabel.charAt(0).toUpperCase() + dayData.dayLabel.slice(1);
+                      const dayNameMap = {
+                        sunday: strings.sunday, monday: strings.monday, tuesday: strings.tuesday,
+                        wednesday: strings.wednesday, thursday: strings.thursday,
+                        friday: strings.friday, saturday: strings.saturday,
+                      };
+                      const rawLabel = dayData.dayLabel;
+                      const dayLabel = rawLabel === 'today' ? strings.today
+                        : rawLabel === 'tomorrow' ? strings.tomorrow
+                        : dayNameMap[rawLabel.toLowerCase()] || rawLabel;
                       const dayNum = dateStr.split('-')[2];
 
                       return (

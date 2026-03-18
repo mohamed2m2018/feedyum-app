@@ -213,7 +213,7 @@ export default function ChefDashboard() {
                 {strings.currency} {formatCurrency(stats?.walletBalance || 0)}
               </ZText>
             </View>
-            <Ionicons name="chevron-forward" size={moderateScale(24)} color={colors.white} />
+            <Ionicons name={require('react-native').I18nManager.isRTL ? 'chevron-back' : 'chevron-forward'} size={moderateScale(24)} color={colors.white} />
           </View>
           <View style={localStyles.walletFooter}>
             <ZText type="M12" color={colors.white} style={{ opacity: 0.8 }}>
@@ -367,7 +367,7 @@ export default function ChefDashboard() {
                   <ZText type="M14" numberOfLines={1}>{activity.message}</ZText>
                   <ZText type="M12" color={colors.grayScale7}>{activity.time}</ZText>
                 </View>
-                <Ionicons name="chevron-forward" size={moderateScale(16)} color={colors.grayScale7} />
+                <Ionicons name={require('react-native').I18nManager.isRTL ? 'chevron-back' : 'chevron-forward'} size={moderateScale(16)} color={colors.grayScale7} />
               </TouchableOpacity>
             ))
           ) : (

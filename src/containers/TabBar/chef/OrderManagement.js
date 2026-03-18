@@ -9,7 +9,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { useSelector } from 'react-redux';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useQuery, useInfiniteQuery, useQueryClient, useMutation } from 'react-query';
 import { showSuccessToast, showErrorToast } from '../../../utils/toast';
@@ -28,6 +28,8 @@ import request from '../../../api/request';
 import strings from '../../../i18n/strings';
 import { moderateScale } from '../../../common/constants';
 import { StackNav } from '../../../navigation/NavigationKeys';
+import OrderAlarmService from '../../../services/OrderAlarmService';
+import BackgroundAlarmService from '../../../services/BackgroundAlarmService';
 
 // Components moved outside to avoid React warnings
 const StatusTab = ({ status, isSelected, onPress, colors }) => (
@@ -135,6 +137,14 @@ export default function OrderManagement() {
 
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [refreshing, setRefreshing] = useState(false);
+
+  // Stop alarm when chef opens orders screen — they've seen it
+  useFocusEffect(
+    React.useCallback(() => {
+      OrderAlarmService.stopAlarm();
+      BackgroundAlarmService.stopForegroundAlarm();
+    }, [])
+  );
 
   // Modal state
   const [orderDetailsVisible, setOrderDetailsVisible] = useState(false);
@@ -636,7 +646,7 @@ const localStyles = StyleSheet.create({
   summaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
   },
   summaryItem: {
     alignItems: 'center',

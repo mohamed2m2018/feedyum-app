@@ -27,6 +27,8 @@ import request from '../../../api/request';
 import { showSuccessToast, showErrorToast } from '../../../utils/toast';
 import { formatDate as formatDateHelper, formatSlotLabel } from '../../../utils/helpers';
 import RejectReasonModal from '../ordering/components/RejectReasonModal';
+import OrderAlarmService from '../../../services/OrderAlarmService';
+import BackgroundAlarmService from '../../../services/BackgroundAlarmService';
 
 /**
  * ChefOrderDetailsScreen - A modal screen for viewing and managing order details
@@ -41,6 +43,12 @@ const ChefOrderDetailsScreen = () => {
     const insets = useSafeAreaInsets();
     const { orderId } = route.params || {};
     const [rejectModalVisible, setRejectModalVisible] = useState(false);
+
+    // Stop alarm when viewing order details — chef has seen the order
+    useEffect(() => {
+        OrderAlarmService.stopAlarm();
+        BackgroundAlarmService.stopForegroundAlarm();
+    }, []);
 
     // Fetch order by ID
     const {

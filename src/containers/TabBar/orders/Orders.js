@@ -245,7 +245,7 @@ export default function Orders({ navigation }) {
         </View>
 
         <Ionicons
-          name="chevron-forward"
+          name={require('react-native').I18nManager.isRTL ? 'chevron-back' : 'chevron-forward'}
           size={moderateScale(20)}
           color={colors.grayScale7}
         />
@@ -337,7 +337,7 @@ export default function Orders({ navigation }) {
               style={localStyles.backButton}
             >
               <Ionicons
-                name="chevron-back"
+                name={require('react-native').I18nManager.isRTL ? 'chevron-forward' : 'chevron-back'}
                 size={moderateScale(24)}
                 color={colors.textColor}
               />

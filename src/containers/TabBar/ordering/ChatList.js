@@ -278,7 +278,7 @@ export default function ChatList({ navigation }) {
             {formatMessagePreview(item.latestMessage) || strings.orderPlacedStartChatting}
           </ZText>
         </View>
-        <Ionicons name="chevron-forward" size={moderateScale(20)} color={colors.grayScale7} />
+        <Ionicons name={require('react-native').I18nManager.isRTL ? 'chevron-back' : 'chevron-forward'} size={moderateScale(20)} color={colors.grayScale7} />
       </TouchableOpacity>
     );
   };

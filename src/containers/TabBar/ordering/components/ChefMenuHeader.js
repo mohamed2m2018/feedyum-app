@@ -153,7 +153,7 @@ const ChefMenuHeader = ({
                     {branchLocations.length === 1 ? strings.branch : strings.branches}
                   </ZText>
                 </View>
-                <Ionicons name="chevron-forward" size={14} color={colors.grayScale6} style={{ marginLeft: moderateScale(4) }} />
+                <Ionicons name={require('react-native').I18nManager.isRTL ? 'chevron-back' : 'chevron-forward'} size={14} color={colors.grayScale6} style={{ marginLeft: moderateScale(4) }} />
               </View>
             </TouchableOpacity>
           )}
