@@ -30,8 +30,8 @@ const StatusPill = ({ status, colors }) => {
   return (
     <View style={[styles.statusPill, { backgroundColor: c.bg }]}>
       <Ionicons name={c.icon} size={moderateScale(12)} color={c.fg} style={{ marginRight: moderateScale(4) }} />
-      <ZText type="M12" color={c.fg}>
-        {String(c.label || 'PENDING').toUpperCase()}
+      <ZText type="M12" color={c.fg} numberOfLines={1}>
+        {c.label || 'PENDING'}
       </ZText>
     </View>
   );
@@ -338,6 +338,7 @@ const styles = StyleSheet.create({
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexShrink: 0,
   },
   primaryBtn: {
     flex: 1,

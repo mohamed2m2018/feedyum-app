@@ -1,5 +1,5 @@
 // Library imports
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import {
   View,
   StyleSheet,
@@ -217,14 +217,18 @@ export default function OrderManagement() {
   // Note: Deep link navigation to order details now goes directly to ChefOrderDetailsScreen
   // instead of opening a modal here. See DeepLinkingService.navigateToChefOrderDetails()
 
-  const tabsScrollViewRef = React.useRef(null);
+  const tabsScrollViewRef = useRef(null);
+  const tabLayoutsRef = useRef({});
 
-  const scrollToTab = (statusValue) => {
+  const scrollToTab = useCallback((statusValue) => {
     const index = statusOptions.findIndex(s => s.value === statusValue);
-    if (index >= 0 && tabsScrollViewRef.current) {
-      tabsScrollViewRef.current.scrollTo({ x: index * 100, animated: true });
+    const layout = tabLayoutsRef.current[index];
+    if (layout && tabsScrollViewRef.current) {
+      // Scroll so the target tab is roughly centered in the visible area
+      const scrollX = Math.max(0, layout.x - 50);
+      tabsScrollViewRef.current.scrollTo({ x: scrollX, animated: true });
     }
-  };
+  }, []);
 
   // Update order status mutation - using real API
   const updateOrderStatusMutation = useMutation(
@@ -437,14 +441,23 @@ export default function OrderManagement() {
           showsHorizontalScrollIndicator={false}
           style={localStyles.statusTabsContainer}
           contentContainerStyle={localStyles.statusTabsContent}>
-          {statusCounts.map(status => (
-            <StatusTab
+          {statusCounts.map((status, index) => (
+            <View
               key={status.value}
-              status={status}
-              isSelected={selectedStatus === status.value}
-              onPress={() => setSelectedStatus(status.value)}
-              colors={colors}
-            />
+              onLayout={(e) => {
+                tabLayoutsRef.current[index] = e.nativeEvent.layout;
+              }}
+            >
+              <StatusTab
+                status={status}
+                isSelected={selectedStatus === status.value}
+                onPress={() => {
+                  setSelectedStatus(status.value);
+                  scrollToTab(status.value);
+                }}
+                colors={colors}
+              />
+            </View>
           ))}
         </ScrollView>
 
