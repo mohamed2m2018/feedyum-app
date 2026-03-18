@@ -346,6 +346,10 @@ export default function StackNavigation() {
         component={StackRoute.EditReel}
       />
       <Stack.Screen
+        name={StackNav.OrderReceipt}
+        component={StackRoute.OrderReceipt}
+      />
+      <Stack.Screen
         name={StackNav.Report}
         component={StackRoute.Report}
       />

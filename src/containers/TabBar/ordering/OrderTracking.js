@@ -1095,6 +1095,20 @@ const OrderTracking = () => {
           </TouchableOpacity>
         )}
 
+        {/* View Receipt - shown for completed/delivered orders */}
+        {currentOrder && ['delivered', 'completed'].includes(currentOrder.status) && (
+          <TouchableOpacity
+            style={localStyles.receiptLink}
+            onPress={() => navigation.navigate(StackNav.OrderReceipt, { order: currentOrder })}
+            activeOpacity={0.6}
+          >
+            <Ionicons name="receipt-outline" size={moderateScale(16)} color="#FF4D67" />
+            <ZText type="B14" color="#FF4D67" style={{ marginLeft: moderateScale(6) }}>
+              {strings.viewReceipt || 'View Receipt'}
+            </ZText>
+          </TouchableOpacity>
+        )}
+
         <View style={{ height: moderateScale(30) }} />
       </ScrollView>
 
@@ -1269,6 +1283,16 @@ const localStyles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: moderateScale(16),
     marginHorizontal: moderateScale(16),
+  },
+  receiptLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: moderateScale(12),
+    marginHorizontal: moderateScale(16),
+    marginTop: moderateScale(4),
+    backgroundColor: 'rgba(255, 77, 103, 0.08)',
+    borderRadius: moderateScale(12),
   },
   contactCard: {
     flexDirection: 'row',

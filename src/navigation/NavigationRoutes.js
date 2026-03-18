@@ -78,6 +78,7 @@ import ChefOrderDetails from '../containers/TabBar/chef/ChefOrderDetails';
 import ChefBranches from '../screens/ChefBranches';
 import WorkingHoursScreen from '../screens/WorkingHoursScreen';
 import EditReel from '../containers/TabBar/add/EditReel';
+import OrderReceipt from '../containers/TabBar/ordering/OrderReceipt';
 import SupportChat from '../containers/TabBar/profile/SupportChat';
 
 export const TabRoute = {
@@ -157,5 +158,6 @@ export const StackRoute = {
   WorkingHours: WorkingHoursScreen,
   Orders,
   EditReel,
+  OrderReceipt,
   SupportChat,
 };

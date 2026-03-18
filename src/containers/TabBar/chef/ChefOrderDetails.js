@@ -25,6 +25,7 @@ import { moderateScale } from '../../../common/constants';
 import strings from '../../../i18n/strings';
 import request from '../../../api/request';
 import { showSuccessToast, showErrorToast } from '../../../utils/toast';
+import { StackNav } from '../../../navigation/NavigationKeys';
 import { formatDate as formatDateHelper, formatSlotLabel } from '../../../utils/helpers';
 import RejectReasonModal from '../ordering/components/RejectReasonModal';
 import OrderAlarmService from '../../../services/OrderAlarmService';
@@ -628,6 +629,20 @@ const ChefOrderDetailsScreen = () => {
                     </View>
                 </View>
 
+                {/* View Receipt - completed/delivered orders */}
+                {['completed', 'delivered'].includes(order.status) && (
+                    <TouchableOpacity
+                        style={localStyles.receiptLink}
+                        onPress={() => navigation.navigate(StackNav.OrderReceipt, { order })}
+                        activeOpacity={0.6}
+                    >
+                        <Ionicons name="receipt-outline" size={moderateScale(16)} color={colors.primary} />
+                        <ZText type="B14" color={colors.primary} style={{ marginLeft: moderateScale(6) }}>
+                            {strings.viewReceipt || 'View Receipt'}
+                        </ZText>
+                    </TouchableOpacity>
+                )}
+
                 {/* Spacer for footer */}
                 <View style={{ height: 100 }} />
             </ScrollView>
@@ -750,6 +765,15 @@ const localStyles = StyleSheet.create({
     },
     section: {
         marginBottom: moderateScale(24),
+    },
+    receiptLink: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: moderateScale(12),
+        marginBottom: moderateScale(12),
+        backgroundColor: 'rgba(255, 77, 103, 0.08)',
+        borderRadius: moderateScale(12),
     },
     sectionTitle: {
         marginBottom: moderateScale(12),

@@ -80,5 +80,6 @@ export const StackNav = {
   WorkingHours: 'WorkingHours',
   Orders: 'Orders',
   EditReel: 'EditReel',
+  OrderReceipt: 'OrderReceipt',
   SupportChat: 'SupportChat',
 };
