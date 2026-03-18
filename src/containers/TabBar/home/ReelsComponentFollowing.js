@@ -233,15 +233,17 @@ export default function ReelsComponent({ amIFocused }) {
           />
         </View>
       )} */}
-      <View style={localStyles.headerContainer}>
-        <TouchableOpacity onPress={onPressSearch}>
-          <Ionicons
-            name="search-outline"
-            size={moderateScale(30)}
-            color={colors.white}
-          />
-        </TouchableOpacity>
-      </View>
+      {user?.type !== 'chef' && (
+        <View style={localStyles.headerContainer}>
+          <TouchableOpacity onPress={onPressSearch}>
+            <Ionicons
+              name="search-outline"
+              size={moderateScale(30)}
+              color={colors.white}
+            />
+          </TouchableOpacity>
+        </View>
+      )}
       <TouchableOpacity
         onPress={() => filtersSheetRef.current?.show()}
         style={localStyles.headerContainer2}>

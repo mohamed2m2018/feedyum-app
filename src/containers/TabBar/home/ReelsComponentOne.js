@@ -32,6 +32,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocation } from '../../../navigation/locationContext';
 import ZButton from '../../../components/common/ZButton';
 
+import { useStorage } from '../../../utils/useStorage';
+
 import { optimizeImageUrl, prefetchImages } from '../../../utils/imageOptimizer';
 import { prefetchVideosAroundIndex } from '../../../services/VideoPrefetchService';
 
@@ -75,6 +77,7 @@ export default function ReelsComponentOne() {
   const [selectedAreas, setSelectedAreas] = useState([]);
   const [selectedGov, setselectedGov] = useState('');
   const [isLocationOpen, setIsLocationOpen] = useState(false);
+  const [user] = useStorage('user');
 
   const fetchReels = page => {
     let url = `/story/author?limit=15&page=${page}&id=${userProfile?._id}&&lat=${location?.latitude}&long=${location?.longitude}`;
@@ -266,13 +269,15 @@ export default function ReelsComponentOne() {
           <ZHeader
             title={customTitle || route?.params?.profile?.fullName}
             rightIcon={
-              <TouchableOpacity onPress={onPressSearch}>
-                <Ionicons
-                  name="search-outline"
-                  size={moderateScale(30)}
-                  color={colors.white}
-                />
-              </TouchableOpacity>
+              user?.type !== 'chef' ? (
+                <TouchableOpacity onPress={onPressSearch}>
+                  <Ionicons
+                    name="search-outline"
+                    size={moderateScale(30)}
+                    color={colors.white}
+                  />
+                </TouchableOpacity>
+              ) : null
             }
           />
         </View>
@@ -320,7 +325,7 @@ export default function ReelsComponentOne() {
             selectedGov={selectedGov}
             onClose={() => setIsLocationOpen(false)}
           />
-          {!adFailedToLoad && (
+          {/* {!adFailedToLoad && (
             <View style={localStyles.bannerContainer}>
               <BannerAd
                 unitId={
@@ -338,7 +343,7 @@ export default function ReelsComponentOne() {
                 }}
               />
             </View>
-          )}
+          )} */}
         </View>
       </View>
     </SafeAreaView>
