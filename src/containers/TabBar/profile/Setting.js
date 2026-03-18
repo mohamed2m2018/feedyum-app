@@ -149,7 +149,7 @@ export default Setting = ({ navigation }) => {
       id: 8,
       title: strings.privacyPolicy,
       icon: 'alert-circle-outline',
-      route: StackNav.PrivacyPolicy,
+      onPress: () => Linking.openURL('https://feedyum.com/privacy-policy'),
     },
     {
       id: 10,
