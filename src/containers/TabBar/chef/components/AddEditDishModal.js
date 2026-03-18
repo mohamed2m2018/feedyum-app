@@ -28,21 +28,6 @@ import request from '../../../../api/request';
 import { moderateScale } from '../../../../common/constants';
 import strings from '../../../../i18n/strings';
 
-// Helper function to translate category name based on current language
-const translateCategoryName = (englishName) => {
-  if (!englishName) return '';
-
-  // Create a key from the English name (e.g., "Main Course" -> "categoryMainCourse")
-  const key = 'category' + englishName
-    .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join('')
-    .replace(/[^a-zA-Z]/g, '');
-
-  // Return translated string if available, otherwise return original
-  return strings[key] || englishName;
-};
-
 // PickerButton component moved outside to avoid React warning
 const PickerButton = ({ label, value, onPress, error, colors }) => (
   <View style={localStyles.pickerContainer}>
@@ -141,7 +126,7 @@ const AddEditDishModal = ({
         errors.cookingTime = { type: 'validate', message: strings.cookingTimeTooLong };
       }
     }
-    return { values: Object.keys(errors).length === 0 ? values : {}, errors };
+    return { values, errors };
   }, []);
 
   // React Hook Form — single source of truth for form state + validation
@@ -175,10 +160,18 @@ const AddEditDishModal = ({
 
   // Fetch categories and sections - using real API calls
   const { data: categoriesData } = useQuery('categories', async () => {
-    // Fetch categories from real API
     const response = await request.get('/categories');
     return response.data;
   });
+
+  // Get localized category name using nameArabic from API data
+  const getLocalizedCategoryName = useCallback((englishName) => {
+    if (!englishName) return '';
+    const isArabic = strings.getLanguage() === 'ar';
+    if (!isArabic || !categoriesData) return englishName;
+    const category = categoriesData.find(c => c.name === englishName);
+    return category?.nameArabic || englishName;
+  }, [categoriesData]);
 
   const { data: sectionsData } = useQuery(
     ['menuSections', userId],
@@ -247,8 +240,18 @@ const AddEditDishModal = ({
           isDefault: !!o.isDefault,
         })),
       })) : []);
-      setNameTranslationEdited(true);
-      setDescTranslationEdited(true);
+      // Only block auto-translation if translations already exist in DB
+      const hasNameTranslation = !!(dish.nameEnglish || dish.nameArabic);
+      const hasDescTranslation = !!(dish.descriptionEnglish || dish.descriptionArabic);
+      setNameTranslationEdited(hasNameTranslation);
+      setDescTranslationEdited(hasDescTranslation);
+      // Auto-translate if translations are missing
+      if (!hasNameTranslation && dish.name && dish.name.length >= 2) {
+        debouncedTranslateName(dish.name);
+      }
+      if (!hasDescTranslation && dish.description && dish.description.length >= 5) {
+        debouncedTranslateDesc(dish.description);
+      }
     } else {
       reset(DEFAULT_FORM_VALUES);
       setImageUri('');
@@ -633,8 +636,8 @@ const AddEditDishModal = ({
           <PickerButton
             label={strings.category}
             value={(formData.categories && formData.categories.length > 0)
-              ? formData.categories.map(translateCategoryName).join(', ')
-              : translateCategoryName(formData.category)}
+              ? formData.categories.map(name => getLocalizedCategoryName(name)).join(', ')
+              : getLocalizedCategoryName(formData.category)}
             error={formErrors.categories?.message}
             colors={colors}
             onPress={() => setShowCategoryModal(true)}

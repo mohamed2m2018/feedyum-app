@@ -472,6 +472,15 @@ export function BackgroundUploadProvider({ children }) {
         cookingTime: dishData.cookingTime ? parseInt(dishData.cookingTime) : undefined,
         ingredients: dishData.ingredients,
         visible: dishData.visible,
+        // Bilingual fields
+        nameArabic: dishData.nameArabic,
+        nameEnglish: dishData.nameEnglish,
+        descriptionArabic: dishData.descriptionArabic,
+        descriptionEnglish: dishData.descriptionEnglish,
+        sectionNameArabic: dishData.sectionNameArabic,
+        sectionNameEnglish: dishData.sectionNameEnglish,
+        // Option groups
+        optionGroups: dishData.optionGroups,
       };
 
       // Create the dish
