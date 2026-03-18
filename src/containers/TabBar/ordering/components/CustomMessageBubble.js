@@ -113,7 +113,7 @@ const CustomMessageBubble = ({
     // For audio messages, render AudioMessage directly without bubble wrapper
     if (message.audio) {
       return (
-        <View style={[styles.bubbleWrapper, showOnRight ? styles.wrapperRight : styles.wrapperLeft, { width: '100%' }]}>
+        <View style={[styles.bubbleWrapper, showOnRight ? styles.wrapperRight : styles.wrapperLeft]}>
           {/* Options button for audio messages */}
           {isCurrentUser && !isDeleted && showOnRight && (
             <TouchableOpacity onPress={handleOptionsPress} style={styles.optionsButtonTrigger}>
@@ -148,7 +148,7 @@ const CustomMessageBubble = ({
     ];
 
     return (
-      <View style={[styles.bubbleWrapper, showOnRight ? styles.wrapperRight : styles.wrapperLeft, { width: '100%' }]}>
+      <View style={[styles.bubbleWrapper, showOnRight ? styles.wrapperRight : styles.wrapperLeft]}>
         {/* Options button on left side (for RTL when own message is on left) */}
         {isCurrentUser && !isDeleted && !showOnRight && (
           <TouchableOpacity onPress={handleOptionsPress} style={[styles.optionsButtonTrigger, { marginLeft: moderateScale(4), marginRight: 0 }]}>
@@ -374,7 +374,7 @@ const styles = StyleSheet.create({
   optionsContainer: {
     borderRadius: moderateScale(12),
     minWidth: moderateScale(150),
-    backgroundColor: '#FFFFFF', // Background color for shadow efficiency
+    backgroundColor: '#FFFFFF',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -395,11 +395,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: moderateScale(2),
-    direction: 'ltr', // Force LTR so own messages stay on right (like WhatsApp)
   },
+  // Chat bubble sides are NOT mirrored for RTL (WhatsApp/Telegram convention)
+  // Parent Message wrapper in Chat.js forces direction: 'ltr', so flex-end = RIGHT
   wrapperRight: {
     justifyContent: 'flex-end',
-    // Removed alignSelf: 'flex-end' to check if width: 100% helps
+    alignSelf: 'flex-end',
   },
   wrapperLeft: {
     justifyContent: 'flex-start',
@@ -414,6 +415,7 @@ const styles = StyleSheet.create({
     padding: moderateScale(12),
     marginHorizontal: moderateScale(10),
     marginVertical: moderateScale(2),
+    maxWidth: '75%',
   },
   messageText: {
     fontSize: moderateScale(14),

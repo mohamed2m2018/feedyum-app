@@ -20,6 +20,7 @@ import {
   MessageImage,
   SystemMessage,
   Composer,
+  Message,
 } from 'react-native-gifted-chat';
 import io from 'socket.io-client';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -987,6 +988,15 @@ export default function ChatScreen({ route }) {
     />
   ), [colors, currentUser, handleDeleteMessage, handleEditMessage, handleRetryMessage, handleReply, isRTL, language]);
 
+  // Force LTR direction on GiftedChat's Message container
+  // This prevents RTL from flipping own messages to the left side
+  // (WhatsApp/Telegram convention: own messages always on right)
+  const renderMessage = useCallback((props) => (
+    <View style={{ direction: 'ltr' }}>
+      <Message {...props} />
+    </View>
+  ), []);
+
 
   const renderInputToolbar = useCallback((props) => {
     // Disable chat for cancelled/expired orders
@@ -1374,6 +1384,7 @@ export default function ChatScreen({ route }) {
           user={chatUser}
           renderSend={renderSend}
           renderBubble={renderBubble}
+          renderMessage={renderMessage}
           renderInputToolbar={renderInputToolbar}
           renderComposer={renderComposer}
           renderActions={renderActions}
