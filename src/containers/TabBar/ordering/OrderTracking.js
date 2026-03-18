@@ -39,6 +39,7 @@ import {
 import { StackNav } from '../../../navigation/NavigationKeys';
 import request from '../../../api/request';
 import { useQuery } from 'react-query';
+import DepositProofModal from './components/DepositProofModal';
 
 const OrderTracking = () => {
   const colors = useSelector(state => state.theme.theme);
@@ -245,8 +246,16 @@ const OrderTracking = () => {
   };
 
   const [confirming, setConfirming] = useState(false);
+  const [showDepositProof, setShowDepositProof] = useState(false);
 
   const handleConfirmOrder = () => {
+    // Deposit orders: show proof modal (mandatory)
+    if (currentOrder?.depositRequired) {
+      setShowDepositProof(true);
+      return;
+    }
+
+    // Non-deposit orders: regular confirm dialog
     showActionDialog({
       type: ALERT_TYPE.SUCCESS,
       title: strings.confirmOrder || 'Confirm Order',
@@ -271,6 +280,25 @@ const OrderTracking = () => {
         }
       },
     });
+  };
+
+  const handleDepositProofConfirm = async (proofImageUrl) => {
+    try {
+      setConfirming(true);
+      await dispatch(confirmOrderByUser(currentOrder._id, proofImageUrl));
+      setShowDepositProof(false);
+      showSuccessToast(
+        strings.orderConfirmed || 'Order Confirmed',
+        strings.orderConfirmedMessage || 'Your order has been confirmed.'
+      );
+    } catch (error) {
+      showErrorToast(
+        strings.error || 'Error',
+        error.message || strings.failedToConfirmOrder || 'Failed to confirm order.'
+      );
+    } finally {
+      setConfirming(false);
+    }
   };
 
   const getStatusColor = status => {
@@ -1150,6 +1178,15 @@ const OrderTracking = () => {
         <View style={{ height: moderateScale(30) }} />
       </ScrollView>
 
+
+
+    {/* Deposit Proof Modal */}
+    <DepositProofModal
+      visible={showDepositProof}
+      order={currentOrder}
+      onClose={() => setShowDepositProof(false)}
+      onConfirm={handleDepositProofConfirm}
+    />
 
     </ZSafeAreaView>
   );

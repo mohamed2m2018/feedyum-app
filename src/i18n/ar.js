@@ -2068,4 +2068,17 @@ export default {
   depositOverrideHint: 'تعديل العربون المطلوب لهذا الطلب',
   noDepositForOrder: 'بدون عربون',
 
+  // Deposit Payment Proof
+  depositProofTitle: 'رفع إثبات الدفع',
+  depositProofInstructions: 'يرجى رفع صورة من تحويل إنستاباي كإثبات لدفع العربون.',
+  depositProofAmount: 'مبلغ العربون',
+  depositProofUpload: 'التقط صورة أو اختر من المعرض',
+  depositProofChangePhoto: 'تغيير الصورة',
+  depositProofConfirm: 'تأكيد وإرسال الإثبات',
+  depositProofUploading: 'جاري رفع الإثبات...',
+  depositProofRequired: 'إثبات الدفع مطلوب',
+  depositProofCamera: 'الكاميرا',
+  depositProofGallery: 'المعرض',
+  depositProofSelectMethod: 'كيف تريد إضافة الإثبات؟',
+
 };

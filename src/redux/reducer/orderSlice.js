@@ -274,7 +274,7 @@ export const cancelOrderByUser = (orderId, reason) => async (dispatch) => {
   }
 };
 
-export const confirmOrderByUser = (orderId) => async (dispatch) => {
+export const confirmOrderByUser = (orderId, depositProofImage) => async (dispatch) => {
   try {
     if (!orderId) {
       throw new Error('Order ID is required');
@@ -283,7 +283,12 @@ export const confirmOrderByUser = (orderId) => async (dispatch) => {
     dispatch(setLoading(true));
     dispatch(clearError());
 
-    const response = await request.put(`/orders/${orderId}/confirm`);
+    const body = {};
+    if (depositProofImage) {
+      body.depositProofImage = depositProofImage;
+    }
+
+    const response = await request.put(`/orders/${orderId}/confirm`, body);
     const confirmedOrder = response.data.order;
 
     dispatch(updateOrderStatus({

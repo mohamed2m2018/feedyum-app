@@ -2085,4 +2085,17 @@ export default {
   depositOverrideHint: 'Override the default deposit for this order',
   noDepositForOrder: 'No Deposit',
 
+  // Deposit Payment Proof
+  depositProofTitle: 'Upload Payment Proof',
+  depositProofInstructions: 'Please upload a screenshot of your InstaPay transfer as proof of deposit payment.',
+  depositProofAmount: 'Deposit Amount',
+  depositProofUpload: 'Take Photo or Choose from Gallery',
+  depositProofChangePhoto: 'Change Photo',
+  depositProofConfirm: 'Confirm & Send Proof',
+  depositProofUploading: 'Uploading proof...',
+  depositProofRequired: 'Payment proof is required',
+  depositProofCamera: 'Camera',
+  depositProofGallery: 'Gallery',
+  depositProofSelectMethod: 'How would you like to add the proof?',
+
 };
