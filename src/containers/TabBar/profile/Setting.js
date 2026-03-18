@@ -7,6 +7,7 @@ import {
   ScrollView,
   I18nManager,
   Alert,
+  Linking,
 } from 'react-native';
 import React, { createRef, useState, useRef, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -149,6 +150,30 @@ export default Setting = ({ navigation }) => {
       title: strings.privacyPolicy,
       icon: 'alert-circle-outline',
       route: StackNav.PrivacyPolicy,
+    },
+    {
+      id: 10,
+      title: strings.termsOfService,
+      icon: 'document-text-outline',
+      onPress: () => Linking.openURL('https://feedyum.com/terms-of-service'),
+    },
+    {
+      id: 11,
+      title: strings.deliveryPolicy,
+      icon: 'bicycle-outline',
+      onPress: () => Linking.openURL('https://feedyum.com/delivery-policy'),
+    },
+    {
+      id: 12,
+      title: strings.refundPolicy,
+      icon: 'cash-outline',
+      onPress: () => Linking.openURL('https://feedyum.com/refund-policy'),
+    },
+    {
+      id: 13,
+      title: strings.deleteAccount,
+      icon: 'trash-outline',
+      onPress: () => Linking.openURL('https://feedyum.com/delete-account'),
     },
     {
       id: 9,
