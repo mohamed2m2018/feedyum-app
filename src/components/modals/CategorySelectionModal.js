@@ -141,26 +141,39 @@ const CategorySelectionModal = ({
 
   const getCategoryIcon = (categoryName) => {
     const iconMap = {
+      // Cuisines
       'Italian': '🍝',
+      'Turkish': '🇹🇷',
+      'Japanese': '🍣',
+      'Chinese': '🥡',
+      'Syrian': '🧆',
+      'Lebanese': '🫓',
+      'Indian': '🍛',
+      'Egyptian': '🇪🇬',
+      // Food Types
+      'Pizza': '🍕',
       'Pasta': '🍜',
+      'Seafood': '🐟',
+      'Burger': '🍔',
+      'Chicken': '🍗',
+      'Grilled': '🔥',
+      'Crepes': '🥞',
+      'Koshary': '🍲',
+      // Categories
+      'Fast food': '🍟',
+      'Main Courses': '🍽️',
       'Soups and Stews': '🍲',
       'Sandwiches and Wraps': '🥪',
-      'Seafood': '🐟',
-      'Chicken': '🍗',
-      'Main Courses': '🍽️',
-      'Homemade': '🏠',
+      'Foul and Flafel': '🥙',
+      'Vegetarian': '🥗',
+      'Healthy': '🥬',
+      'Breakfast': '☕',
       'Bakery': '🍰',
       'Desserts': '🧁',
-      'Foul and Flafel': '🥙',
-      'Side Dishes': '🥗',
-      'Coupons': '🎫',
-      'Dessert': '🍨',
-      'Main Course': '🍽️',
-      'Pizza': '🍕',
-      'Burger': '🍔',
-      'Vegetarian': '🥗',
       'Beverages': '🥤',
-      'Fast food': '🍟',
+      'Snacks': '🍿',
+      'Side Dishes': '🥗',
+      'Homemade': '🏠',
     };
     return iconMap[categoryName] || '🍴';
   };
