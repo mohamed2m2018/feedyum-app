@@ -2070,4 +2070,11 @@ export default {
   updateRequiredMessage: 'A new version of FeedYum is available. Please update to continue using the app.',
   updateNow: 'Update Now',
 
+  // Deposit Agreement & Strike System
+  depositAgreementTitle: 'Deposit Terms Agreement',
+  depositAgreementBody: 'By enabling deposits, you agree to:\n\n• Refund the customer\'s deposit if you cancel the order\n• Deposits go directly to your InstaPay — FeedYum does not hold funds\n• Cancelling a deposit order results in a strike on your account\n• Accumulating 3 strikes leads to a 7-day account suspension\n\nFeedYum acts as an intermediary and cannot force refunds.',
+  depositAgreementAccept: 'I Agree to the Terms',
+  depositAgreementDecline: 'Cancel',
+  chefSuspendedMessage: 'Your account is suspended until {date} due to deposit order cancellations. You cannot receive new orders during this period.',
+
 };

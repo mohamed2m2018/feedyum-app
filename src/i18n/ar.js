@@ -2053,4 +2053,11 @@ export default {
   updateRequiredMessage: 'يتوفر إصدار جديد من FeedYum. يرجى التحديث للاستمرار في استخدام التطبيق.',
   updateNow: 'تحديث الآن',
 
+  // Deposit Agreement & Strike System
+  depositAgreementTitle: 'اتفاقية شروط العربون',
+  depositAgreementBody: 'بتفعيل العربون، أنت توافق على:\n\n• استرداد عربون العميل في حالة إلغاء الطلب\n• العربون يُحوّل مباشرة لحسابك على إنستاباي — FeedYum لا تحتفظ بالأموال\n• إلغاء طلب بعربون ينتج عنه مخالفة على حسابك\n• تراكم ٣ مخالفات يؤدي لتعليق الحساب لمدة ٧ أيام\n\nFeedYum وسيط تقني ولا يمكنها إجبار الاسترداد.',
+  depositAgreementAccept: 'أوافق على الشروط',
+  depositAgreementDecline: 'إلغاء',
+  chefSuspendedMessage: 'حسابك معلّق حتى {date} بسبب إلغاء طلبات بعربون. لا يمكنك استقبال طلبات جديدة خلال هذه الفترة.',
+
 };

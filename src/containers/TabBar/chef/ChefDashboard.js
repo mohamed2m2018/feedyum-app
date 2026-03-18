@@ -52,6 +52,7 @@ export default function ChefDashboard() {
   const [instapayHandle, setInstapayHandle] = useState('');
   const [depositType, setDepositType] = useState('percentage');
   const [depositValue, setDepositValue] = useState('50');
+  const [depositAgreementAccepted, setDepositAgreementAccepted] = useState(false);
 
   // InstaPay modal state
   const [showInstapayModal, setShowInstapayModal] = useState(false);
@@ -77,6 +78,7 @@ export default function ChefDashboard() {
         if (cs.instapayType !== undefined) setInstapayType(cs.instapayType || 'phone');
         if (cs.depositType !== undefined) setDepositType(cs.depositType || 'percentage');
         if (cs.depositValue !== undefined) setDepositValue(String(cs.depositValue || 50));
+        if (cs.depositAgreementAccepted !== undefined) setDepositAgreementAccepted(cs.depositAgreementAccepted === true);
       }
     }, [user?.chatEnabled, user?.chefSettings])
   );
@@ -128,6 +130,30 @@ export default function ChefDashboard() {
 
   const handleDepositToggle = useCallback(async (value) => {
     if (value) {
+      // Agreement not yet accepted → show terms first
+      if (!depositAgreementAccepted) {
+        setConfirmModal({
+          visible: true,
+          title: strings.depositAgreementTitle,
+          message: strings.depositAgreementBody,
+          destructive: false,
+          confirmText: strings.depositAgreementAccept,
+          cancelText: strings.depositAgreementDecline,
+          onConfirm: async () => {
+            setConfirmModal(prev => ({ ...prev, visible: false }));
+            setDepositAgreementAccepted(true);
+            try {
+              await request.patch('/user', { depositAgreementAccepted: true });
+              queryClient.invalidateQueries('user');
+            } catch (error) {
+              setDepositAgreementAccepted(false);
+            }
+            // Re-trigger toggle now that agreement is accepted
+            handleDepositToggle(true);
+          },
+        });
+        return;
+      }
       // No InstaPay yet → show modal to add it first
       if (!instapayHandle) {
         setInstapayInput('');
@@ -175,7 +201,7 @@ export default function ChefDashboard() {
         setRequireDeposit(true);
       }
     }
-  }, [queryClient, instapayHandle, requireConfirmation]);
+  }, [queryClient, instapayHandle, requireConfirmation, depositAgreementAccepted]);
 
   // Validate InstaPay input based on type
   const validateInstapayInput = useCallback((value, type) => {
@@ -440,14 +466,14 @@ export default function ChefDashboard() {
                 onPress={() => setConfirmModal(prev => ({ ...prev, visible: false }))}
                 activeOpacity={0.7}
               >
-                <ZText type="B16" color={colors.textColor}>{strings.cancel}</ZText>
+                <ZText type="B16" color={colors.textColor}>{confirmModal.cancelText || strings.cancel}</ZText>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[localStyles.modalBtn, { backgroundColor: confirmModal.destructive ? colors.redColor : colors.primary }]}
                 onPress={confirmModal.onConfirm}
                 activeOpacity={0.7}
               >
-                <ZText type="B16" color={colors.white}>{strings.confirm}</ZText>
+                <ZText type="B16" color={colors.white}>{confirmModal.confirmText || strings.confirm}</ZText>
               </TouchableOpacity>
             </View>
           </View>
