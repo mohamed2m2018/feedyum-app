@@ -33,7 +33,9 @@ const MenuDishCard = ({
     .reduce((sum, item) => sum + item.quantity, 0);
 
   const isAvailable = dish.visible !== false;
+  const isChefUser = user?.type === 'chef';
   const isOwnMenu = user?._id?.toString() === chefId?.toString();
+  const canOrder = !isOwnMenu && !isChefUser;
   const hasImage = !!dish.image && !dish.image.includes('placeholder');
 
   const handleAdd = () => {
@@ -103,7 +105,7 @@ const MenuDishCard = ({
 
   // Right-side action for no-image cards (vertically centered)
   const renderRightAction = () => {
-    if (isOwnMenu) return null;
+    if (!canOrder) return null;
     if (!isAvailable) return renderUnavailable();
     if (currentQuantity > 0) return renderQuantityControls();
     return renderAddBtn(32);
@@ -154,18 +156,18 @@ const MenuDishCard = ({
         <View style={s.imageSection}>
           <Image source={{ uri: dish.image }} style={s.thumbnail} />
           {/* Only the single + button overlaps the image */}
-          {!isOwnMenu && isAvailable && currentQuantity === 0 && (
+          {canOrder && isAvailable && currentQuantity === 0 && (
             <View style={s.imageActionOverlay}>
               {renderAddBtn(30)}
             </View>
           )}
-          {!isOwnMenu && !isAvailable && (
+          {canOrder && !isAvailable && (
             <View style={s.imageActionOverlay}>
               {renderUnavailable()}
             </View>
           )}
           {/* Quantity controls sit below the image */}
-          {!isOwnMenu && isAvailable && currentQuantity > 0 && (
+          {canOrder && isAvailable && currentQuantity > 0 && (
             <View style={s.imageBelowAction}>
               {renderQuantityControls()}
             </View>
