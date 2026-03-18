@@ -1,10 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   StyleSheet,
   ScrollView,
   Share,
-  I18nManager,
 } from 'react-native';
 import { useSelector } from 'react-redux';
 import { useRoute } from '@react-navigation/native';
@@ -14,18 +13,18 @@ import ZHeader from '../../../components/common/ZHeader';
 import ZText from '../../../components/common/ZText';
 import ZButton from '../../../components/common/ZButton';
 import { moderateScale } from '../../../common/constants';
-import { styles } from '../../../themes';
 import strings from '../../../i18n/strings';
 import { formatDate, formatTime } from '../../../utils/helpers';
 import { selectCurrentOrder } from '../../../redux/reducer/orderSlice';
+import { buildReceiptText } from '../../../utils/receiptTextBuilder';
 
 const OrderReceipt = () => {
   const colors = useSelector(state => state.theme.theme);
   const language = useSelector(state => state.profile?.language);
   const route = useRoute();
   const currentOrder = useSelector(selectCurrentOrder);
+  const [sharing, setSharing] = useState(false);
 
-  // Use route params if available, fallback to redux
   const order = route.params?.order || currentOrder;
 
   if (!order) {
@@ -46,52 +45,15 @@ const OrderReceipt = () => {
   const chefName = order.chef?.fullName || order.chef?.username || '';
   const customerName = order.user?.fullName || order.user?.username || '';
 
-  const buildShareText = () => {
-    const lines = [];
-    const divider = '─'.repeat(30);
-
-    lines.push(`🧾 FeedYum — ${strings.orderReceipt}`);
-    lines.push(divider);
-    lines.push(`${strings.receiptOrderId} #${shortId}`);
-    lines.push(`${strings.orderDate} ${order.created_at ? formatDate(order.created_at, language) : ''}`);
-    lines.push(`${strings.chef} ${chefName}`);
-    lines.push(divider);
-
-    order.items?.forEach(item => {
-      const name = item.dish?.name || '';
-      const qty = item.quantity || 1;
-      const price = ((item.unitPrice || item.dish?.price || 0) * qty).toFixed(2);
-      lines.push(`${name} × ${qty}  —  ${price} ${strings.currency}`);
-    });
-
-    lines.push(divider);
-    lines.push(`${strings.subtotal} ${order.subtotal?.toFixed(2) || '0.00'} ${strings.currency}`);
-
-    if (order.deliveryFee > 0) {
-      lines.push(`${strings.deliveryFee} ${order.deliveryFee.toFixed(2)} ${strings.currency}`);
-    }
-    if (order.serviceFee > 0) {
-      lines.push(`${strings.serviceFee || 'Service Fee:'} ${order.serviceFee.toFixed(2)} ${strings.currency}`);
-    }
-    if (order.promocode?.discountAmount > 0) {
-      lines.push(`${strings.discount} (${order.promocode.code}) -${order.promocode.discountAmount.toFixed(2)} ${strings.currency}`);
-    }
-
-    lines.push(divider);
-    lines.push(`${strings.total} ${order.totalPrice?.toFixed(2) || '0.00'} ${strings.currency}`);
-    lines.push('');
-    lines.push(strings.thankYouForOrder);
-
-    return lines.join('\n');
-  };
-
   const handleShare = async () => {
     try {
-      await Share.share({
-        message: buildShareText(),
-      });
+      setSharing(true);
+      const text = buildReceiptText({ order, shortId, chefName, customerName, language, strings });
+      await Share.share({ message: text });
     } catch (error) {
       console.error('[OrderReceipt] Share error:', error);
+    } finally {
+      setSharing(false);
     }
   };
 
@@ -196,10 +158,7 @@ const OrderReceipt = () => {
           />
         </View>
 
-        {/* Items */}
         {renderItems()}
-
-        {/* Pricing */}
         {renderPricing()}
 
         {/* Delivery Address */}
@@ -221,6 +180,7 @@ const OrderReceipt = () => {
         <ZButton
           title={strings.shareReceipt}
           onPress={handleShare}
+          disabled={sharing}
           frontIcon={<Ionicons name="share-outline" size={moderateScale(18)} color="#FFFFFF" style={{ marginEnd: moderateScale(6) }} />}
           containerStyle={localStyles.shareButton}
         />
