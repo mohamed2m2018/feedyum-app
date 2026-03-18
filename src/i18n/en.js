@@ -2077,4 +2077,12 @@ export default {
   depositAgreementDecline: 'Cancel',
   chefSuspendedMessage: 'Your account is suspended until {date} due to deposit order cancellations. You cannot receive new orders during this period.',
 
+  // Per-Order Deposit Override
+  depositOverrideSection: 'Deposit Settings',
+  depositOverrideLabel: 'Deposit Amount',
+  depositTypePercentage: 'Percentage',
+  depositTypeFixed: 'Fixed',
+  depositOverrideHint: 'Override the default deposit for this order',
+  noDepositForOrder: 'No Deposit',
+
 };

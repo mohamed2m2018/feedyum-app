@@ -33,6 +33,11 @@ const OrderReviewModal = ({ visible, order, onClose, onAccept, onReject }) => {
   const [estimatedTime, setEstimatedTime] = useState('30');
   const [isDeliveryFeeCustom, setIsDeliveryFeeCustom] = useState(false);
 
+  // Deposit override state
+  const [depositEnabled, setDepositEnabled] = useState(false);
+  const [depositOverrideType, setDepositOverrideType] = useState('percentage');
+  const [depositOverrideValue, setDepositOverrideValue] = useState('');
+
   useEffect(() => {
     if (visible && order) {
       // Pre-populate delivery fee from the order (auto-calculated at creation)
@@ -41,6 +46,33 @@ const OrderReviewModal = ({ visible, order, onClose, onAccept, onReject }) => {
       setIsDeliveryFeeCustom(false);
       setEstimatedTime('30');
       setIsProcessing(false);
+
+      // Pre-populate deposit from order
+      if (order.depositRequired) {
+        setDepositEnabled(true);
+        // Determine type/value from order's depositAmount vs subtotal
+        const subtotal = order.subtotal || 0;
+        const storedAmount = order.depositAmount || 0;
+        // Check if it looks like a percentage of subtotal
+        if (subtotal > 0 && storedAmount > 0) {
+          const pct = (storedAmount / subtotal) * 100;
+          // If it's a clean percentage, pre-select percentage type
+          if (Number.isInteger(Math.round(pct)) && pct <= 100) {
+            setDepositOverrideType('percentage');
+            setDepositOverrideValue(String(Math.round(pct)));
+          } else {
+            setDepositOverrideType('fixed');
+            setDepositOverrideValue(String(storedAmount));
+          }
+        } else {
+          setDepositOverrideType('percentage');
+          setDepositOverrideValue('50');
+        }
+      } else {
+        setDepositEnabled(false);
+        setDepositOverrideType('percentage');
+        setDepositOverrideValue('');
+      }
     }
   }, [visible, order]);
 
@@ -61,9 +93,15 @@ const OrderReviewModal = ({ visible, order, onClose, onAccept, onReject }) => {
         try {
           setIsProcessing(true);
 
-          // Update order status to accepted with delivery fee
+          // Update order status to accepted with delivery fee + deposit override
+          const depositOverride = order.depositRequired ? {
+            depositEnabled,
+            depositType: depositOverrideType,
+            depositValue: parseFloat(depositOverrideValue) || 0,
+          } : undefined;
+
           const updatedOrder = await dispatch(
-            updateOrderStatusAsync(order._id, 'confirmed', fee),
+            updateOrderStatusAsync(order._id, 'confirmed', fee, depositOverride),
           );
 
           // Call parent callback with actual status from backend
@@ -306,6 +344,102 @@ const OrderReviewModal = ({ visible, order, onClose, onAccept, onReject }) => {
     </View>
   );
 
+  const getCalculatedDepositAmount = () => {
+    const subtotal = order?.subtotal || 0;
+    const val = parseFloat(depositOverrideValue) || 0;
+    if (!depositEnabled || val <= 0) return 0;
+    if (depositOverrideType === 'percentage') {
+      return Number(((subtotal * Math.min(val, 100)) / 100).toFixed(2));
+    }
+    return val;
+  };
+
+  const renderDepositOverride = () => (
+    <View style={[localStyles.section, {
+      backgroundColor: colors.inputBg,
+      borderColor: colors.orange || '#FF9800',
+      borderWidth: 1,
+    }]}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: moderateScale(12) }}>
+        <ZText type="B16" color={colors.orange || '#FF9800'}>{strings.depositOverrideSection}</ZText>
+        <TouchableOpacity
+          onPress={() => setDepositEnabled(!depositEnabled)}
+          style={{
+            paddingHorizontal: moderateScale(12),
+            paddingVertical: moderateScale(6),
+            borderRadius: moderateScale(16),
+            backgroundColor: depositEnabled ? (colors.orange || '#FF9800') + '20' : colors.grayScale3 || '#E0E0E0',
+          }}
+          activeOpacity={0.7}
+        >
+          <ZText type="B12" color={depositEnabled ? (colors.orange || '#FF9800') : colors.grayScale7}>
+            {depositEnabled ? strings.depositOverrideLabel : strings.noDepositForOrder}
+          </ZText>
+        </TouchableOpacity>
+      </View>
+
+      {depositEnabled && (
+        <>
+          {/* Type selector */}
+          <View style={{ flexDirection: 'row', marginBottom: moderateScale(12) }}>
+            {['percentage', 'fixed'].map((type) => (
+              <TouchableOpacity
+                key={type}
+                onPress={() => setDepositOverrideType(type)}
+                style={{
+                  flex: 1,
+                  paddingVertical: moderateScale(10),
+                  borderRadius: moderateScale(8),
+                  backgroundColor: depositOverrideType === type ? (colors.orange || '#FF9800') : 'transparent',
+                  borderWidth: 1,
+                  borderColor: depositOverrideType === type ? (colors.orange || '#FF9800') : (colors.bColor || '#DDD'),
+                  marginHorizontal: moderateScale(4),
+                  alignItems: 'center',
+                }}
+                activeOpacity={0.7}
+              >
+                <ZText type="B14" color={depositOverrideType === type ? '#FFF' : colors.textColor}>
+                  {type === 'percentage' ? strings.depositTypePercentage : strings.depositTypeFixed}
+                </ZText>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {/* Value input */}
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <TextInput
+              style={[
+                localStyles.feeInput,
+                {
+                  flex: 1,
+                  backgroundColor: colors.backgroundColor,
+                  borderColor: colors.orange || '#FF9800',
+                  color: colors.textColor,
+                },
+              ]}
+              value={depositOverrideValue}
+              onChangeText={setDepositOverrideValue}
+              placeholder={depositOverrideType === 'percentage' ? '50' : '100'}
+              placeholderTextColor={colors.grayScale7}
+              keyboardType="decimal-pad"
+              returnKeyType="done"
+            />
+            <ZText type="B14" color={colors.grayScale7} style={{ marginStart: moderateScale(8) }}>
+              {depositOverrideType === 'percentage' ? '%' : (order?.currency || 'EGP')}
+            </ZText>
+          </View>
+
+          {/* Calculated amount preview */}
+          {depositOverrideType === 'percentage' && (
+            <ZText type="M12" color={colors.grayScale7} style={{ marginTop: moderateScale(8) }}>
+              {strings.depositOverrideLabel}: {getCalculatedDepositAmount().toFixed(2)} {order?.currency || 'EGP'}
+            </ZText>
+          )}
+        </>
+      )}
+    </View>
+  );
+
   const renderPricingSummary = () => (
     <View style={[localStyles.section, { backgroundColor: colors.inputBg }]}>
       <ZText
@@ -387,6 +521,7 @@ const OrderReviewModal = ({ visible, order, onClose, onAccept, onReject }) => {
           {renderDeliveryAddress()}
           {renderOrderItems()}
           {renderDeliveryFeeInput()}
+          {order?.depositRequired && renderDepositOverride()}
           {renderPricingSummary()}
         </ScrollView>
 

@@ -2060,4 +2060,12 @@ export default {
   depositAgreementDecline: 'إلغاء',
   chefSuspendedMessage: 'حسابك معلّق حتى {date} بسبب إلغاء طلبات بعربون. لا يمكنك استقبال طلبات جديدة خلال هذه الفترة.',
 
+  // Per-Order Deposit Override
+  depositOverrideSection: 'إعدادات العربون',
+  depositOverrideLabel: 'مبلغ العربون',
+  depositTypePercentage: 'نسبة مئوية',
+  depositTypeFixed: 'مبلغ ثابت',
+  depositOverrideHint: 'تعديل العربون المطلوب لهذا الطلب',
+  noDepositForOrder: 'بدون عربون',
+
 };
