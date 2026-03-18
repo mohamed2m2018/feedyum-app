@@ -2081,4 +2081,10 @@ export default {
   depositProofGallery: 'المعرض',
   depositProofSelectMethod: 'كيف تريد إضافة الإثبات؟',
 
+  // Deposit Display (Order Cards & Details)
+  depositBadge: 'يتطلب عربون',
+  depositPaid: 'تم دفع العربون',
+  depositProofSent: 'تم إرسال إثبات الدفع',
+  viewDepositProof: 'عرض إثبات الدفع',
+
 };

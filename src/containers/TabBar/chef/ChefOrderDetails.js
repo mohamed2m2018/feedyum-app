@@ -679,6 +679,47 @@ const ChefOrderDetailsScreen = () => {
                                 <ZText type="M14" color={colors.grayScale7}>{strings.depositAmount}</ZText>
                                 <ZText type="B16" color={colors.textColor}>{order.depositAmount || 0} {strings.currency}</ZText>
                             </View>
+                            {/* Deposit Proof Image */}
+                            {order.depositProofImage && (
+                                <TouchableOpacity
+                                    style={{
+                                        marginTop: moderateScale(10),
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        backgroundColor: (colors.success || '#4CAF50') + '10',
+                                        borderRadius: moderateScale(10),
+                                        padding: moderateScale(8),
+                                    }}
+                                    onPress={() => {
+                                        // Open image in full screen or linking
+                                        Linking.openURL(order.depositProofImage).catch(() => {});
+                                    }}
+                                    activeOpacity={0.7}
+                                >
+                                    <Image
+                                        source={{ uri: order.depositProofImage }}
+                                        style={{
+                                            width: moderateScale(50),
+                                            height: moderateScale(50),
+                                            borderRadius: moderateScale(8),
+                                        }}
+                                        resizeMode="cover"
+                                    />
+                                    <View style={{ marginStart: moderateScale(10), flex: 1 }}>
+                                        <ZText type="B14" color={colors.success || '#4CAF50'}>
+                                            {strings.depositProofSent}
+                                        </ZText>
+                                        <ZText type="M12" color={colors.grayScale7}>
+                                            {strings.viewDepositProof}
+                                        </ZText>
+                                    </View>
+                                    <Ionicons
+                                        name="open-outline"
+                                        size={moderateScale(18)}
+                                        color={colors.grayScale7}
+                                    />
+                                </TouchableOpacity>
+                            )}
                             {!order.depositConfirmedByChef && (
                                 <TouchableOpacity
                                     style={{

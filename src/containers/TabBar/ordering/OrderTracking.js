@@ -1144,6 +1144,42 @@ const OrderTracking = () => {
         {renderOrderDetails()}
         {renderOrderItems()}
         {renderPricingSummary()}
+
+        {/* Deposit Summary — persistent across all statuses */}
+        {currentOrder?.depositRequired && currentOrder.status !== 'awaiting_confirmation' && (
+          <View style={{
+            backgroundColor: currentOrder.depositProofImage ? '#4CAF5015' : '#FF980015',
+            borderRadius: moderateScale(12),
+            padding: moderateScale(14),
+            marginHorizontal: moderateScale(16),
+            marginBottom: moderateScale(12),
+            borderWidth: 1,
+            borderColor: currentOrder.depositProofImage ? '#4CAF5030' : '#FF980030',
+          }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: moderateScale(6) }}>
+              <Ionicons
+                name={currentOrder.depositProofImage ? 'checkmark-circle' : 'cash-outline'}
+                size={moderateScale(18)}
+                color={currentOrder.depositProofImage ? '#4CAF50' : '#FF9800'}
+                style={{ marginEnd: moderateScale(8) }}
+              />
+              <ZText type="B14" color={currentOrder.depositProofImage ? '#4CAF50' : '#FF9800'}>
+                {currentOrder.depositProofImage ? strings.depositPaid : strings.depositBadge}
+              </ZText>
+            </View>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <ZText type="M14" color={colors.grayScale7}>{strings.depositProofAmount}</ZText>
+              <ZText type="B16" color={colors.textColor}>{currentOrder.depositAmount?.toFixed(2) || 0} {strings.currency}</ZText>
+            </View>
+            {currentOrder.depositProofImage && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: moderateScale(6) }}>
+                <Ionicons name="image-outline" size={moderateScale(14)} color="#4CAF50" style={{ marginEnd: moderateScale(4) }} />
+                <ZText type="M12" color="#4CAF50">{strings.depositProofSent}</ZText>
+              </View>
+            )}
+          </View>
+        )}
+
         {renderDeliveryInfo()}
 
         {/* Cancel Order - subtle text link, not a button */}

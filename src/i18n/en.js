@@ -2098,4 +2098,10 @@ export default {
   depositProofGallery: 'Gallery',
   depositProofSelectMethod: 'How would you like to add the proof?',
 
+  // Deposit Display (Order Cards & Details)
+  depositBadge: 'Deposit Required',
+  depositPaid: 'Deposit Paid',
+  depositProofSent: 'Payment Proof Sent',
+  viewDepositProof: 'View Payment Proof',
+
 };

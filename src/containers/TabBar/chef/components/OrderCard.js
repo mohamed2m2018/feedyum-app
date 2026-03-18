@@ -365,6 +365,32 @@ const OrderCard = ({
         )}
       </View>
 
+      {/* Deposit Badge */}
+      {order.depositRequired && (
+        <View style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          backgroundColor: order.depositProofImage ? (colors.green || '#4CAF50') + '15' : '#FF980015',
+          borderRadius: moderateScale(8),
+          paddingHorizontal: moderateScale(10),
+          paddingVertical: moderateScale(6),
+          marginBottom: moderateScale(12),
+        }}>
+          <Ionicons
+            name={order.depositProofImage ? 'checkmark-circle' : 'cash-outline'}
+            size={moderateScale(14)}
+            color={order.depositProofImage ? (colors.green || '#4CAF50') : '#FF9800'}
+            style={{ marginEnd: moderateScale(6) }}
+          />
+          <ZText type="M12" color={order.depositProofImage ? (colors.green || '#4CAF50') : '#FF9800'} style={{ flex: 1 }}>
+            {order.depositProofImage ? strings.depositPaid : strings.depositBadge}
+          </ZText>
+          <ZText type="B12" color={order.depositProofImage ? (colors.green || '#4CAF50') : '#FF9800'}>
+            {order.depositAmount || 0} {strings.currency}
+          </ZText>
+        </View>
+      )}
+
       {/* Action Buttons */}
       <View style={localStyles.actionsContainer}>
         <View style={localStyles.actionButtonsRow}>
