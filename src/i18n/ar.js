@@ -1129,8 +1129,8 @@ export default {
 
   // Order Status Actions
   startPreparing: 'بدء التحضير',
-  markReady: 'وضع علامة جاهز',
-  markAsReady: 'وضع علامة جاهز',
+  markReady: 'جاهز للاستلام',
+  markAsReady: 'جاهز للاستلام',
   markOutForDelivery: 'في الطريق للتوصيل',
   completeOrder: 'إكمال الطلب',
 

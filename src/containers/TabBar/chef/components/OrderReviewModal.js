@@ -62,13 +62,14 @@ const OrderReviewModal = ({ visible, order, onClose, onAccept, onReject }) => {
           setIsProcessing(true);
 
           // Update order status to accepted with delivery fee
-          await dispatch(
+          const updatedOrder = await dispatch(
             updateOrderStatusAsync(order._id, 'confirmed', fee),
           );
 
-          // Call parent callback
+          // Call parent callback with actual status from backend
+          // (backend may redirect 'confirmed' → 'awaiting_confirmation')
           if (onAccept) {
-            onAccept(order, fee);
+            onAccept(order, fee, updatedOrder?.status);
           }
 
           onClose();

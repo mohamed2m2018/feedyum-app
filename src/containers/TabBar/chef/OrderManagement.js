@@ -82,7 +82,7 @@ const StatusTab = ({ status, isSelected, onPress, colors }) => (
   </TouchableOpacity>
 );
 
-const EmptyState = ({ selectedStatus, colors }) => (
+const EmptyState = ({ selectedStatus, statusLabel, colors }) => (
   <View style={localStyles.emptyContainer}>
     <Ionicons name="receipt-outline" size={moderateScale(64)} color={colors.grayScale4} />
     <ZText type="B18" color={colors.grayScale7} style={localStyles.emptyTitle}>
@@ -91,7 +91,7 @@ const EmptyState = ({ selectedStatus, colors }) => (
     <ZText type="M14" color={colors.grayScale7} style={localStyles.emptySubtitle}>
       {selectedStatus === 'all'
         ? strings.ordersWillAppear
-        : strings.formatString(strings.noOrdersStatus, selectedStatus)}
+        : strings.formatString(strings.noOrdersStatus, statusLabel || selectedStatus)}
     </ZText>
   </View>
 );
@@ -338,15 +338,17 @@ export default function OrderManagement() {
     setOrderReviewVisible(true);
   };
 
-  const handleAcceptOrder = async (order, fee) => {
+  const handleAcceptOrder = async (order, fee, actualStatus) => {
     // The modal handles the API call. We just need to refresh.
     queryClient.invalidateQueries('chefOrders');
     setOrderReviewVisible(false);
     setSelectedOrder(null);
 
-    // Switch to Accepted tab
-    setSelectedStatus('confirmed');
-    scrollToTab('confirmed');
+    // Switch to the ACTUAL resulting tab from backend
+    // (backend may redirect 'confirmed' → 'awaiting_confirmation' if chef requires confirmation)
+    const targetStatus = actualStatus || 'confirmed';
+    setSelectedStatus(targetStatus);
+    scrollToTab(targetStatus);
   };
 
   const handleChatWithCustomer = (order) => {
@@ -393,34 +395,34 @@ export default function OrderManagement() {
           <View style={[localStyles.summaryContainer, { backgroundColor: colors.inputBg || '#FFFFFF' }]}>
             <View style={localStyles.summaryRow}>
               <View style={localStyles.summaryItem}>
-                <ZText type="B20" color={colors.primary}>
+                <ZText type="B20" color={colors.primary} align="center">
                   {ordersData.length}
                 </ZText>
-                <ZText type="M12" color={colors.grayScale7}>
+                <ZText type="M12" color={colors.grayScale7} align="center" numberOfLines={2}>
                   {strings.totalOrders}
                 </ZText>
               </View>
               <View style={localStyles.summaryItem}>
-                <ZText type="B20" color={colors.orange}>
+                <ZText type="B20" color={colors.orange} align="center">
                   {ordersData.filter(order => order.status === 'pending').length}
                 </ZText>
-                <ZText type="M12" color={colors.grayScale7}>
+                <ZText type="M12" color={colors.grayScale7} align="center" numberOfLines={2}>
                   {strings.pending}
                 </ZText>
               </View>
               <View style={localStyles.summaryItem}>
-                <ZText type="B20" color={colors.blue}>
+                <ZText type="B20" color={colors.blue} align="center">
                   {ordersData.filter(order => order.status === 'preparing').length}
                 </ZText>
-                <ZText type="M12" color={colors.grayScale7}>
+                <ZText type="M12" color={colors.grayScale7} align="center" numberOfLines={2}>
                   {strings.preparing}
                 </ZText>
               </View>
               <View style={localStyles.summaryItem}>
-                <ZText type="B20" color={colors.primary}>
+                <ZText type="B20" color={colors.primary} align="center">
                   {ordersData.filter(order => order.status === 'ready').length}
                 </ZText>
-                <ZText type="M12" color={colors.grayScale7}>
+                <ZText type="M12" color={colors.grayScale7} align="center" numberOfLines={2}>
                   {strings.ready}
                 </ZText>
               </View>
@@ -465,7 +467,11 @@ export default function OrderManagement() {
                 <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
               }
               ListEmptyComponent={
-                <EmptyState selectedStatus={selectedStatus} colors={colors} />
+                <EmptyState
+                  selectedStatus={selectedStatus}
+                  statusLabel={statusCounts.find(s => s.value === selectedStatus)?.label}
+                  colors={colors}
+                />
               }
               contentContainerStyle={localStyles.ordersContent}
               onEndReached={() => {

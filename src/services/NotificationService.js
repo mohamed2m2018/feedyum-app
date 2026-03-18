@@ -48,6 +48,10 @@ class NotificationService {
       // Reset flag after a short delay
       setTimeout(() => { justHandledClick = false; }, 1000);
 
+      // Stop any active alarm — user has acknowledged the notification
+      OrderAlarmService.stopAlarm();
+      BackgroundAlarmService.stopForegroundAlarm();
+
       const data = event.notification.additionalData;
       if (data) {
         this.handleNotificationTap(data);
@@ -70,12 +74,17 @@ class NotificationService {
       const notification = event.notification;
       const data = notification.additionalData;
 
-      // If it has an explicit alarmType, display via notifee alarm (order-related notifications)
+      // If it has an explicit alarmType (order-related alarm notification)
       if (data?.alarmType) {
-        console.log('🐞 [NotificationService] Order alarm — displaying via notifee, type:', data.alarmType);
+        console.log('🐞 [NotificationService] Order alarm foreground, type:', data.alarmType);
+
+        // Start in-app alarm (sound + vibration)
+        OrderAlarmService.startAlarm();
+
+        // Show notifee persistent notification (survives app going to background)
         BackgroundAlarmService.showAlarmNotification(data.alarmType, { orderId: data?.orderId });
 
-        // Also show an in-app clickable toast — clicking it stops the alarm
+        // Show in-app clickable toast — clicking stops the alarm and navigates
         showPersistentClickableToast(
           notification.title || '🔔 New Order!',
           notification.body || '',

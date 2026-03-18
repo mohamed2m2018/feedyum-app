@@ -52,6 +52,7 @@ class BackgroundAlarmService {
       // Listen for notification events (foreground)
       notifee.onForegroundEvent(({ type, detail }) => {
         if (type === EventType.PRESS) {
+          console.log('[BackgroundAlarm] Notification PRESSED — stopping alarm, orderId:', detail?.notification?.data?.orderId);
           // Chef tapped the notification — stop the alarm
           this.stopForegroundAlarm();
           OrderAlarmService.stopAlarm();
@@ -68,17 +69,9 @@ class BackgroundAlarmService {
           }
         }
         if (type === EventType.DISMISSED) {
+          console.log('[BackgroundAlarm] Notification DISMISSED — stopping alarm');
           this.stopForegroundAlarm();
           OrderAlarmService.stopAlarm();
-        }
-      });
-
-      // Listen for app coming to foreground to stop background alarm
-      this._appStateSubscription = AppState.addEventListener('change', (nextState) => {
-        if (nextState === 'active') {
-          // App came to foreground — stop the background alarm
-          // (in-app alarm will be handled by OrderAlarmService via socket)
-          this.stopForegroundAlarm();
         }
       });
 
@@ -101,6 +94,7 @@ class BackgroundAlarmService {
       // Clear any existing alarm interval before starting a new one
       // Prevents overlapping loops when multiple notifications arrive
       if (this.alarmInterval) {
+        console.log('[BackgroundAlarm] Clearing existing alarm interval before new one');
         clearInterval(this.alarmInterval);
         this.alarmInterval = null;
       }
@@ -121,8 +115,10 @@ class BackgroundAlarmService {
           console.error('[BackgroundAlarm] Re-trigger error:', err);
         }
       }, 15000);
+      // Store on global as safety net for hot reload (interval ID survives module re-evaluation)
+      global.__backgroundAlarmIntervalId = this.alarmInterval;
 
-      console.log('[BackgroundAlarm] Alarm notification shown with repeat, type:', alarmType);
+      console.log('[BackgroundAlarm] Alarm notification shown with repeat, type:', alarmType, 'orderId:', notificationData.orderId);
     } catch (error) {
       console.error('[BackgroundAlarm] Failed to show notification:', error);
     }
@@ -180,21 +176,28 @@ class BackgroundAlarmService {
   }
 
   /**
-   * Stop the alarm notification and clear the repeat interval
+   * Stop the alarm notification and clear the repeat interval.
+   * Called from: notifee press/dismiss, toast click, OneSignal click, OrderManagement focus.
    */
   async stopForegroundAlarm() {
     try {
-      // Clear the repeat interval
+      // Clear the repeat interval (instance reference)
       if (this.alarmInterval) {
+        console.log('[BackgroundAlarm] Clearing active alarm interval');
         clearInterval(this.alarmInterval);
         this.alarmInterval = null;
+      }
+      // Also clear global safety net interval (handles hot reload orphans)
+      if (global.__backgroundAlarmIntervalId) {
+        clearInterval(global.__backgroundAlarmIntervalId);
+        global.__backgroundAlarmIntervalId = null;
       }
 
       // Cancel all possible alarm notification IDs
       await notifee.cancelNotification('order_alarm');
       await notifee.cancelNotification('order_confirmed_alarm');
       await notifee.cancelNotification('awaiting_confirmation_alarm');
-      console.log('[BackgroundAlarm] Alarm notification cancelled');
+      console.log('[BackgroundAlarm] All alarm notifications cancelled');
     } catch (error) {
       console.error('[BackgroundAlarm] Failed to cancel notification:', error);
     }
@@ -204,19 +207,34 @@ class BackgroundAlarmService {
    * Cleanup
    */
   destroy() {
-    if (this._appStateSubscription) {
-      this._appStateSubscription.remove();
-    }
     if (this.alarmInterval) {
       clearInterval(this.alarmInterval);
+      this.alarmInterval = null;
     }
   }
 }
 
 console.log('[BackgroundAlarm] Module loaded');
 
+// Clean up previous instance on hot reload — prevents orphaned setInterval
+if (global.__backgroundAlarmCleanup) {
+  console.log('[BackgroundAlarm] Hot reload detected — cleaning up previous instance');
+  global.__backgroundAlarmCleanup();
+}
+
+// Also clear any orphaned interval ID stored on global (safety net)
+if (global.__backgroundAlarmIntervalId) {
+  clearInterval(global.__backgroundAlarmIntervalId);
+  global.__backgroundAlarmIntervalId = null;
+}
+
 // Create the singleton early so background handler can reference it
 const backgroundAlarmInstance = new BackgroundAlarmService();
+
+// Store cleanup function for next hot reload
+global.__backgroundAlarmCleanup = () => {
+  backgroundAlarmInstance.destroy();
+};
 
 // Register background event handler (runs even when app is killed)
 try {
