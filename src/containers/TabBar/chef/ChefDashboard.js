@@ -1,6 +1,6 @@
 // Library imports
 import React, { useState, useCallback } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, Switch, Modal, TextInput, Alert, KeyboardAvoidingView, Platform, Dimensions } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, Switch, Modal, TextInput, KeyboardAvoidingView, Platform, Dimensions } from 'react-native';
 import { useSelector } from 'react-redux';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -60,6 +60,9 @@ export default function ChefDashboard() {
   const [modalDepositType, setModalDepositType] = useState('percentage');
   const [modalDepositValue, setModalDepositValue] = useState('50');
 
+  // Confirmation modal state (replaces Alert.alert)
+  const [confirmModal, setConfirmModal] = useState({ visible: false, title: '', message: '', onConfirm: null, destructive: false });
+
   // Sync all settings with server data when screen gains focus
   useFocusEffect(
     useCallback(() => {
@@ -94,28 +97,24 @@ export default function ChefDashboard() {
   const handleConfirmationToggle = useCallback(async (value) => {
     // Turning OFF while deposit is ON → show warning modal
     if (!value && requireDeposit) {
-      Alert.alert(
-        strings.customerConfirmationStep,
-        strings.confirmationDisablesDeposit,
-        [
-          { text: strings.cancel, style: 'cancel' },
-          {
-            text: strings.confirm,
-            style: 'destructive',
-            onPress: async () => {
-              setRequireConfirmation(false);
-              setRequireDeposit(false);
-              try {
-                await request.patch('/user', { requireCustomerConfirmation: false, requireDeposit: false });
-                queryClient.invalidateQueries('user');
-              } catch (error) {
-                setRequireConfirmation(true);
-                setRequireDeposit(true);
-              }
-            },
-          },
-        ],
-      );
+      setConfirmModal({
+        visible: true,
+        title: strings.customerConfirmationStep,
+        message: strings.confirmationDisablesDeposit,
+        destructive: true,
+        onConfirm: async () => {
+          setConfirmModal(prev => ({ ...prev, visible: false }));
+          setRequireConfirmation(false);
+          setRequireDeposit(false);
+          try {
+            await request.patch('/user', { requireCustomerConfirmation: false, requireDeposit: false });
+            queryClient.invalidateQueries('user');
+          } catch (error) {
+            setRequireConfirmation(true);
+            setRequireDeposit(true);
+          }
+        },
+      });
       return;
     }
     setRequireConfirmation(value);
@@ -139,23 +138,24 @@ export default function ChefDashboard() {
       }
       // Confirmation is OFF → warn that both will be enabled
       if (!requireConfirmation) {
-        Alert.alert(strings.requireDeposit, strings.depositEnablesConfirmation, [
-          { text: strings.cancel, style: 'cancel' },
-          {
-            text: strings.confirm,
-            onPress: async () => {
-              setRequireDeposit(true);
-              setRequireConfirmation(true);
-              try {
-                await request.patch('/user', { requireDeposit: true, requireCustomerConfirmation: true });
-                queryClient.invalidateQueries('user');
-              } catch (error) {
-                setRequireDeposit(false);
-                setRequireConfirmation(false);
-              }
-            },
+        setConfirmModal({
+          visible: true,
+          title: strings.requireDeposit,
+          message: strings.depositEnablesConfirmation,
+          destructive: false,
+          onConfirm: async () => {
+            setConfirmModal(prev => ({ ...prev, visible: false }));
+            setRequireDeposit(true);
+            setRequireConfirmation(true);
+            try {
+              await request.patch('/user', { requireDeposit: true, requireCustomerConfirmation: true });
+              queryClient.invalidateQueries('user');
+            } catch (error) {
+              setRequireDeposit(false);
+              setRequireConfirmation(false);
+            }
           },
-        ]);
+        });
         return;
       }
       // All good, just enable
@@ -424,6 +424,34 @@ export default function ChefDashboard() {
             </View>
           </View>
         </KeyboardAvoidingView>
+      </Modal>
+
+      {/* Confirmation Modal — themed replacement for Alert.alert */}
+      <Modal visible={confirmModal.visible} transparent animationType="fade" onRequestClose={() => setConfirmModal(prev => ({ ...prev, visible: false }))}>
+        <View style={localStyles.modalOverlay}>
+          <View style={[localStyles.modalContainer, { backgroundColor: colors.backgroundColor }]}>
+            <View style={localStyles.modalHeaderCenter}>
+              <ZText type="B20" color={colors.textColor} align="center">{confirmModal.title}</ZText>
+              <ZText type="R14" color={colors.grayScale7} align="center" style={{ marginTop: moderateScale(8) }}>{confirmModal.message}</ZText>
+            </View>
+            <View style={localStyles.modalButtonRow}>
+              <TouchableOpacity
+                style={[localStyles.modalBtn, localStyles.modalCancelBtn, { borderColor: colors.borderColor }]}
+                onPress={() => setConfirmModal(prev => ({ ...prev, visible: false }))}
+                activeOpacity={0.7}
+              >
+                <ZText type="B16" color={colors.textColor}>{strings.cancel}</ZText>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[localStyles.modalBtn, { backgroundColor: confirmModal.destructive ? colors.redColor : colors.primary }]}
+                onPress={confirmModal.onConfirm}
+                activeOpacity={0.7}
+              >
+                <ZText type="B16" color={colors.white}>{strings.confirm}</ZText>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
       </Modal>
 
       <View style={localStyles.headerContainer}>
