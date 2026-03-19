@@ -109,19 +109,31 @@ const ChefMenu = () => {
   // Lifted state for section selection — shared between header and sticky CategoryBrowser
   const [selectedSectionKey, setSelectedSectionKey] = useState(null);
 
-  // Auto-select section based on visible dishes during manual scroll
+  // Auto-select section based on the majority of visible dishes during scroll
   const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 50 }).current;
   const onViewableItemsChanged = useRef(({ viewableItems }) => {
     // Skip during programmatic scroll (section tap)
     if (isProgrammaticScrollRef.current) return;
     if (!viewableItems || viewableItems.length === 0) return;
 
-    // Get the first visible dish and its section key
-    const firstDish = viewableItems[0]?.item;
-    if (!firstDish) return;
-    const sectionKey = firstDish.section?._id || firstDish.section || null;
-    if (sectionKey) {
-      setSelectedSectionKey(prev => prev !== sectionKey ? sectionKey : prev);
+    // Count how many visible items belong to each section
+    const sectionCounts = {};
+    for (const entry of viewableItems) {
+      const dish = entry?.item;
+      if (!dish) continue;
+      const key = dish.section?._id || dish.section || null;
+      if (key) sectionCounts[key] = (sectionCounts[key] || 0) + 1;
+    }
+
+    // Pick the section with the most visible items
+    let majorityKey = null;
+    let maxCount = 0;
+    for (const [key, count] of Object.entries(sectionCounts)) {
+      if (count > maxCount) { maxCount = count; majorityKey = key; }
+    }
+
+    if (majorityKey) {
+      setSelectedSectionKey(prev => prev !== majorityKey ? majorityKey : prev);
     }
   }).current;
 
@@ -314,7 +326,7 @@ const ChefMenu = () => {
               flatListRef.current.scrollToOffset({ offset: approximateOffset, animated: true });
               setTimeout(() => {
                 try {
-                  flatListRef.current?.scrollToIndex({ index: info.index, animated: true, viewPosition: 0.1 });
+                  flatListRef.current?.scrollToIndex({ index: info.index, animated: true, viewPosition: 0.25 });
                 } catch (e2) { /* swallow */ }
               }, 250);
             }

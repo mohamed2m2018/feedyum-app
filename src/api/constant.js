@@ -254,7 +254,7 @@ const contactUsData = [
     title: 'Facebook',
     icon: 'facebook',
     onPress: () => {
-      Linking.openURL('https://www.facebook.com/thefoodtok');
+      Linking.openURL('https://www.facebook.com/FeedYum');
     },
   },
   {
@@ -262,7 +262,7 @@ const contactUsData = [
     title: 'Instagram',
     icon: 'instagram',
     onPress: () => {
-      Linking.openURL('https://www.instagram.com/the.foodtok/');
+      Linking.openURL('https://instagram.com/feedyum.app');
     },
   },
 ];

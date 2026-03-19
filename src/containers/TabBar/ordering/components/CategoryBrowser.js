@@ -106,7 +106,7 @@ const CategoryBrowser = ({ dishes, flatListRef, onScrollStart, selectedKey, onSe
       flatListRef.current.scrollToIndex({
         index: dishIndex,
         animated: true,
-        viewPosition: 0,
+        viewPosition: 0.25,
       });
     } catch (_) { /* handled by onScrollToIndexFailed */ }
   };
