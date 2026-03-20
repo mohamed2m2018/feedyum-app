@@ -104,7 +104,9 @@ const DishCard = ({
         />
         <View style={localStyles.priceRow}>
           <ZText type="B16" color={colors.primary}>
-            {dish.price} {strings.currency}
+            {dish.pricingType === 'upon_request'
+              ? strings.uponRequest
+              : `${dish.price} ${strings.currency}`}
           </ZText>
           {dish.cookingTime && (
             <ZText type="M12" color={colors.grayScale7}>

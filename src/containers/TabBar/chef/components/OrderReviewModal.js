@@ -30,6 +30,7 @@ const OrderReviewModal = ({ visible, order, onClose, onAccept, onReject }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [estimatedTime, setEstimatedTime] = useState('30');
   const [isDeliveryFeeCustom, setIsDeliveryFeeCustom] = useState(false);
+  const [quotePrice, setQuotePrice] = useState('');
 
   // Deposit override state
   const [depositEnabled, setDepositEnabled] = useState(false);
@@ -44,6 +45,7 @@ const OrderReviewModal = ({ visible, order, onClose, onAccept, onReject }) => {
       setIsDeliveryFeeCustom(false);
       setEstimatedTime('30');
       setIsProcessing(false);
+      setQuotePrice(order.orderType === 'catering' && !order.totalPrice ? '' : String(order.totalPrice || ''));
 
       // Pre-populate deposit from order
       if (order.depositRequired) {
@@ -81,6 +83,14 @@ const OrderReviewModal = ({ visible, order, onClose, onAccept, onReject }) => {
       return;
     }
 
+    // Catering orders require a quote price
+    const isCatering = order?.orderType === 'catering';
+    const quotedPrice = parseFloat(quotePrice || '0');
+    if (isCatering && (!quotedPrice || quotedPrice <= 0)) {
+      showErrorToast(strings.error, strings.enterQuotePrice || 'Please enter a price quote');
+      return;
+    }
+
     showActionDialog({
       type: ALERT_TYPE.SUCCESS,
       title: strings.acceptOrder,
@@ -99,7 +109,7 @@ const OrderReviewModal = ({ visible, order, onClose, onAccept, onReject }) => {
           } : undefined;
 
           const updatedOrder = await dispatch(
-            updateOrderStatusAsync(order._id, 'confirmed', fee, depositOverride),
+            updateOrderStatusAsync(order._id, 'confirmed', fee, depositOverride, isCatering ? quotedPrice : undefined),
           );
 
           // Call parent callback with actual status from backend
@@ -156,7 +166,8 @@ const OrderReviewModal = ({ visible, order, onClose, onAccept, onReject }) => {
   };
 
   const calculateTotal = () => {
-    const subtotal = order?.subtotal || 0;
+    const isCatering = order?.orderType === 'catering';
+    const subtotal = isCatering ? (parseFloat(quotePrice) || 0) : (order?.subtotal || 0);
     const fee = parseFloat(deliveryFee) || 0;
     const discount = order?.promocode?.discountAmount || 0;
     return subtotal + fee - discount;
@@ -266,11 +277,15 @@ const OrderReviewModal = ({ visible, order, onClose, onAccept, onReject }) => {
               {strings.quantityLabel}{item.quantity}
             </ZText>
             <ZText type="M12" color={colors.grayScale7}>
-              {strings.priceLabel}{(item.price || item.dish?.price || 0).toFixed(2)}{strings.eachLabel}
+              {order?.orderType === 'catering' && !(item.price || item.dish?.price)
+                ? (strings.uponRequest || 'Upon Request')
+                : `${strings.priceLabel}${(item.price || item.dish?.price || 0).toFixed(2)}${strings.eachLabel}`}
             </ZText>
           </View>
           <ZText type="B14" color={colors.primary}>
-            {((item.price || item.dish?.price || 0) * (item.quantity || 0)).toFixed(2)}
+            {order?.orderType === 'catering' && !(item.price || item.dish?.price)
+              ? (strings.uponRequest || 'Upon Request')
+              : ((item.price || item.dish?.price || 0) * (item.quantity || 0)).toFixed(2)}
           </ZText>
         </View>
       ))}
@@ -452,7 +467,7 @@ const OrderReviewModal = ({ visible, order, onClose, onAccept, onReject }) => {
           {strings.subtotalLabel}
         </ZText>
         <ZText type="B14" color={colors.textColor}>
-          {order?.subtotal?.toFixed(2) || '0.00'}
+          {order?.orderType === 'catering' ? (parseFloat(quotePrice) || 0).toFixed(2) : (order?.subtotal?.toFixed(2) || '0.00')}
         </ZText>
       </View>
 
@@ -518,6 +533,43 @@ const OrderReviewModal = ({ visible, order, onClose, onAccept, onReject }) => {
           {renderCustomerInfo()}
           {renderDeliveryAddress()}
           {renderOrderItems()}
+
+          {/* Quote Price Input — only for catering orders */}
+          {order?.orderType === 'catering' && (
+            <View style={[localStyles.section, {
+              backgroundColor: colors.inputBg,
+              borderColor: colors.primary,
+              borderWidth: 1,
+            }]}>
+              <ZText type="B16" color={colors.primary} style={localStyles.sectionTitle}>
+                {strings.setQuotePrice || 'Set Quote Price'}
+              </ZText>
+              <ZText type="M12" color={colors.grayScale7} style={{ marginBottom: moderateScale(10) }}>
+                {strings.setQuotePriceDesc || 'Enter the total price for this catering order'}
+              </ZText>
+              <TextInput
+                style={[
+                  localStyles.feeInput,
+                  {
+                    backgroundColor: colors.backgroundColor,
+                    borderColor: quotePrice ? colors.primary : colors.bColor,
+                    color: colors.textColor,
+                    fontSize: moderateScale(16),
+                    fontWeight: 'bold',
+                    fontFamily: 'Urbanist-Bold',
+                    textAlign: 'center',
+                  },
+                ]}
+                value={quotePrice}
+                onChangeText={setQuotePrice}
+                placeholder={strings.enterPrice || 'Enter price'}
+                placeholderTextColor={colors.grayScale7}
+                keyboardType="decimal-pad"
+                returnKeyType="done"
+              />
+            </View>
+          )}
+
           {renderDeliveryFeeInput()}
           {order?.depositRequired && renderDepositOverride()}
           {renderPricingSummary()}
@@ -642,6 +694,7 @@ const localStyles = StyleSheet.create({
     borderRadius: moderateScale(8),
     paddingHorizontal: moderateScale(16),
     fontSize: moderateScale(16),
+    fontFamily: 'Urbanist-Medium',
   },
   pricingRow: {
     flexDirection: 'row',

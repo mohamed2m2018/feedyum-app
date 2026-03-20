@@ -14,7 +14,7 @@ const formatCurrency = (value) => {
   }
 };
 
-const StatusPill = ({ status, colors }) => {
+const StatusPill = ({ status, colors, orderType }) => {
   const normalized = String(status || 'pending').toLowerCase();
   const map = {
     pending: { bg: colors.statusPendingBg, fg: colors.statusPendingFg, icon: 'time-outline', label: strings.pendingCustomer || strings.pending },
@@ -26,7 +26,13 @@ const StatusPill = ({ status, colors }) => {
     completed: { bg: colors.statusCompletedBg, fg: colors.statusCompletedFg, icon: 'checkmark-done-circle-outline', label: strings.completed },
     cancelled: { bg: colors.statusCancelledBg, fg: colors.statusCancelledFg, icon: 'close-circle-outline', label: strings.cancelled },
   };
-  const c = map[normalized] || { bg: colors.statusDefaultBg, fg: colors.statusDefaultFg, icon: 'help-circle-outline', label: status };
+  let c = map[normalized] || { bg: colors.statusDefaultBg, fg: colors.statusDefaultFg, icon: 'help-circle-outline', label: status };
+
+  // Override label for catering orders with pending status
+  if (orderType === 'catering' && normalized === 'pending') {
+    c = { ...c, icon: 'document-text-outline', label: strings.awaitingQuote || 'Awaiting Quote' };
+  }
+
   return (
     <View style={[styles.statusPill, { backgroundColor: c.bg }]}>
       <Ionicons name={c.icon} size={moderateScale(12)} color={c.fg} style={{ marginRight: moderateScale(4) }} />
@@ -190,7 +196,7 @@ const OrderSummaryCard = ({ order, colors, onPressPrimary, initialCollapsed = tr
               {strings.orderNumber}{String(order?.id || order?._id || '').slice(-6) || '—'}
             </ZText>
             <View style={styles.headerRight}>
-              <StatusPill status={order?.status} colors={colors} />
+              <StatusPill status={order?.status} colors={colors} orderType={order?.orderType} />
               <View style={[styles.chevronCircle, { backgroundColor: 'rgba(255,255,255,0.06)' }]}>
                 <Ionicons name={collapsed ? 'chevron-down' : 'chevron-up'} size={moderateScale(16)} color={colors.textColor} />
               </View>
@@ -207,6 +213,16 @@ const OrderSummaryCard = ({ order, colors, onPressPrimary, initialCollapsed = tr
             </View>
           )}
 
+          {/* Catering order badge */}
+          {order?.orderType === 'catering' && (
+            <View style={[styles.scheduledBadge, { backgroundColor: '#FF6B3515' }]}>
+              <Ionicons name="document-text-outline" size={moderateScale(12)} color="#FF6B35" style={{ marginRight: moderateScale(4) }} />
+              <ZText type="M12" color="#FF6B35">
+                {strings.cateringOrder || 'Catering Order'}
+              </ZText>
+            </View>
+          )}
+
           {/* Bottom row: date + price */}
           <View style={styles.metaRow}>
             <View style={styles.metaLeft}>
@@ -214,7 +230,9 @@ const OrderSummaryCard = ({ order, colors, onPressPrimary, initialCollapsed = tr
               <ZText type="M12" color={colors.grayScale7} numberOfLines={1}>{order?.formattedDate || ''}</ZText>
             </View>
             {collapsed && (
-              <ZText type="B14" color={colors.primary}>{formatCurrency(order?.totalPrice)}</ZText>
+              <ZText type="B14" color={colors.primary}>
+                {order?.orderType === 'catering' && !order?.totalPrice ? (strings.uponRequest || 'Upon Request') : formatCurrency(order?.totalPrice)}
+              </ZText>
             )}
           </View>
         </View>

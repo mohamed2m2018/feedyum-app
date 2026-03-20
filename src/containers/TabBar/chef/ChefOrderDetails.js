@@ -9,6 +9,9 @@ import {
     ActivityIndicator,
     Linking,
     Platform,
+    TextInput,
+    Modal,
+    KeyboardAvoidingView,
 } from 'react-native';
 import { useSelector } from 'react-redux';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -28,6 +31,7 @@ import { showSuccessToast, showErrorToast } from '../../../utils/toast';
 import { StackNav } from '../../../navigation/NavigationKeys';
 import { formatDate as formatDateHelper, formatSlotLabel } from '../../../utils/helpers';
 import RejectReasonModal from '../ordering/components/RejectReasonModal';
+import OrderReviewModal from './components/OrderReviewModal';
 import OrderAlarmService from '../../../services/OrderAlarmService';
 import BackgroundAlarmService from '../../../services/BackgroundAlarmService';
 
@@ -44,6 +48,11 @@ const ChefOrderDetailsScreen = () => {
     const insets = useSafeAreaInsets();
     const { orderId } = route.params || {};
     const [rejectModalVisible, setRejectModalVisible] = useState(false);
+    const [reviewModalVisible, setReviewModalVisible] = useState(false);
+    const [editQuoteVisible, setEditQuoteVisible] = useState(false);
+    const [editQuoteValue, setEditQuoteValue] = useState('');
+    const [editDeliveryFee, setEditDeliveryFee] = useState('');
+    const [isUpdatingQuote, setIsUpdatingQuote] = useState(false);
 
     // Stop alarm when viewing order details — chef has seen the order
     useEffect(() => {
@@ -232,8 +241,56 @@ const ChefOrderDetailsScreen = () => {
 
     const handleStatusChange = () => {
         const nextStatus = getNextStatus();
-        if (nextStatus && order) {
-            updateStatusMutation.mutate({ orderId: order._id, status: nextStatus });
+        if (!nextStatus || !order) return;
+
+        // Catering orders that are pending MUST go through the review modal
+        // so the chef can set the quote price
+        if (order.status === 'pending' && order.orderType === 'catering') {
+            setReviewModalVisible(true);
+            return;
+        }
+
+        updateStatusMutation.mutate({ orderId: order._id, status: nextStatus });
+    };
+
+    const handleReviewAccept = async (reviewedOrder, fee, actualStatus) => {
+        setReviewModalVisible(false);
+        queryClient.invalidateQueries(['order', orderId]);
+        queryClient.invalidateQueries('chefOrders');
+        navigation.goBack();
+    };
+
+    const handleEditQuotePrice = () => {
+        setEditQuoteValue(String(order?.subtotal || ''));
+        setEditDeliveryFee(String(order?.deliveryFee || '0'));
+        setEditQuoteVisible(true);
+    };
+
+    const handleSaveQuotePrice = async () => {
+        const newPrice = parseFloat(editQuoteValue);
+        const newFee = parseFloat(editDeliveryFee || '0');
+        if (!newPrice || newPrice <= 0) {
+            showErrorToast(strings.error, strings.enterQuotePrice || 'Please enter a valid price');
+            return;
+        }
+        if (isNaN(newFee) || newFee < 0) {
+            showErrorToast(strings.error, strings.invalidDeliveryFee || 'Please enter a valid delivery fee');
+            return;
+        }
+        try {
+            setIsUpdatingQuote(true);
+            await request.put(`/orders/${order._id}/quote-price`, {
+                quotePrice: newPrice,
+                deliveryFee: newFee,
+            });
+            showSuccessToast(strings.success, strings.quotePriceUpdated || 'Quote price updated');
+            setEditQuoteVisible(false);
+            refetch();
+            queryClient.invalidateQueries('chefOrders');
+        } catch (err) {
+            showErrorToast(strings.error, err?.response?.data?.messageAr || err?.message || strings.failedToUpdateOrder);
+        } finally {
+            setIsUpdatingQuote(false);
         }
     };
 
@@ -422,23 +479,29 @@ const ChefOrderDetailsScreen = () => {
                     <View style={[localStyles.infoCard, {
                         backgroundColor: order.orderType === 'scheduled'
                             ? (colors.info || '#2196F3') + '15'
-                            : (colors.success || '#4CAF50') + '15',
+                            : order.orderType === 'catering'
+                                ? colors.primary + '15'
+                                : (colors.success || '#4CAF50') + '15',
                         borderWidth: 1,
                         borderColor: order.orderType === 'scheduled'
                             ? (colors.info || '#2196F3') + '30'
-                            : (colors.success || '#4CAF50') + '30',
+                            : order.orderType === 'catering'
+                                ? colors.primary + '30'
+                                : (colors.success || '#4CAF50') + '30',
                     }]}>
                         <View style={localStyles.infoRow}>
                             <Ionicons
-                                name={order.orderType === 'scheduled' ? 'calendar-outline' : 'flash-outline'}
+                                name={order.orderType === 'scheduled' ? 'calendar-outline' : order.orderType === 'catering' ? 'pricetag-outline' : 'flash-outline'}
                                 size={moderateScale(20)}
-                                color={order.orderType === 'scheduled' ? (colors.info || '#2196F3') : (colors.success || '#4CAF50')}
+                                color={order.orderType === 'scheduled' ? (colors.info || '#2196F3') : order.orderType === 'catering' ? colors.primary : (colors.success || '#4CAF50')}
                             />
                             <View style={{ marginLeft: moderateScale(12), flex: 1 }}>
-                                <ZText type="B14" color={order.orderType === 'scheduled' ? (colors.info || '#2196F3') : (colors.success || '#4CAF50')}>
+                                <ZText type="B14" color={order.orderType === 'scheduled' ? (colors.info || '#2196F3') : order.orderType === 'catering' ? colors.primary : (colors.success || '#4CAF50')}>
                                     {order.orderType === 'scheduled'
                                         ? (strings.scheduledDelivery || 'Scheduled Delivery')
-                                        : (strings.instantOrder || 'Instant Order')}
+                                        : order.orderType === 'catering'
+                                            ? (strings.cateringOrder || 'Catering Order')
+                                            : (strings.instantOrder || 'Instant Order')}
                                 </ZText>
                                 {order.orderType === 'scheduled' && order.scheduledFor && (
                                     <ZText type="M14" color={colors.textColor} style={{ marginTop: moderateScale(2) }}>
@@ -764,6 +827,28 @@ const ChefOrderDetailsScreen = () => {
                             {strings.waitingForCustomerConfirmation || 'Waiting for customer to confirm'}
                         </ZText>
                     </View>
+
+                    {/* Edit Quote Price button for catering orders */}
+                    {order.orderType === 'catering' && (
+                        <TouchableOpacity
+                            onPress={handleEditQuotePrice}
+                            style={{
+                                marginTop: moderateScale(10),
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                backgroundColor: colors.primary,
+                                borderRadius: moderateScale(12),
+                                paddingVertical: moderateScale(12),
+                            }}
+                            activeOpacity={0.7}
+                        >
+                            <Ionicons name="create-outline" size={moderateScale(18)} color="#FFF" style={{ marginRight: moderateScale(8) }} />
+                            <ZText type="B14" color="#FFF">
+                                {strings.editQuotePrice || 'Edit Quote Price'}
+                            </ZText>
+                        </TouchableOpacity>
+                    )}
                 </View>
             )}
 
@@ -799,6 +884,148 @@ const ChefOrderDetailsScreen = () => {
                 onConfirm={handleConfirmReject}
                 colors={colors}
             />
+
+            {/* Order Review Modal (for catering quote price) */}
+            <OrderReviewModal
+                visible={reviewModalVisible}
+                order={order}
+                onClose={() => setReviewModalVisible(false)}
+                onAccept={handleReviewAccept}
+                onReject={handleRejectOrder}
+            />
+
+            {/* Edit Quote Price Modal */}
+            <Modal
+                visible={editQuoteVisible}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setEditQuoteVisible(false)}
+            >
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}
+                >
+                    <View style={{
+                        backgroundColor: colors.backgroundColor,
+                        borderRadius: moderateScale(16),
+                        padding: moderateScale(24),
+                        width: '85%',
+                        maxWidth: 400,
+                    }}>
+                        <ZText type="B18" color={colors.textColor} align="center" style={{ marginBottom: moderateScale(8) }}>
+                            {strings.editQuotePrice || 'Edit Quote Price'}
+                        </ZText>
+                        <ZText type="M14" color={colors.grayScale7} align="center" style={{ marginBottom: moderateScale(20) }}>
+                            {strings.editQuotePriceDesc || 'Enter the new price for this order'}
+                        </ZText>
+
+                        {/* Quote Price */}
+                        <ZText type="B14" color={colors.textColor} style={{ marginBottom: moderateScale(6) }}>
+                            {strings.setQuotePrice || 'Quote Price'}
+                        </ZText>
+                        <TextInput
+                            style={{
+                                height: moderateScale(50),
+                                borderWidth: 2,
+                                borderColor: colors.primary,
+                                borderRadius: moderateScale(12),
+                                paddingHorizontal: moderateScale(16),
+                                fontSize: moderateScale(20),
+                                fontWeight: 'bold',
+                                fontFamily: 'Urbanist-Bold',
+                                textAlign: 'center',
+                                color: colors.textColor,
+                                backgroundColor: colors.inputBg,
+                            }}
+                            value={editQuoteValue}
+                            onChangeText={setEditQuoteValue}
+                            placeholder={strings.enterPrice || 'Enter price'}
+                            placeholderTextColor={colors.grayScale7}
+                            keyboardType="decimal-pad"
+                            returnKeyType="next"
+                            autoFocus
+                        />
+
+                        {/* Delivery Fee */}
+                        <ZText type="B14" color={colors.textColor} style={{ marginTop: moderateScale(16), marginBottom: moderateScale(6) }}>
+                            {strings.deliveryFee || 'Delivery Fee'}
+                        </ZText>
+                        <TextInput
+                            style={{
+                                height: moderateScale(50),
+                                borderWidth: 2,
+                                borderColor: colors.primary,
+                                borderRadius: moderateScale(12),
+                                paddingHorizontal: moderateScale(16),
+                                fontSize: moderateScale(20),
+                                fontWeight: 'bold',
+                                fontFamily: 'Urbanist-Bold',
+                                textAlign: 'center',
+                                color: colors.textColor,
+                                backgroundColor: colors.inputBg,
+                            }}
+                            value={editDeliveryFee}
+                            onChangeText={setEditDeliveryFee}
+                            placeholder="0"
+                            placeholderTextColor={colors.grayScale7}
+                            keyboardType="decimal-pad"
+                            returnKeyType="done"
+                        />
+
+                        {/* Total Preview */}
+                        <View style={{
+                            marginTop: moderateScale(16),
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            backgroundColor: colors.inputBg,
+                            borderRadius: moderateScale(10),
+                            paddingHorizontal: moderateScale(14),
+                            paddingVertical: moderateScale(10),
+                        }}>
+                            <ZText type="B14" color={colors.grayScale7}>{strings.total || 'Total'}</ZText>
+                            <ZText type="B18" color={colors.primary}>
+                                {((parseFloat(editQuoteValue) || 0) + (parseFloat(editDeliveryFee) || 0)).toFixed(2)} {strings.EGP || 'EGP'}
+                            </ZText>
+                        </View>
+
+                        <View style={{ flexDirection: 'row', marginTop: moderateScale(20), gap: moderateScale(10) }}>
+                            <TouchableOpacity
+                                onPress={() => setEditQuoteVisible(false)}
+                                style={{
+                                    flex: 1,
+                                    paddingVertical: moderateScale(14),
+                                    borderRadius: moderateScale(12),
+                                    borderWidth: 1,
+                                    borderColor: colors.grayScale7,
+                                    alignItems: 'center',
+                                }}
+                                activeOpacity={0.7}
+                            >
+                                <ZText type="B14" color={colors.grayScale7}>{strings.cancel}</ZText>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                onPress={handleSaveQuotePrice}
+                                disabled={isUpdatingQuote}
+                                style={{
+                                    flex: 1,
+                                    paddingVertical: moderateScale(14),
+                                    borderRadius: moderateScale(12),
+                                    backgroundColor: colors.primary,
+                                    alignItems: 'center',
+                                    opacity: isUpdatingQuote ? 0.6 : 1,
+                                }}
+                                activeOpacity={0.7}
+                            >
+                                <ZText type="B14" color="#FFF">
+                                    {isUpdatingQuote ? (strings.saving || 'Saving...') : (strings.save || 'Save')}
+                                </ZText>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </KeyboardAvoidingView>
+            </Modal>
         </ZSafeAreaView>
     );
 };

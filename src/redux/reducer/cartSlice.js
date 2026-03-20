@@ -87,6 +87,12 @@ export default function cartReducer(state = initialState, action) {
     case ADD_TO_CART: {
       const { dish, quantity = 1, chefId, chefName, selectedOptions } = action.payload;
 
+      // Guard: upon_request dishes cannot be added to cart (use chat quote flow instead)
+      if (dish.pricingType === 'upon_request') {
+        console.warn('[CART] Blocked: upon_request dish cannot be added to cart:', dish.name);
+        return state;
+      }
+
       // Ensure chefId is a string (handle ObjectId objects)
       const normalizedChefId = objectIdToString(chefId);
 

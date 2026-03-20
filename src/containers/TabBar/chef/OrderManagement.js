@@ -138,12 +138,19 @@ export default function OrderManagement() {
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [refreshing, setRefreshing] = useState(false);
 
-  // Stop alarm when chef opens orders screen — they've seen it
+  // Stop alarm and mark all orders as seen when chef opens orders screen
   useFocusEffect(
     React.useCallback(() => {
       OrderAlarmService.stopAlarm();
       BackgroundAlarmService.stopForegroundAlarm();
-    }, [])
+
+      // Clear the "unseen orders" badge instantly
+      request.put('/orders/mark-all-seen').then(() => {
+        // Invalidate counts to immediately hide badge in UI
+        queryClient.invalidateQueries(['unseenOrdersCount']);
+        queryClient.invalidateQueries(['unreadOrderChatsCount']); // some hooks fetch them together
+      }).catch(err => console.log('Failed to mark orders seen:', err));
+    }, [queryClient])
   );
 
   // Modal state

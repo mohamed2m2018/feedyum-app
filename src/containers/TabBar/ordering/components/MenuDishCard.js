@@ -33,6 +33,7 @@ const MenuDishCard = ({
     .reduce((sum, item) => sum + item.quantity, 0);
 
   const isAvailable = dish.visible !== false;
+  const isUponRequest = dish.pricingType === 'upon_request';
   const isChefUser = user?.type === 'chef';
   const isOwnMenu = user?._id?.toString() === chefId?.toString();
   const canOrder = !isOwnMenu && !isChefUser;
@@ -107,6 +108,7 @@ const MenuDishCard = ({
   const renderRightAction = () => {
     if (!canOrder) return null;
     if (!isAvailable) return renderUnavailable();
+    if (isUponRequest) return null; // No + button for upon_request — user taps card to go to DishDetail
     if (currentQuantity > 0) return renderQuantityControls();
     return renderAddBtn(32);
   };
@@ -130,8 +132,10 @@ const MenuDishCard = ({
         )}
 
         <View style={s.priceRow}>
-          <ZText type="B16" color={colors.textColor}>
-            {strings.currency} {dish.price?.toFixed(2) || '0.00'}
+          <ZText type="B16" color={isUponRequest ? colors.primary : colors.textColor}>
+            {isUponRequest
+              ? strings.uponRequest
+              : `${strings.currency} ${dish.price?.toFixed(2) || '0.00'}`}
           </ZText>
           {hasMultipleCategories && (dish.section || dish.category) && (() => {
             const sectionObj = typeof dish.section === 'object' ? dish.section : null;
@@ -156,7 +160,7 @@ const MenuDishCard = ({
         <View style={s.imageSection}>
           <Image source={{ uri: dish.image }} style={s.thumbnail} />
           {/* Only the single + button overlaps the image */}
-          {canOrder && isAvailable && currentQuantity === 0 && (
+          {canOrder && isAvailable && !isUponRequest && currentQuantity === 0 && (
             <View style={s.imageActionOverlay}>
               {renderAddBtn(30)}
             </View>
@@ -167,7 +171,7 @@ const MenuDishCard = ({
             </View>
           )}
           {/* Quantity controls sit below the image */}
-          {canOrder && isAvailable && currentQuantity > 0 && (
+          {canOrder && isAvailable && !isUponRequest && currentQuantity > 0 && (
             <View style={s.imageBelowAction}>
               {renderQuantityControls()}
             </View>

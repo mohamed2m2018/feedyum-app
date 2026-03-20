@@ -66,6 +66,7 @@ const DEFAULT_FORM_VALUES = {
   price: '', category: '', categories: [],
   section: '', sectionNameArabic: '', sectionNameEnglish: '',
   image: '', cookingTime: '', ingredients: '', visible: true,
+  pricingType: 'fixed', // 'fixed' or 'upon_request'
 };
 
 const AddEditDishModal = ({
@@ -97,15 +98,17 @@ const AddEditDishModal = ({
     } else if (values.description.trim().length > 500) {
       errors.description = { type: 'maxLength', message: strings.descriptionTooLong };
     }
-    // Price
-    if (!values.price || !values.price.toString().trim()) {
-      errors.price = { type: 'required', message: strings.priceRequired };
-    } else {
-      const priceNum = parseFloat(values.price);
-      if (isNaN(priceNum) || priceNum <= 0) {
-        errors.price = { type: 'validate', message: strings.validPriceRequired };
-      } else if (priceNum > 99999) {
-        errors.price = { type: 'validate', message: strings.priceTooHigh };
+    // Price (skip validation for upon_request items)
+    if (values.pricingType !== 'upon_request') {
+      if (!values.price || !values.price.toString().trim()) {
+        errors.price = { type: 'required', message: strings.priceRequired };
+      } else {
+        const priceNum = parseFloat(values.price);
+        if (isNaN(priceNum) || priceNum <= 0) {
+          errors.price = { type: 'validate', message: strings.validPriceRequired };
+        } else if (priceNum > 99999) {
+          errors.price = { type: 'validate', message: strings.priceTooHigh };
+        }
       }
     }
     // Categories
@@ -226,6 +229,7 @@ const AddEditDishModal = ({
         cookingTime: dish.preparationTime?.toString() || '',
         ingredients: Array.isArray(dish.ingredients) ? dish.ingredients.join(', ') : (dish.ingredients || ''),
         visible: dish.visible !== false,
+        pricingType: dish.pricingType || 'fixed',
       });
       setImageUri(dish.image || '');
       setOptionGroups(Array.isArray(dish.optionGroups) ? dish.optionGroups.map(g => ({
@@ -387,7 +391,8 @@ const AddEditDishModal = ({
   const onFormSubmit = useCallback((data) => {
     const dishData = {
       ...data,
-      price: parseFloat(data.price),
+      price: data.pricingType === 'upon_request' ? 0 : parseFloat(data.price),
+      pricingType: data.pricingType || 'fixed',
       preparationTime: data.cookingTime ? parseInt(data.cookingTime) : undefined,
       image: imageUri || data.image,
       category: data.category || data.categories?.[0] || '',
@@ -623,14 +628,74 @@ const AddEditDishModal = ({
             </View>
           )}
 
-          <ZInput
-            label={strings.priceEGP}
-            _value={formData.price}
-            toGetTextFieldValue={text => updateFormData('price', text)}
-            placeHolder="0.00"
-            keyBoardType="decimal-pad"
-            _errorText={formErrors.price?.message}
-          />
+          {/* Pricing Type Toggle */}
+          <View style={localStyles.pricingTypeContainer}>
+            <TouchableOpacity
+              style={[
+                localStyles.pricingTypeOption,
+                {
+                  backgroundColor: formData.pricingType === 'fixed' ? colors.primary : colors.inputBg,
+                  borderColor: formData.pricingType === 'fixed' ? colors.primary : colors.bColor,
+                },
+              ]}
+              onPress={() => {
+                updateFormData('pricingType', 'fixed');
+              }}
+              activeOpacity={0.8}>
+              <Ionicons
+                name="pricetag"
+                size={moderateScale(14)}
+                color={formData.pricingType === 'fixed' ? colors.white : colors.textColor}
+              />
+              <ZText
+                type="M12"
+                color={formData.pricingType === 'fixed' ? colors.white : colors.textColor}
+                style={{ marginLeft: moderateScale(4) }}>
+                {strings.fixedPrice}
+              </ZText>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                localStyles.pricingTypeOption,
+                {
+                  backgroundColor: formData.pricingType === 'upon_request' ? colors.primary : colors.inputBg,
+                  borderColor: formData.pricingType === 'upon_request' ? colors.primary : colors.bColor,
+                },
+              ]}
+              onPress={() => {
+                updateFormData('pricingType', 'upon_request');
+                updateFormData('price', '0');
+              }}
+              activeOpacity={0.8}>
+              <Ionicons
+                name="chatbubble-ellipses"
+                size={moderateScale(14)}
+                color={formData.pricingType === 'upon_request' ? colors.white : colors.textColor}
+              />
+              <ZText
+                type="M12"
+                color={formData.pricingType === 'upon_request' ? colors.white : colors.textColor}
+                style={{ marginLeft: moderateScale(4) }}>
+                {strings.uponRequestPricing}
+              </ZText>
+            </TouchableOpacity>
+          </View>
+
+          {formData.pricingType === 'upon_request' ? (
+            <ZText type="R12" color={colors.grayScale7} style={{ marginBottom: moderateScale(8) }}>
+              {strings.priceNotRequired}
+            </ZText>
+          ) : (
+            <ZInput
+              label={strings.priceEGP}
+              _value={formData.price}
+              toGetTextFieldValue={text => updateFormData('price', text)}
+              placeHolder="0.00"
+              keyBoardType="decimal-pad"
+              _errorText={formErrors.price?.message}
+            />
+          )}
 
           {/* Category Picker (now supports multi-select) */}
           <PickerButton
@@ -1156,6 +1221,21 @@ const localStyles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: moderateScale(8),
     marginTop: moderateScale(4),
+  },
+  // Pricing Type Toggle
+  pricingTypeContainer: {
+    flexDirection: 'row',
+    gap: moderateScale(8),
+    marginTop: moderateScale(-4),
+    marginBottom: moderateScale(12),
+  },
+  pricingTypeOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: moderateScale(12),
+    paddingVertical: moderateScale(8),
+    borderRadius: moderateScale(20),
+    borderWidth: 1,
   },
 });
 

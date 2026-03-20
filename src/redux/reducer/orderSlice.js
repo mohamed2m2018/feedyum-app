@@ -211,7 +211,7 @@ export const fetchOrderById = (orderId) => async (dispatch) => {
   }
 };
 
-export const updateOrderStatusAsync = (orderId, status, deliveryFee, depositOverride) => async (dispatch) => {
+export const updateOrderStatusAsync = (orderId, status, deliveryFee, depositOverride, quotePrice) => async (dispatch) => {
   try {
     dispatch(setLoading(true));
     dispatch(clearError());
@@ -222,6 +222,9 @@ export const updateOrderStatusAsync = (orderId, status, deliveryFee, depositOver
     }
     if (depositOverride !== undefined) {
       updateData.depositOverride = depositOverride;
+    }
+    if (quotePrice !== undefined) {
+      updateData.quotePrice = quotePrice;
     }
 
     const response = await request.put(`/orders/${orderId}/status`, updateData);

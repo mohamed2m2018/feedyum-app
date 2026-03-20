@@ -8,6 +8,11 @@ import {
   Animated,
   Dimensions,
   I18nManager,
+  TextInput,
+  Modal,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { showSuccessToast, showErrorToast, showSuccessDialog, showActionDialog, ALERT_TYPE } from '../../../utils/toast';
 import { formatDistance } from '../../../utils/helpers';
@@ -56,6 +61,8 @@ const DishDetailScreen = () => {
   const { dishId, chefId, editCartItemKey, editSelectedOptions, editQuantity } = route.params;
   const isEditMode = !!editCartItemKey;
   const [quantity, setQuantity] = useState(isEditMode ? (editQuantity || 1) : 1);
+  const [quoteNotes, setQuoteNotes] = useState('');
+  const [showQuoteModal, setShowQuoteModal] = useState(false);
   const [selectedTab, setSelectedTab] = useState('reviews');
   const [scrollY] = useState(new Animated.Value(0));
   const [showFullDescription, setShowFullDescription] = useState(false);
@@ -577,7 +584,9 @@ const DishDetailScreen = () => {
             {dishData?.name}
           </ZText>
           <ZText type="B20" color="#FF4D67" style={localStyles.dishPrice}>
-            {dishData?.price} {strings.currency}
+            {dishData?.pricingType === 'upon_request'
+              ? strings.uponRequest
+              : `${dishData?.price} ${strings.currency}`}
           </ZText>
         </View>
 
@@ -1036,6 +1045,30 @@ const DishDetailScreen = () => {
     const isOwner = currentUserId === dishOwnerId;
     if (isOwner) return null;
 
+    const isUponRequest = dishData?.pricingType === 'upon_request';
+
+    // ─── Upon Request: Clean CTA → opens notes modal ───
+    if (isUponRequest) {
+      return (
+        <View style={[localStyles.bottomSection, { backgroundColor: colors.white }]}>
+          <ZButton
+            title={strings.requestQuote}
+            onPress={() => setShowQuoteModal(true)}
+            containerStyle={localStyles.addToCartButton}
+            frontIcon={
+              <Ionicons
+                name="chatbubble-ellipses-outline"
+                size={moderateScale(18)}
+                color={colors.white}
+                style={{ marginRight: moderateScale(6) }}
+              />
+            }
+          />
+        </View>
+      );
+    }
+
+    // ─── Fixed Price: Normal quantity + add to cart ───
     const totalPrice = calculateTotalPrice();
     const requiredSatisfied = areRequiredOptionsSatisfied();
 
@@ -1217,6 +1250,111 @@ const DishDetailScreen = () => {
       </Animated.ScrollView>
 
       {renderBottomSection()}
+
+      {/* Quote Request Modal */}
+      <Modal
+        visible={showQuoteModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowQuoteModal(false)}>
+        <TouchableWithoutFeedback onPress={() => setShowQuoteModal(false)}>
+          <View style={localStyles.quoteModalOverlay}>
+            <TouchableWithoutFeedback onPress={() => {}}>
+              <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                style={localStyles.quoteModalContent}
+              >
+                <View style={[localStyles.quoteModalCard, { backgroundColor: colors.backgroundColor }]}>
+                  {/* Header */}
+                  <View style={localStyles.quoteModalHeader}>
+                    <ZText type="B18" color={colors.textColor}>
+                      {strings.requestQuote}
+                    </ZText>
+                    <TouchableOpacity onPress={() => setShowQuoteModal(false)}>
+                      <Ionicons name="close" size={moderateScale(24)} color={colors.grayScale5} />
+                    </TouchableOpacity>
+                  </View>
+
+                  {/* Dish Name */}
+                  <ZText type="M14" color={colors.grayScale7} style={{ marginBottom: moderateScale(12) }}>
+                    {dishData?.name}
+                  </ZText>
+
+                  {/* Notes Input */}
+                  <ZText type="B14" color={colors.textColor} style={{ marginBottom: moderateScale(6) }}>
+                    {strings.quoteNotesLabel}
+                  </ZText>
+                  <TextInput
+                    style={[
+                      localStyles.quoteNotesInput,
+                      {
+                        backgroundColor: colors.inputBg,
+                        color: colors.textColor,
+                        borderColor: colors.bColor,
+                        textAlign: I18nManager.isRTL ? 'right' : 'left',
+                        writingDirection: I18nManager.isRTL ? 'rtl' : 'ltr',
+                      },
+                    ]}
+                    placeholder={strings.quoteNotesPlaceholder}
+                    placeholderTextColor={colors.grayScale5}
+                    value={quoteNotes}
+                    onChangeText={setQuoteNotes}
+                    multiline
+                    numberOfLines={4}
+                    textAlignVertical="top"
+                    autoFocus
+                  />
+
+                  {/* Send Button */}
+                  <ZButton
+                    title={strings.sendQuoteRequest}
+                    onPress={async () => {
+                      if (!quoteNotes.trim()) {
+                        showErrorToast(strings.quoteNotesRequired || 'Please describe your order details');
+                        return;
+                      }
+                      try {
+                        const optionsSummary = buildSelectedOptionsForCart();
+                        const selectedOptionNames = optionsSummary.flatMap(o => o.optionNames);
+
+                        const response = await request.post('/chat/quote-request', {
+                          receiverId: chefId,
+                          dishId: dishData?._id,
+                          selectedOptions: selectedOptionNames,
+                          notes: quoteNotes.trim(),
+                        });
+
+                        const orderId = response?.data?.order?._id;
+
+                        setShowQuoteModal(false);
+                        setQuoteNotes('');
+                        showSuccessToast(strings.quoteRequestSent);
+                        navigation.navigate(StackNav.OrderTracking, { orderId });
+                      } catch (err) {
+                        console.error('Quote request failed:', err);
+                        showErrorToast(strings.somethingWentWrong);
+                      }
+                    }}
+                    containerStyle={[
+                      localStyles.addToCartButton,
+                      !quoteNotes.trim() && { opacity: 0.5 },
+                    ]}
+                    disabled={!quoteNotes.trim()}
+                    frontIcon={
+                      <Ionicons
+                        name="send-outline"
+                        size={moderateScale(18)}
+                        color={colors.white}
+                        style={{ marginRight: moderateScale(6) }}
+                      />
+                    }
+                  />
+                </View>
+              </KeyboardAvoidingView>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
     </ZSafeAreaView>
   );
 };
@@ -1525,6 +1663,34 @@ const localStyles = StyleSheet.create({
   addToCartButton: {
     height: moderateScale(56),
     borderRadius: moderateScale(16),
+  },
+  quoteNotesInput: {
+    borderWidth: 1,
+    borderRadius: moderateScale(12),
+    padding: moderateScale(12),
+    minHeight: moderateScale(80),
+    fontSize: moderateScale(14),
+    marginBottom: moderateScale(12),
+  },
+  quoteModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  quoteModalContent: {
+    justifyContent: 'flex-end',
+  },
+  quoteModalCard: {
+    borderTopLeftRadius: moderateScale(20),
+    borderTopRightRadius: moderateScale(20),
+    padding: moderateScale(20),
+    paddingBottom: moderateScale(32),
+  },
+  quoteModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: moderateScale(8),
   },
 
   // Loading and Error States

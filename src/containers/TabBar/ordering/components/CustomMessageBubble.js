@@ -18,6 +18,8 @@ import AudioMessage from '../../../../components/AudioMessage';
 import { moderateScale } from '../../../../common/constants';
 import strings from '../../../../i18n/strings';
 import { formatTime } from '../../../../utils/helpers';
+import PriceOfferBubble from './PriceOfferBubble';
+import QuoteRequestBubble from './QuoteRequestBubble';
 
 const CustomMessageBubble = ({
   props,
@@ -30,6 +32,12 @@ const CustomMessageBubble = ({
   isRTL = false, // RTL support for Arabic
   onImagePress, // Callback when image is pressed
   language, // For locale-aware date formatting
+  onAcceptOffer, // Callback when customer accepts a price offer
+  onDeclineOffer, // Callback when customer declines a price offer
+  isChef = false, // Whether current user is the chef in this chat
+  onSetPrice, // Callback when chef wants to set price on a quote request
+  orderPrice, // Current order total price
+  orderStatus, // Current order status
 }) => {
   const [showOptions, setShowOptions] = useState(false);
   const swipeableRef = useRef(null);
@@ -126,6 +134,63 @@ const CustomMessageBubble = ({
             messageId={message._id}
             isOwn={isCurrentUser}
           />
+        </View>
+      );
+    }
+
+    // Price offer messages - render PriceOfferBubble card
+    if (message.priceOffer) {
+      return (
+        <View style={[styles.bubbleWrapper, showOnRight ? styles.wrapperRight : styles.wrapperLeft]}>
+          <View style={[
+            styles.bubble,
+            {
+              backgroundColor: isCurrentUser ? colors.primary : colors.inputBg,
+              padding: 0,
+              overflow: 'hidden',
+            },
+          ]}>
+            <PriceOfferBubble
+              priceOffer={message.priceOffer}
+              isCurrentUser={isCurrentUser}
+              isChef={isChef}
+              colors={colors}
+              onAccept={() => onAcceptOffer?.(message._id)}
+              onDecline={() => onDeclineOffer?.(message._id)}
+              createdAt={message.createdAt}
+              language={language}
+            />
+          </View>
+        </View>
+      );
+    }
+
+    // Quote request messages - render QuoteRequestBubble card
+    if (message.quoteRequest) {
+      const screenWidth = require('react-native').Dimensions.get('window').width;
+      return (
+        <View style={[styles.bubbleWrapper, showOnRight ? styles.wrapperRight : styles.wrapperLeft]}>
+          <View style={[
+            styles.bubble,
+            {
+              backgroundColor: isCurrentUser ? colors.primary : colors.inputBg,
+              padding: 0,
+              overflow: 'hidden',
+              maxWidth: screenWidth * 0.72,
+            },
+          ]}>
+            <QuoteRequestBubble
+              quoteRequest={message.quoteRequest}
+              isCurrentUser={isCurrentUser}
+              isChef={isChef}
+              colors={colors}
+              createdAt={message.createdAt}
+              language={language}
+              onSetPrice={isChef ? onSetPrice : undefined}
+              orderPrice={orderPrice}
+              orderStatus={orderStatus}
+            />
+          </View>
         </View>
       );
     }

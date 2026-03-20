@@ -109,7 +109,7 @@ const ChefProfile = ({ chef, orderId, colors, onPress }) => {
 
 
 export default function ChatScreen({ route }) {
-  const { chefId, orderId } = route.params;
+  const { chefId, orderId, prefilledMessage } = route.params;
   const navigation = useNavigation();
   const queryClient = useQueryClient();
   const colors = useSelector(state => state.theme.theme);
@@ -119,7 +119,7 @@ export default function ChatScreen({ route }) {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [editingMessage, setEditingMessage] = useState(null);
-  const [text, setText] = useState('');
+  const [text, setText] = useState(prefilledMessage || '');
 
   const [hideOrderSummary, setHideOrderSummary] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
@@ -132,9 +132,23 @@ export default function ChatScreen({ route }) {
   const socketRef = useRef(null);
   const textInputRef = useRef(null);
   const messageContainerRef = useRef(null);
+  const prefilledSentRef = useRef(false);
   const { data: currentUserData } = useQuery('user', () => request.get('/user'));
   const currentUserId = currentUserData?.data?.user?._id;
-  const isCurrentUserChef = currentUserId === chefId;
+  const isCurrentUserChef = currentUserData?.data?.user?.type === 'chef';
+
+  // Auto-send prefilled message (from quote request modal)
+  useEffect(() => {
+    if (prefilledMessage && !prefilledSentRef.current && currentUserId) {
+      prefilledSentRef.current = true;
+      // Delay to ensure socket is connected and chat is ready
+      const timer = setTimeout(() => {
+        onSend([{ text: prefilledMessage, _id: `prefilled_${Date.now()}`, createdAt: new Date(), user: { _id: currentUserId } }]);
+        setText('');
+      }, 1200);
+      return () => clearTimeout(timer);
+    }
+  }, [currentUserId, onSend]);
 
   // Check if the chef has chat enabled
   useEffect(() => {
@@ -243,6 +257,10 @@ export default function ChatScreen({ route }) {
           text = '';
           audio = message.audio;
           duration = message.duration;
+        } else if (message.messageType === 'price_offer') {
+          // Price offer messages keep their text, priceOffer data added below
+        } else if (message.messageType === 'quote_request') {
+          // Quote request messages keep their text, quoteRequest data added below
         } else {
           // Try to parse content as JSON for image_with_text messages
           try {
@@ -276,6 +294,8 @@ export default function ChatScreen({ route }) {
           image: image,
           audio: audio,
           duration: duration,
+          priceOffer: message.priceOffer || undefined,
+          quoteRequest: message.quoteRequest || undefined,
         };
 
         // 3. Append to state with deduplication check
@@ -286,6 +306,17 @@ export default function ChatScreen({ route }) {
           }
           return GiftedChat.append(previousMessages, newMessage);
         });
+      });
+
+      // Listen for price offer response updates (accept/decline)
+      socketRef.current.on('priceOfferResponse', (data) => {
+        if (data.messageId) {
+          setMessages(prev => prev.map(m =>
+            String(m._id) === String(data.messageId)
+              ? { ...m, priceOffer: { ...m.priceOffer, status: data.action === 'accept' ? 'accepted' : 'declined' } }
+              : m
+          ));
+        }
       });
     }
 
@@ -411,6 +442,24 @@ export default function ChatScreen({ route }) {
               text: '',
               audio: msg.audio,
               duration: msg.duration,
+            };
+          }
+
+          // Check if it's a price offer message
+          if (msg.messageType === 'price_offer' && msg.priceOffer) {
+            return {
+              ...baseMessage,
+              text: msg.content || '',
+              priceOffer: msg.priceOffer,
+            };
+          }
+
+          // Check if it's a quote request message
+          if (msg.messageType === 'quote_request' && msg.quoteRequest) {
+            return {
+              ...baseMessage,
+              text: msg.content || '',
+              quoteRequest: msg.quoteRequest,
             };
           }
 
@@ -985,8 +1034,45 @@ export default function ChatScreen({ route }) {
       isRTL={isRTL}
       onImagePress={(imageUrl) => setSelectedImage(imageUrl)}
       language={language}
+      isChef={isCurrentUserChef}
+      onAcceptOffer={async (messageId) => {
+        try {
+          const res = await request.put(`/chat/price-offer/${messageId}/respond`, { action: 'accept' });
+          if (res.data?.success) {
+            // Update the message in state to reflect acceptance
+            setMessages(prev => prev.map(m =>
+              String(m._id) === String(messageId)
+                ? { ...m, priceOffer: { ...m.priceOffer, status: 'accepted' } }
+                : m
+            ));
+          }
+        } catch (err) {
+          console.error('[PRICE_OFFER] Accept error:', err);
+        }
+      }}
+      onDeclineOffer={async (messageId) => {
+        try {
+          const res = await request.put(`/chat/price-offer/${messageId}/respond`, { action: 'decline' });
+          if (res.data?.success) {
+            setMessages(prev => prev.map(m =>
+              String(m._id) === String(messageId)
+                ? { ...m, priceOffer: { ...m.priceOffer, status: 'declined' } }
+                : m
+            ));
+          }
+        } catch (err) {
+          console.error('[PRICE_OFFER] Decline error:', err);
+        }
+      }}
+      onSetPrice={['pending', 'awaiting_confirmation'].includes(order?.status) ? () => {
+        if (orderId) {
+          navigation.navigate(StackNav.ChefOrderDetails, { orderId });
+        }
+      } : undefined}
+      orderPrice={order?.totalPrice}
+      orderStatus={order?.status}
     />
-  ), [colors, currentUser, handleDeleteMessage, handleEditMessage, handleRetryMessage, handleReply, isRTL, language]);
+  ), [colors, currentUser, handleDeleteMessage, handleEditMessage, handleRetryMessage, handleReply, isRTL, language, isCurrentUserChef, orderId, navigation, order?.status, order?.totalPrice]);
 
   // Force LTR direction on GiftedChat's Message container
   // This prevents RTL from flipping own messages to the left side

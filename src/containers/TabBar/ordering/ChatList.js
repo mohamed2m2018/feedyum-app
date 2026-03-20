@@ -8,7 +8,7 @@ import {
   Image,
 } from 'react-native';
 import { useSelector } from 'react-redux';
-import { useQuery, useInfiniteQuery } from 'react-query';
+import { useQuery, useInfiniteQuery, useQueryClient } from 'react-query';
 import { useFocusEffect, useRoute } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
@@ -25,6 +25,7 @@ export default function ChatList({ navigation }) {
   const colors = useSelector(state => state.theme.theme);
   const language = useSelector(state => state.profile?.language);
   const route = useRoute();
+  const queryClient = useQueryClient();
   const [refreshing, setRefreshing] = useState(false);
 
   // Get current user
@@ -71,11 +72,17 @@ export default function ChatList({ navigation }) {
     return allChats.filter(item => item && (item.chatPartner || item.chef) && item.order);
   }, [chatsData]);
 
-  // Refresh chat list when screen comes into focus
+  // Refresh chat list and clear badges when screen comes into focus
   useFocusEffect(
     React.useCallback(() => {
       refetch();
-    }, [refetch])
+
+      // Clear the "unread chats" badge instantly
+      request.put('/chat/mark-all-read').then(() => {
+        // Invalidate counts to immediately hide badge in UI
+        queryClient.invalidateQueries(['unreadOrderChatsCount']);
+      }).catch(err => console.log('Failed to mark chats read:', err));
+    }, [refetch, queryClient])
   );
 
   // Refresh chat list when a new order is created
@@ -314,7 +321,7 @@ export default function ChatList({ navigation }) {
   if (chatsLoading && !orderChats.length) {
     return (
       <ZSafeAreaView>
-        <ZHeader title={strings.orderChats} isHideBack={!route.params?.fromStack} />
+        <ZHeader title={strings.orderChats} />
         <ZLoader />
       </ZSafeAreaView>
     );
@@ -322,7 +329,7 @@ export default function ChatList({ navigation }) {
 
   return (
     <ZSafeAreaView>
-      <ZHeader title={strings.orderChats} isHideBack={!route.params?.fromStack} />
+      <ZHeader title={strings.orderChats} />
       <FlatList
         data={orderChats}
         renderItem={renderChatItem}

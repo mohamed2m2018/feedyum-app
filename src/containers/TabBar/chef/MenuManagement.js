@@ -230,10 +230,11 @@ export default function MenuManagement() {
       const menuId = await ensureMenu();
 
       // Ensure all required fields are present and valid
+      const needsPrice = dishData.pricingType !== 'upon_request';
       if (
         !dishData.name ||
         !dishData.description ||
-        !dishData.price ||
+        (needsPrice && !dishData.price) ||
         !dishData.category ||
         !dishData.section
       ) {
@@ -286,6 +287,7 @@ export default function MenuManagement() {
         descriptionEnglish: dishData.descriptionEnglish,
         sectionNameArabic: dishData.sectionNameArabic,
         sectionNameEnglish: dishData.sectionNameEnglish,
+        pricingType: dishData.pricingType || 'fixed',
       };
 
 
@@ -370,6 +372,7 @@ export default function MenuManagement() {
         descriptionEnglish: dishData.descriptionEnglish,
         sectionNameArabic: dishData.sectionNameArabic,
         sectionNameEnglish: dishData.sectionNameEnglish,
+        pricingType: dishData.pricingType || 'fixed',
       };
 
       // Update dish with real API call

@@ -748,14 +748,18 @@ const OrderTracking = () => {
                     {strings.qty} {item.quantity || 1}
                   </Text>
                   <Text style={{ fontSize: 12, color: '#666666' }}>
-                    {(item.dish?.price || 0).toFixed(2)} {strings.currency} {strings.each}
+                    {currentOrder.orderType === 'catering' && !(item.dish?.price)
+                      ? (strings.uponRequest || 'Upon Request')
+                      : `${(item.dish?.price || 0).toFixed(2)} ${strings.currency} ${strings.each}`}
                   </Text>
                 </View>
               </View>
               <View style={localStyles.itemPriceContainer}>
                 <Text
                   style={{ fontSize: 14, fontWeight: 'bold', color: '#FF4D67' }}>
-                  {((item.dish?.price || 0) * (item.quantity || 1)).toFixed(2)} {strings.currency}
+                  {currentOrder.orderType === 'catering' && !(item.dish?.price)
+                    ? (strings.uponRequest || 'Upon Request')
+                    : `${((item.dish?.price || 0) * (item.quantity || 1)).toFixed(2)} ${strings.currency}`}
                 </Text>
               </View>
             </View>
@@ -787,6 +791,32 @@ const OrderTracking = () => {
           <View style={localStyles.loadingContainer}>
             <Text style={{ fontSize: 14, color: '#666666', textAlign: 'center' }}>
               {strings.loadingPricingInformation}
+            </Text>
+          </View>
+        </View>
+      );
+    }
+
+    // Catering orders with no price yet — show "Upon Request" instead of $0 breakdown
+    if (currentOrder.orderType === 'catering' && !currentOrder.totalPrice) {
+      return (
+        <View style={[localStyles.section, { backgroundColor: '#FFFFFF' }]}>
+          <Text
+            style={{
+              fontSize: 16,
+              fontWeight: 'bold',
+              color: '#FF6B35',
+              marginBottom: 16,
+            }}>
+            {strings.pricingSummary}
+          </Text>
+          <View style={{ alignItems: 'center', paddingVertical: moderateScale(16) }}>
+            <Ionicons name="document-text-outline" size={moderateScale(32)} color="#FF6B35" />
+            <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#FF6B35', marginTop: moderateScale(8) }}>
+              {strings.uponRequest}
+            </Text>
+            <Text style={{ fontSize: 13, color: '#666666', marginTop: moderateScale(4), textAlign: 'center' }}>
+              {strings.awaitingQuote}
             </Text>
           </View>
         </View>
@@ -1009,6 +1039,14 @@ const OrderTracking = () => {
             </View>
 
             <View style={localStyles.confirmationDetails}>
+              <View style={localStyles.confirmationDetailRow}>
+                <ZText type="M14" color="rgba(255,255,255,0.7)">
+                  {currentOrder.orderType === 'catering'
+                    ? (strings.offeredQuote || 'Offered Quote')
+                    : (strings.subtotal || 'Subtotal')}
+                </ZText>
+                <ZText type="B14" color="#FFFFFF">{currentOrder.subtotal || 0} {strings.currency || 'EGP'}</ZText>
+              </View>
               <View style={localStyles.confirmationDetailRow}>
                 <ZText type="M14" color="rgba(255,255,255,0.7)">{strings.deliveryFee || 'Delivery Fee'}</ZText>
                 <ZText type="B14" color="#FFFFFF">{currentOrder.deliveryFee || 0} {strings.currency || 'EGP'}</ZText>

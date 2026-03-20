@@ -12,8 +12,17 @@ import { styles } from '../../../../themes';
 import strings from '../../../../i18n/strings';
 import { formatDate as formatDateHelper, formatSlotLabel } from '../../../../utils/helpers';
 
-const StatusBadge = ({ status, colors }) => {
+const StatusBadge = ({ status, colors, orderType }) => {
   const getStatusConfig = () => {
+    // Override for catering orders with pending status
+    if (orderType === 'catering' && status === 'pending') {
+      return {
+        color: '#FF6B35',
+        backgroundColor: '#FF6B35' + '20',
+        text: strings.awaitingQuote || 'Awaiting Quote',
+        icon: 'document-text-outline',
+      };
+    }
     switch (status) {
       case 'pending':
         return {
@@ -262,7 +271,7 @@ const OrderCard = ({
             {formatDate(order.created_at)}
           </ZText>
         </View>
-        <StatusBadge status={order.status} colors={colors} />
+        <StatusBadge status={order.status} colors={colors} orderType={order.orderType} />
       </View>
 
       {/* Customer Info */}
@@ -336,6 +345,29 @@ const OrderCard = ({
         </View>
       )}
 
+      {/* Catering Order Badge */}
+      {order.orderType === 'catering' && (
+        <View style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          backgroundColor: '#FF6B35' + '15',
+          borderRadius: moderateScale(8),
+          paddingHorizontal: moderateScale(10),
+          paddingVertical: moderateScale(6),
+          marginBottom: moderateScale(12),
+        }}>
+          <Ionicons
+            name="document-text-outline"
+            size={moderateScale(14)}
+            color="#FF6B35"
+            style={{ marginRight: moderateScale(6) }}
+          />
+          <ZText type="M12" color="#FF6B35">
+            {strings.cateringOrder || 'Catering Order'}
+          </ZText>
+        </View>
+      )}
+
       {/* Order Summary */}
       <View style={localStyles.orderSummary}>
         <View style={localStyles.summaryRow}>
@@ -343,7 +375,7 @@ const OrderCard = ({
             {getTotalItems() === 1 ? strings.oneItemLabel : strings.itemsCountLabel.replace('{0}', getTotalItems())}
           </ZText>
           <ZText type="B16" color={colors.primary}>
-            {order.totalPrice?.toFixed(2) || '0.00'}
+            {order.orderType === 'catering' && !order.totalPrice ? (strings.uponRequest || 'Upon Request') : (order.totalPrice?.toFixed(2) || '0.00')}
           </ZText>
         </View>
         {order.specialInstructions && (
@@ -357,7 +389,7 @@ const OrderCard = ({
             <ZText
               type="M12"
               color={colors.grayScale7}
-              numberOfLines={2}
+              numberOfLines={order.orderType === 'catering' ? undefined : 2}
               style={localStyles.instructions}>
               {order.specialInstructions}
             </ZText>
