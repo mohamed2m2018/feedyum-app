@@ -420,6 +420,7 @@ export default {
   phoneNumberStarts: 'لابد ان يبدأ رقم الهاتف ب 01 بالارقام الانجليزية',
   addBio: 'من فضلك قم باضافة نبذة عنك',
   addRestaurantBio: 'عن مطعمك',
+  defaultBio: 'نشارككم ألذ وأشهى المأكولات',
   dashboard: 'لوحة التحكم',
   error: 'حدث خطأ',
   pleaseProvideCorrectNo: 'من فضلك اكتب رقم مصري صحيح',

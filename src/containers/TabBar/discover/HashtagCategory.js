@@ -390,7 +390,7 @@ export default function HashtagCategory({ selectedTag, isLocationChanging }) {
                 numberOfLines={2}
                 color={colors.dark ? colors.grayScale3 : colors.grayScale7}
                 style={styles.mt5}>
-                {item?.bio || 'Sharing delicious food content'}
+                {item?.bio || strings.defaultBio}
               </ZText>
               {/* Distance Display */}
               {item?.kmAway !== undefined && item?.kmAway !== null && (

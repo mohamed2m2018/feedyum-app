@@ -438,6 +438,7 @@ export default {
   phoneNumberStarts: 'Phone number must start with 01....',
   addBio: 'Add Bio about you',
   addRestaurantBio: 'About your restaurant',
+  defaultBio: 'Sharing delicious food content',
   dashboard: 'Dashboard',
   pleaseProvideCorrectNo: 'Please provide a correct egyptian phone number',
   phoneAlreadyRegistered: 'This phone number is already registered',
