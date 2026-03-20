@@ -95,6 +95,8 @@ const ChefBranchesScreen = () => {
                     countryCode: locationData.countryCode || '+20',
                     deliveryRadius: locationData.deliveryRadius || 20,
                     deliveryTiers: locationData.deliveryTiers || [],
+                    deliveryFee: locationData.deliveryFee, // Pass explicitly
+                    areaDeliveryFees: locationData.areaDeliveryFees || [], // Pass explicitly
                     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
                     orderMode: locationData.orderMode || 'asap',
                     minLeadTime: locationData.minLeadTime || 60,
@@ -138,6 +140,8 @@ const ChefBranchesScreen = () => {
                 buildingDetails: branch.addressDetails?.buildingDetails,
                 contactInfo: branch.contactInfo,
                 deliveryRadius: branch.deliveryRadius,
+                deliveryFee: branch.deliveryFee, // PRE-FILL BASE FEE
+                areaDeliveryFees: branch.areaDeliveryFees, // PRE-FILL AREA FEES
                 deliveryTiers: branch.deliveryTiers,
                 orderMode: branch.orderMode,
                 minLeadTime: branch.minLeadTime,
@@ -165,7 +169,9 @@ const ChefBranchesScreen = () => {
                         phoneNumber: locationData.phoneNumber || branch.contactInfo?.phoneNumber || '0000000000',
                         countryCode: locationData.countryCode || branch.contactInfo?.countryCode || '+20',
                         deliveryRadius: locationData.deliveryRadius || branch.deliveryRadius || 20,
-                        deliveryTiers: locationData.deliveryTiers || branch.deliveryTiers || [],
+                        deliveryTiers: locationData.deliveryTiers || [], // Pass empty array over old tiers
+                        deliveryFee: locationData.deliveryFee, // PASS EXPLICITLY TO BACKEND
+                        areaDeliveryFees: locationData.areaDeliveryFees || [], // PASS EXPLICITLY TO BACKEND
                         orderMode: locationData.orderMode || branch.orderMode || 'asap',
                         minLeadTime: locationData.minLeadTime || branch.minLeadTime || 60,
                         slotDuration: locationData.slotDuration || branch.slotDuration || 60,

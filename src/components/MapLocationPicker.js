@@ -8,6 +8,8 @@ import {
   ActivityIndicator,
   ScrollView,
   TextInput,
+  Modal,
+  Animated,
 } from 'react-native';
 import { showErrorToast } from '../utils/toast';
 import { useSelector, useDispatch } from 'react-redux';
@@ -38,7 +40,85 @@ import Geolocation from '@react-native-community/geolocation';
 
 const { width, height } = Dimensions.get('window');
 
+const AnimatedCheckboxIcon = memo(({ isExcluded, colors, shouldPulse }) => {
+  const pulseAnim = useRef(new Animated.Value(1)).current;
 
+  useEffect(() => {
+    if (shouldPulse) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, {
+            toValue: 1.25,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseAnim, {
+            toValue: 1,
+            duration: 800,
+            useNativeDriver: true,
+          })
+        ])
+      ).start();
+    } else {
+      pulseAnim.setValue(1);
+    }
+  }, [pulseAnim, shouldPulse]);
+
+  return (
+    <Animated.View style={{ marginRight: moderateScale(6), marginTop: moderateScale(2), transform: [{ scale: pulseAnim }] }}>
+      <Ionicons 
+        name={!isExcluded ? "checkbox" : "square-outline"} 
+        size={moderateScale(22)} 
+        color={!isExcluded ? colors.primary : colors.grayScale5} 
+      />
+    </Animated.View>
+  );
+});
+
+const AnimatedMapButton = memo(({ onPress, text, shouldPulse, colors }) => {
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (shouldPulse) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, {
+            toValue: 1.15,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseAnim, {
+            toValue: 1,
+            duration: 800,
+            useNativeDriver: true,
+          })
+        ])
+      ).start();
+    } else {
+      pulseAnim.setValue(1);
+    }
+  }, [pulseAnim, shouldPulse]);
+
+  return (
+    <TouchableOpacity onPress={onPress}>
+      <Animated.View style={{ 
+        flexDirection: 'row',
+        alignItems: 'center',
+        alignSelf: 'flex-start',
+        backgroundColor: colors.primary + '15',
+        paddingHorizontal: moderateScale(8),
+        paddingVertical: moderateScale(4),
+        borderRadius: moderateScale(6),
+        transform: [{ scale: pulseAnim }]
+      }}>
+        <Ionicons name="map-outline" size={moderateScale(12)} color={colors.primary} style={{ marginRight: moderateScale(4) }} />
+        <ZText type="M10" color={colors.primary}>
+          {text}
+        </ZText>
+      </Animated.View>
+    </TouchableOpacity>
+  );
+});
 
 const MapLocationPicker = () => {
   const colors = useSelector(state => state.theme.theme);
@@ -107,11 +187,34 @@ const MapLocationPicker = () => {
     editMode && addressToEdit?.excludedAreas ? addressToEdit.excludedAreas : []
   ); // Array of { name, placeId } chef excluded
   const [showBranchForm, setShowBranchForm] = useState(false);
-  const [deliveryTiers, setDeliveryTiers] = useState([{ maxDistance: 20, fee: '' }]);
-  const [tierErrors, setTierErrors] = useState([]); // indices of tiers with invalid fees
+  const [deliveryFee, setDeliveryFee] = useState(() => {
+    if (editMode && addressToEdit) {
+      if (addressToEdit.deliveryFee || addressToEdit.deliveryFee > 0) {
+        return String(addressToEdit.deliveryFee);
+      }
+      if (addressToEdit.deliveryTiers && addressToEdit.deliveryTiers.length > 0) {
+        return String(addressToEdit.deliveryTiers[0].fee); // Base fee falls back to lowest legacy tier
+      }
+      if (addressToEdit.deliveryFee !== undefined && addressToEdit.deliveryFee !== null) {
+        return String(addressToEdit.deliveryFee);
+      }
+    }
+    return '';
+  });
+  const [areaFees, setAreaFees] = useState(
+    editMode && addressToEdit?.areaDeliveryFees ? addressToEdit.areaDeliveryFees : []
+  ); // Array of { name, placeId, fee: string }
+  const legacyTiersMapped = useRef(false);
+  const manuallyEditedAreas = useRef(new Set(
+    editMode && addressToEdit?.areaDeliveryFees ? addressToEdit.areaDeliveryFees.map(a => a.placeId) : []
+  )); // Track which area placeIds have been explicitly customized, so Base Fee edits don't overwrite them
+  const [selectedAreaToView, setSelectedAreaToView] = useState(null);
+  const [animationWatched, setAnimationWatched] = useState(false);
+  const [checkboxAnimationWatched, setCheckboxAnimationWatched] = useState(false);
+  
+  const [tierErrors, setTierErrors] = useState([]); // legacy, can be repurposed or removed
   const [orderModeError, setOrderModeError] = useState(false);
   const [orderMode, setOrderMode] = useState(
-
     editMode && addressToEdit?.orderMode ? addressToEdit.orderMode : null
   );
   const savedLeadMinutes = editMode && addressToEdit?.minLeadTime ? addressToEdit.minLeadTime : null;
@@ -130,34 +233,9 @@ const MapLocationPicker = () => {
     editMode && addressToEdit?.slotDuration ? addressToEdit.slotDuration : 60
   );
 
-  // Auto-adjust delivery tiers when radius changes
-  useEffect(() => {
-    setDeliveryTiers(prev => {
-      // Clamp all maxDistance values to not exceed radius
-      let adjusted = prev.map(tier => ({
-        ...tier,
-        maxDistance: Math.min(tier.maxDistance, deliveryRadius),
-      }));
+  // Auto-adjust delivery tiers when radius changes is DEPRECATED
+  // Areas are fetched dynamically based on radius using Google Places
 
-      // Remove zero-range tiers (where From >= To after clamping)
-      adjusted = adjusted.filter((tier, idx) => {
-        const from = idx === 0 ? 0 : adjusted[idx - 1]?.maxDistance || 0;
-        return tier.maxDistance > from;
-      });
-
-      if (adjusted.length === 0) {
-        return [{ maxDistance: deliveryRadius, fee: '' }];
-      }
-
-      // Ensure last tier reaches the radius
-      adjusted[adjusted.length - 1] = {
-        ...adjusted[adjusted.length - 1],
-        maxDistance: deliveryRadius,
-      };
-
-      return adjusted;
-    });
-  }, [deliveryRadius]);
 
   // Initialize state for edit mode - show form instantly with existing data
   useEffect(() => {
@@ -203,9 +281,7 @@ const MapLocationPicker = () => {
       if (addressToEdit.deliveryRadius) {
         setDeliveryRadius(addressToEdit.deliveryRadius);
       }
-      if (addressToEdit.deliveryTiers && addressToEdit.deliveryTiers.length > 0) {
-        setDeliveryTiers(addressToEdit.deliveryTiers);
-      }
+      // Area delivery fees are initialized in useState
       if (addressToEdit.branchName) {
         setBranchName(addressToEdit.branchName);
       }
@@ -405,9 +481,53 @@ const MapLocationPicker = () => {
 
     setLoadingAreas(true);
     try {
-      const response = await branchService.getCoverageAreas(lat, lng, radius);
-      if (response?.success && response.areas) {
+      const radiusVal = deliveryRadius || (editMode && addressToEdit?.deliveryRadius) || 20;
+      const response = await branchService.getCoverageAreas(lat, lng, radiusVal);
+
+      if (response.success && response.areas) {
+        // Deduplicate areas by placeId since a radius search might return multiple points in same area
+        const uniqueAreas = [];
+        const seenPlaceIds = new Set();
+
         setCoverageAreas(response.areas);
+
+        // Backward compatibility for legacy branches that had distance-based tiers
+        if (editMode && addressToEdit?.deliveryTiers?.length > 0 && !legacyTiersMapped.current) {
+          if (!addressToEdit.areaDeliveryFees || addressToEdit.areaDeliveryFees.length === 0) {
+            const newAreaFees = [];
+            const baseFee = addressToEdit.deliveryFee || addressToEdit.deliveryFee > 0
+              ? Number(addressToEdit.deliveryFee)
+              : (addressToEdit.deliveryTiers && addressToEdit.deliveryTiers.length > 0)
+                ? Number(addressToEdit.deliveryTiers[0]?.fee || 0)
+                : Number(addressToEdit.deliveryFee || 0);
+
+            response.areas.forEach(area => {
+              const approxDist = area.approxDistance;
+              if (approxDist !== undefined) {
+                // Find applicable tier
+                const applicableTier = addressToEdit.deliveryTiers.find(
+                  tier => approxDist >= tier.fromKm && approxDist < tier.toKm
+                );
+                if (applicableTier) {
+                  // If tier fee differs from base fee, add custom area fee
+                  if (Number(applicableTier.fee) !== baseFee) {
+                    newAreaFees.push({
+                      name: area.name,
+                      placeId: area.placeId,
+                      fee: applicableTier.fee
+                    });
+                    manuallyEditedAreas.current.add(area.placeId); // Mark legacy custom tiers as explicitly requested
+                  }
+                }
+              }
+            });
+
+            if (newAreaFees.length > 0) {
+              setAreaFees(newAreaFees);
+            }
+            legacyTiersMapped.current = true;
+          }
+        }
       }
     } catch (error) {
       console.error('Error fetching coverage areas:', error);
@@ -415,7 +535,7 @@ const MapLocationPicker = () => {
     } finally {
       setLoadingAreas(false);
     }
-  }, []);
+  }, [deliveryRadius, editMode, addressToEdit]);
 
   // Debounced radius change handler
   const handleRadiusChange = useCallback((value) => {
@@ -475,32 +595,30 @@ const MapLocationPicker = () => {
       return;
     }
 
-    // Validate delivery tiers - all must have a fee > 0
-    const invalidIndices = deliveryTiers
-      .map((t, i) => (!t.fee || isNaN(Number(t.fee)) || Number(t.fee) <= 0) ? i : -1)
-      .filter(i => i !== -1);
-    if (invalidIndices.length > 0) {
-      setTierErrors(invalidIndices);
+    // Validate Base Delivery Fee
+    if (deliveryFee === '' || isNaN(Number(deliveryFee)) || Number(deliveryFee) < 0) {
       showErrorToast(
         strings.invalidDeliveryFee || 'Invalid Delivery Fee',
-        strings.allTiersMustHaveFee || 'All delivery tiers must have a fee greater than 0'
+        strings.baseFeeRequired || 'Please set a valid Base Delivery Fee'
       );
-      // Auto-scroll to the delivery fee section so user sees the error
       if (branchFormRef.current && tiersSectionY.current > 0) {
         const scrollFn = branchFormRef.current.scrollToPosition || branchFormRef.current.scrollTo;
-        if (scrollFn) {
-          scrollFn.call(branchFormRef.current, 0, tiersSectionY.current - 20, true);
-        }
+        if (scrollFn) scrollFn.call(branchFormRef.current, 0, tiersSectionY.current - 20, true);
       }
       return;
     }
-    setTierErrors([]);
 
-    // Format delivery tiers
-    const validTiers = deliveryTiers.map(t => ({
-      maxDistance: Number(t.maxDistance),
-      fee: Number(t.fee),
-    }));
+    // Format delivery config
+    const validDeliveryFee = Number(deliveryFee) || 0;
+
+    // Filter area fees to only those explicitly set and cleanly formatted
+    const validAreaFees = areaFees
+      .filter(a => a.fee !== '' && !isNaN(Number(a.fee)) && Number(a.fee) >= 0)
+      .map(a => ({
+        name: a.name,
+        placeId: a.placeId,
+        fee: Number(a.fee)
+      }));
 
     const locationData = {
       lat: selectedLocation.lat,
@@ -512,7 +630,9 @@ const MapLocationPicker = () => {
       description: selectedLocation.formattedAddress,
       branchName: branchName.trim() || `${selectedLocation.area || 'New'} Branch`,
       deliveryRadius: deliveryRadius,
-      deliveryTiers: validTiers,
+      deliveryFee: validDeliveryFee,
+      areaDeliveryFees: validAreaFees,
+      deliveryTiers: [], // Override and clear legacy distance-based tiers
       excludedAreas: excludedAreas,
       area: selectedLocation.area,
       city: selectedLocation.city,
@@ -525,7 +645,7 @@ const MapLocationPicker = () => {
       onLocationSelect(locationData);
     }
     navigation.goBack();
-  }, [selectedLocation, branchName, deliveryRadius, deliveryTiers, excludedAreas, orderMode, leadTimeValue, leadTimeUnit, slotDuration, onLocationSelect, navigation]);
+  }, [selectedLocation, branchName, deliveryRadius, deliveryFee, areaFees, excludedAreas, orderMode, leadTimeValue, leadTimeUnit, slotDuration, onLocationSelect, navigation]);
 
   const handleAddressDetailChange = (field, value) => {
     setAddressDetails(prev => ({
@@ -995,137 +1115,72 @@ const MapLocationPicker = () => {
               </View>
             </View>
 
-            {/* Delivery Fee Tiers */}
+            {/* Base Delivery Fee */}
             <View
               style={localStyles.section}
               onLayout={(e) => { tiersSectionY.current = e.nativeEvent.layout.y; }}
             >
-              <ZText type="B16" color={colors.textColor} style={localStyles.sectionTitle}>
-                {strings.deliveryTiers}
-              </ZText>
-              <ZText type="s12" color={colors.grayScale6} style={{ marginBottom: moderateScale(12) }}>
-                {strings.deliveryTiersHint}
-              </ZText>
-
-              {deliveryTiers.map((tier, index) => (
-                <View key={index} style={[localStyles.tierRow, { backgroundColor: colors.inputBg, borderColor: colors.grayScale4 }]}>
-                  <View style={localStyles.tierInputGroup}>
-                    <View style={localStyles.tierInputWrapper}>
-                      <ZText type="s12" color={colors.grayScale6}>{strings.tierFromKm}</ZText>
-                      <ZInput
-                        placeHolder="0"
-                        _value={index === 0 ? '0' : String(deliveryTiers[index - 1].maxDistance)}
-                        keyBoardType="numeric"
-                        editable={index !== 0}
-                        toGetTextFieldValue={(val) => {
-                          if (index > 0) {
-                            const num = Math.min(parseInt(val) || 0, deliveryRadius);
-                            const updated = [...deliveryTiers];
-                            updated[index - 1] = { ...updated[index - 1], maxDistance: num };
-                            setDeliveryTiers(updated);
-                          }
-                        }}
-                        inputContainerStyle={[localStyles.tierFeeInput, {
-                          backgroundColor: index === 0 ? colors.inputBg : colors.backgroundColor,
-                          borderColor: colors.grayScale4,
-                          opacity: index === 0 ? 0.6 : 1,
-                        }]}
-                      />
-                    </View>
-                    <View style={localStyles.tierInputWrapper}>
-                      <ZText type="s12" color={colors.grayScale6}>{strings.tierToKm}</ZText>
-                      <ZInput
-                        placeHolder="0"
-                        _value={String(tier.maxDistance)}
-                        keyBoardType="numeric"
-                        toGetTextFieldValue={(val) => {
-                          const num = parseInt(val) || 0;
-                          // Auto-expand delivery radius if tier exceeds it
-                          if (num > deliveryRadius) {
-                            setDeliveryRadius(num);
-                          }
-                          let updated = [...deliveryTiers];
-                          updated[index] = { ...updated[index], maxDistance: num };
-                          // Remove downstream tiers that become zero-range (From >= To)
-                          updated = updated.filter((t, i) => {
-                            if (i <= index) return true;
-                            const from = updated[i - 1]?.maxDistance || 0;
-                            return t.maxDistance > from;
-                          });
-                          setDeliveryTiers(updated);
-                        }}
-                        inputContainerStyle={[localStyles.tierFeeInput, { backgroundColor: colors.backgroundColor, borderColor: colors.grayScale4 }]}
-                      />
-                    </View>
-                    <View style={localStyles.tierInputWrapper}>
-                      <ZText type="s12" color={colors.grayScale6}>{strings.tierFeeEgp}</ZText>
-                      <ZInput
-                        placeHolder="10"
-                        _value={String(tier.fee)}
-                        keyBoardType="numeric"
-                        toGetTextFieldValue={(val) => {
-                          const updated = [...deliveryTiers];
-                          updated[index] = { ...updated[index], fee: val };
-                          setDeliveryTiers(updated);
-                          // Clear error for this tier if value is now valid
-                          if (val && !isNaN(Number(val)) && Number(val) > 0) {
-                            setTierErrors(prev => prev.filter(i => i !== index));
-                          }
-                        }}
-                        inputContainerStyle={[localStyles.tierFeeInput, {
-                          backgroundColor: colors.backgroundColor,
-                          borderColor: tierErrors.includes(index) ? '#FF5252' : colors.grayScale4,
-                          borderWidth: tierErrors.includes(index) ? 1.5 : 1,
-                        }]}
-                      />
-                      {tierErrors.includes(index) && (
-                        <ZText type="s10" color="#FF5252" style={{ marginTop: moderateScale(2) }}>
-                          {strings.invalidDeliveryFee || 'Required'}
-                        </ZText>
-                      )}
-                    </View>
-                  </View>
-                  {deliveryTiers.length > 1 && (
-                    <TouchableOpacity
-                      onPress={() => {
-                        const updated = deliveryTiers.filter((_, i) => i !== index);
-                        setDeliveryTiers(updated);
-                      }}
-                      style={localStyles.tierRemoveButton}
-                    >
-                      <Feather name="x" size={moderateScale(16)} color={colors.primary} />
-                    </TouchableOpacity>
-                  )}
-                </View>
-              ))}
-
-              <TouchableOpacity
-                style={[localStyles.addTierButton, { borderColor: colors.primary }]}
-                onPress={() => {
-                  const lastTier = deliveryTiers[deliveryTiers.length - 1];
-                  const newMax = lastTier.maxDistance + 5;
-                  // Auto-expand delivery radius to match
-                  if (newMax > deliveryRadius) {
-                    setDeliveryRadius(newMax);
-                  }
-                  const updated = [...deliveryTiers, { maxDistance: newMax, fee: '' }];
-                  setDeliveryTiers(updated);
-                }}
-              >
-                <Feather name="plus" size={moderateScale(16)} color={colors.primary} />
-                <ZText type="M14" color={colors.primary} style={{ marginLeft: moderateScale(6) }}>
-                  {strings.addTier}
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: moderateScale(8) }}>
+                <MaterialIcons name="local-shipping" size={moderateScale(20)} color={colors.primary} />
+                <ZText type="B16" color={colors.textColor} style={{ marginLeft: moderateScale(8), flex: 1 }}>
+                  {strings.baseDeliveryFee || 'Fee for all areas (Optional)'}
                 </ZText>
-              </TouchableOpacity>
+              </View>
+              <ZText type="s12" color={colors.grayScale6} style={{ marginBottom: moderateScale(12) }}>
+                {strings.baseDeliveryFeeHint || 'Set a single delivery fee that applies to all checked areas below. You can still set custom overrides for specific areas.'}
+              </ZText>
+              
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <ZInput
+                  placeHolder="e.g. 50"
+                  _value={deliveryFee}
+                  keyBoardType="numeric"
+                  toGetTextFieldValue={(val) => {
+                    setDeliveryFee(val);
+                    // Overwrite unset areas with the new global fee
+                    setAreaFees(prev => {
+                      const newAreaFees = [...prev];
+                      coverageAreas.forEach(area => {
+                        const isExcluded = excludedAreas.some(ex => ex.placeId === area.placeId || ex.name === area.name);
+                        const isCustom = manuallyEditedAreas.current.has(area.placeId);
+                        
+                        if (!isExcluded && !isCustom) {
+                           // Remove existing inherited fee if val is empty, or explicitly set it
+                           const existingIdx = newAreaFees.findIndex(a => a.placeId === area.placeId || a.name === area.name);
+                           if (val !== '') {
+                              if (existingIdx >= 0) {
+                                newAreaFees[existingIdx].fee = val;
+                              } else {
+                                newAreaFees.push({ name: area.name, placeId: area.placeId, fee: val });
+                              }
+                           } else {
+                              if (existingIdx >= 0) {
+                                newAreaFees.splice(existingIdx, 1);
+                              }
+                           }
+                        }
+                      });
+                      return newAreaFees;
+                    });
+                  }}
+                  inputContainerStyle={[localStyles.inputContainer, { backgroundColor: colors.inputBg, flex: 1 }]}
+                />
+                <ZText type="B16" color={colors.textColor} style={{ marginLeft: moderateScale(12), width: moderateScale(40) }}>
+                  EGP
+                </ZText>
+              </View>
             </View>
 
-            {/* Coverage Areas — tappable to exclude */}
+            {/* Area Grid Section */}
             <View style={localStyles.section}>
-              <ZText type="B16" color={colors.textColor} style={localStyles.sectionTitle}>
-                {strings.areasYouCanDeliverTo}
-              </ZText>
-              <ZText type="s12" color={colors.grayScale6} style={{ marginBottom: moderateScale(8) }}>
-                {strings.tapToExcludeArea || 'Press ✕ to stop delivering to an area'}
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: moderateScale(8) }}>
+                <MaterialIcons name="map" size={moderateScale(20)} color={colors.primary} />
+                <ZText type="B16" color={colors.textColor} style={{ marginLeft: moderateScale(8), flex: 1 }}>
+                  {strings.areasYouCanDeliverTo || 'Delivery Delivery'}
+                </ZText>
+              </View>
+              <ZText type="M14" color={colors.grayScale5} style={{ marginBottom: moderateScale(16), lineHeight: moderateScale(20) }}>
+                {'Toggle checkboxes to enable or disable delivery for specific neighborhoods.'}
               </ZText>
 
               {/* Excluded count badge */}
@@ -1135,9 +1190,9 @@ const MapLocationPicker = () => {
                   alignItems: 'center',
                   backgroundColor: '#FF4D4D15',
                   paddingHorizontal: moderateScale(12),
-                  paddingVertical: moderateScale(6),
+                  paddingVertical: moderateScale(8),
                   borderRadius: moderateScale(8),
-                  marginBottom: moderateScale(10),
+                  marginBottom: moderateScale(16),
                   borderWidth: 1,
                   borderColor: '#FF4D4D30',
                 }}>
@@ -1151,71 +1206,166 @@ const MapLocationPicker = () => {
               )}
 
               {loadingAreas ? (
-                <View style={localStyles.loadingAreasContainer}>
+                <View style={[localStyles.loadingAreasContainer, { paddingVertical: moderateScale(40) }]}>
                   <ActivityIndicator size="small" color={colors.primary} />
-                  <ZText type="s14" color={colors.grayScale6} style={{ marginLeft: moderateScale(8) }}>
-                    {strings.loadingAreas}
+                  <ZText type="s14" color={colors.grayScale6} style={{ marginTop: moderateScale(16) }}>
+                    {strings.loadingAreas || 'Scanning neighborhoods...'}
                   </ZText>
                 </View>
               ) : coverageAreas.length > 0 ? (
-                <View style={localStyles.areasContainer}>
+                <View style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginTop: moderateScale(8) }}>
                   {coverageAreas.map((area, index) => {
-                    const isExcluded = excludedAreas.some(ex => ex.placeId === area.placeId);
+                    // Match by placeId, but robustly fallback to area.name because Google Reverse Geocoding 
+                    // can return different placeIds for the same polygon bounding box over varying queries.
+                    const isExcluded = excludedAreas.some(ex => ex.placeId === area.placeId || ex.name === area.name);
+                    const specificFeeObj = areaFees.find(a => a.placeId === area.placeId || a.name === area.name);
+                    const specificFeeVal = specificFeeObj ? specificFeeObj.fee : '';
+                    const hasCustomFee = specificFeeVal !== '';
+                    
                     return (
-                      <TouchableOpacity
-                        key={area.placeId || index}
-                        style={[
-                          localStyles.areaTag,
-                          isExcluded
-                            ? { backgroundColor: colors.alertColor + '12', borderColor: colors.alertColor + '40' }
-                            : { backgroundColor: colors.primary + '15', borderColor: colors.primary + '40' },
-                        ]}
-                        onPress={() => {
-                          if (isExcluded) {
-                            setExcludedAreas(prev => prev.filter(ex => ex.placeId !== area.placeId));
-                          } else {
-                            setExcludedAreas(prev => [...prev, { name: area.name, placeId: area.placeId }]);
-                          }
+                      <View 
+                        key={area.placeId || index} 
+                        style={{
+                          flexDirection: 'column',
+                          alignItems: 'flex-start',
+                          justifyContent: 'flex-start',
+                          backgroundColor: colors.inputBg,
+                          borderRadius: moderateScale(12),
+                          padding: moderateScale(10),
+                          borderWidth: 1,
+                          borderColor: isExcluded ? colors.grayScale3 || colors.bColor : (hasCustomFee ? colors.primary + '40' : colors.bColor),
+                          opacity: isExcluded ? 0.75 : 1,
+                          width: '48%',
+                          marginBottom: moderateScale(12),
                         }}
-                        activeOpacity={0.7}
                       >
-                        {isExcluded ? (
-                          <>
-                            <ZText
-                              type="s14"
-                              color={colors.alertColor}
-                              style={{ textDecorationLine: 'line-through', opacity: 0.7 }}
+                        {/* Checkbox & Area Name */}
+                        <TouchableOpacity
+                          style={{ flexDirection: 'row', alignItems: 'flex-start', width: '100%', marginBottom: isExcluded ? 0 : moderateScale(10) }}
+                          onPress={() => {
+                            setCheckboxAnimationWatched(true);
+                            if (isExcluded) {
+                              setExcludedAreas(prev => prev.filter(ex => ex.placeId !== area.placeId && ex.name !== area.name));
+                            } else {
+                              setExcludedAreas(prev => [...prev, { name: area.name, placeId: area.placeId }]);
+                              setAreaFees(prev => prev.filter(a => a.placeId !== area.placeId && a.name !== area.name));
+                            }
+                          }}
+                          activeOpacity={0.7}
+                        >
+                          <AnimatedCheckboxIcon 
+                            isExcluded={isExcluded} 
+                            colors={colors} 
+                            shouldPulse={index === 0 && !checkboxAnimationWatched} 
+                          />
+                          <View style={{ flex: 1 }}>
+                            <ZText 
+                              type="M14" 
+                              color={isExcluded ? colors.grayScale5 : colors.textColor}
+                              numberOfLines={2}
+                              style={{ lineHeight: moderateScale(20), marginBottom: area.lat && area.lng ? moderateScale(6) : 0 }}
                             >
                               {area.name}
                             </ZText>
-                            <Ionicons
-                              name="arrow-undo-outline"
-                              size={moderateScale(14)}
-                              color={colors.alertColor}
-                              style={{ marginLeft: moderateScale(6) }}
-                            />
-                          </>
-                        ) : (
-                          <>
-                            <ZText type="s14" color={colors.primary}>
-                              {area.name}
+                            {!!(area.lat && area.lng) && (
+                              <AnimatedMapButton
+                                onPress={(e) => {
+                                  e.stopPropagation();
+                                  setAnimationWatched(true);
+                                  setSelectedAreaToView(area);
+                                }}
+                                text={strings.viewOnMap || 'View on map'}
+                                shouldPulse={index === 0 && !animationWatched}
+                                colors={colors}
+                              />
+                            )}
+                          </View>
+                        </TouchableOpacity>
+
+                        {/* Inline Input for Fee (only if checked) */}
+                        {!isExcluded ? (
+                          <View style={{ 
+                            flexDirection: 'row', 
+                            alignItems: 'center', 
+                            backgroundColor: colors.backgroundColor,
+                            borderRadius: moderateScale(8),
+                            height: moderateScale(34),
+                            width: '100%',
+                            borderWidth: hasCustomFee ? 1 : 1,
+                            borderColor: hasCustomFee ? colors.primary : colors.bColor
+                          }}>
+                            <View style={{ flex: 1 }}>
+                              <ZInput
+                                placeHolder={deliveryFee ? `${deliveryFee}` : "0"}
+                                _value={String(specificFeeVal)}
+                                keyBoardType="numeric"
+                                toGetTextFieldValue={(val) => {
+                                  if (val !== '') {
+                                    manuallyEditedAreas.current.add(area.placeId);
+                                  } else {
+                                    manuallyEditedAreas.current.delete(area.placeId);
+                                  }
+                                  
+                                  setAreaFees(prev => {
+                                    const existing = prev.filter(a => a.placeId !== area.placeId && a.name !== area.name);
+                                    if (val !== '') {
+                                      return [...existing, { name: area.name, placeId: area.placeId, fee: val }];
+                                    }
+                                    return existing;
+                                  });
+                                }}
+                                inputContainerStyle={{ 
+                                  height: '100%', 
+                                  borderWidth: 0, 
+                                  backgroundColor: 'transparent',
+                                  paddingHorizontal: 0
+                                }}
+                                style={{ 
+                                  fontSize: moderateScale(14), 
+                                  fontWeight: '600', 
+                                  color: hasCustomFee ? colors.primary : colors.textColor,
+                                  width: '100%',
+                                  textAlign: 'center'
+                                }}
+                              />
+                            </View>
+                            <ZText type="M10" color={hasCustomFee ? colors.primary : colors.grayScale5} style={{ paddingRight: moderateScale(8) }}>
+                              EGP
                             </ZText>
-                            <Ionicons
-                              name="close"
-                              size={moderateScale(16)}
-                              color={colors.primary}
-                              style={{ marginLeft: moderateScale(6), opacity: 0.6 }}
-                            />
-                          </>
+                          </View>
+                        ) : (
+                          <View style={{ 
+                            flexDirection: 'row', 
+                            alignItems: 'center', 
+                            justifyContent: 'center',
+                            backgroundColor: colors.dark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
+                            borderRadius: moderateScale(8),
+                            borderWidth: 1,
+                            borderStyle: 'dashed',
+                            borderColor: colors.grayScale3 || colors.grayScale4,
+                            height: moderateScale(34),
+                            width: '100%'
+                          }}>
+                            <Ionicons name="close-circle-outline" size={moderateScale(14)} color={colors.grayScale5} style={{ marginRight: moderateScale(4) }} />
+                            <ZText type="M12" color={colors.grayScale5}>
+                              {strings.notIncluded || 'Not Included'}
+                            </ZText>
+                          </View>
                         )}
-                      </TouchableOpacity>
+                      </View>
                     );
                   })}
                 </View>
               ) : (
-                <ZText type="s14" color={colors.grayScale6}>
-                  {strings.noAreasFound}
-                </ZText>
+                <View style={{ padding: moderateScale(20), alignItems: 'center', backgroundColor: colors.inputBg, borderRadius: moderateScale(12) }}>
+                  <Feather name="map-pin" size={moderateScale(28)} color={colors.grayScale4} style={{ marginBottom: moderateScale(12) }} />
+                  <ZText type="B14" color={colors.textColor} align="center" style={{ marginBottom: moderateScale(4) }}>
+                    {strings.noAreasFound || 'No Service Areas Detected'}
+                  </ZText>
+                  <ZText type="s12" color={colors.grayScale6} align="center">
+                    {strings.noAreasFoundDesc || 'Increase your delivery radius to scan for available neighborhoods.'}
+                  </ZText>
+                </View>
               )}
             </View>
 
@@ -1338,6 +1488,82 @@ const MapLocationPicker = () => {
             </TouchableOpacity>
           </View>
         )}
+
+        {/* Area Map Viewer Modal */}
+        <Modal
+          visible={!!selectedAreaToView}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setSelectedAreaToView(null)}
+        >
+          <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}>
+            <View style={{ 
+              width: '90%', 
+              height: '70%', 
+              backgroundColor: colors.backgroundColor, 
+              borderRadius: moderateScale(16), 
+              overflow: 'hidden',
+              elevation: 5,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.25,
+              shadowRadius: 4,
+            }}>
+              {/* Header */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: moderateScale(16), borderBottomWidth: 1, borderBottomColor: colors.bColor }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                  <Ionicons name="location" size={moderateScale(20)} color={colors.primary} />
+                  <ZText type="B16" color={colors.textColor} style={{ marginLeft: moderateScale(8) }} numberOfLines={1}>
+                    {selectedAreaToView?.name || strings.areaLocation}
+                  </ZText>
+                </View>
+                <TouchableOpacity onPress={() => setSelectedAreaToView(null)} style={{ padding: moderateScale(4) }}>
+                  <Ionicons name="close" size={moderateScale(24)} color={colors.textColor} />
+                </TouchableOpacity>
+              </View>
+
+              {/* Map */}
+              {selectedAreaToView?.lat && selectedAreaToView?.lng ? (
+                <MapView
+                  provider={PROVIDER_GOOGLE}
+                  style={{ flex: 1 }}
+                  region={{
+                    latitude: selectedAreaToView.lat,
+                    longitude: selectedAreaToView.lng,
+                    latitudeDelta: 0.025,
+                    longitudeDelta: 0.025,
+                  }}
+                >
+                  <Marker
+                    coordinate={{
+                      latitude: selectedAreaToView.lat,
+                      longitude: selectedAreaToView.lng,
+                    }}
+                  >
+                    <View style={localStyles.customMarker}>
+                      <Ionicons name="location" size={moderateScale(32)} color={colors.primary} />
+                    </View>
+                  </Marker>
+                  <Circle
+                    center={{
+                      latitude: selectedAreaToView.lat,
+                      longitude: selectedAreaToView.lng,
+                    }}
+                    radius={1500} // Approximate 1.5km circle
+                    fillColor={colors.primary + '20'}
+                    strokeColor={colors.primary}
+                    strokeWidth={1}
+                  />
+                </MapView>
+              ) : (
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                  <ZText type="M14" color={colors.grayScale5}>Location data unavailable</ZText>
+                </View>
+              )}
+            </View>
+          </View>
+        </Modal>
+
       </View>
     </ZSafeAreaView>
   );
