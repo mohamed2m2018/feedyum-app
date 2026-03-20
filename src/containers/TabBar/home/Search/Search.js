@@ -13,6 +13,7 @@ import { styles } from '../../../../themes';
 import ZText from '../../../../components/common/ZText';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 import { useScreen } from '../../../../navigation/screenContext';
+import { useLocation } from '../../../../navigation/locationContext';
 import { TabNav, StackNav } from '../../../../navigation/NavigationKeys';
 import ZLoader from '../../../../components/common/ZLoader';
 import SearchHeader from '../../../../components/SearchHeader';
@@ -31,14 +32,19 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 export default function Search() {
   const colors = useSelector(state => state.theme.theme);
   const { selectedAddress } = useSelector(state => state.address);
+  const locationCtx = useLocation();
   const navigation = useNavigation();
   const cartItemCount = useSelector(selectCartItemCount);
   const { unseenOrdersCount, unreadChatsCount } = useNotificationCounts();
 
   // User location for location-based search
+  // Prioritize selectedAddress from Redux, fallback to GPS location context
   const userLocation = selectedAddress?.coordinates ? {
     lat: selectedAddress.coordinates.lat || selectedAddress.coordinates.latitude,
     lng: selectedAddress.coordinates.lng || selectedAddress.coordinates.longitude,
+  } : locationCtx?.latitude && locationCtx?.longitude ? {
+    lat: locationCtx.latitude,
+    lng: locationCtx.longitude,
   } : null;
 
   // Unified search state shared across all tabs
