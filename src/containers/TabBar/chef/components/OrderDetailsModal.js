@@ -17,7 +17,7 @@ import ZButton from '../../../../components/common/ZButton';
 import { styles } from '../../../../themes';
 import { moderateScale } from '../../../../common/constants';
 import strings from '../../../../i18n/strings';
-import { formatDate as formatDateHelper, formatSlotLabel } from '../../../../utils/helpers';
+import { formatDate as formatDateHelper, formatSlotLabel, getLocalizedText } from '../../../../utils/helpers';
 
 const OrderDetailsModal = ({
   visible,
@@ -150,7 +150,7 @@ const OrderDetailsModal = ({
       />
       <View style={localStyles.itemDetails}>
         <ZText type="B16" numberOfLines={1}>
-          {item.dish?.name || 'Unknown Dish'}
+          {getLocalizedText(item.dish?.name, item.dish?.nameArabic, item.dish?.nameEnglish) || 'Unknown Dish'}
         </ZText>
         <ZText type="M14" color={colors.grayScale7}>
           {(item.dish?.price?.toFixed(2) || '0.00')} × {item.quantity}

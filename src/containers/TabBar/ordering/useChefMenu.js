@@ -4,7 +4,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useQuery, useInfiniteQuery } from 'react-query';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { showErrorToast, showActionDialog, showSuccessToast, ALERT_TYPE } from '../../../utils/toast';
-import { formatDistance } from '../../../utils/helpers';
+import { formatDistance, getLocalizedText } from '../../../utils/helpers';
 import request from '../../../api/request';
 import branchService from '../../../api/branchService';
 import { StackNav } from '../../../navigation/NavigationKeys';
@@ -311,7 +311,7 @@ const useChefMenu = () => {
 
     try {
       dispatch(addToCart({ dish, quantity, chefId, chefName: chefName || strings.unknownChef }));
-      showSuccessToast(strings.dishAddedTitle, strings.formatString(strings.dishAddedMessage, dish?.name));
+      showSuccessToast(strings.dishAddedTitle, strings.formatString(strings.dishAddedMessage, getLocalizedText(dish?.name, dish?.nameArabic, dish?.nameEnglish)));
     } catch (err) {
       showErrorToast(strings.error, strings.failedToAddItemToCart);
     }
@@ -353,7 +353,7 @@ const useChefMenu = () => {
         cancelText: strings.viewCart,
         onConfirm: () => {
           dispatch(clearCartAndAddPending());
-          showSuccessToast(strings.dishAddedTitle, strings.formatString(strings.dishAddedMessage, pendingConflictItem.dish?.name));
+          showSuccessToast(strings.dishAddedTitle, strings.formatString(strings.dishAddedMessage, getLocalizedText(pendingConflictItem.dish?.name, pendingConflictItem.dish?.nameArabic, pendingConflictItem.dish?.nameEnglish)));
         },
         onCancel: () => {
           dispatch(clearPendingConflictItem());

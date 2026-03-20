@@ -22,6 +22,7 @@ import { styles } from '../../../themes';
 import { moderateScale } from '../../../common/constants';
 import strings from '../../../i18n/strings';
 import request from '../../../api/request';
+import { getLocalizedText } from '../../../utils/helpers';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -116,7 +117,7 @@ const PopularDishItem = ({ dish, index, colors }) => (
     )}
     <View style={localStyles.dishInfo}>
       <ZText type="S14" color={colors.textColor} numberOfLines={1}>
-        {dish.name}
+        {getLocalizedText(dish.name, dish.nameArabic, dish.nameEnglish)}
       </ZText>
       <ZText type="M12" color={colors.grayScale6}>
         {dish.totalOrdered} {strings.ordersCount} · {strings.currency} {dish.revenue?.toFixed(2)}

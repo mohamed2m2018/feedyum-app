@@ -16,6 +16,7 @@ import { moderateScale } from '../../common/constants';
 import images from '../../assets/images';
 import { StackNav } from '../../navigation/NavigationKeys';
 import strings from '../../i18n/strings';
+import { getLocalizedText } from '../../utils/helpers';
 
 const AttachedDishesDisplay = ({
   attachedDishes = [],
@@ -56,7 +57,7 @@ const AttachedDishesDisplay = ({
         // Manual/Unlinked Dish: Google Search
         // Prioritize passed restaurantName (from post) over dishChefName (which might be the reviewer)
         const searchEntity = restaurantName || dishChefName || '';
-        const query = `${searchEntity} ${dish.name}`;
+        const query = `${searchEntity} ${getLocalizedText(dish.name, dish.nameArabic, dish.nameEnglish)}`;
         const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query.trim())}`;
         Linking.openURL(searchUrl);
       }
@@ -98,7 +99,7 @@ const AttachedDishesDisplay = ({
             color={colors.white}
             numberOfLines={1}
             style={localStyles.compactDishName}>
-            {dish.name}
+            {getLocalizedText(dish.name, dish.nameArabic, dish.nameEnglish)}
           </ZText>
 
           {/* Price badge */}
@@ -127,7 +128,7 @@ const AttachedDishesDisplay = ({
               color={colors.white}
               numberOfLines={1}
               style={localStyles.dishName}>
-              {dish.name}
+              {getLocalizedText(dish.name, dish.nameArabic, dish.nameEnglish)}
             </ZText>
             <StarRating
               rating={Number.isFinite(dish?.average_rating)

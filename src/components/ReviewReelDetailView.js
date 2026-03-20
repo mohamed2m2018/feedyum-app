@@ -20,6 +20,7 @@ import { styles } from '../themes';
 import request from '../api/request';
 import images from '../assets/images';
 import strings from '../i18n/strings';
+import { getLocalizedText } from '../utils/helpers';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -144,12 +145,12 @@ const ReviewReelDetailView = ({ reviewReel, onClose }) => {
 
           <View style={localStyles.itemInfo}>
             <ZText type="B16" color="#1A1A1A" numberOfLines={2}>
-              {item.name}
+              {getLocalizedText(item.name, item.nameArabic, item.nameEnglish)}
             </ZText>
 
             {item.description && (
               <ZText type="M14" color="#666666" numberOfLines={3} style={styles.mt4}>
-                {item.description}
+                {getLocalizedText(item.description, item.descriptionArabic, item.descriptionEnglish)}
               </ZText>
             )}
 

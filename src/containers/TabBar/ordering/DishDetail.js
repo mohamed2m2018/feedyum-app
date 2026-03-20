@@ -467,7 +467,7 @@ const DishDetailScreen = () => {
         cancelText: strings.viewCart,
         onConfirm: () => {
           dispatch(clearCartAndAddPending());
-          showSuccessToast(strings.dishAddedTitle, strings.formatString(strings.dishAddedMessage, pendingConflictItem.dish?.name));
+          showSuccessToast(strings.dishAddedTitle, strings.formatString(strings.dishAddedMessage, getLocalizedText(pendingConflictItem.dish?.name, pendingConflictItem.dish?.nameArabic, pendingConflictItem.dish?.nameEnglish)));
         },
         onCancel: () => {
           dispatch(clearPendingConflictItem());
@@ -1277,7 +1277,7 @@ const DishDetailScreen = () => {
 
                   {/* Dish Name */}
                   <ZText type="M14" color={colors.grayScale7} style={{ marginBottom: moderateScale(12) }}>
-                    {dishData?.name}
+                    {getLocalizedText(dishData?.name, dishData?.nameArabic, dishData?.nameEnglish)}
                   </ZText>
 
                   {/* Notes Input */}

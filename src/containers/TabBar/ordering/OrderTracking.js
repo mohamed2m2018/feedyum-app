@@ -24,7 +24,7 @@ import ZLoader from '../../../components/common/ZLoader';
 import { moderateScale } from '../../../common/constants';
 import { styles } from '../../../themes';
 import strings from '../../../i18n/strings';
-import { formatTime, formatDate, formatDateTime, formatSlotLabel } from '../../../utils/helpers';
+import { formatTime, formatDate, formatDateTime, formatSlotLabel, getLocalizedText } from '../../../utils/helpers';
 import {
   fetchOrderById,
   selectCurrentOrder,
@@ -734,13 +734,13 @@ const OrderTracking = () => {
               <View style={localStyles.itemInfo}>
                 <Text
                   style={{ fontSize: 14, fontWeight: 'bold', color: '#000000' }}>
-                  {item.dish?.name || strings.unknownDish}
+                  {getLocalizedText(item.dish?.name, item.dish?.nameArabic, item.dish?.nameEnglish) || strings.unknownDish}
                 </Text>
                 {item.dish?.description && (
                   <Text
                     style={{ fontSize: 12, color: '#666666' }}
                     numberOfLines={2}>
-                    {item.dish.description}
+                    {getLocalizedText(item.dish.description, item.dish.descriptionArabic, item.dish.descriptionEnglish)}
                   </Text>
                 )}
                 <View style={localStyles.itemQuantityPrice}>

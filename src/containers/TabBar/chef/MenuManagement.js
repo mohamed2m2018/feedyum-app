@@ -34,6 +34,7 @@ import request from '../../../api/request';
 import { moderateScale } from '../../../common/constants';
 import strings from '../../../i18n/strings';
 import { uploadImageToS3 } from '../../../utils/UploadUtils';
+import { getLocalizedText } from '../../../utils/helpers';
 
 // Components moved outside to avoid React warnings
 const SectionTab = ({ section, isSelected, onPress, colors }) => (
@@ -507,6 +508,8 @@ export default function MenuManagement() {
       const matchesSearch =
         !searchQuery ||
         dish.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (dish.nameArabic && dish.nameArabic.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (dish.nameEnglish && dish.nameEnglish.toLowerCase().includes(searchQuery.toLowerCase())) ||
         dish.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (dish.category && dish.category.toLowerCase().includes(searchQuery.toLowerCase())) ||
         (Array.isArray(dish.categories) && dish.categories.some(c => c.toLowerCase().includes(searchQuery.toLowerCase())));
@@ -540,7 +543,7 @@ export default function MenuManagement() {
     showActionDialog({
       type: ALERT_TYPE.WARNING,
       title: strings.deleteDishTitle,
-      message: strings.formatString(strings.deleteDishConfirm, dish.name),
+      message: strings.formatString(strings.deleteDishConfirm, getLocalizedText(dish.name, dish.nameArabic, dish.nameEnglish)),
       confirmText: strings.delete,
       cancelText: strings.cancel,
       onConfirm: () => deleteDishMutation.mutate(dish._id),

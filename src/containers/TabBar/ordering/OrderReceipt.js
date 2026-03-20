@@ -14,7 +14,7 @@ import ZText from '../../../components/common/ZText';
 import ZButton from '../../../components/common/ZButton';
 import { moderateScale } from '../../../common/constants';
 import strings from '../../../i18n/strings';
-import { formatDate, formatTime } from '../../../utils/helpers';
+import { formatDate, formatTime, getLocalizedText } from '../../../utils/helpers';
 import { selectCurrentOrder } from '../../../redux/reducer/orderSlice';
 import { buildReceiptText } from '../../../utils/receiptTextBuilder';
 
@@ -78,7 +78,7 @@ const OrderReceipt = () => {
           <View key={index} style={localStyles.itemRow}>
             <View style={localStyles.itemLeft}>
               <ZText type="B14" color={colors.textColor} numberOfLines={2}>
-                {item.dish?.name || strings.unknownDish}
+                {getLocalizedText(item.dish?.name, item.dish?.nameArabic, item.dish?.nameEnglish) || strings.unknownDish}
               </ZText>
               {item.selectedOptions?.length > 0 && (
                 <ZText type="M12" color={colors.grayScale7} numberOfLines={1}>

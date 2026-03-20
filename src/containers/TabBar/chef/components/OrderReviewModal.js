@@ -21,6 +21,7 @@ import { styles } from '../../../../themes';
 import images from '../../../../assets/images';
 import { updateOrderStatusAsync } from '../../../../redux/reducer/orderSlice';
 import strings from '../../../../i18n/strings';
+import { getLocalizedText } from '../../../../utils/helpers';
 
 const OrderReviewModal = ({ visible, order, onClose, onAccept, onReject }) => {
   const colors = useSelector(state => state.theme.theme);
@@ -271,7 +272,7 @@ const OrderReviewModal = ({ visible, order, onClose, onAccept, onReject }) => {
           />
           <View style={localStyles.itemInfo}>
             <ZText type="B14" color={colors.textColor}>
-              {item.dish?.name || strings.unknownDish}
+              {getLocalizedText(item.dish?.name, item.dish?.nameArabic, item.dish?.nameEnglish) || strings.unknownDish}
             </ZText>
             <ZText type="M12" color={colors.grayScale7}>
               {strings.quantityLabel}{item.quantity}

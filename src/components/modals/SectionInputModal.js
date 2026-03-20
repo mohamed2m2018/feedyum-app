@@ -22,6 +22,7 @@ import ZText from '../common/ZText';
 import ZButton from '../common/ZButton';
 import ZInput from '../common/ZInput';
 import strings from '../../i18n/strings';
+import { getLocalizedText } from '../../utils/helpers';
 import request from '../../api/request';
 import { showActionDialog, showErrorToast, showSuccessToast } from '../../utils/toast';
 import { ALERT_TYPE } from 'react-native-alert-notification';
@@ -265,7 +266,7 @@ const SectionInputModal = ({
               type={isSelected ? "B16" : "M16"}
               color={isSelected ? colors.primary : colors.textColor}
               style={styles.sectionName}>
-              {item.name}
+              {getLocalizedText(item.name, item.nameArabic, item.nameEnglish)}
             </ZText>
             {item.description && (
               <ZText

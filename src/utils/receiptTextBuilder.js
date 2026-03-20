@@ -1,4 +1,4 @@
-import { formatDate, formatTime } from './helpers';
+import { formatDate, formatTime, getLocalizedText } from './helpers';
 
 /**
  * Builds a well-formatted text receipt for sharing via the native Share API.
@@ -30,7 +30,7 @@ export const buildReceiptText = ({ order, shortId, chefName, customerName, langu
   parts.push(`🛒 ${strings.orderItems}`);
   parts.push('');
   (order.items || []).forEach(item => {
-    const name = item.dish?.name || '';
+    const name = getLocalizedText(item.dish?.name, item.dish?.nameArabic, item.dish?.nameEnglish) || '';
     const qty = item.quantity || 1;
     const unitPrice = item.unitPrice || item.dish?.price || 0;
     const lineTotal = (unitPrice * qty).toFixed(2);

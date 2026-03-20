@@ -19,6 +19,7 @@ import request from '../../../../api/request';
 import { moderateScale } from '../../../../common/constants';
 import images from '../../../../assets/images';
 import strings from '../../../../i18n/strings';
+import { getLocalizedText } from '../../../../utils/helpers';
 
 const AttachedDishesComponent = ({
   colors,
@@ -90,10 +91,10 @@ const AttachedDishesComponent = ({
       />
       <View style={localStyles.dishSelectorInfo}>
         <ZText type="B16" color={colors.textColor} numberOfLines={1}>
-          {item.name}
+          {getLocalizedText(item.name, item.nameArabic, item.nameEnglish)}
         </ZText>
         <ZText type="M14" color={colors.grayScale7} numberOfLines={2}>
-          {item.description}
+          {getLocalizedText(item.description, item.descriptionArabic, item.descriptionEnglish)}
         </ZText>
         <ZText type="B14" color={colors.primary}>
           {strings.currency} {item.price}
@@ -139,7 +140,7 @@ const AttachedDishesComponent = ({
           color={colors.textColor}
           numberOfLines={1}
           style={localStyles.dishName}>
-          {dish.name}
+          {getLocalizedText(dish.name, dish.nameArabic, dish.nameEnglish)}
         </ZText>
         <ZText type="B12" color={colors.primary}>
           {strings.currency} {dish.price}

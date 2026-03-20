@@ -29,7 +29,7 @@ import strings from '../../../i18n/strings';
 import request from '../../../api/request';
 import { showSuccessToast, showErrorToast } from '../../../utils/toast';
 import { StackNav } from '../../../navigation/NavigationKeys';
-import { formatDate as formatDateHelper, formatSlotLabel } from '../../../utils/helpers';
+import { formatDate as formatDateHelper, formatSlotLabel, getLocalizedText } from '../../../utils/helpers';
 import RejectReasonModal from '../ordering/components/RejectReasonModal';
 import OrderReviewModal from './components/OrderReviewModal';
 import OrderAlarmService from '../../../services/OrderAlarmService';
@@ -304,7 +304,7 @@ const ChefOrderDetailsScreen = () => {
             />
             <View style={localStyles.itemDetails}>
                 <ZText type="B16" numberOfLines={1}>
-                    {item.dish?.name || 'Unknown Dish'}
+                    {getLocalizedText(item.dish?.name, item.dish?.nameArabic, item.dish?.nameEnglish) || 'Unknown Dish'}
                 </ZText>
                 <ZText type="M14" color={colors.grayScale7}>
                     {(item.dish?.price?.toFixed(2) || '0.00')} × {item.quantity}

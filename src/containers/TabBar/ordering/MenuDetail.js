@@ -20,6 +20,7 @@ import ZLoader from '../../../components/common/ZLoader';
 import { moderateScale } from '../../../common/constants';
 import { styles } from '../../../themes';
 import request from '../../../api/request';
+import { getLocalizedText } from '../../../utils/helpers';
 
 const MenuDetailScreen = () => {
   const colors = useSelector(state => state.theme.theme);
@@ -124,12 +125,12 @@ const MenuDetailScreen = () => {
       onPress={() => handleDishPress(dish)}>
       <View style={localStyles.dishInfo}>
         <ZText type="B16" color="#1A1A1A" style={localStyles.dishName}>
-          {dish.name}
+          {getLocalizedText(dish.name, dish.nameArabic, dish.nameEnglish)}
         </ZText>
 
         {dish.description && (
           <ZText type="M14" color="#666666" numberOfLines={2} style={localStyles.dishDescription}>
-            {dish.description}
+            {getLocalizedText(dish.description, dish.descriptionArabic, dish.descriptionEnglish)}
           </ZText>
         )}
 

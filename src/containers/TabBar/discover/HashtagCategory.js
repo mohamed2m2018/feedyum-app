@@ -1,19 +1,15 @@
 // Library import
 import {
   FlatList,
-  I18nManager,
   Image,
   StyleSheet,
   TouchableOpacity,
   View,
-  ScrollView,
-  Dimensions,
-  InteractionManager
 } from 'react-native';
 import React, { useCallback, useState } from 'react';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useSelector } from 'react-redux';
-import { useNavigation, useIsFocused } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 
 // Local import
 import { moderateScale } from '../../../common/constants';
@@ -30,6 +26,7 @@ import { useLocation } from '../../../navigation/locationContext';
 import StarRating from '../../../components/StarRating';
 import { optimizeImageUrl, ImagePresets } from '../../../utils/imageOptimizer';
 import { useDiscoverCategoryPaginated } from '../../../hooks/useDiscoverBatch';
+import { getLocalizedText } from '../../../utils/helpers';
 
 export default function HashtagCategory({ selectedTag, isLocationChanging }) {
   const colors = useSelector(state => state.theme.theme);
@@ -285,7 +282,7 @@ export default function HashtagCategory({ selectedTag, isLocationChanging }) {
                 color={colors.white}
                 numberOfLines={1}
                 style={localStyles.dishName}>
-                {item.name}
+                {getLocalizedText(item.name, item.nameArabic, item.nameEnglish)}
               </ZText>
               <StarRating
                 rating={Number.isFinite(item?.average_rating)

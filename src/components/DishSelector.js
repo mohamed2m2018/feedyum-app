@@ -18,6 +18,7 @@ import ZText from './common/ZText';
 import request from '../api/request';
 import images from '../assets/images';
 import strings from '../i18n/strings';
+import { getLocalizedText } from '../utils/helpers';
 
 const DishSelector = ({
     restaurant,
@@ -206,7 +207,7 @@ const DishSelector = ({
                                             )}
                                             <View style={localStyles.menuItemText}>
                                                 <ZText type="B14" color={colors.textColor} numberOfLines={1}>
-                                                    {item.title || item.name}
+                                                    {getLocalizedText(item.name, item.nameArabic, item.nameEnglish) || item.title}
                                                 </ZText>
                                                 <ZText type="M12" color={colors.primary}>
                                                     {strings.currency} {item.price}
