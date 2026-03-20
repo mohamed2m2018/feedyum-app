@@ -10,6 +10,7 @@ import { moderateScale } from '../../../../common/constants';
 import { styles } from '../../../../themes';
 import StarRating from '../../../../components/StarRating';
 import strings from '../../../../i18n/strings';
+import { getLocalizedText } from '../../../../utils/helpers';
 
 const DishCard = ({
   dish,
@@ -83,14 +84,14 @@ const DishCard = ({
       {/* Dish Info */}
       <View style={localStyles.dishInfo}>
         <ZText type="B16" numberOfLines={1} style={localStyles.dishName}>
-          {dish.name}
+          {getLocalizedText(dish.name, dish.nameArabic, dish.nameEnglish)}
         </ZText>
         <ZText
           type="M14"
           color={colors.grayScale7}
           numberOfLines={2}
           style={localStyles.dishDescription}>
-          {dish.description}
+          {getLocalizedText(dish.description, dish.descriptionArabic, dish.descriptionEnglish)}
         </ZText>
         <StarRating
           rating={Number.isFinite(dish?.average_rating)

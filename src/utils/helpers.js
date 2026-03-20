@@ -114,6 +114,17 @@ const formatDistance = (distanceKm) => {
   return Math.round(num).toLocaleString();
 };
 
+// Get localized text from standard, Arabic, and English versions with robust fallback
+const getLocalizedText = (text, textAr, textEn) => {
+  const { I18nManager } = require('react-native');
+  
+  if (I18nManager.isRTL) {
+    return (textAr && textAr.trim() !== '') ? textAr : (text || '');
+  }
+  
+  return (textEn && textEn.trim() !== '') ? textEn : (text || '');
+};
+
 export {
   getAsyncStorageData,
   setAsyncStorageData,
@@ -126,4 +137,5 @@ export {
   formatDateTime,
   formatSlotLabel,
   formatDistance,
+  getLocalizedText,
 };

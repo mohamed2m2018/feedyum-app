@@ -21,6 +21,7 @@ import { moderateScale, getHeight } from '../../../../common/constants';
 import { styles } from '../../../../themes';
 import strings from '../../../../i18n/strings';
 import images from '../../../../assets/images';
+import { getLocalizedText } from '../../../../utils/helpers';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -167,7 +168,7 @@ const ChefDishPreviewModal = ({
                         {/* Dish Title & Rating */}
                         <View style={localStyles.titleSection}>
                             <ZText type="B24" color={colors.textColor} style={localStyles.dishTitle}>
-                                {dish.name}
+                                {getLocalizedText(dish.name, dish.nameArabic, dish.nameEnglish)}
                             </ZText>
 
                             <StarRating
@@ -223,7 +224,7 @@ const ChefDishPreviewModal = ({
                                     {strings.description || 'Description'}
                                 </ZText>
                                 <ZText type="M14" color={colors.grayScale7} style={localStyles.description}>
-                                    {dish.description}
+                                    {getLocalizedText(dish.description, dish.descriptionArabic, dish.descriptionEnglish)}
                                 </ZText>
                             </View>
                         )}

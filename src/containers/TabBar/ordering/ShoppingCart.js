@@ -16,7 +16,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useQueryClient } from 'react-query';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { showActionDialog, showErrorToast, showInfoToast, showSuccessToast } from '../../../utils/toast';
-import { formatDistance } from '../../../utils/helpers';
+import { formatDistance, getLocalizedText } from '../../../utils/helpers';
 import { ALERT_TYPE } from 'react-native-alert-notification';
 import ZText from '../../../components/common/ZText';
 import ZHeader from '../../../components/common/ZHeader';
@@ -486,7 +486,7 @@ const ShoppingCart = () => {
               numberOfLines={2}
               style={[localStyles.dishName, { color: '#000000', fontWeight: 'bold' }]}
             >
-              {item.dish?.name || item.name || strings.testDishName}
+              {getLocalizedText(item.dish?.name || item.name, item.dish?.nameArabic, item.dish?.nameEnglish) || strings.testDishName}
             </ZText>
             <ZText type="M14" color={colors.primary} style={localStyles.dishPrice}>
               {itemPrice} {strings.EGP}

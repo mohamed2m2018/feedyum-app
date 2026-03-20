@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { showErrorToast } from '../../../../utils/toast';
-import { formatDistance } from '../../../../utils/helpers';
+import { formatDistance, getLocalizedText } from '../../../../utils/helpers';
 import { moderateScale } from '../../../../common/constants';
 import ZText from '../../../../components/common/ZText';
 import { StackNav } from '../../../../navigation/NavigationKeys';
@@ -122,12 +122,12 @@ const MenuDishCard = ({
       {/* Text info */}
       <View style={s.textSection}>
         <ZText type="B16" numberOfLines={1} color={colors.textColor} style={s.name}>
-          {dish.name}
+          {getLocalizedText(dish.name, dish.nameArabic, dish.nameEnglish)}
         </ZText>
 
         {dish.description && (
           <ZText type="M13" numberOfLines={2} color={colors.grayScale7} style={s.description}>
-            {dish.description}
+            {getLocalizedText(dish.description, dish.descriptionArabic, dish.descriptionEnglish)}
           </ZText>
         )}
 

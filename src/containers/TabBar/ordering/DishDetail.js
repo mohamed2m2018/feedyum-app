@@ -15,7 +15,7 @@ import {
   TouchableWithoutFeedback,
 } from 'react-native';
 import { showSuccessToast, showErrorToast, showSuccessDialog, showActionDialog, ALERT_TYPE } from '../../../utils/toast';
-import { formatDistance } from '../../../utils/helpers';
+import { formatDistance, getLocalizedText } from '../../../utils/helpers';
 import { useSelector, useDispatch } from 'react-redux';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { useNavigation, useRoute, CommonActions } from '@react-navigation/native';
@@ -504,7 +504,7 @@ const DishDetailScreen = () => {
         </TouchableOpacity>
 
         <ZText type="B18" color="#1A1A1A" numberOfLines={1}>
-          {dishData?.name}
+          {dishData ? getLocalizedText(dishData.name, dishData.nameArabic, dishData.nameEnglish) : ''}
         </ZText>
 
         <TouchableOpacity
@@ -581,7 +581,7 @@ const DishDetailScreen = () => {
       <View style={localStyles.dishHeader}>
         <View style={localStyles.dishTitleSection}>
           <ZText type="B24" color="#1A1A1A" style={localStyles.dishName}>
-            {dishData?.name}
+            {dishData ? getLocalizedText(dishData.name, dishData.nameArabic, dishData.nameEnglish) : ''}
           </ZText>
           <ZText type="B20" color="#FF4D67" style={localStyles.dishPrice}>
             {dishData?.pricingType === 'upon_request'
@@ -622,7 +622,7 @@ const DishDetailScreen = () => {
           color="#555555"
           style={localStyles.description}
           numberOfLines={showFullDescription ? undefined : 3}>
-          {dishData?.description}
+          {dishData ? getLocalizedText(dishData.description, dishData.descriptionArabic, dishData.descriptionEnglish) : ''}
         </ZText>
 
         {dishData?.description && dishData.description.length > 100 && (
