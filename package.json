@@ -14,6 +14,7 @@
     "postinstall": "patch-package"
   },
   "dependencies": {
+    "@expo/metro-runtime": "~5.0.5",
     "@notifee/react-native": "^9.1.8",
     "@react-native-async-storage/async-storage": "2.1.2",
     "@react-native-community/blur": "^4.4.1",
@@ -52,6 +53,7 @@
     "millify": "^6.1.0",
     "pluralize": "^8.0.0",
     "react": "19.0.0",
+    "react-dom": "19.0.0",
     "react-hook-form": "^7.71.2",
     "react-native": "0.79.6",
     "react-native-actions-sheet": "^0.9.7",
@@ -96,6 +98,7 @@
     "react-native-tab-view": "^3.5.2",
     "react-native-vector-icons": "^10.2.0",
     "react-native-video": "^6.7.0",
+    "react-native-web": "^0.20.0",
     "react-native-webview": "13.13.5",
     "react-native-zoom-view": "^1.0.2",
     "react-query": "^3.39.3",

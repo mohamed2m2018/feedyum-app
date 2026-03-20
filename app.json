@@ -161,6 +161,12 @@
         "projectId": "98042cba-f7a5-408c-851b-15482b2769d6"
       }
     },
+    "web": {
+      "bundler": "metro",
+      "favicon": "./assets/icon.png",
+      "name": "FeedYum Chef Portal",
+      "shortName": "FeedYum Chef"
+    },
     "owner": "mohamed2m2035"
   }
 }

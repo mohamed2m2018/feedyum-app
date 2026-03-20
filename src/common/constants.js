@@ -6,8 +6,17 @@ export const ENVIRONMENT_KEY = 'APP_ENVIRONMENT'; // 'production' or 'staging'
 
 // Initial Dimensions
 const windowDimensions = Dimensions.get('window');
-const windowHeight = windowDimensions.height;
-const windowWidth = windowDimensions.width;
+
+// On web, the browser viewport is much larger than a phone screen.
+// Cap dimensions to the mobile reference size so moderateScale, getWidth,
+// getHeight produce the same pixel values as on a real iPhone.
+// This prevents the "zoomed-in mobile app" look on desktop.
+const windowHeight = Platform.OS === 'web'
+  ? Math.min(windowDimensions.height, 926)
+  : windowDimensions.height;
+const windowWidth = Platform.OS === 'web'
+  ? Math.min(windowDimensions.width, 428)
+  : windowDimensions.width;
 
 let iPhoneX = windowHeight === 812 ? true : false;
 
@@ -15,7 +24,7 @@ let iPhoneX = windowHeight === 812 ? true : false;
 export const STATUSBAR_HEIGHT =
   Platform.OS === 'ios' ? (iPhoneX ? 44 : 22) : StatusBar.currentHeight;
 
-export const screenHeight = windowHeight - STATUSBAR_HEIGHT;
+export const screenHeight = windowHeight - (STATUSBAR_HEIGHT || 0);
 export const screenWidth = windowWidth;
 export const screenFullHeight = windowHeight;
 export const isAndroid = Platform.OS === 'ios' ? false : true;

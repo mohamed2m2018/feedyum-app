@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { NavigationContainer, useNavigationContainerRef } from '@react-navigation/native';
-import { AppState } from 'react-native';
+import { AppState, Platform } from 'react-native';
 import StackNavigation from './Type/StackNavigation';
 import { useSelector } from 'react-redux';
 import { BackgroundUploadProvider } from '../providers/BackgroundUploadProvider';
@@ -150,24 +150,14 @@ export default function pAppNavigator() {
         },
 
         // Profile screens
-        ProfileDetail: {
-          path: '/user/:userId',
-          parse: {
-            userId: (userId) => userId,
-          },
-        },
 
         // Chef specific screens
-        ChefDashboard: 'chef/dashboard',
         ChefMenu: {
           path: '/chef/:chefId/menu',
           parse: {
             chefId: (chefId) => chefId,
           },
         },
-        MenuManagement: 'chef/menu-management',
-        OrderManagement: 'chef/orders',
-        Analytics: 'chef/analytics',
 
         // Menu and dish screens
         MenuDetail: {
@@ -193,13 +183,6 @@ export default function pAppNavigator() {
         ShoppingCart: 'cart',
 
         // Chat screens
-        ChatScreen: {
-          path: '/chat/:otherUserId',
-          parse: {
-            otherUserId: (otherUserId) => otherUserId,
-          },
-        },
-        ChatList: 'chat',
         Message: 'messages',
 
         // Search and discovery
@@ -249,18 +232,6 @@ export default function pAppNavigator() {
         },
 
         // Social features
-        Following: {
-          path: '/profile/:userId/following',
-          parse: {
-            userId: (userId) => userId,
-          },
-        },
-        Follower: {
-          path: '/profile/:userId/followers',
-          parse: {
-            userId: (userId) => userId,
-          },
-        },
         UserNetwork: 'network',
         FindFriends: 'find-friends',
         Suggested: 'suggested',
@@ -269,8 +240,6 @@ export default function pAppNavigator() {
         Wallet: 'wallet',
 
         // Settings and account
-        Setting: 'settings',
-        EditProfile: 'profile/edit',
         ManageAccount: 'account/manage',
         Privacy: 'privacy',
         PrivacyPolicy: 'privacy-policy',
@@ -304,7 +273,18 @@ export default function pAppNavigator() {
 
     // Custom URL matching for complex patterns
     getInitialURL: async () => {
-      // Handle app launch from deep link
+      // On web, the bare root URL '/' matches TabBar (path: ''),
+      // which bypasses the Splash screen's auth check entirely.
+      // Return null so initialRouteName 'Splash' takes over.
+      if (Platform.OS === 'web') {
+        const path = window.location.pathname;
+        if (!path || path === '/') {
+          return null; // Let Splash handle auth
+        }
+        // For actual deep link paths, return the full URL
+        return window.location.href;
+      }
+      // Handle app launch from deep link (native)
       const url = await DeepLinkingService.getInstance().getInitialURL?.();
       return url;
     },
@@ -321,11 +301,15 @@ export default function pAppNavigator() {
     },
   };
 
+  // On web, linking causes the root URL '/' to resolve directly to TabBar (path: ''),
+  // bypassing Splash auth flow. Disable linking on web so initialRouteName: 'Splash' works.
+  const linkingConfig = Platform.OS === 'web' ? undefined : linking;
+
   return (
     <NavigationContainer
       ref={navigationRef}
       theme={colors}
-      linking={linking}
+      linking={linkingConfig}
       fallback={<></>} // You can add a loading component here
       onReady={() => {
         // Navigation is ready, deep linking service can now handle navigation

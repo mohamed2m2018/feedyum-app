@@ -1,5 +1,5 @@
 // Library Imports
-import { StyleSheet, View, TouchableOpacity, I18nManager } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, I18nManager, Platform } from 'react-native';
 import React, { memo, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -30,6 +30,7 @@ import {
 } from '@react-native-google-signin/google-signin';
 import ZHeader from '../../components/common/ZHeader';
 import { useStorage } from '../../utils/useStorage';
+import { useWebGoogleSignIn } from '../../hooks/useWebGoogleSignIn';
 
 const RenderSocialBtn = memo(({ item, index }) => {
   return (
@@ -63,6 +64,47 @@ const Login = ({ navigation }) => {
     // Hide native splash screen once Login component is mounted
     SplashScreen.hideAsync();
   }, []);
+
+  const onWebGoogleTokenReceived = useCallback(async (idToken) => {
+    if (!idToken) {
+      showErrorToast(strings.error, strings.googleSignInFailed);
+      return;
+    }
+    
+    try {
+      const payload = JSON.parse(atob(idToken.split('.')[1]));
+      const email = payload.email;
+      
+      console.log('[Login] Calling mutate login with Web googleIdToken...');
+      await mutate(
+        { email, googleIdToken: idToken },
+        {
+          onSuccess: async res => {
+            const token = res?.data?.token;
+            const userData = res?.data?.user;
+            
+            setAccessToken(token);
+            setUser(userData);
+            await AppInitializer.handleUserLogin(userData, token);
+            await queryClient.clear();
+            
+            navigation.reset({ index: 0, routes: [{ name: StackNav.TabBar }] });
+          },
+          onError: () => {
+            showWarningToast(strings.error, strings.notsignedInWithGoogle);
+            setTimeout(() => {
+              navigation.navigate(StackNav.Register, { isGoogleSignInFailed: true });
+            }, 200);
+          },
+        }
+      );
+    } catch (error) {
+      console.error('[Web Google Login] Error processing login:', error);
+    }
+  }, [mutate, navigation, queryClient, setAccessToken, setUser]);
+
+  // Use custom hook for web Google Sign-In to keep component clean
+  useWebGoogleSignIn({ onTokenReceived: onWebGoogleTokenReceived });
 
   const onPressSignInWithGoogle = async () => {
     try {
@@ -344,9 +386,25 @@ const Login = ({ navigation }) => {
 
   return (
     <ZSafeAreaView style={localStyles.root}>
+      {Platform.OS === 'web' && (
+        <div style={{
+          position: 'absolute',
+          top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: colors.dark === 'dark' ? '#0b0c10' : '#f4f7f6',
+          backgroundImage: colors.dark === 'dark'
+            ? 'radial-gradient(circle at 10% 10%, rgba(255,77,103,0.15) 0%, transparent 40%), radial-gradient(circle at 90% 90%, rgba(114,16,255,0.12) 0%, transparent 40%)'
+            : 'radial-gradient(circle at 10% 10%, rgba(255,77,103,0.08) 0%, transparent 40%), radial-gradient(circle at 90% 90%, rgba(114,16,255,0.06) 0%, transparent 40%)',
+          zIndex: 0,
+        }} />
+      )}
       <ZKeyBoardAvoidWrapper>
         {navigation.canGoBack() && <ZHeader />}
-        <View style={localStyles.mainContainer}>
+        <View style={Platform.OS === 'web' ? localStyles.webContentWrapper : { flex: 1 }}>
+        <View style={Platform.OS === 'web' ? [localStyles.webCardContainer, {
+          backgroundColor: colors.dark === 'dark' ? 'rgba(31,34,42,0.6)' : 'rgba(255,255,255,0.7)',
+          borderColor: colors.dark === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)',
+        }] : {}}>
+          <View style={localStyles.mainContainer}>
           <ZText type={'b46'} align={'left'} style={styles.mv40}>
             {strings.loginYourAccount}
           </ZText>
@@ -360,7 +418,8 @@ const Login = ({ navigation }) => {
             insideLeftIcon={() => <EmailIcon />}
             toGetTextFieldValue={onChangedEmail}
             inputContainerStyle={[
-              { backgroundColor: colors.inputBg },
+              { backgroundColor: Platform.OS === 'web' ? (colors.dark === 'dark' ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.5)') : colors.inputBg },
+              Platform.OS === 'web' && { borderWidth: 1, borderColor: colors.dark === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)' },
               localStyles.inputContainerStyle,
               emailInputStyle,
             ]}
@@ -377,7 +436,8 @@ const Login = ({ navigation }) => {
             insideLeftIcon={() => <PasswordIcon />}
             toGetTextFieldValue={onChangedPassword}
             inputContainerStyle={[
-              { backgroundColor: colors.inputBg },
+              { backgroundColor: Platform.OS === 'web' ? (colors.dark === 'dark' ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.5)') : colors.inputBg },
+              Platform.OS === 'web' && { borderWidth: 1, borderColor: colors.dark === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)' },
               localStyles.inputContainerStyle,
               passwordInputStyle,
             ]}
@@ -431,9 +491,13 @@ const Login = ({ navigation }) => {
             */}
 
           <View style={localStyles.socialBtnContainer}>
-            {socialIcon.map((item, index) => (
-              <RenderSocialBtn item={item} key={index.toString()} />
-            ))}
+            {Platform.OS === 'web' ? (
+               <View id="google-signin-btn" style={{ minHeight: 40 }} />
+            ) : (
+              socialIcon.map((item, index) => (
+                <RenderSocialBtn item={item} key={index.toString()} />
+              ))
+            )}
           </View>
 
           <TouchableOpacity
@@ -474,6 +538,8 @@ const Login = ({ navigation }) => {
             </TouchableOpacity>
           </View>
         </View>
+        </View>
+        </View>
       </ZKeyBoardAvoidWrapper>
     </ZSafeAreaView>
   );
@@ -482,8 +548,33 @@ const Login = ({ navigation }) => {
 export default Login;
 
 const localStyles = StyleSheet.create({
+  root: {
+    flex: 1,
+  },
+  webContentWrapper: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+    minHeight: '100vh',
+    padding: moderateScale(20),
+  },
+  webCardContainer: {
+    width: '100%',
+    maxWidth: 440,
+    padding: moderateScale(40),
+    borderRadius: 24,
+    borderWidth: 1,
+    ...(Platform.OS === 'web' ? { backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' } : {}),
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 24 },
+    shadowOpacity: 0.25,
+    shadowRadius: 40,
+    elevation: 10,
+  },
   mainContainer: {
-    ...styles.ph20,
+    // on web, we don't need the extra padding because the card handles it, but we keep it for mobile
+    ...(Platform.OS !== 'web' && styles.ph20),
   },
   divider: {
     ...styles.rowCenter,

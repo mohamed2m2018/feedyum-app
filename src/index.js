@@ -1,3 +1,45 @@
+// Polyfill setImmediate for web — used by react-native-swiper and other RN libs
+if (typeof setImmediate === 'undefined') {
+  window.setImmediate = (fn, ...args) => setTimeout(fn, 0, ...args);
+}
+
+// Natural web layout — let RN Web render at full browser width
+if (typeof document !== 'undefined') {
+  const style = document.createElement('style');
+  style.textContent = `
+    html, body, #root {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: auto;
+    }
+    #root > div {
+      height: 100%;
+    }
+    /* Suppress Chrome/Safari yellow/white autofill background */
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover, 
+    input:-webkit-autofill:focus, 
+    input:-webkit-autofill:active {
+      transition: background-color 5000s ease-in-out 0s;
+    }
+    /* Perfect theme text color injection for autofill */
+    .dark-mode input:-webkit-autofill,
+    .dark-mode input:-webkit-autofill:hover,
+    .dark-mode input:-webkit-autofill:focus,
+    .dark-mode input:-webkit-autofill:active {
+      -webkit-text-fill-color: #FFFFFF !important;
+    }
+    .light-mode input:-webkit-autofill,
+    .light-mode input:-webkit-autofill:hover,
+    .light-mode input:-webkit-autofill:focus,
+    .light-mode input:-webkit-autofill:active {
+      -webkit-text-fill-color: #212121 !important;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
 import React, { useEffect } from 'react';
 import { Platform, StatusBar, View, LogBox, I18nManager } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -64,6 +106,13 @@ const App = () => {
       } catch { }
     }
   }, []);
+
+  // Sync Redux theme with the DOM body for global CSS targeting
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.body.className = colors.dark === 'dark' ? 'dark-mode' : 'light-mode';
+    }
+  }, [colors.dark]);
 
   return (
     <SafeAreaProvider>

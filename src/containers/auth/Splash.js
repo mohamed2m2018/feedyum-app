@@ -57,7 +57,9 @@ const Splash = ({ navigation }) => {
 
     // We relies on DeepLinkingService to capture the click globally.
 
-    if (access_token) {
+    const isValidToken = access_token && typeof access_token === 'string' && access_token !== 'undefined' && access_token !== 'null' && access_token.trim() !== '';
+
+    if (isValidToken) {
       // Token is now read from MMKV on each request via interceptor
 
       // Delay to allow DeepLinkingService to receive the unique event

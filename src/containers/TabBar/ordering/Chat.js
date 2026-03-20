@@ -137,18 +137,21 @@ export default function ChatScreen({ route }) {
   const currentUserId = currentUserData?.data?.user?._id;
   const isCurrentUserChef = currentUserData?.data?.user?.type === 'chef';
 
+  // Ref to hold onSend so it can be used before its declaration (avoids temporal dead zone)
+  const onSendRef = useRef(null);
+
   // Auto-send prefilled message (from quote request modal)
   useEffect(() => {
-    if (prefilledMessage && !prefilledSentRef.current && currentUserId) {
+    if (prefilledMessage && !prefilledSentRef.current && currentUserId && onSendRef.current) {
       prefilledSentRef.current = true;
       // Delay to ensure socket is connected and chat is ready
       const timer = setTimeout(() => {
-        onSend([{ text: prefilledMessage, _id: `prefilled_${Date.now()}`, createdAt: new Date(), user: { _id: currentUserId } }]);
+        onSendRef.current([{ text: prefilledMessage, _id: `prefilled_${Date.now()}`, createdAt: new Date(), user: { _id: currentUserId } }]);
         setText('');
       }, 1200);
       return () => clearTimeout(timer);
     }
-  }, [currentUserId, onSend]);
+  }, [currentUserId, prefilledMessage]);
 
   // Check if the chef has chat enabled
   useEffect(() => {
@@ -909,6 +912,8 @@ export default function ChatScreen({ route }) {
       // Note: Keyboard stays open to allow continuous typing
     }
   }, [chefId, orderId, currentUser, editingMessage, text, replyingTo]);
+  // Keep ref in sync so early useEffects can call onSend
+  onSendRef.current = onSend;
   const handleImageMessage = useCallback((imageMessage) => {
     const fullImageMessage = {
       ...imageMessage,

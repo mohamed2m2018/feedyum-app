@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { StyleSheet, TouchableOpacity, View, Alert, Linking, Platform, Modal } from 'react-native';
+import WebNavBar from './WebNavBar';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as SplashScreen from 'expo-splash-screen';
@@ -271,23 +272,26 @@ export default function TabBarNavigation({ route, navigation }) {
   return (
     <>
       <Tab.Navigator
-        tabBarPosition="bottom"
+        tabBarPosition={Platform.OS === 'web' ? 'top' : 'bottom'}
+        {...(Platform.OS === 'web' ? { tabBar: (props) => <WebNavBar {...props} /> } : {})}
         sceneContainerStyle={{ backgroundColor: colors.backgroundColor }}
         style={{ backgroundColor: colors.backgroundColor }}
         pagerStyle={{ backgroundColor: colors.backgroundColor }}
         screenOptions={{
           headerShown: false,
-          tabBarItemStyle: { height: BOTTOM_TAB_HEIGHT },
+          tabBarItemStyle: Platform.OS === 'web' ? {} : { height: BOTTOM_TAB_HEIGHT },
           animationEnabled: false,
           tabBarLabelStyle: { fontSize: 12 },
           freezeOnBlur: true,
           swipeEnabled: false,
           tabBarContentContainerStyle: { backgroundColor: colors.backgroundColor },
-          tabBarStyle: {
-            backgroundColor: colors.backgroundColor,
-            height: BOTTOM_TAB_HEIGHT + insets.bottom,
-            paddingBottom: insets.bottom,
-          },
+          tabBarStyle: Platform.OS === 'web'
+            ? { backgroundColor: colors.backgroundColor }
+            : {
+                backgroundColor: colors.backgroundColor,
+                height: BOTTOM_TAB_HEIGHT + insets.bottom,
+                paddingBottom: insets.bottom,
+              },
           tabBarShowLabel: false,
         }}
         freezeOnBlur={true}
@@ -350,35 +354,37 @@ export default function TabBarNavigation({ route, navigation }) {
           />
         )}
 
-        {/* Add Post Tab - always visible */}
-        <Tab.Screen
-          name={'AddPost'}
-          component={AddPost}
-          listeners={{
-            tabPress: e => {
-              e.preventDefault();
-              onPressAdd();
-            },
-            swipeEnd: () => {
-              if (handleAuthToast()) {
-                if (previousScreen === TabNav.FollowingTab) {
-                  navigation.navigate(TabNav.Orders);
-                } else {
-                  navigation.navigate(TabNav.FollowingTab);
+        {/* Add Post Tab - hidden on web (camera/gallery is native-only) */}
+        {Platform.OS !== 'web' && (
+          <Tab.Screen
+            name={'AddPost'}
+            component={AddPost}
+            listeners={{
+              tabPress: e => {
+                e.preventDefault();
+                onPressAdd();
+              },
+              swipeEnd: () => {
+                if (handleAuthToast()) {
+                  if (previousScreen === TabNav.FollowingTab) {
+                    navigation.navigate(TabNav.Orders);
+                  } else {
+                    navigation.navigate(TabNav.FollowingTab);
+                  }
                 }
-              }
-            },
-          }}
-          options={{
-            tabBarIcon: ({ focused }) => (
-              <TouchableOpacity
-                onPress={onPressAdd}
-                style={localStyles.tabViewContainer}>
-                <Add_Icon />
-              </TouchableOpacity>
-            ),
-          }}
-        />
+              },
+            }}
+            options={{
+              tabBarIcon: ({ focused }) => (
+                <TouchableOpacity
+                  onPress={onPressAdd}
+                  style={localStyles.tabViewContainer}>
+                  <Add_Icon />
+                </TouchableOpacity>
+              ),
+            }}
+          />
+        )}
 
         {/* Search Tab - only for regular users (after plus button) */}
         {!isChef && (
