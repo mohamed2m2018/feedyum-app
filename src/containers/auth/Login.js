@@ -1,6 +1,6 @@
 // Library Imports
 import { StyleSheet, View, TouchableOpacity, I18nManager, Platform } from 'react-native';
-import React, { memo, useEffect } from 'react';
+import React, { memo, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import RNRestart from 'react-native-restart';
