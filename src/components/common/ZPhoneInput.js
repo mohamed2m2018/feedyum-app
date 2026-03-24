@@ -200,6 +200,23 @@ const ZPhoneInput = forwardRef(({
                         withCountryNameButton: false,
                         withCallingCode: true,
                         withCallingCodeButton: true,
+                        renderFlagButton: () => {
+                            const getFlagEmoji = (code) => {
+                                if (!code) return '';
+                                const codePoints = code
+                                    .toUpperCase()
+                                    .split('')
+                                    .map(char => 127397 + char.charCodeAt(0));
+                                return String.fromCodePoint(...codePoints);
+                            };
+                            return (
+                                <View style={{ justifyContent: 'center', alignItems: 'center', marginRight: 5 }}>
+                                    <ZText style={{ fontSize: moderateScale(22) }} allowFontScaling={false}>
+                                        {getFlagEmoji(selectedCountry)}
+                                    </ZText>
+                                </View>
+                            );
+                        },
                         filterProps: {
                             style: {
                                 backgroundColor: colors.backgroundColor,

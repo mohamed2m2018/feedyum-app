@@ -128,10 +128,10 @@ export default function ChefDashboard() {
     }
   }, [queryClient, requireDeposit]);
 
-  const handleDepositToggle = useCallback(async (value) => {
+  const handleDepositToggle = useCallback(async (value, skipAgreementCheck = false) => {
     if (value) {
       // Agreement not yet accepted → show terms first
-      if (!depositAgreementAccepted) {
+      if (!skipAgreementCheck && !depositAgreementAccepted) {
         setConfirmModal({
           visible: true,
           title: strings.depositAgreementTitle,
@@ -149,7 +149,7 @@ export default function ChefDashboard() {
               setDepositAgreementAccepted(false);
             }
             // Re-trigger toggle now that agreement is accepted
-            handleDepositToggle(true);
+            handleDepositToggle(true, true);
           },
         });
         return;
@@ -889,7 +889,9 @@ const localStyles = StyleSheet.create({
   },
   modalBtn: {
     flex: 1,
-    height: moderateScale(48),
+    minHeight: moderateScale(48),
+    paddingVertical: moderateScale(12),
+    paddingHorizontal: moderateScale(16),
     borderRadius: moderateScale(24),
     alignItems: 'center',
     justifyContent: 'center',

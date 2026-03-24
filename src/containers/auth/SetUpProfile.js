@@ -6,6 +6,7 @@ import {
   Image,
   TouchableOpacity,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import React, { createRef, useEffect, useState, useRef } from 'react';
@@ -14,6 +15,7 @@ import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import EntypoIcon from 'react-native-vector-icons/Entypo';
 import { Dropdown } from 'react-native-element-dropdown';
+import { useForm, Controller } from 'react-hook-form';
 import ImagePicker from 'react-native-image-crop-picker';
 import { Image as ImageCompressor } from 'react-native-compressor';
 import LinearGradient from 'react-native-linear-gradient';
@@ -31,6 +33,7 @@ import {
   moderateScale,
 } from '../../common/constants';
 import ZInput from '../../components/common/ZInput';
+import { validateName } from '../../utils/validators';
 import ZPhoneInput from '../../components/common/ZPhoneInput';
 import ZKeyBoardAvoidWrapper from '../../components/common/ZKeyBoardAvoidWrapper';
 import { StackNav } from '../../navigation/NavigationKeys';
@@ -68,18 +71,23 @@ const SetUpProfile = props => {
   // State for locations (branches for chefs)
   const [locations, setLocations] = useState([]);
 
-  const [fullName, setFullName] = useState('');
+  const { control, handleSubmit: hookFormSubmit, formState: { errors, isValid }, clearErrors } = useForm({
+    defaultValues: { fullName: '', phoneNo: '', bio: '' },
+    mode: 'onChange'
+  });
+
   const [isPhoneValid, setIsPhoneValid] = useState(false);
   const phoneInputRef = useRef(null);
-  const [phoneNo, setPhoneNo] = useState('');
   const [gender, setGender] = useState('');
-  const [bio, setBio] = useState('');
   const [fullNameInputStyle, setFullNameInputStyle] = useState(BlurredStyle);
   const [phoneNoInputStyle, setPhoneNoInputStyle] = useState(BlurredStyle);
   const [bioStyle, setBioStyle] = useState(BlurredStyle);
   const [selectImage, setSelectImage] = useState(null);
   const [isPhotoUploading, setisPhotoUploading] = useState(false);
   const [phoneError, setPhoneError] = useState('');
+  const [locationsError, setLocationsError] = useState(false);
+  const [photoError, setPhotoError] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const onFocusInput = onHighlight => onHighlight(FocusedStyle);
   const onBlurInput = onUnHighlight => onUnHighlight(BlurredStyle);
@@ -93,44 +101,55 @@ const SetUpProfile = props => {
   const onFocusBio = () => onFocusInput(setBioStyle);
 
   const onBlurBio = () => onBlurInput(setBioStyle);
-
-  const onChangedFullName = text => setFullName(text);
-  const onChangedPhoneNo = text => setPhoneNo(text);
-  const onChangedSetBio = text => setBio(text);
   const onChangedGender = text => setGender(text.value.toLowerCase());
   const [_, setAccessToken] = useStorage(ACCESS_TOKEN);
   const queryClient = useQueryClient();
 
   const handlePhoneValidation = (isValid) => {
     setIsPhoneValid(isValid);
-    if (phoneNo && !isValid) {
+    if (!isValid) {
       setPhoneError(strings.invalidPhoneNumber || 'Invalid phone number');
     } else {
       setPhoneError('');
+      clearErrors('phoneNo');
     }
   };
 
-  const handleSubmit = async () => {
-    // Validate name - minimum 2 characters
-    if (!fullName || fullName.trim().length < 2) {
-      showErrorToast(strings.error, strings.nameTooShort || 'Name must be at least 2 characters');
+  const onInvalidSubmit = () => {
+    if (type === 'chef' && locations.length === 0) {
+      setLocationsError(true);
+    }
+    if (!selectImage) setPhotoError(true);
+  };
+
+  const handleSubmit = async (data) => {
+    const { fullName, phoneNo, bio } = data;
+
+    if (!selectImage) {
+      setPhotoError(true);
+      showErrorToast(strings.error, strings.profilePhotoRequired || 'Profile photo is required');
       return;
     }
 
-    // Validate phone using the library's method
-    const phoneValid = phoneInputRef.current?.isValidNumber() || isPhoneValid;
-    if (!phoneValid) {
-      showErrorToast(strings.error, strings.pleaseProvideCorrectNo);
-      setPhoneError(strings.pleaseProvideCorrectNo);
+    if (type === 'user' && !gender) {
+      showErrorToast(strings.error, strings.genderRequired || 'Gender is required');
+      return;
+    }
+
+    if (type === 'chef' && locations.length === 0) {
+      setLocationsError(true);
+      showErrorToast(strings.error, strings.dontHaveBranches || 'Please add at least one branch');
       return;
     }
 
     // Check if phone is available (not already registered)
+    setIsSubmitting(true);
     try {
       const checkResponse = await request.post('/user/check-availability', {
         phone: phoneNo,
       });
       if (checkResponse?.data?.fields?.phone?.available === false) {
+        setIsSubmitting(false);
         showErrorToast(strings.error, strings.phoneAlreadyRegistered);
         setPhoneError(strings.phoneAlreadyRegistered);
         return;
@@ -168,19 +187,29 @@ const SetUpProfile = props => {
           try {
             await branchService.addBranch({
               branchName: loc.branchName || `Branch ${i + 1}`,
-              addressDetails: {
-                city: loc.city || '',
-                country: loc.country || 'Egypt',
-                formattedAddress: loc.description,
-              },
-              location: {
-                lat: loc.latitude,
-                long: loc.longitude,
-              },
-              contactInfo: {
-                phone: loc.contactPhone || phoneNo,
-              },
+              streetName: loc.streetName || loc.description?.split(',')[0] || 'Street',
+              buildingNumber: loc.buildingNumber || '1',
+              area: loc.area || loc.city || 'Area',
+              city: loc.city || 'City',
+              state: loc.state || 'State',
+              country: loc.country || 'Egypt',
+              postalCode: loc.postalCode || '00000',
+              lat: parseFloat(loc.latitude),
+              long: parseFloat(loc.longitude),
+              phoneNumber: loc.contactPhone || phoneNo,
+              countryCode: loc.countryCode || '+20',
               isPrimary: i === 0, // First branch is primary
+              
+              // Defaults since we don't ask for these in SetUpProfile
+              deliveryRadius: loc.deliveryRadius || 20,
+              deliveryFee: loc.deliveryFee || 0,
+              areaDeliveryFees: loc.areaDeliveryFees || [],
+              timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+              orderMode: loc.orderMode || 'asap',
+              minLeadTime: loc.minLeadTime || 60,
+              slotDuration: loc.slotDuration || 60,
+              excludedAreas: loc.excludedAreas || [],
+              operatingHours: []
             });
           } catch (branchError) {
             console.log('Failed to create branch:', branchError);
@@ -190,20 +219,29 @@ const SetUpProfile = props => {
       }
 
       await queryClient.clear();
+      setIsSubmitting(false);
       navigation.reset({
         index: 0,
         routes: [{ name: StackNav.TabBar }],
       });
     } catch (err) {
+      setIsSubmitting(false);
       showErrorToast(strings.error, err[Object.keys(err)?.[0]]);
     }
   };
 
   // Helper function to upload image via backend API
   const uploadImageToBackend = async (imagePath, mimeType) => {
+    let formattedPath = imagePath;
+    if (Platform.OS === 'android' && !imagePath.startsWith('file://') && !imagePath.startsWith('http')) {
+      formattedPath = `file://${imagePath}`;
+    } else if (Platform.OS === 'ios' && !imagePath.startsWith('file://') && !imagePath.startsWith('http')) {
+      formattedPath = `file://${imagePath}`;
+    }
+
     const formData = new FormData();
     formData.append('image', {
-      uri: imagePath,
+      uri: formattedPath,
       type: mimeType || 'image/jpeg',
       name: 'profile_' + Date.now() + '.jpg',
     });
@@ -238,6 +276,7 @@ const SetUpProfile = props => {
         const secureUrl = await uploadImageToBackend(result, response.mime);
         console.log('Camera upload successful:', secureUrl);
         setSelectImage(secureUrl);
+        setPhotoError(false);
         setisPhotoUploading(false);
       } catch (error) {
         console.log('Camera upload error:', error);
@@ -264,6 +303,7 @@ const SetUpProfile = props => {
         const secureUrl = await uploadImageToBackend(result, response.mime);
         console.log('Gallery upload successful:', secureUrl);
         setSelectImage(secureUrl);
+        setPhotoError(false);
         setisPhotoUploading(false);
       } catch (error) {
         console.log('Gallery upload error:', error);
@@ -284,6 +324,7 @@ const SetUpProfile = props => {
   const [locationIndexToEdit, setlocationIndexToEdit] = useState();
 
   const handleLocationSelect = (newLocation) => {
+    setLocationsError(false);
     // Adapt newLocation to the structure SetUpProfile expects
     const adaptedLocation = {
       description: newLocation.formattedAddress || newLocation.address || '',
@@ -346,7 +387,7 @@ const SetUpProfile = props => {
             activeOpacity={0.8}
             style={localStyles.avatarWrapper}>
             <LinearGradient
-              colors={[colors.primary, colors.primary + '80']}
+              colors={photoError ? [colors.lightRed, colors.lightRed + '80'] : [colors.primary, colors.primary + '80']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={localStyles.avatarGradientBorder}>
@@ -373,7 +414,7 @@ const SetUpProfile = props => {
               </View>
             )}
           </TouchableOpacity>
-          <ZText type="m14" color={colors.grayScale5} style={localStyles.avatarHint}>
+          <ZText type="m14" color={photoError ? colors.lightRed : colors.grayScale5} style={localStyles.avatarHint}>
             {selectImage
               ? (strings.tapToChangePhoto || 'Tap to change photo')
               : (strings.addPhoto || 'Add photo')
@@ -392,60 +433,94 @@ const SetUpProfile = props => {
               <ZText type="b16" color={colors.textColor}>{strings.aboutYou}</ZText>
             </View>
 
-            <ZInput
-              placeHolder={type === 'user' ? strings.fullName : (strings.fullNameChef || strings.fullName)}
-              keyboard
-              insideLeftIcon={() => (
-                <EntypoIcon
-                  name="text"
-                  size={moderateScale(18)}
-                  color={colors.grayScale5}
+            <Controller
+              control={control}
+              name="fullName"
+              rules={{
+                required: strings.thisFieldIsMandatory,
+                validate: (value) => {
+                  const { status, msg } = validateName(value.trim());
+                  return status || msg;
+                }
+              }}
+              render={({ field: { onChange, onBlur, value } }) => (
+                <ZInput
+                  placeHolder={type === 'user' ? strings.fullName : (strings.fullNameChef || strings.fullName)}
+                  keyboard
+                  insideLeftIcon={() => (
+                    <EntypoIcon
+                      name="text"
+                      size={moderateScale(18)}
+                      color={colors.grayScale5}
+                    />
+                  )}
+                  _value={value}
+                  _errorText={errors.fullName?.message}
+                  autoCapitalize={'none'}
+                  toGetTextFieldValue={onChange}
+                  inputContainerStyle={[
+                    localStyles.inputStyle,
+                    { backgroundColor: colors.dark ? colors.backgroundColor : colors.inputBg },
+                    fullNameInputStyle,
+                  ]}
+                  _onFocus={onFocusFullName}
+                  _onBlur={() => { onBlur(); onBlurFullName(); }}
                 />
               )}
-              _value={fullName}
-              autoCapitalize={'none'}
-              toGetTextFieldValue={onChangedFullName}
-              inputContainerStyle={[
-                localStyles.inputStyle,
-                { backgroundColor: colors.dark ? colors.backgroundColor : colors.inputBg },
-                fullNameInputStyle,
-              ]}
-              _onFocus={onFocusFullName}
-              _onBlur={onBlurFullName}
             />
 
-            <ZPhoneInput
-              ref={phoneInputRef}
-              value={phoneNo}
-              defaultCode="EG"
-              placeholder={strings.phoneNumber}
-              onChangeText={onChangedPhoneNo}
-              onValidation={handlePhoneValidation}
-              errorText={phoneError}
-              containerStyle={localStyles.phoneInputContainer}
-            />
-
-            <ZInput
-              placeHolder={strings.addBio}
-              _value={bio}
-              multiline
-              _autoFocus={props.route.params.isEditBio}
-              toGetTextFieldValue={onChangedSetBio}
-              insideLeftIcon={() => (
-                <Ionicons
-                  style={{ position: 'relative', top: -18 }}
-                  name="information-circle"
-                  size={moderateScale(20)}
-                  color={colors.grayScale5}
+            <Controller
+              control={control}
+              name="phoneNo"
+              rules={{
+                required: strings.thisFieldIsMandatory,
+                validate: () => (phoneInputRef.current?.isValidNumber() || isPhoneValid) || strings.pleaseProvideCorrectNo
+              }}
+              render={({ field: { onChange, value } }) => (
+                <ZPhoneInput
+                  ref={phoneInputRef}
+                  value={value}
+                  defaultCode="EG"
+                  placeholder={strings.phoneNumber}
+                  onChangeText={onChange}
+                  onValidation={handlePhoneValidation}
+                  errorText={errors.phoneNo?.message || phoneError}
+                  containerStyle={localStyles.phoneInputContainer}
                 />
               )}
-              inputContainerStyle={[
-                localStyles.bioInputStyle,
-                { backgroundColor: colors.dark ? colors.backgroundColor : colors.inputBg },
-                bioStyle,
-              ]}
-              _onFocus={onFocusBio}
-              _onBlur={onBlurBio}
+            />
+
+            <Controller
+              control={control}
+              name="bio"
+              rules={{
+                required: type !== 'user' ? strings.thisFieldIsMandatory : false
+              }}
+              render={({ field: { onChange, onBlur, value } }) => (
+                <ZInput
+                  placeHolder={strings.addBio}
+                  _value={value}
+                  _errorText={errors.bio?.message}
+                  multiline
+                  _autoFocus={props.route.params?.isEditBio}
+                  toGetTextFieldValue={onChange}
+                  insideLeftIcon={() => (
+                    <Ionicons
+                      style={{ position: 'relative', top: -18 }}
+                      name="information-circle"
+                      size={moderateScale(20)}
+                      color={colors.grayScale5}
+                    />
+                  )}
+                  inputContainerStyle={[
+                    localStyles.bioInputStyle,
+                    { backgroundColor: colors.dark ? colors.backgroundColor : colors.inputBg },
+                    bioStyle,
+                  ]}
+                  _onFocus={onFocusBio}
+                  _onBlur={() => { onBlur(); onBlurBio(); }}
+                />
+              )}
             />
 
             {type === 'user' && (
@@ -511,8 +586,8 @@ const SetUpProfile = props => {
 
               {(locations?.length === 0 || !locations) && (
                 <View style={localStyles.emptyBranchesContainer}>
-                  <Ionicons name="location-outline" size={moderateScale(40)} color={colors.grayScale4} />
-                  <ZText type="m14" color={colors.grayScale5} style={localStyles.emptyBranchesText}>
+                  <Ionicons name="location-outline" size={moderateScale(40)} color={locationsError ? colors.lightRed : colors.grayScale4} />
+                  <ZText type="m14" color={locationsError ? colors.lightRed : colors.grayScale5} style={localStyles.emptyBranchesText}>
                     {strings.dontHaveBranches}
                   </ZText>
                 </View>
@@ -557,21 +632,11 @@ const SetUpProfile = props => {
         <ZButton
           title={strings.continue}
           textType={'b18'}
-          disabled={
-            !fullName ||
-            !phoneNo ||
-            (!gender && type === 'user') ||
-            (!bio && type !== 'user') ||
-            !email ||
-            !password ||
-            !type ||
-            (!locations.length && type !== 'user') ||
-            isPhotoUploading
-          }
+          disabled={isPhotoUploading || isSubmitting}
           color={colors.white}
-          isLoading={isPhotoUploading}
+          isLoading={isPhotoUploading || isSubmitting}
           containerStyle={localStyles.continueButton}
-          onPress={onPressContinue}
+          onPress={hookFormSubmit(handleSubmit, onInvalidSubmit)}
         />
       </View>
       <ProfilePicture

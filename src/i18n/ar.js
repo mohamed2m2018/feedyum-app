@@ -129,8 +129,7 @@ export default {
   emailAlreadyRegistered: 'هذا البريد الإلكتروني مسجل مسبقاً',
   plsEnterPassword: 'يرجى إدخال كلمة المرور',
   invalidPassword: 'يرجى إدخال كلمة مرور صحيحة',
-  validatePassword:
-    'يجب أن تحتوي كلمة المرور على 8-40 حرفًا، وحرف كبير (A-Z) وحرف صغير (a-z) ورقم (0-9)، وحرف خاص ما عدا المسافة.',
+  validatePassword: 'يجب أن تتكون كلمة المرور من ٨ أحرف على الأقل.',
   confirmPassValidString: 'كلمة المرور غير متطابقة.',
   selectInterestDescription: 'اختر تصنيفات الاكل التي تحبذها',
   selectInterest: 'اختر تصنيفات الاكل',
@@ -140,6 +139,8 @@ export default {
   whenIsYourBirthdayDesc: 'سيتم إخفاء يوم ميلادك عن الجمهور.',
   skip: 'تخطى',
   continue: 'متابعة',
+  genderRequired: 'يرجى اختيار الجنس',
+  profilePhotoRequired: 'يرجى إضافة صورة شخصية',
   fillYourProfile: 'املأ ملفك الشخصي',
   setupYourKitchen: 'أعد مطبخك',
   customizeYourBrand: 'هذا مطلوب لقائمة طعامك وطريقة ظهور علامتك التجارية للعملاء',
@@ -2068,7 +2069,7 @@ export default {
   // Deposit Agreement & Strike System
   depositAgreementTitle: 'اتفاقية شروط العربون',
   depositAgreementBody: 'بتفعيل العربون، أنت توافق على:\n\n• استرداد عربون العميل في حالة إلغاء الطلب\n• العربون يُحوّل مباشرة لحسابك على إنستاباي — FeedYum لا تحتفظ بالأموال\n• إلغاء طلب بعربون ينتج عنه مخالفة على حسابك\n• تراكم ٣ مخالفات يؤدي لتعليق الحساب لمدة ٧ أيام\n\nFeedYum وسيط تقني ولا يمكنها إجبار الاسترداد.',
-  depositAgreementAccept: 'أوافق على الشروط',
+  depositAgreementAccept: 'أوافق',
   depositAgreementDecline: 'إلغاء',
   chefSuspendedMessage: 'حسابك معلّق حتى {date} بسبب إلغاء طلبات بعربون. لا يمكنك استقبال طلبات جديدة خلال هذه الفترة.',
 

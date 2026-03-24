@@ -56,10 +56,10 @@ export default ZInput = props => {
         style={[
           localStyle.inputContainer,
           {
-            borderColor: _errorText ? colors.lightRed : colors.bColor,
             height: multiline ? getHeight(75) : getHeight(50),
           },
           inputContainerStyle,
+          !!_errorText && { borderColor: colors.lightRed },
         ]}>
         {insideLeftIcon ? (
           <View style={styles.pl10}>{insideLeftIcon()}</View>
