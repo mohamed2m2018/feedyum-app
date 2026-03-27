@@ -251,12 +251,19 @@ const ShoppingCart = () => {
           discountAmount: response.data.discountAmount,
           discountType: response.data.discountType,
         }));
-        showSuccessToast(strings.successExclamation, strings.promoCodeApplied);
+        const isRTL = require('react-native').I18nManager.isRTL;
+        const msg = (isRTL && response.data?.messageAr) ? response.data.messageAr : (response.data?.message || strings.promoCodeApplied);
+        showSuccessToast(strings.successExclamation, msg);
       } else {
-        setPromoError(response.data?.message || strings.promoCodeInvalidMsg);
+        const isRTL = require('react-native').I18nManager.isRTL;
+        const msg = (isRTL && response.data?.messageAr) ? response.data.messageAr : response.data?.message;
+        setPromoError(msg || strings.promoCodeInvalidMsg);
       }
     } catch (err) {
-      const msg = err?.response?.data?.message || strings.failedToValidatePromoCode;
+      const isRTL = require('react-native').I18nManager.isRTL;
+      const msg = (isRTL && err?.response?.data?.messageAr)
+        ? err.response.data.messageAr
+        : err?.response?.data?.message || strings.failedToValidatePromoCode;
       setPromoError(msg);
     } finally {
       setPromoLoading(false);
