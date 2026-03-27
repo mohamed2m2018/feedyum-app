@@ -165,6 +165,11 @@ const EditProfileScreen = ({ navigation }) => {
         [saveField]
     );
 
+    const debouncedSavePhone = useCallback(
+        debounce((value) => saveField('phone', value), 1000),
+        [saveField]
+    );
+
     const debouncedSaveBio = useCallback(
         debounce((value) => saveField('bio', value), 1000),
         [saveField]
@@ -183,6 +188,10 @@ const EditProfileScreen = ({ navigation }) => {
 
     const onChangedPhoneNo = (text) => {
         setPhoneNo(text);
+        
+        // Auto-save phone as they type, just like name and bio
+        // We only save if validation passes internally, which is handled in saveField
+        debouncedSavePhone(text);
     };
 
     const handlePhoneBlur = () => {
