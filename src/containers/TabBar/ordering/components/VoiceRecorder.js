@@ -411,40 +411,30 @@ const VoiceRecorder = ({ onSend, onCancel, autoStart = false }) => {
       setIsUploading(false);
       setUploadProgress(0);
 
-      showActionDialog({
-        type: ALERT_TYPE.WARNING,
-        title: 'Upload Failed',
-        message: `Failed to upload audio: ${error.message}. Would you like to send it locally instead?`,
-        confirmText: strings.sendLocally,
-        cancelText: strings.cancel,
-        onConfirm: async () => {
-          try {
-            // Convert M4A for compatibility and send locally
-            const compatiblePath =
-              await convertWavToMp3(audioPath);
-            const audioMessage = {
-              _id: Math.round(Math.random() * 1000000),
-              text: '',
-              createdAt: new Date(),
-              audio: compatiblePath,
-              duration: recordingTime,
-              isLocal: true,
-            };
+      // Auto-fallback: silently send locally without showing a disruptive dialog
+      console.log('[VoiceRecorder] Upload failed, auto-falling back to local send:', error.message);
+      try {
+        const compatiblePath = await convertWavToMp3(audioPath);
+        const audioMessage = {
+          _id: Math.round(Math.random() * 1000000),
+          text: '',
+          createdAt: new Date(),
+          audio: compatiblePath,
+          duration: recordingTime,
+          isLocal: true,
+        };
 
+        onSend(audioMessage);
 
-            onSend(audioMessage);
-
-            // Reset state
-            setAudioPath(null);
-            setCompatibleAudioPath(null);
-            setRecordingTime(0);
-            setIsPlaying(false);
-          } catch (conversionError) {
-            console.error('WAV conversion error:', conversionError);
-            showErrorToast(strings.error, strings.failedToProcessAudio);
-          }
-        }
-      });
+        // Reset state
+        setAudioPath(null);
+        setCompatibleAudioPath(null);
+        setRecordingTime(0);
+        setIsPlaying(false);
+      } catch (conversionError) {
+        console.error('Local fallback conversion error:', conversionError);
+        showErrorToast(strings.error, strings.failedToProcessAudio);
+      }
     }
   };
 
