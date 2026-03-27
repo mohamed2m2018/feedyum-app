@@ -74,9 +74,11 @@ class NotificationService {
       const notification = event.notification;
       const data = notification.additionalData;
 
-      // If it has an explicit alarmType (order-related alarm notification)
-      if (data?.alarmType) {
-        console.log('🐞 [NotificationService] Order alarm foreground, type:', data.alarmType);
+      // Alarm types that trigger full alarm experience (sound + persistent notifee).
+      // newOrder / orderConfirmed → chef alarm. awaitingConfirmation → customer alarm (must act to confirm).
+      const ALARM_TYPES = ['newOrder', 'orderConfirmed', 'awaitingConfirmation'];
+      if (data?.alarmType && ALARM_TYPES.includes(data.alarmType)) {
+        console.log('🐞 [NotificationService] Alarm foreground, type:', data.alarmType);
 
         // Start in-app alarm (sound + vibration)
         OrderAlarmService.startAlarm();

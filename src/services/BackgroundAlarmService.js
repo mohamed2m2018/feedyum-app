@@ -135,8 +135,8 @@ class BackgroundAlarmService {
       case 'awaitingConfirmation':
         return {
           id: 'awaiting_confirmation_alarm',
-          title: '⏳ Awaiting Confirmation',
-          body: 'An order is waiting for customer confirmation.',
+          title: '⏳ Confirm Your Order!',
+          body: 'Your order is waiting for your confirmation. Tap to review.',
         };
       case 'newOrder':
       default:
