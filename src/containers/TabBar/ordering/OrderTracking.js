@@ -1051,6 +1051,10 @@ const OrderTracking = () => {
                 <ZText type="M14" color="rgba(255,255,255,0.7)">{strings.deliveryFee || 'Delivery Fee'}</ZText>
                 <ZText type="B14" color="#FFFFFF">{currentOrder.deliveryFee || 0} {strings.currency || 'EGP'}</ZText>
               </View>
+              <View style={localStyles.confirmationDetailRow}>
+                <ZText type="M14" color="rgba(255,255,255,0.7)">{strings.serviceFee || 'Service Fee'}</ZText>
+                <ZText type="B14" color="#FFFFFF">{currentOrder.serviceFee || 0} {strings.currency || 'EGP'}</ZText>
+              </View>
               {currentOrder.promocode?.discountAmount > 0 && (
                 <View style={localStyles.confirmationDetailRow}>
                   <ZText type="M14" color="rgba(255,255,255,0.7)">{strings.discount} ({currentOrder.promocode.code})</ZText>
