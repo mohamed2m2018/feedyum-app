@@ -243,9 +243,9 @@ const ChefOrderDetailsScreen = () => {
         const nextStatus = getNextStatus();
         if (!nextStatus || !order) return;
 
-        // Catering orders that are pending MUST go through the review modal
-        // so the chef can set the quote price
-        if (order.status === 'pending' && order.orderType === 'catering') {
+        // Pending orders MUST go through the review modal
+        // so the chef can edit the delivery fee (and set quote price for catering)
+        if (order.status === 'pending') {
             setReviewModalVisible(true);
             return;
         }

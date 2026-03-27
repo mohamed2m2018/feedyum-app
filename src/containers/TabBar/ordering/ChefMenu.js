@@ -87,6 +87,7 @@ const ChefMenu = () => {
   const [showStickyBar, setShowStickyBar] = useState(false);
   const searchBarYRef = useRef(0);
   const isProgrammaticScrollRef = useRef(false);
+  const headerHeightRef = useRef(0);
 
   const handleSearchBarLayout = useCallback((e) => {
     searchBarYRef.current = e.nativeEvent.layout.y;
@@ -271,19 +272,21 @@ const ChefMenu = () => {
 
   return (
     <ZSafeAreaView>
-      <ZHeader
-        title={menuData?.chef?.fullName || chefName || strings.menu}
-        showBack
-        rightIcon={
-          <TouchableOpacity
-            onPress={() => shareSheetRef.current?.show()}
-            style={{ padding: moderateScale(8) }}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          >
-            <Ionicons name="share-social-outline" size={moderateScale(24)} color={colors.textColor} />
-          </TouchableOpacity>
-        }
-      />
+      <View onLayout={(e) => { headerHeightRef.current = e.nativeEvent.layout.height; }}>
+        <ZHeader
+          title={menuData?.chef?.fullName || chefName || strings.menu}
+          showBack
+          rightIcon={
+            <TouchableOpacity
+              onPress={() => shareSheetRef.current?.show()}
+              style={{ padding: moderateScale(8) }}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Ionicons name="share-social-outline" size={moderateScale(24)} color={colors.textColor} />
+            </TouchableOpacity>
+          }
+        />
+      </View>
 
       <FlatList
         ref={flatListRef}
@@ -302,14 +305,15 @@ const ChefMenu = () => {
         )}
         keyExtractor={item => item._id}
         keyboardShouldPersistTaps="handled"
-        ListHeaderComponent={() => (
+        automaticallyAdjustKeyboardInsets
+        ListHeaderComponent={
           <View>
             {renderListHeader()}
             <View onLayout={handleSearchBarLayout}>
               {menuData?.dishes?.length > 0 && renderSearchAndSections()}
             </View>
           </View>
-        )}
+        }
         contentContainerStyle={localStyles.listContainer}
         showsVerticalScrollIndicator={false}
         onScroll={handleScroll}
@@ -336,12 +340,12 @@ const ChefMenu = () => {
           if (hasNextPage && !isFetchingNextPage) fetchNextPage();
         }}
         onEndReachedThreshold={0.5}
-        ListFooterComponent={() => isFetchingNextPage ? <View style={{ padding: 20 }}><ZLoader /></View> : null}
+        ListFooterComponent={isFetchingNextPage ? <View style={{ padding: 20 }}><ZLoader /></View> : null}
       />
 
       {/* Sticky overlay — appears when search+sections scrolls off-screen */}
       {showStickyBar && menuData?.dishes?.length > 0 && (
-        <View style={[stickyOverlayStyles.container, { backgroundColor: colors.backgroundColor }]}>
+        <View style={[stickyOverlayStyles.container, { top: headerHeightRef.current, backgroundColor: colors.backgroundColor }]}>
           {renderSearchAndSections(true)}
         </View>
       )}

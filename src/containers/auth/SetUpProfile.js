@@ -209,7 +209,7 @@ const SetUpProfile = props => {
               minLeadTime: loc.minLeadTime || 60,
               slotDuration: loc.slotDuration || 60,
               excludedAreas: loc.excludedAreas || [],
-              operatingHours: []
+              operatingHours: loc.operatingHours || []
             });
           } catch (branchError) {
             console.log('Failed to create branch:', branchError);
@@ -333,16 +333,25 @@ const SetUpProfile = props => {
       ...newLocation
     };
 
-    if (locationIndexToEdit !== undefined && locationIndexToEdit !== null) {
-      setLocations(prev => {
-        const newLocs = [...prev];
-        newLocs[locationIndexToEdit] = adaptedLocation;
-        return newLocs;
+    // Delay navigation so it fires AFTER MapLocationPicker's goBack() pops
+    setTimeout(() => {
+      navigation.navigate(StackNav.WorkingHours, {
+        mode: 'registration',
+        pendingBranchData: adaptedLocation,
+        onSave: (completeLocationData) => {
+          if (locationIndexToEdit !== undefined && locationIndexToEdit !== null) {
+            setLocations(prev => {
+              const newLocs = [...prev];
+              newLocs[locationIndexToEdit] = completeLocationData;
+              return newLocs;
+            });
+            setlocationIndexToEdit(null);
+          } else {
+            setLocations(prev => [...prev, completeLocationData]);
+          }
+        }
       });
-      setlocationIndexToEdit(null);
-    } else {
-      setLocations(prev => [...prev, adaptedLocation]);
-    }
+    }, 100);
   };
 
   const onPressProfilePic = () => ProfilePictureSheetRef?.current.show();

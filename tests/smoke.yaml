@@ -1,0 +1,165 @@
+# FeedYum AI Smoke Tests
+# Run via MCP: "Read tests/smoke.yaml and run each check on the emulator"
+#
+# Each check is a natural-language goal sent to the live app via execute_task.
+# The agent reads the real UI, taps/types/navigates, and reports pass/fail.
+
+checks:
+
+  # ─── Auth ──────────────────────────────────────────────────────────────────
+
+  - id: login-form-visible
+    category: Auth
+    check: "Go to the Login screen and verify that the email and password fields are present and the login button exists"
+
+  - id: forgot-password-flow
+    category: Auth
+    check: "On the Login screen, tap 'Forgot Password' and verify the Forgot Password screen opens with an email input"
+
+  - id: register-link
+    category: Auth
+    check: "On the Login screen, tap 'Don't have an account' and verify the Register screen opens"
+
+  - id: language-switch
+    category: Auth
+    check: "On the Login screen, tap the العربية (Arabic) button and verify the UI language changes to Arabic"
+
+  # ─── Onboarding ────────────────────────────────────────────────────────────
+
+  - id: onboarding-completes
+    category: Onboarding
+    check: "Complete the entire OnBoarding flow by tapping through all slides and tapping the final Get Started button"
+
+  - id: interests-selectable
+    category: Onboarding
+    check: "Navigate to the SelectInterest screen and tap at least 3 interest categories, then verify the selections are highlighted"
+
+  - id: gender-selection
+    category: Onboarding
+    check: "On the Gender screen, tap a gender option and verify it becomes selected"
+
+  # ─── Discover / Home ───────────────────────────────────────────────────────
+
+  - id: discover-loads
+    category: Discover
+    check: "Navigate to the Discover screen and verify food items or restaurants are visible"
+
+  - id: search-works
+    category: Search
+    check: "Go to the Search screen, type 'pizza' in the search field, and verify results appear"
+
+  - id: search-tabs-exist
+    category: Search
+    check: "Go to the Search screen and verify there are tabs for Top, Users, Videos, and Hashtags"
+
+  - id: reel-feed-scrollable
+    category: ReelFeed
+    check: "Go to ReelFeed and scroll down to verify more content loads"
+
+  # ─── Restaurant / Menu ─────────────────────────────────────────────────────
+
+  - id: menu-detail-opens
+    category: Menu
+    check: "Navigate to MenuDetail for any restaurant and verify the restaurant name, menu items, and an Add to Cart button are visible"
+
+  - id: dish-detail-opens
+    category: Menu
+    check: "Navigate to DishDetail for any dish and verify the dish name, price, and description are shown"
+
+  - id: add-to-cart
+    category: Cart
+    check: "Find any dish available on screen and add it to the cart by tapping the Add to Cart button"
+
+  - id: cart-shows-items
+    category: Cart
+    check: "Navigate to ShoppingCart and verify at least one item is listed with a name and price"
+
+  - id: cart-total-visible
+    category: Cart
+    check: "Navigate to ShoppingCart and verify a total or subtotal amount is displayed"
+
+  # ─── Profile ───────────────────────────────────────────────────────────────
+
+  - id: profile-loads
+    category: Profile
+    check: "Navigate to the Profile screen and verify the user's name or username is visible"
+
+  - id: edit-profile-opens
+    category: Profile
+    check: "Navigate to EditProfile and verify the form fields (name, bio) are editable"
+
+  - id: saved-addresses-visible
+    category: Profile
+    check: "Navigate to SavedAddresses and verify the screen loads without errors — even if no addresses are saved"
+
+  - id: privacy-policy-loads
+    category: Settings
+    check: "Navigate to PrivacyPolicy and verify the screen contains readable text content"
+
+  - id: help-center-loads
+    category: Settings
+    check: "Navigate to HelpCenter and verify the screen loads and shows contact or FAQ content"
+
+  - id: language-setting
+    category: Settings
+    check: "Navigate to the Language screen under Settings and verify English and Arabic options are present"
+
+  # ─── Chef Dashboard ────────────────────────────────────────────────────────
+
+  - id: chef-dashboard-loads
+    category: Chef
+    check: "Navigate to ChefDashboard and verify key metrics (orders, revenue, or similar) are displayed"
+
+  - id: menu-management-loads
+    category: Chef
+    check: "Navigate to MenuManagement and verify it shows a list of menu items or an Add Item button"
+
+  - id: order-management-loads
+    category: Chef
+    check: "Navigate to OrderManagement and verify it shows a list of orders or an empty state message"
+
+  - id: working-hours-loads
+    category: Chef
+    check: "Navigate to WorkingHours and verify the schedule or time slots are displayed"
+
+  # ─── Chat & Social ─────────────────────────────────────────────────────────
+
+  - id: chat-list-loads
+    category: Chat
+    check: "Navigate to ChatList and verify the screen loads — either showing conversations or an empty state"
+
+  - id: find-friends-loads
+    category: Social
+    check: "Navigate to FindFriends and verify a list of suggested users or a search field is visible"
+
+  - id: followers-visible
+    category: Social
+    check: "Navigate to the Follower screen and verify the list loads (even if empty)"
+
+  # ─── Orders & Wallet ───────────────────────────────────────────────────────
+
+  - id: orders-history-loads
+    category: Orders
+    check: "Navigate to Orders and verify the screen shows order history or an empty state with a message"
+
+  - id: wallet-loads
+    category: Wallet
+    check: "Navigate to Wallet and verify the balance or transaction history is displayed"
+
+  - id: order-receipt-accessible
+    category: Orders
+    check: "Navigate to OrderReceipt for any recent order and verify an order summary with items and total is shown"
+
+  # ─── Edge Cases ────────────────────────────────────────────────────────────
+
+  - id: qr-code-screen
+    category: Edge
+    check: "Navigate to QrCode and verify a QR code or scannable element is displayed"
+
+  - id: report-screen-has-options
+    category: Edge
+    check: "Navigate to the Report screen and verify it shows report reason options"
+
+  - id: security-screen-loads
+    category: Settings
+    check: "Navigate to Security under Settings and verify options like Change Password or Two-Factor are visible"

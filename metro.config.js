@@ -75,4 +75,7 @@ config.resolver = {
   },
 };
 
+// Auto-generate the AI screen map on start for the React Native Agentic AI
+require('react-native-agentic-ai/generate-map').autoGenerate(__dirname);
+
 module.exports = config;

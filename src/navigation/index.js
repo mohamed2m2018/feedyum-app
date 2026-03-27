@@ -1,13 +1,13 @@
 import React, { useEffect, useRef } from 'react';
 import { NavigationContainer, useNavigationContainerRef } from '@react-navigation/native';
 import { AppState, Platform } from 'react-native';
+// import { AIAgent } from 'experimental-stuff';
 import StackNavigation from './Type/StackNavigation';
 import { useSelector } from 'react-redux';
 import { BackgroundUploadProvider } from '../providers/BackgroundUploadProvider';
 import { LocationProvider } from './locationContext';
 import { ScreenProvider } from './screenContext';
 import DeepLinkingService from '../services/DeepLinkingService';
-import NotificationService from '../services/NotificationService';
 import AppInitializer from '../services/AppInitializer';
 import NewOrderAlarmBanner from '../containers/TabBar/chef/components/NewOrderAlarmBanner';
 import ForceUpdateCheck from '../components/ForceUpdateCheck';
@@ -306,35 +306,46 @@ export default function pAppNavigator() {
   const linkingConfig = Platform.OS === 'web' ? undefined : linking;
 
   return (
-    <NavigationContainer
-      ref={navigationRef}
-      theme={colors}
-      linking={linkingConfig}
-      fallback={<></>} // You can add a loading component here
-      onReady={() => {
-        // Navigation is ready, deep linking service can now handle navigation
-        if (navigationRef.isReady()) {
-          DeepLinkingService.setNavigationRef(navigationRef);
-        }
-      }}
-      onUnhandledAction={(action) => {
-      }}
-      onStateChange={(state) => {
-        // Log navigation state changes for debugging
-        if (__DEV__) {
-        }
-      }}
-    >
-      <ForceUpdateCheck>
-        <ScreenProvider>
-          <BackgroundUploadProvider>
-            <LocationProvider>
-              <StackNavigation />
-              <NewOrderAlarmBanner />
-            </LocationProvider>
-          </BackgroundUploadProvider>
-        </ScreenProvider>
-      </ForceUpdateCheck>
-    </NavigationContainer>
+    <>
+      {/* <AIAgent
+        apiKey="***REMOVED***"
+        mcpServerUrl="ws://localhost:3101"
+        navRef={navigationRef}
+        showChatBar={true}
+        debug={true}
+        useScreenMap={true}
+      > */}
+      <NavigationContainer
+        ref={navigationRef}
+        theme={colors}
+        linking={linkingConfig}
+        fallback={<></>} // You can add a loading component here
+        onReady={() => {
+          // Navigation is ready, deep linking service can now handle navigation
+          if (navigationRef.isReady()) {
+            DeepLinkingService.setNavigationRef(navigationRef);
+          }
+        }}
+        onUnhandledAction={(action) => {
+        }}
+        onStateChange={(state) => {
+          // Log navigation state changes for debugging
+          if (__DEV__) {
+          }
+        }}
+      >
+        <ForceUpdateCheck>
+          <ScreenProvider>
+            <BackgroundUploadProvider>
+              <LocationProvider>
+                <StackNavigation />
+                <NewOrderAlarmBanner />
+              </LocationProvider>
+            </BackgroundUploadProvider>
+          </ScreenProvider>
+        </ForceUpdateCheck>
+      </NavigationContainer>
+      {/* </AIAgent> */}
+    </>
   );
 }

@@ -225,9 +225,6 @@ const useChefMenu = () => {
     setSearch(text);
     clearTimeout(onSearchInput._t);
     onSearchInput._t = setTimeout(() => setDebouncedSearch(text), 500);
-    requestAnimationFrame(() => {
-      if (searchInputRef.current) searchInputRef.current.focus();
-    });
   }, []);
 
   const fetchSearchedDishes = async ({ pageParam = null }) => {

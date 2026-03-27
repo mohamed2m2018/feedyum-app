@@ -122,6 +122,17 @@ const WorkingHoursScreen = () => {
           orderMode: schedulingChoice || 'asap',
         });
         showSuccessToast(strings.success, strings.branchAddedSuccess || 'Branch added successfully');
+      } else if (mode === 'registration') {
+        // Registration flow bypasses API and returns composite state
+        if (onSave) {
+          onSave({
+            ...pendingBranchData,
+            operatingHours: hours,
+            orderMode: schedulingChoice || 'asap',
+          });
+        }
+        navigation.goBack();
+        return;
       } else {
         // Edit existing branch hours + scheduling
         await branchService.editBranch(branch._id, {
