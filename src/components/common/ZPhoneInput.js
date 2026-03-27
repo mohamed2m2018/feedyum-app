@@ -84,7 +84,8 @@ const ZPhoneInput = forwardRef(({
     // Expose validation methods to parent via ref
     useImperativeHandle(ref, () => ({
         isValidNumber: () => {
-            return phoneInputRef.current?.isValidNumber(value) || false;
+            // Use internalValue (live state) not value prop (can be stale on blur)
+            return phoneInputRef.current?.isValidNumber(internalValue) || false;
         },
         getFormattedNumber: () => {
             return phoneInputRef.current?.getNumberAfterPossiblyEliminatingZero()?.formattedNumber || '';
