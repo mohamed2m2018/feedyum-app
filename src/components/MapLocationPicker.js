@@ -10,7 +10,10 @@ import {
   TextInput,
   Modal,
   Animated,
+  Alert,
+  Linking,
 } from 'react-native';
+import { check, request as requestPermission, PERMISSIONS, RESULTS } from 'react-native-permissions';
 import { showErrorToast } from '../utils/toast';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -426,49 +429,76 @@ const MapLocationPicker = () => {
   }, [reverseGeocodePositionSilent]);
 
   // Center map on current GPS location (fresh position, not cached context)
-  const handleCenterOnCurrentLocation = useCallback(() => {
-    Geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
+  const handleCenterOnCurrentLocation = useCallback(async () => {
+    try {
+      // 1. Check Permissions first
+      const permission = Platform.OS === 'ios' ? PERMISSIONS.IOS.LOCATION_WHEN_IN_USE : PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION;
+      let permissionStatus = await check(permission);
 
-        setMarkerPosition({ latitude, longitude });
+      // 2. Request if not determined
+      if (permissionStatus === RESULTS.DENIED) {
+        permissionStatus = await requestPermission(permission);
+      }
 
-        // Animate the map camera to the fresh GPS position
-        mapRef.current?.animateCamera(
-          {
-            center: { latitude, longitude },
-            zoom: 17,
-          },
-          { duration: 500 }
+      // 3. Prompt to open settings if blocked or permanently denied
+      if (permissionStatus === RESULTS.BLOCKED || permissionStatus === RESULTS.DENIED) {
+        Alert.alert(
+          strings.locationPermissionRequired || 'Location Required',
+          strings.locationPermissionRequiredDesc || 'Please enable location permissions in your device settings to use this feature.',
+          [
+            { text: strings.cancel || 'Cancel', style: 'cancel' },
+            { text: strings.openSettings || 'Open Settings', onPress: () => Linking.openSettings() }
+          ]
         );
+        return;
+      }
 
-        // Reverse-geocode the new position silently
-        reverseGeocodePositionSilent(latitude, longitude);
-        setLocationSaved(false);
-        setShowAddressForm(false);
-      },
-      (error) => {
-        console.warn('GPS relocate failed:', error.message);
-        // Fallback: use context location if GPS fails
-        if (location?.latitude && location?.longitude) {
-          const lat = location.latitude;
-          const lng = location.longitude;
+      // 4. Fetch position since we have permission
+      Geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
 
-          setMarkerPosition({ latitude: lat, longitude: lng });
+          setMarkerPosition({ latitude, longitude });
+
+          // Animate the map camera to the fresh GPS position
           mapRef.current?.animateCamera(
             {
-              center: { latitude: lat, longitude: lng },
+              center: { latitude, longitude },
               zoom: 17,
             },
             { duration: 500 }
           );
-          reverseGeocodePositionSilent(lat, lng);
+
+          // Reverse-geocode the new position silently
+          reverseGeocodePositionSilent(latitude, longitude);
           setLocationSaved(false);
           setShowAddressForm(false);
-        }
-      },
-      { enableHighAccuracy: false, timeout: 10000, maximumAge: 10000 },
-    );
+        },
+        (error) => {
+          console.warn('GPS relocate failed:', error.message);
+          // Fallback: use context location if GPS fails
+          if (location?.latitude && location?.longitude) {
+            const lat = location.latitude;
+            const lng = location.longitude;
+
+            setMarkerPosition({ latitude: lat, longitude: lng });
+            mapRef.current?.animateCamera(
+              {
+                center: { latitude: lat, longitude: lng },
+                zoom: 17,
+              },
+              { duration: 500 }
+            );
+            reverseGeocodePositionSilent(lat, lng);
+            setLocationSaved(false);
+            setShowAddressForm(false);
+          }
+        },
+        { enableHighAccuracy: false, timeout: 10000, maximumAge: 10000 },
+      );
+    } catch (error) {
+      console.warn('Permission check failed:', error);
+    }
   }, [location, reverseGeocodePositionSilent]);
 
   // Fetch coverage areas when radius changes
