@@ -434,14 +434,12 @@ const MapLocationPicker = () => {
         setMarkerPosition({ latitude, longitude });
 
         // Animate the map camera to the fresh GPS position
-        mapRef.current?.animateToRegion(
+        mapRef.current?.animateCamera(
           {
-            latitude,
-            longitude,
-            latitudeDelta: 0.004,
-            longitudeDelta: 0.004,
+            center: { latitude, longitude },
+            zoom: 17,
           },
-          500,
+          { duration: 500 }
         );
 
         // Reverse-geocode the new position silently
@@ -457,21 +455,19 @@ const MapLocationPicker = () => {
           const lng = location.longitude;
 
           setMarkerPosition({ latitude: lat, longitude: lng });
-          mapRef.current?.animateToRegion(
+          mapRef.current?.animateCamera(
             {
-              latitude: lat,
-              longitude: lng,
-              latitudeDelta: 0.004,
-              longitudeDelta: 0.004,
+              center: { latitude: lat, longitude: lng },
+              zoom: 17,
             },
-            500,
+            { duration: 500 }
           );
           reverseGeocodePositionSilent(lat, lng);
           setLocationSaved(false);
           setShowAddressForm(false);
         }
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 5000 },
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 10000 },
     );
   }, [location, reverseGeocodePositionSilent]);
 
