@@ -1,6 +1,13 @@
 import { Dimensions, Platform, StatusBar } from 'react-native';
 import strings from '../i18n/strings';
-export const API_BASE_URL = __DEV__ ? 'http://192.168.1.105:4800/api' : 'https://feedyum.com/api';
+
+const DEV_API_BASE_URL =
+  process.env.EXPO_PUBLIC_API_BASE_URL ||
+  (Platform.OS === 'android'
+    ? 'http://10.0.2.2:4800/api'
+    : 'http://localhost:4800/api');
+
+export const API_BASE_URL = __DEV__ ? DEV_API_BASE_URL : 'https://feedyum.com/api';
 export const API_STAGING_URL = 'https://makeit-be-staging-5lua2axahq-ew.a.run.app/api';
 export const ENVIRONMENT_KEY = 'APP_ENVIRONMENT'; // 'production' or 'staging'
 

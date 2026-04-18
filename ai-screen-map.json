@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-03-27T18:03:23.876Z",
+  "generatedAt": "2026-04-18T19:19:04.449Z",
   "framework": "react-navigation",
   "screens": {
     "Login": {
-      "description": "text input (text-input), icon (button), forgot password (button), dont have account (button), continue guest (button), English (button), العربية (button), ZText (component)",
+      "description": "Screen content",
       "navigatesTo": [
         "TabBar",
         "Register",
@@ -11,7 +11,7 @@
       ]
     },
     "Register": {
-      "description": "text input (text-input), icon (button), already have account (button), UserTypeSelectionModal (modal), TermsAcceptanceModal (modal), ChefBrandSetupModal (modal), ZText (component), ZSafeAreaView (component)",
+      "description": "Screen content",
       "navigatesTo": [
         "SetUpProfile",
         "TabBar",
@@ -21,16 +21,16 @@
       ]
     },
     "SelectInterest": {
-      "description": "continue (button), FlatList (list), Image (image), ZText (component), ZSafeAreaView (component), ActivityIndicator (component), select interest (ZHeader)"
+      "description": "Screen content"
     },
     "Gender": {
-      "description": "ZText (component), ZSafeAreaView (component), Male_Svg (component), Female_Svg (component), tell us your self (ZHeader), male (ListGenderCategory), female (ListGenderCategory)",
+      "description": "Screen content",
       "navigatesTo": [
         "SetUpProfile"
       ]
     },
     "SetUpProfile": {
-      "description": "text input (text-input), phone number (text-input), Image (image), ZSafeAreaView (component), ZHeader (component), ZKeyBoardAvoidWrapper (component), ActivityIndicator (component), ZText (component)",
+      "description": "Screen content",
       "navigatesTo": [
         "TabBar",
         "WorkingHours",
@@ -40,23 +40,23 @@
       ]
     },
     "SetSecure": {
-      "description": "SuccessModal (modal), ZSafeAreaView (component), ZText (component), FingerPrint (component), set your fingerprint (ZHeader)",
+      "description": "Screen content",
       "navigatesTo": [
         "TabBar"
       ]
     },
     "ForgotPassword": {
-      "description": "text input (text-input), ZSafeAreaView (component), ZText (component), forgot password (ZHeader)"
+      "description": "Screen content"
     },
     "CreateNewPassword": {
-      "description": "text input (text-input), SuccessModal (modal), ZSafeAreaView (component), ZText (component), ZKeyBoardAvoidWrapper (component), NewPassWordDark (component), NewPassWordLight (component), create new password (ZHeader)",
+      "description": "Screen content",
       "navigatesTo": [
         "Login",
         "ForgotPassword"
       ]
     },
     "Splash": {
-      "description": "ZLoader (component)",
+      "description": "Screen content",
       "navigatesTo": [
         "TabBar",
         "Auth",
@@ -64,10 +64,10 @@
       ]
     },
     "SelectCategory": {
-      "description": "continue (button), FlatList (list), Image (image), ZText (component), ZSafeAreaView (component), ActivityIndicator (component), select interest (ZHeader)"
+      "description": "Screen content"
     },
     "OnBoarding": {
-      "description": "Image (image), ZText (component), Swiper (component), TutorialItem (component)",
+      "description": "Screen content",
       "navigatesTo": [
         "Auth"
       ]
@@ -79,45 +79,72 @@
       "description": "Navigator (component), Screen (component), Group (component)"
     },
     "TabBar": {
-      "description": "order needs confirmation (button), chat with chef (button), title (modal), create new post (modal), Modal (modal), ZLoader (component), ZText (component), Navigator (component)",
+      "description": "Screen content",
       "navigatesTo": [
         "FollowingTab",
         "Orders",
         "MenuManagement",
         "Chat",
         "SupportChat",
-        "OrderTracking"
+        "OrderTracking",
+        "Auth2",
+        "OrderManagement",
+        "Analytics",
+        "ChatList",
+        "Wallet",
+        "ChefBranches",
+        "Search",
+        "ShoppingCart",
+        "UserNetwork",
+        "EditProfileField",
+        "Setting",
+        "TabBar",
+        "Register",
+        "ForgotPassword",
+        "SetUpProfile",
+        "Login",
+        "Auth",
+        "OnBoarding",
+        "WorkingHours",
+        "MapLocationPicker",
+        "CreateNewPassword",
+        "ChefMenu",
+        "QrCode",
+        "ChefOrderDetails",
+        "ReviewReelCreator",
+        "DishDetail",
+        "OrderReceipt",
+        "ProfileDetail",
+        "PaymobCheckout",
+        "MenuDetail",
+        "EditAddress",
+        "SingleReel",
+        "EditReel",
+        "Profile",
+        "Report"
       ]
     },
     "Setting": {
-      "description": "toggle (switch), title (button), logout (button), ZSafeAreaView (component), ZText (component), ZLoader (component), LogOut (component), settings (ZHeader)",
+      "description": "Screen content",
       "navigatesTo": [
         "Auth",
         "Auth2"
       ]
     },
     "SingleReel": {
-      "description": "ReelsList (list), ReelItem (component), ZHeader (component), Comment (component), Description (component), Locations (component)",
-      "navigatesTo": [
-        "Search",
-        "Report",
-        "Profile",
-        "ChefMenu",
-        "ProfileDetail",
-        "Auth2"
-      ]
+      "description": "Screen content"
     },
     "LocationPicker": {
-      "description": "ZText (component), search (FreeAddressSearch)"
+      "description": "Screen content"
     },
     "ManageAccount": {
-      "description": "type (button), SectionList (list), ZText (component), ZSafeAreaView (component), RenderInfoItem (component), edit profile (ZHeader)"
+      "description": "Screen content"
     },
     "QrCode": {
-      "description": "ZSafeAreaView (component), ZText (component), qr code (ZHeader)"
+      "description": "Screen content"
     },
     "Suggested": {
-      "description": "FlatList (list), UserDetailComponent (component)",
+      "description": "Screen content",
       "navigatesTo": [
         "Profile",
         "ChefMenu",
@@ -126,7 +153,7 @@
       ]
     },
     "Follower": {
-      "description": "FlatList (list), UserDetailComponent (component), Spinner (component), ZText (component), ActivityIndicator (component)",
+      "description": "Screen content",
       "navigatesTo": [
         "Profile",
         "ChefMenu",
@@ -135,7 +162,7 @@
       ]
     },
     "Following": {
-      "description": "FlatList (list), UserDetailComponent (component), Spinner (component), ZText (component), ActivityIndicator (component)",
+      "description": "Screen content",
       "navigatesTo": [
         "Profile",
         "ChefMenu",
@@ -144,7 +171,7 @@
       ]
     },
     "ProfileDetail": {
-      "description": "value (button), follow (button), view menu (button), SuccessModal (modal), LikeIconModal (modal), ImageZoomModal (modal), FlatList (list), Image (image)",
+      "description": "Screen content",
       "navigatesTo": [
         "UserNetwork",
         "ChefMenu",
@@ -155,7 +182,7 @@
       ]
     },
     "UserNetwork": {
-      "description": "ZText (component), Following (component), Follower (component), ZSafeAreaView (component), TabView (component), title (HeaderCetegoryItem), follow list (ZHeader)",
+      "description": "Screen content",
       "navigatesTo": [
         "Profile",
         "ChefMenu",
@@ -164,13 +191,13 @@
       ]
     },
     "EditProfile": {
-      "description": "type (button), edit profile (button), SectionList (list), Image (image), ZText (component), ZSafeAreaView (component), ZHeader (component), RenderInfoItem (component)",
+      "description": "Screen content",
       "navigatesTo": [
         "EditProfileField"
       ]
     },
     "EditProfileField": {
-      "description": "text input (text-input), phone number (text-input), your branches (button), Image (image), ActivityIndicator (component), ZSafeAreaView (component), ZKeyBoardAvoidWrapper (component), ZText (component)",
+      "description": "Screen content",
       "navigatesTo": [
         "ChefBranches",
         "Search",
@@ -178,25 +205,25 @@
       ]
     },
     "Privacy": {
-      "description": "toggle (switch), title (button), SectionList (list), ZText (component), ZSafeAreaView (component), RenderData (component), privacy (ZHeader)"
+      "description": "Screen content"
     },
     "PrivacyPolicy": {
-      "description": "ZText (component), ZSafeAreaView (component), RenderData (component), privacy policy (ZHeader)"
+      "description": "Screen content"
     },
     "HelpCenter": {
-      "description": "text input (text-input), title (button), ZText (component), ZSafeAreaView (component), HeaderCategory (component), RenderHelper (component), ContactUsRender (component), title (FaqComponent)"
+      "description": "Screen content"
     },
     "Security": {
-      "description": "toggle (switch), title (button), SectionList (list), ZText (component), ZSafeAreaView (component), RenderData (component), security (ZHeader)",
+      "description": "Screen content",
       "navigatesTo": [
         "CreateNewPassword"
       ]
     },
     "Language": {
-      "description": "ln name (button), SectionList (list), ZText (component), ZSafeAreaView (component), RenderData (component), RenderHeader (component), language (ZHeader)"
+      "description": "Screen content"
     },
     "Search": {
-      "description": "title (button), ZText (component), DishSearchTab (component), KitchensTab (component), ReviewsTab (component), ZSafeAreaView (component), SearchHeader (component), HeaderIconWithBadge (component)",
+      "description": "Screen content",
       "navigatesTo": [
         "ShoppingCart",
         "Orders",
@@ -208,7 +235,7 @@
       ]
     },
     "SearchTop": {
-      "description": "FlatList (list), ZText (component), UserDetailComponent (component), ReelComponent (component), SoundComponent (component), user (UserItemTitle), video (UserItemTitle), sound (UserItemTitle)",
+      "description": "Screen content",
       "navigatesTo": [
         "Profile",
         "ChefMenu",
@@ -220,7 +247,7 @@
       ]
     },
     "SearchUser": {
-      "description": "FlashList (list), RefreshControl (component), ZText (component), UserDetailComponent (component), ActivityIndicator (component)",
+      "description": "Screen content",
       "navigatesTo": [
         "Profile",
         "ChefMenu",
@@ -229,16 +256,16 @@
       ]
     },
     "SearchVideo": {
-      "description": "FlatList (list), RefreshControl (component), ActivityIndicator (component), ZText (component), LiveComponent (component)",
+      "description": "Screen content",
       "navigatesTo": [
         "SingleReel"
       ]
     },
     "SearchHashtag": {
-      "description": "# (button), FlatList (list), ZText (component), RenderHashtagItem (component)"
+      "description": "Screen content"
     },
     "CreateReel": {
-      "description": "title placeholder (text-input), caption placeholder (text-input), text input (text-input), add phone number placeholder (text-input), upload dish media (button), title (modal), Image (image), ZSafeAreaView (component)",
+      "description": "Screen content",
       "navigatesTo": [
         "MapLocationPicker",
         "TabBar",
@@ -247,18 +274,10 @@
       ]
     },
     "ReelFeed": {
-      "description": "ReelFiltersSheet (modal), ReelsList (list), ReelItem (component), AddressDropdown (component), ZLoader (component), ZText (component), Comment (component), Description (component)",
-      "navigatesTo": [
-        "Report",
-        "Profile",
-        "ChefMenu",
-        "ProfileDetail",
-        "Auth2",
-        "MapLocationPicker"
-      ]
+      "description": "Screen content"
     },
     "FindFriends": {
-      "description": "text input (text-input), FlatList (list), ZText (component), ZSafeAreaView (component), Control (component), UserDetailComponent (component), find friends (ZHeader), user tab (UserItemTitle)",
+      "description": "Screen content",
       "navigatesTo": [
         "QrCode",
         "Profile",
@@ -268,7 +287,7 @@
       ]
     },
     "ChefDashboard": {
-      "description": "instapay phone placeholder (text-input), 50 (text-input), customer chat (switch), customer confirmation step (switch), require deposit (switch), instapay type phone (button), instapay type handle (button), deposit type percentage (button)",
+      "description": "Screen content",
       "navigatesTo": [
         "MenuManagement",
         "OrderManagement",
@@ -279,23 +298,23 @@
       ]
     },
     "MenuManagement": {
-      "description": "search dishes (text-input), name (button), add dish (button), AddEditDishModal (modal), ChefDishPreviewModal (modal), MenuUploadModal (modal), FlatList (list), ZText (component)",
+      "description": "Screen content",
       "navigatesTo": [
         "FollowingTab"
       ]
     },
     "OrderManagement": {
-      "description": "label (button), retry (button), OrderDetailsModal (modal), OrderReviewModal (modal), RejectReasonModal (modal), FlatList (list), ZText (component), ZLoader (component)",
+      "description": "Screen content",
       "navigatesTo": [
         "ChefOrderDetails",
         "Chat"
       ]
     },
     "Analytics": {
-      "description": "label (button), Image (image), ZText (component), ZSafeAreaView (component), ZLoader (component), RefreshControl (component), SimpleBarChart (component), StatusBadge (component)"
+      "description": "Screen content"
     },
     "ChefMenu": {
-      "description": "text input (text-input), ShareOptionsSheet (modal), FlatList (list), ZSafeAreaView (component), ZLoader (component), ZText (component), ChefMenuHeader (component), Locations (component)",
+      "description": "Screen content",
       "navigatesTo": [
         "ShoppingCart",
         "DishDetail",
@@ -304,19 +323,13 @@
       ]
     },
     "DishDetail": {
-      "description": "quote notes placeholder (text-input), : (button), show less (button), ingredients (button), rating (button), name (button), share your experience (button), request quote (button)",
+      "description": "Screen content",
       "navigatesTo": [
-        "ShoppingCart",
-        "TabBar",
-        "ChefMenu",
-        "ReviewReelDetail",
-        "SingleReel",
-        "ReviewReelCreator",
-        "OrderTracking"
+        "SingleReel"
       ]
     },
     "ShoppingCart": {
-      "description": "special instructions placeholder (text-input), enter promo code placeholder (text-input), clear all (button), formatted address (button), asap (button), schedule for later (button), label (button), have promo code (button)",
+      "description": "Screen content",
       "navigatesTo": [
         "Orders",
         "DishDetail",
@@ -325,7 +338,7 @@
       ]
     },
     "OrderTracking": {
-      "description": "deposit instapay handle (button), confirming (button), cancel order (button), unknown chef (button), cancelling (button), view receipt (button), DepositProofModal (modal), ZSafeAreaView (component)",
+      "description": "Screen content",
       "navigatesTo": [
         "Chat",
         "SupportChat",
@@ -333,13 +346,13 @@
       ]
     },
     "ChefOrderDetails": {
-      "description": "enter price (text-input), 0 (text-input), view receipt (button), deposit proof sent (button), confirm deposit received (button), edit quote price (button), cancel (button), saving (button)",
+      "description": "Screen content",
       "navigatesTo": [
         "OrderReceipt"
       ]
     },
     "Chat": {
-      "description": "default chef name (button), contact support (button), load earlier messages (button), RejectReasonModal (modal), OrderReviewModal (modal), Modal (modal), Image (image), MessageImage (image)",
+      "description": "Screen content",
       "navigatesTo": [
         "OrderTracking",
         "ChefMenu",
@@ -349,69 +362,69 @@
       ]
     },
     "ChatList": {
-      "description": "Order # (button), FlatList (list), Image (image), ZText (component), ZLoader (component), ZSafeAreaView (component), RefreshControl (component), order chats (ZHeader)",
+      "description": "Screen content",
       "navigatesTo": [
         "Chat"
       ]
     },
     "Wallet": {
-      "description": "enter code (text-input), 20 (text-input), maximum discount (text-input), 0.00 (text-input), maximum uses (text-input), enter amount placeholder (text-input), set maximum discount (switch), set usage limit (switch)",
+      "description": "Screen content",
       "navigatesTo": [
         "PaymobCheckout",
         "Auth2"
       ]
     },
     "PaymobCheckout": {
-      "description": "ZSafeAreaView (component), ZText (component), WebView (component), ActivityIndicator (component), payment title (ZHeader)"
+      "description": "Screen content"
     },
     "MenuDetail": {
-      "description": "Chef (button), Review This Menu (button), price (button), FlatList (list), ZText (component), ZSafeAreaView (component), ZLoader (component)",
+      "description": "Screen content",
       "navigatesTo": [
         "ReviewReelCreator",
         "DishDetail"
       ]
     },
     "ReviewReelCreator": {
-      "description": "review placeholder min chars (text-input), add photo video (button), change (button), MediaSelectionModal (modal), ZText (component), ZSafeAreaView (component), ZLoader (component)",
+      "description": "Screen content",
       "navigatesTo": [
         "FollowingTab"
       ]
     },
     "ReviewReelDetail": {
-      "description": "anonymous (button), Image (image), ZText (component), StarRating (component)",
+      "description": "Screen content",
       "navigatesTo": [
         "DishDetail",
         "MenuDetail"
       ]
     },
     "SavedAddresses": {
-      "description": "label (button), add new address (button), FlatList (list), ZText (component), ZSafeAreaView (component), ZLoader (component)",
+      "description": "Screen content",
       "navigatesTo": [
         "EditAddress",
         "MapLocationPicker"
       ]
     },
     "EditAddress": {
-      "description": "text input (text-input), phone number (text-input), label (button), formatted address (button), set primary address (button), ZText (component), ZSafeAreaView (component), ZLoader (component)",
+      "description": "Screen content",
       "navigatesTo": [
         "MapLocationPicker"
       ]
     },
     "MapLocationPicker": {
-      "description": "text input (text-input), 0 (text-input), phone number placeholder (text-input), edit location (button), label (button), name (button), confirm (button), Modal (modal)"
+      "description": "Screen content"
     },
     "ChefBranches": {
-      "description": "label (button), order mode label (button), add branch (button), FlatList (list), ZText (component), ZSafeAreaView (component), ActivityIndicator (component), RefreshControl (component)",
+      "description": "Screen content",
       "navigatesTo": [
         "MapLocationPicker",
         "WorkingHours"
       ]
     },
     "WorkingHours": {
-      "description": "toggle (switch), select open time (button), select close time (button), label (button), Modal (modal), FlatList (list), ZText (component), ZSafeAreaView (component)"
+      "description": "Screen content"
     },
     "Orders": {
-      "description": "Chef (button), FlatList (list), Image (image), ZText (component), ZLoader (component), ZSafeAreaView (component), HeaderIconWithBadge (component), RefreshControl (component)",
+      "description": "Screen content",
       "navigatesTo": [
         "OrderTracking",
         "ShoppingCart",
@@ -420,7 +433,7 @@
       ]
     },
     "EditReel": {
-      "description": "title placeholder (text-input), caption placeholder (text-input), text input (text-input), add phone number placeholder (text-input), upload dish media (button), title (modal), Image (image), ZSafeAreaView (component)",
+      "description": "Screen content",
       "navigatesTo": [
         "TabBar",
         "MenuManagement",
@@ -428,16 +441,16 @@
       ]
     },
     "OrderReceipt": {
-      "description": "ZSafeAreaView (component), ZText (component), order receipt (ZHeader), subtotal (InfoRow), delivery fee (InfoRow), service fee (InfoRow), (...) (InfoRow), total (InfoRow)"
+      "description": "Screen content"
     },
     "Report": {
-      "description": "ln name (button), FlatList (list), ZText (component), ZSafeAreaView (component), RenderData (component), report (ZHeader)"
+      "description": "Screen content"
     },
     "SupportChat": {
       "description": "Screen content"
     },
     "Discover": {
-      "description": "order needs confirmation (button), chat with chef (button), title (modal), create new post (modal), Modal (modal), ZLoader (component), ZText (component), Navigator (component)",
+      "description": "order needs confirmation (button), awaiting confirmation desc (button), order (button), chat with chef (button), Chat (button), contact support (button), title (modal), create new post (modal)",
       "navigatesTo": [
         "FollowingTab",
         "Orders",
@@ -448,16 +461,7 @@
       ]
     },
     "FollowingTab": {
-      "description": "ReelsComponent (component), ReelsComponentFollowing (component), TabBar (component), ZText (component), ZSafeAreaView (component), TabView (component)",
-      "navigatesTo": [
-        "Search",
-        "Report",
-        "Profile",
-        "ChefMenu",
-        "ProfileDetail",
-        "Auth2",
-        "MapLocationPicker"
-      ]
+      "description": "Screen content"
     },
     "AddPost": {
       "description": "create new post (modal), title (modal), ActivityIndicator (component)",
@@ -467,7 +471,7 @@
       ]
     },
     "Profile": {
-      "description": "title (button), add restaurant bio (button), edit profile (button), branches (button), wallet (button), orders (button), chats (button), FlatList (list)",
+      "description": "Screen content",
       "navigatesTo": [
         "UserNetwork",
         "EditProfileField",

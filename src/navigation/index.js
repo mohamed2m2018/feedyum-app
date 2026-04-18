@@ -1,7 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import { NavigationContainer, useNavigationContainerRef } from '@react-navigation/native';
 import { AppState, Platform } from 'react-native';
-// import { AIAgent } from 'experimental-stuff';
+import { AIAgent } from '@mobileai/react-native';
+import screenMap from '../../ai-screen-map.json';
 import StackNavigation from './Type/StackNavigation';
 import { useSelector } from 'react-redux';
 import { BackgroundUploadProvider } from '../providers/BackgroundUploadProvider';
@@ -16,6 +17,7 @@ export default function pAppNavigator() {
   const navigationRef = useNavigationContainerRef();
   const appState = useRef(AppState.currentState);
   const color = useSelector(state => state.theme.theme);
+  const mobileAIBaseUrl = process.env.EXPO_PUBLIC_MOBILEAI_BASE_URL || 'http://localhost:3001';
 
   const colors = {
     colors: { background: color.backgroundColor },
@@ -307,45 +309,49 @@ export default function pAppNavigator() {
 
   return (
     <>
-      {/* <AIAgent
-        apiKey="***REMOVED***"
-        mcpServerUrl="ws://localhost:3101"
+      <AIAgent
+        proxyUrl={`${mobileAIBaseUrl}/api/v1/hosted-proxy/text`}
+        voiceProxyUrl={mobileAIBaseUrl.replace(/^http/, 'ws') + '/ws/hosted-proxy/voice'}
+        mcpServerUrl={__DEV__ ? 'ws://localhost:3101' : undefined}
+        analyticsKey={process.env.EXPO_PUBLIC_MOBILEAI_KEY || ''}
         navRef={navigationRef}
         showChatBar={true}
+        enableUIControl={true}
+        enableVoice={true}
         debug={true}
-        useScreenMap={true}
-      > */}
-      <NavigationContainer
-        ref={navigationRef}
-        theme={colors}
-        linking={linkingConfig}
-        fallback={<></>} // You can add a loading component here
-        onReady={() => {
-          // Navigation is ready, deep linking service can now handle navigation
-          if (navigationRef.isReady()) {
-            DeepLinkingService.setNavigationRef(navigationRef);
-          }
-        }}
-        onUnhandledAction={(action) => {
-        }}
-        onStateChange={(state) => {
-          // Log navigation state changes for debugging
-          if (__DEV__) {
-          }
-        }}
+        screenMap={screenMap}
       >
-        <ForceUpdateCheck>
-          <ScreenProvider>
-            <BackgroundUploadProvider>
-              <LocationProvider>
-                <StackNavigation />
-                <NewOrderAlarmBanner />
-              </LocationProvider>
-            </BackgroundUploadProvider>
-          </ScreenProvider>
-        </ForceUpdateCheck>
-      </NavigationContainer>
-      {/* </AIAgent> */}
+        <NavigationContainer
+          ref={navigationRef}
+          theme={colors}
+          linking={linkingConfig}
+          fallback={<></>} // You can add a loading component here
+          onReady={() => {
+            // Navigation is ready, deep linking service can now handle navigation
+            if (navigationRef.isReady()) {
+              DeepLinkingService.setNavigationRef(navigationRef);
+            }
+          }}
+          onUnhandledAction={(action) => {
+          }}
+          onStateChange={(state) => {
+            // Log navigation state changes for debugging
+            if (__DEV__) {
+            }
+          }}
+        >
+          <ForceUpdateCheck>
+            <ScreenProvider>
+              <BackgroundUploadProvider>
+                <LocationProvider>
+                  <StackNavigation />
+                  <NewOrderAlarmBanner />
+                </LocationProvider>
+              </BackgroundUploadProvider>
+            </ScreenProvider>
+          </ForceUpdateCheck>
+        </NavigationContainer>
+      </AIAgent>
     </>
   );
 }

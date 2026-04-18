@@ -22,6 +22,7 @@ import { useNavigation, useRoute, CommonActions } from '@react-navigation/native
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
+import { AIZone, InfoCard, ReviewSummary } from '@mobileai/react-native';
 
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
 import ZText from '../../../components/common/ZText';
@@ -575,83 +576,90 @@ const DishDetailScreen = () => {
   );
 
   const renderDishInfo = () => (
-    <View
-      style={[localStyles.dishInfoSection, { backgroundColor: colors.white }]}>
-      {/* Dish Name and Price */}
-      <View style={localStyles.dishHeader}>
-        <View style={localStyles.dishTitleSection}>
-          <ZText type="B24" color="#1A1A1A" style={localStyles.dishName}>
-            {dishData ? getLocalizedText(dishData.name, dishData.nameArabic, dishData.nameEnglish) : ''}
-          </ZText>
-          <ZText type="B20" color="#FF4D67" style={localStyles.dishPrice}>
-            {dishData?.pricingType === 'upon_request'
-              ? strings.uponRequest
-              : `${dishData?.price} ${strings.currency}`}
-          </ZText>
-        </View>
-
-        {/* Chef Info */}
-        <TouchableOpacity
-          style={localStyles.chefInfo}
-          onPress={() => navigation.navigate(StackNav.ChefMenu, { chefId, chefName: finalChefData?.fullName || strings.unknownChef })}>
-          <Image
-            source={
-              finalChefData?.avatar
-                ? { uri: finalChefData.avatar }
-                : colors.dark
-                  ? images.userDark
-                  : images.userLight
-            }
-            style={localStyles.chefAvatar}
-          />
-          <View>
-            <ZText type="M12" color="#888888">
-              {strings.chef ? strings.chef.replace(':', '') : 'Kitchen'}
+    <AIZone
+      id="dish-detail-summary"
+      allowInjectCard
+      allowHighlight
+      templates={[InfoCard, ReviewSummary]}
+    >
+      <View
+        style={[localStyles.dishInfoSection, { backgroundColor: colors.white }]}>
+        {/* Dish Name and Price */}
+        <View style={localStyles.dishHeader}>
+          <View style={localStyles.dishTitleSection}>
+            <ZText type="B24" color="#1A1A1A" style={localStyles.dishName}>
+              {dishData ? getLocalizedText(dishData.name, dishData.nameArabic, dishData.nameEnglish) : ''}
             </ZText>
-            <ZText type="B14" color="#1A1A1A">
-              {finalChefData?.fullName || strings.unknownChef}
+            <ZText type="B20" color="#FF4D67" style={localStyles.dishPrice}>
+              {dishData?.pricingType === 'upon_request'
+                ? strings.uponRequest
+                : `${dishData?.price} ${strings.currency}`}
             </ZText>
           </View>
-        </TouchableOpacity>
-      </View>
 
-      {/* Description */}
-      <View style={localStyles.descriptionSection}>
-        <ZText
-          type="M16"
-          color="#555555"
-          style={localStyles.description}
-          numberOfLines={showFullDescription ? undefined : 3}>
-          {dishData ? getLocalizedText(dishData.description, dishData.descriptionArabic, dishData.descriptionEnglish) : ''}
-        </ZText>
-
-        {dishData?.description && dishData.description.length > 100 && (
+          {/* Chef Info */}
           <TouchableOpacity
-            onPress={() => setShowFullDescription(!showFullDescription)}>
-            <ZText type="B14" color="#FF4D67" style={styles.mt5}>
-              {showFullDescription ? strings.showLess : strings.readMore}
-            </ZText>
+            style={localStyles.chefInfo}
+            onPress={() => navigation.navigate(StackNav.ChefMenu, { chefId, chefName: finalChefData?.fullName || strings.unknownChef })}>
+            <Image
+              source={
+                finalChefData?.avatar
+                  ? { uri: finalChefData.avatar }
+                  : colors.dark
+                    ? images.userDark
+                    : images.userLight
+              }
+              style={localStyles.chefAvatar}
+            />
+            <View>
+              <ZText type="M12" color="#888888">
+                {strings.chef ? strings.chef.replace(':', '') : 'Kitchen'}
+              </ZText>
+              <ZText type="B14" color="#1A1A1A">
+                {finalChefData?.fullName || strings.unknownChef}
+              </ZText>
+            </View>
           </TouchableOpacity>
+        </View>
+
+        {/* Description */}
+        <View style={localStyles.descriptionSection}>
+          <ZText
+            type="M16"
+            color="#555555"
+            style={localStyles.description}
+            numberOfLines={showFullDescription ? undefined : 3}>
+            {dishData ? getLocalizedText(dishData.description, dishData.descriptionArabic, dishData.descriptionEnglish) : ''}
+          </ZText>
+
+          {dishData?.description && dishData.description.length > 100 && (
+            <TouchableOpacity
+              onPress={() => setShowFullDescription(!showFullDescription)}>
+              <ZText type="B14" color="#FF4D67" style={styles.mt5}>
+                {showFullDescription ? strings.showLess : strings.readMore}
+              </ZText>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* Tags */}
+        {dishData?.tags && dishData.tags.length > 0 && (
+          <View style={localStyles.tagsSection}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {dishData.tags.map((tag, index) => (
+                <View
+                  key={index}
+                  style={[localStyles.tag, { backgroundColor: '#FF4D67' + '15' }]}>
+                  <ZText type="M12" color="#FF4D67">
+                    {tag}
+                  </ZText>
+                </View>
+              ))}
+            </ScrollView>
+          </View>
         )}
       </View>
-
-      {/* Tags */}
-      {dishData?.tags && dishData.tags.length > 0 && (
-        <View style={localStyles.tagsSection}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {dishData.tags.map((tag, index) => (
-              <View
-                key={index}
-                style={[localStyles.tag, { backgroundColor: '#FF4D67' + '15' }]}>
-                <ZText type="M12" color="#FF4D67">
-                  {tag}
-                </ZText>
-              </View>
-            ))}
-          </ScrollView>
-        </View>
-      )}
-    </View>
+    </AIZone>
   );
 
   const renderTabBar = () => (
