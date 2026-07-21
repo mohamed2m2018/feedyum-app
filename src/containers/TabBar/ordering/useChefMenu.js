@@ -160,13 +160,26 @@ const useChefMenu = () => {
   const location = useLocation();
   const userLat = location?.latitude;
   const userLng = location?.longitude;
+  const destinationPlaceId =
+    location?.selectedAddress?.deliveryArea?.placeId ||
+    location?.selectedAddress?.deliveryAreaPlaceId;
+  const destinationPlaceName =
+    location?.selectedAddress?.deliveryArea?.nameAr ||
+    location?.selectedAddress?.deliveryArea?.name ||
+    location?.selectedAddress?.deliveryArea?.nameEn ||
+    location?.selectedAddress?.deliveryAreaName;
 
   const { data: deliveryData } = useQuery(
-    ['deliveryEligibility', chefId, userLat, userLng],
+    ['deliveryEligibility', chefId, userLat, userLng, destinationPlaceId],
     async () => {
-      const response = await request.get(
-        `/orders/check-delivery/${chefId}?lat=${userLat}&long=${userLng}`
-      );
+      const response = await request.get(`/orders/check-delivery/${chefId}`, {
+        params: {
+          lat: userLat,
+          long: userLng,
+          ...(destinationPlaceId ? { placeId: destinationPlaceId } : {}),
+          ...(destinationPlaceName ? { placeName: destinationPlaceName } : {}),
+        },
+      });
       return response.data;
     },
     { enabled: !!chefId && !!userLat && !!userLng, staleTime: 1000 * 60 * 5 }

@@ -60,15 +60,17 @@ const ReelsList = ({
           }
           disableIntervalMomentum={true}
           ListEmptyComponent={
-            ((isLoading || isFetching || isRefetching || !user) && !isFetchingStory) || isWaitingForDeepLinkStory ? (
+            ((isLoading || isFetching || isRefetching) && !isFetchingStory) || isWaitingForDeepLinkStory ? (
               <ZLoader height={150} top={300} />
             ) : (
-              <ZText
-                align="center"
-                type={'m28'}
-                style={{ alignSelf: 'center', marginTop: 300 }}>
-                {emptylistMessage}
-              </ZText>
+              <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', marginTop: layoutHeight ? layoutHeight * 0.3 : 200, paddingHorizontal: 40 }}>
+                <ZText align="center" type={'m18'} style={{ opacity: 0.5, marginBottom: 8 }}>
+                  {'🍽️'}
+                </ZText>
+                <ZText align="center" type={'b18'} style={{ opacity: 0.7, marginBottom: 6 }}>
+                  {emptylistMessage}
+                </ZText>
+              </View>
             )
           }
           ref={flatListRef}

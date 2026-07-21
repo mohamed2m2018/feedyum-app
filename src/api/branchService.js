@@ -164,8 +164,20 @@ class BranchService {
       errors.deliveryRadius = 'Delivery radius must be a positive number';
     }
 
-    if (data.deliveryFee && (isNaN(Number(data.deliveryFee)) || Number(data.deliveryFee) < 0)) {
-      errors.deliveryFee = 'Delivery fee must be a positive number';
+    if (data.deliveryFee === undefined || data.deliveryFee === null || `${data.deliveryFee}`.trim() === '' ||
+      isNaN(Number(data.deliveryFee)) || Number(data.deliveryFee) <= 0) {
+      errors.deliveryFee = 'Delivery fee must be greater than 0';
+    }
+
+    if (Array.isArray(data.areaDeliveryFees)) {
+      const hasInvalidAreaFee = data.areaDeliveryFees.some(
+        area => area?.fee !== '' && area?.fee !== undefined && area?.fee !== null &&
+          (isNaN(Number(area.fee)) || Number(area.fee) <= 0),
+      );
+
+      if (hasInvalidAreaFee) {
+        errors.areaDeliveryFees = 'Area delivery fees must be greater than 0';
+      }
     }
 
     if (data.minimumOrderAmount && (isNaN(Number(data.minimumOrderAmount)) || Number(data.minimumOrderAmount) < 0)) {
@@ -213,4 +225,4 @@ class BranchService {
   }
 }
 
-export default new BranchService(); 
+export default new BranchService();

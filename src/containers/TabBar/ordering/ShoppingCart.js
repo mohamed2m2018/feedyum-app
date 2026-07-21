@@ -114,6 +114,14 @@ const ShoppingCart = () => {
 
       const lat = selectedAddress.location?.lat || selectedAddress.lat || selectedAddress.coordinates?.lat;
       const long = selectedAddress.location?.long || selectedAddress.long || selectedAddress.coordinates?.lng || selectedAddress.coordinates?.long;
+      const destinationPlaceId =
+        selectedAddress.deliveryArea?.placeId ||
+        selectedAddress.deliveryAreaPlaceId;
+      const destinationPlaceName =
+        selectedAddress.deliveryArea?.nameAr ||
+        selectedAddress.deliveryArea?.name ||
+        selectedAddress.deliveryArea?.nameEn ||
+        selectedAddress.deliveryAreaName;
 
       if (!lat || !long) {
         setCalculatedDeliveryFee(null);
@@ -123,7 +131,15 @@ const ShoppingCart = () => {
 
       try {
         setLoadingDeliveryFee(true);
-        const response = await request.get(`/orders/check-delivery/${chef.id}?lat=${lat}&long=${long}&subtotal=${subtotal || 0}`);
+        const response = await request.get(`/orders/check-delivery/${chef.id}`, {
+            params: {
+            lat,
+            long,
+            subtotal: subtotal || 0,
+            ...(destinationPlaceId ? { placeId: destinationPlaceId } : {}),
+            ...(destinationPlaceName ? { placeName: destinationPlaceName } : {}),
+          },
+        });
         if (response.data?.success && response.data?.canDeliver) {
           setCalculatedDeliveryFee(response.data.deliveryFee || 0);
           setCalculatedServiceFee(response.data.serviceFee != null ? response.data.serviceFee : null);
@@ -369,6 +385,13 @@ const ShoppingCart = () => {
                 lat: selectedAddress.location?.lat || selectedAddress.lat || selectedAddress.coordinates?.lat || null,
                 long: selectedAddress.location?.long || selectedAddress.long || selectedAddress.coordinates?.lng || selectedAddress.coordinates?.long || null
               };
+              const deliveryAreaPlaceId = selectedAddress.deliveryArea?.placeId || selectedAddress.deliveryAreaPlaceId || '';
+              const deliveryAreaName =
+                selectedAddress.deliveryArea?.nameAr ||
+                selectedAddress.deliveryArea?.name ||
+                selectedAddress.deliveryArea?.nameEn ||
+                selectedAddress.deliveryAreaName ||
+                '';
 
               return {
                 street: selectedAddress.streetDetails?.streetName || selectedAddress.formattedAddress || selectedAddress.nameLine || 'Address not specified',
@@ -379,13 +402,21 @@ const ShoppingCart = () => {
                 formattedAddress: selectedAddress.formattedAddress || selectedAddress.nameLine || '',
                 streetDetails: selectedAddress.streetDetails,
                 buildingDetails: selectedAddress.buildingDetails,
+                placeId: deliveryAreaPlaceId,
                 // Include location in the format the backend expects
                 location: location,
                 // Also include direct lat/long as fallback
                 lat: location.lat,
                 long: location.long,
+                deliveryArea: {
+                  placeId: deliveryAreaPlaceId,
+                  name: selectedAddress.deliveryArea?.name || selectedAddress.deliveryAreaName || '',
+                  nameAr: selectedAddress.deliveryArea?.nameAr || '',
+                  nameEn: selectedAddress.deliveryArea?.nameEn || '',
+                },
                 // Delivery area place_id for exclusion check
-                deliveryAreaPlaceId: selectedAddress.deliveryArea?.placeId || '',
+                deliveryAreaPlaceId: deliveryAreaPlaceId,
+                deliveryAreaName: deliveryAreaName,
               };
             })(),
             notes: specialInstructions || '', // Backend expects 'notes' not 'specialInstructions'

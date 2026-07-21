@@ -3221,7 +3221,7 @@ PODS:
   - SDWebImageWebPCoder (0.14.6):
     - libwebp (~> 1.0)
     - SDWebImage/Core (~> 5.17)
-  - segment-analytics-react-native (2.21.4):
+  - segment-analytics-react-native (2.23.0):
     - React-Core
     - sovran-react-native
   - SocketRocket (0.7.1)
@@ -3856,7 +3856,7 @@ SPEC CHECKSUMS:
   SDWebImageAVIFCoder: afe194a084e851f70228e4be35ef651df0fc5c57
   SDWebImageSVGCoder: 15a300a97ec1c8ac958f009c02220ac0402e936c
   SDWebImageWebPCoder: e38c0a70396191361d60c092933e22c20d5b1380
-  segment-analytics-react-native: 0eae155b0e9fa560fa6b17d78941df64537c35b7
+  segment-analytics-react-native: 5df85065a7cf2c07311ec5a4832d5d3092015c98
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   sovran-react-native: a3ad3f8ff90c2002b2aa9790001a78b0b0a38594
   TOCropViewController: 797deaf39c90e6e9ddd848d88817f6b9a8a09888

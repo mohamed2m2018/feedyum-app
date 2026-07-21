@@ -1,6 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import { NavigationContainer, useNavigationContainerRef } from '@react-navigation/native';
-import { AppState, Platform } from 'react-native';
+import { Alert, AppState, Linking, Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
+import RNRestart from 'react-native-restart';
+import { MMKVLoader } from 'react-native-mmkv-storage';
 import StackNavigation from './Type/StackNavigation';
 import { useSelector } from 'react-redux';
 import { BackgroundUploadProvider } from '../providers/BackgroundUploadProvider';
@@ -10,6 +12,53 @@ import DeepLinkingService from '../services/DeepLinkingService';
 import AppInitializer from '../services/AppInitializer';
 import NewOrderAlarmBanner from '../containers/TabBar/chef/components/NewOrderAlarmBanner';
 import ForceUpdateCheck from '../components/ForceUpdateCheck';
+import ZText from '../components/common/ZText';
+import request, { switchEnvironment } from '../api/request';
+import { ACCESS_TOKEN } from '../common/constants';
+import { useStorage } from '../utils/useStorage';
+
+const sessionStorage = new MMKVLoader().initialize();
+const IMPERSONATION_SESSION_KEY = 'impersonation_session';
+
+function ImpersonationBanner() {
+  const [session] = useStorage(IMPERSONATION_SESSION_KEY);
+  if (!session?.targetName) return null;
+
+  const exitSession = () => {
+    sessionStorage.removeItem(ACCESS_TOKEN);
+    sessionStorage.removeItem('user');
+    sessionStorage.removeItem(IMPERSONATION_SESSION_KEY);
+    RNRestart.Restart();
+  };
+
+  return (
+    <View style={impersonationStyles.banner}>
+      <ZText type="B12" color="#FFFFFF" style={impersonationStyles.label}>
+        {`READ-ONLY: Viewing as ${session.targetName}`}
+      </ZText>
+      <TouchableOpacity onPress={exitSession} style={impersonationStyles.exitButton}>
+        <ZText type="B12" color="#8B1E1E">Exit</ZText>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+const impersonationStyles = StyleSheet.create({
+  banner: {
+    backgroundColor: '#8B1E1E',
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  label: { flex: 1 },
+  exitButton: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+});
 
 export default function pAppNavigator() {
   const navigationRef = useNavigationContainerRef();
@@ -25,6 +74,32 @@ export default function pAppNavigator() {
     const deepLinkingService = DeepLinkingService.getInstance();
     const cleanup = deepLinkingService.initialize();
     return cleanup;
+  }, []);
+
+  useEffect(() => {
+    const handleImpersonationLink = async ({ url } = {}) => {
+      if (!url?.startsWith('feedyum://admin-impersonate')) return;
+
+      try {
+        const parsed = new URL(url);
+        const code = parsed.searchParams.get('code');
+        if (!code) throw new Error('The shortcut does not contain an impersonation code');
+
+        // In a development build, "production" resolves to the local API URL.
+        switchEnvironment('production');
+        const { data } = await request.post('/admin-impersonation/exchange', { code });
+        sessionStorage.setString(ACCESS_TOKEN, data.token);
+        sessionStorage.setMap('user', data.user);
+        sessionStorage.setMap(IMPERSONATION_SESSION_KEY, data.impersonation);
+        RNRestart.Restart();
+      } catch (error) {
+        Alert.alert('Unable to view account', error?.message || 'The shortcut expired or was already used.');
+      }
+    };
+
+    Linking.getInitialURL().then(url => handleImpersonationLink({ url }));
+    const subscription = Linking.addEventListener('url', handleImpersonationLink);
+    return () => subscription.remove();
   }, []);
 
   useEffect(() => {
@@ -297,6 +372,7 @@ export default function pAppNavigator() {
       }
       // Handle app launch from deep link (native)
       const url = await DeepLinkingService.getInstance().getInitialURL?.();
+      if (url?.startsWith('feedyum://admin-impersonate')) return null;
       return url;
     },
 
@@ -342,6 +418,7 @@ export default function pAppNavigator() {
                 <LocationProvider>
                   <StackNavigation />
                   <NewOrderAlarmBanner />
+                  <ImpersonationBanner />
                 </LocationProvider>
               </BackgroundUploadProvider>
             </ScreenProvider>

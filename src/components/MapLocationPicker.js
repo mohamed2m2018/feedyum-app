@@ -521,11 +521,13 @@ const MapLocationPicker = () => {
         if (editMode && addressToEdit?.deliveryTiers?.length > 0 && !legacyTiersMapped.current) {
           if (!addressToEdit.areaDeliveryFees || addressToEdit.areaDeliveryFees.length === 0) {
             const newAreaFees = [];
-            const baseFee = addressToEdit.deliveryFee || addressToEdit.deliveryFee > 0
-              ? Number(addressToEdit.deliveryFee)
-              : (addressToEdit.deliveryTiers && addressToEdit.deliveryTiers.length > 0)
-                ? Number(addressToEdit.deliveryTiers[0]?.fee || 0)
-                : Number(addressToEdit.deliveryFee || 0);
+            const legacyBaseFee =
+              addressToEdit.deliveryFee || addressToEdit.deliveryFee > 0
+                ? Number(addressToEdit.deliveryFee)
+                : (addressToEdit.deliveryTiers && addressToEdit.deliveryTiers.length > 0)
+                  ? Number(addressToEdit.deliveryTiers[0]?.fee || 0)
+                  : Number(addressToEdit.deliveryFee || 0);
+            const baseFee = legacyBaseFee > 0 ? legacyBaseFee : 1;
 
             response.areas.forEach(area => {
               const approxDist = area.approxDistance;
@@ -622,7 +624,7 @@ const MapLocationPicker = () => {
     }
 
     // Validate Base Delivery Fee
-    if (deliveryFee === '' || isNaN(Number(deliveryFee)) || Number(deliveryFee) < 0) {
+    if (deliveryFee === '' || isNaN(Number(deliveryFee)) || Number(deliveryFee) <= 0) {
       showErrorToast(
         strings.invalidDeliveryFee || 'Invalid Delivery Fee',
         strings.baseFeeRequired || 'Please set a valid Base Delivery Fee'
@@ -635,11 +637,27 @@ const MapLocationPicker = () => {
     }
 
     // Format delivery config
-    const validDeliveryFee = Number(deliveryFee) || 0;
+    const hasInvalidAreaFee = areaFees.some(
+      a => a.fee !== '' && (isNaN(Number(a.fee)) || Number(a.fee) <= 0)
+    );
+
+    if (hasInvalidAreaFee) {
+      showErrorToast(
+        strings.invalidDeliveryFee || 'Invalid Delivery Fee',
+        strings.areaFeeRequired || 'Area delivery fees must be greater than 0'
+      );
+      if (branchFormRef.current && tiersSectionY.current > 0) {
+        const scrollFn = branchFormRef.current.scrollToPosition || branchFormRef.current.scrollTo;
+        if (scrollFn) scrollFn.call(branchFormRef.current, 0, tiersSectionY.current - 20, true);
+      }
+      return;
+    }
+
+    const validDeliveryFee = Number(deliveryFee);
 
     // Filter area fees to only those explicitly set and cleanly formatted
     const validAreaFees = areaFees
-      .filter(a => a.fee !== '' && !isNaN(Number(a.fee)) && Number(a.fee) >= 0)
+      .filter(a => a.fee !== '' && !isNaN(Number(a.fee)) && Number(a.fee) > 0)
       .map(a => ({
         name: a.name,
         placeId: a.placeId,

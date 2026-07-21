@@ -95,8 +95,14 @@ export default function KitchensTab({ searchQuery = '', useSemanticSearch = true
 
     // Batch check delivery eligibility for all kitchens
     const [deliveryMap, setDeliveryMap] = useState({});
-    useEffect(() => {
+  useEffect(() => {
         if (!kitchensRaw.length || !userLocation?.lat) return;
+    const destinationPlaceId = userLocation?.deliveryArea?.placeId || userLocation?.deliveryAreaPlaceId;
+    const destinationPlaceName =
+      userLocation?.deliveryArea?.name ||
+      userLocation?.deliveryArea?.nameAr ||
+      userLocation?.deliveryArea?.nameEn ||
+      userLocation?.deliveryAreaName;
 
         const checkDelivery = async () => {
             const newMap = {};
@@ -108,7 +114,12 @@ export default function KitchensTab({ searchQuery = '', useSemanticSearch = true
                     }
                     try {
                         const res = await request.get(`/orders/check-delivery/${kitchen._id}`, {
-                            params: { lat: userLocation.lat, long: userLocation.lng },
+                            params: {
+                                lat: userLocation.lat,
+                                long: userLocation.lng,
+                                ...(destinationPlaceId ? { placeId: destinationPlaceId } : {}),
+                                ...(destinationPlaceName ? { placeName: destinationPlaceName } : {}),
+                            },
                         });
                         newMap[kitchen._id] = res.data?.canDeliver ?? false;
                     } catch {

@@ -42,9 +42,13 @@ export default function Search() {
   const userLocation = selectedAddress?.coordinates ? {
     lat: selectedAddress.coordinates.lat || selectedAddress.coordinates.latitude,
     lng: selectedAddress.coordinates.lng || selectedAddress.coordinates.longitude,
+    deliveryAreaPlaceId: selectedAddress.deliveryArea?.placeId || selectedAddress.deliveryAreaPlaceId,
+    deliveryArea: selectedAddress.deliveryArea,
   } : locationCtx?.latitude && locationCtx?.longitude ? {
     lat: locationCtx.latitude,
     lng: locationCtx.longitude,
+    deliveryAreaPlaceId: locationCtx.selectedAddress?.deliveryArea?.placeId || locationCtx.selectedAddress?.deliveryAreaPlaceId,
+    deliveryArea: locationCtx.selectedAddress?.deliveryArea,
   } : null;
 
   // Unified search state shared across all tabs

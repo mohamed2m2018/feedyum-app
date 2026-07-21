@@ -67,14 +67,27 @@ function DishCardCompact({
     const location = useLocation();
     const userLat = location?.latitude;
     const userLng = location?.longitude;
+  const destinationPlaceId =
+    location?.selectedAddress?.deliveryArea?.placeId ||
+    location?.selectedAddress?.deliveryAreaPlaceId;
+  const destinationPlaceName =
+    location?.selectedAddress?.deliveryArea?.nameAr ||
+    location?.selectedAddress?.deliveryArea?.name ||
+    location?.selectedAddress?.deliveryArea?.nameEn ||
+    location?.selectedAddress?.deliveryAreaName;
 
     // Check delivery eligibility
     const { data: deliveryData } = useQuery(
-        ['deliveryEligibility', effectiveChefId, userLat, userLng],
+        ['deliveryEligibility', effectiveChefId, userLat, userLng, destinationPlaceId],
         async () => {
-            const response = await request.get(
-                `/orders/check-delivery/${effectiveChefId}?lat=${userLat}&long=${userLng}`
-            );
+            const response = await request.get(`/orders/check-delivery/${effectiveChefId}`, {
+                params: {
+                    lat: userLat,
+                    long: userLng,
+                    ...(destinationPlaceId ? { placeId: destinationPlaceId } : {}),
+                    ...(destinationPlaceName ? { placeName: destinationPlaceName } : {}),
+                }
+            });
             return response.data;
         },
         {
