@@ -24,6 +24,18 @@ jest.mock('@react-navigation/native', () => ({
   useNavigation: () => mockNavigation,
 }));
 
+jest.mock('../../../../utils/useHandleAuth', () => ({
+  useHandleAuth: () => ({
+    isGuest: false,
+    handleAuthToast: jest.fn(),
+  }),
+}));
+
+jest.mock('../../../../redux/actions/addressActions', () => ({
+  getAddresses: () => ({ type: 'TEST_GET_ADDRESSES' }),
+  setSelectedAddress: address => ({ type: 'TEST_SELECT_ADDRESS', payload: address }),
+}));
+
 describe('ShoppingCart', () => {
   let store;
 

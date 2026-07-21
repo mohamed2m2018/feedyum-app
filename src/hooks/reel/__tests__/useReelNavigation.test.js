@@ -2,7 +2,7 @@
  * useReelNavigation Hook Tests
  */
 
-import { renderHook, act } from '@testing-library/react-hooks';
+import { renderHook, act } from '@testing-library/react-native';
 import { Linking } from 'react-native';
 import useReelNavigation from '../useReelNavigation';
 
@@ -39,7 +39,7 @@ describe('useReelNavigation', () => {
                 result.current.navigateToProfile();
             });
 
-            expect(mockNavigate).toHaveBeenCalledWith('ProfileTab');
+            expect(mockNavigate).toHaveBeenCalledWith('Profile');
         });
 
         it('should navigate to ChefMenu for chef authors', () => {

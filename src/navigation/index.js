@@ -1,8 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { NavigationContainer, useNavigationContainerRef } from '@react-navigation/native';
 import { AppState, Platform } from 'react-native';
-import { AIAgent } from '@mobileai/react-native';
-import screenMap from '../../ai-screen-map.json';
 import StackNavigation from './Type/StackNavigation';
 import { useSelector } from 'react-redux';
 import { BackgroundUploadProvider } from '../providers/BackgroundUploadProvider';
@@ -17,7 +15,6 @@ export default function pAppNavigator() {
   const navigationRef = useNavigationContainerRef();
   const appState = useRef(AppState.currentState);
   const color = useSelector(state => state.theme.theme);
-  const mobileAIBaseUrl = process.env.EXPO_PUBLIC_MOBILEAI_BASE_URL || 'http://localhost:3001';
 
   const colors = {
     colors: { background: color.backgroundColor },
@@ -136,6 +133,11 @@ export default function pAppNavigator() {
           },
         },
         ReviewReelCreator: 'create-review-reel',
+        ClaimRestaurant: {
+          path: '/claim-restaurant/:restaurantId',
+          parse: {restaurantId: restaurantId => restaurantId},
+        },
+        RestaurantClaimStatus: '/restaurant-claims',
         PostDetail: {
           path: '/post/:postId',
           parse: {
@@ -241,6 +243,13 @@ export default function pAppNavigator() {
         // Wallet and payments
         Wallet: 'wallet',
 
+        // Missions
+        MissionsHub: 'missions',
+        MissionDetail: 'missions/:missionId',
+        MissionLeaderboard: 'missions/:missionId/leaderboard',
+        AmbassadorDashboard: 'ambassador/dashboard',
+        AmbassadorWallet: 'ambassador/wallet',
+
         // Settings and account
         ManageAccount: 'account/manage',
         Privacy: 'privacy',
@@ -308,20 +317,7 @@ export default function pAppNavigator() {
   const linkingConfig = Platform.OS === 'web' ? undefined : linking;
 
   return (
-    <>
-      <AIAgent
-        proxyUrl={`${mobileAIBaseUrl}/api/v1/hosted-proxy/text`}
-        voiceProxyUrl={mobileAIBaseUrl.replace(/^http/, 'ws') + '/ws/hosted-proxy/voice'}
-        mcpServerUrl={__DEV__ ? 'ws://localhost:3101' : undefined}
-        analyticsKey={process.env.EXPO_PUBLIC_MOBILEAI_KEY || ''}
-        navRef={navigationRef}
-        showChatBar={true}
-        enableUIControl={true}
-        enableVoice={true}
-        debug={true}
-        screenMap={screenMap}
-      >
-        <NavigationContainer
+    <NavigationContainer
           ref={navigationRef}
           theme={colors}
           linking={linkingConfig}
@@ -350,8 +346,6 @@ export default function pAppNavigator() {
               </BackgroundUploadProvider>
             </ScreenProvider>
           </ForceUpdateCheck>
-        </NavigationContainer>
-      </AIAgent>
-    </>
+    </NavigationContainer>
   );
 }

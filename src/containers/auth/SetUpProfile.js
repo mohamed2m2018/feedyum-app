@@ -44,7 +44,6 @@ import branchService from '../../api/branchService';
 import { showErrorToast } from '../../utils/toast';
 import { useQuery, useQueryClient } from 'react-query';
 import { OneSignal } from 'react-native-onesignal';
-import { RNS3 } from 'react-native-aws3';
 import ZText from '../../components/common/ZText';
 import { useStorage } from '../../utils/useStorage';
 

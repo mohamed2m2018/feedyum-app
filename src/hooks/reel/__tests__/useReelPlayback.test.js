@@ -2,7 +2,7 @@
  * useReelPlayback Hook Tests
  */
 
-import { renderHook, act } from '@testing-library/react-hooks';
+import { renderHook, act } from '@testing-library/react-native';
 import useReelPlayback from '../useReelPlayback';
 
 // Mock dependencies

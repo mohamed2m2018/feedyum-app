@@ -80,6 +80,14 @@ import WorkingHoursScreen from '../screens/WorkingHoursScreen';
 import EditReel from '../containers/TabBar/add/EditReel';
 import OrderReceipt from '../containers/TabBar/ordering/OrderReceipt';
 import SupportChat from '../containers/TabBar/profile/SupportChat';
+import MissionsHub from '../containers/TabBar/missions/MissionsHub';
+import MissionDetail from '../containers/TabBar/missions/MissionDetail';
+import MissionLeaderboard from '../containers/TabBar/missions/MissionLeaderboard';
+import AmbassadorDashboard from '../containers/TabBar/missions/AmbassadorDashboard';
+import AmbassadorWallet from '../containers/TabBar/missions/AmbassadorWallet';
+import ScoutRestaurant from '../containers/TabBar/missions/ScoutRestaurant';
+import ClaimRestaurant from '../containers/TabBar/missions/ClaimRestaurant';
+import RestaurantClaimStatus from '../containers/TabBar/missions/RestaurantClaimStatus';
 
 export const TabRoute = {
   ForYou: ForYou,
@@ -160,4 +168,12 @@ export const StackRoute = {
   EditReel,
   OrderReceipt,
   SupportChat,
+  MissionsHub,
+  MissionDetail,
+  MissionLeaderboard,
+  AmbassadorDashboard,
+  AmbassadorWallet,
+  ScoutRestaurant,
+  ClaimRestaurant,
+  RestaurantClaimStatus,
 };

@@ -22,7 +22,6 @@ import { useNavigation, useRoute, CommonActions } from '@react-navigation/native
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
-import { AIZone, InfoCard, ReviewSummary } from '@mobileai/react-native';
 
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
 import ZText from '../../../components/common/ZText';
@@ -155,14 +154,27 @@ const DishDetailScreen = () => {
   const location = useLocation();
   const userLat = location?.latitude;
   const userLng = location?.longitude;
+  const destinationPlaceId =
+    location?.selectedAddress?.deliveryArea?.placeId ||
+    location?.selectedAddress?.deliveryAreaPlaceId;
+  const destinationPlaceName =
+    location?.selectedAddress?.deliveryArea?.nameAr ||
+    location?.selectedAddress?.deliveryArea?.name ||
+    location?.selectedAddress?.deliveryArea?.nameEn ||
+    location?.selectedAddress?.deliveryAreaName;
 
   // Check delivery eligibility to user's location
   const { data: deliveryData } = useQuery(
-    ['deliveryEligibility', effectiveChefId, userLat, userLng],
+    ['deliveryEligibility', effectiveChefId, userLat, userLng, destinationPlaceId],
     async () => {
-      const response = await request.get(
-        `/orders/check-delivery/${effectiveChefId}?lat=${userLat}&long=${userLng}`
-      );
+      const response = await request.get(`/orders/check-delivery/${effectiveChefId}`, {
+        params: {
+          lat: userLat,
+          long: userLng,
+          ...(destinationPlaceId ? { placeId: destinationPlaceId } : {}),
+          ...(destinationPlaceName ? { placeName: destinationPlaceName } : {}),
+        },
+      });
       return response.data;
     },
     {
@@ -576,12 +588,6 @@ const DishDetailScreen = () => {
   );
 
   const renderDishInfo = () => (
-    <AIZone
-      id="dish-detail-summary"
-      allowInjectCard
-      allowHighlight
-      templates={[InfoCard, ReviewSummary]}
-    >
       <View
         style={[localStyles.dishInfoSection, { backgroundColor: colors.white }]}>
         {/* Dish Name and Price */}
@@ -659,7 +665,6 @@ const DishDetailScreen = () => {
           </View>
         )}
       </View>
-    </AIZone>
   );
 
   const renderTabBar = () => (
@@ -802,7 +807,7 @@ const DishDetailScreen = () => {
                   onPress={() => handleReviewStoryPress(story)}
                 >
                   {/* Rating Badge */}
-                  <View style={[localStyles.ratingBadge, { backgroundColor: colors.primary }]}>
+                  <View style={[localStyles.reviewRatingBadge, { backgroundColor: colors.primary }]}>
                     <Ionicons name="star" size={moderateScale(12)} color={colors.white} />
                     <ZText type="B12" color={colors.white} style={styles.ml4}>
                       {story.rating}/5
@@ -1838,7 +1843,7 @@ const localStyles = StyleSheet.create({
     elevation: 3,
   },
 
-  ratingBadge: {
+  reviewRatingBadge: {
     position: 'absolute',
     top: moderateScale(8),
     right: moderateScale(8),

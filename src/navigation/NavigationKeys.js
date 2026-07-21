@@ -82,4 +82,13 @@ export const StackNav = {
   EditReel: 'EditReel',
   OrderReceipt: 'OrderReceipt',
   SupportChat: 'SupportChat',
+  // Missions System
+  MissionsHub: 'MissionsHub',
+  MissionDetail: 'MissionDetail',
+  MissionLeaderboard: 'MissionLeaderboard',
+  AmbassadorDashboard: 'AmbassadorDashboard',
+  AmbassadorWallet: 'AmbassadorWallet',
+  ScoutRestaurant: 'ScoutRestaurant',
+  ClaimRestaurant: 'ClaimRestaurant',
+  RestaurantClaimStatus: 'RestaurantClaimStatus',
 };

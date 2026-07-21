@@ -2,10 +2,11 @@
  * useReelInteractions Hook Tests
  */
 
-import { renderHook, act } from '@testing-library/react-hooks';
+import { renderHook, act } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import React from 'react';
 import useReelInteractions from '../useReelInteractions';
+import request from '../../../api/request';
 
 // Mock dependencies
 jest.mock('../../../api/request', () => ({
@@ -71,14 +72,16 @@ describe('useReelInteractions', () => {
         expect(result.current.shareSheetRef.current).toBeNull();
     });
 
-    it('should handle like animation on press', () => {
+    it('should handle like animation on press', async () => {
         jest.useFakeTimers();
+        request.post.mockImplementationOnce(() => new Promise(() => {}));
         const { result } = renderHook(() => useReelInteractions(defaultOptions), {
             wrapper: createWrapper(),
         });
 
-        act(() => {
+        await act(async () => {
             result.current.onPressLike('123', false);
+            await Promise.resolve();
         });
 
         expect(result.current.isLike).toBe(true);

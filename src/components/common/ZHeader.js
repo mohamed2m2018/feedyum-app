@@ -8,11 +8,17 @@ import {useSelector} from 'react-redux';
 import {moderateScale} from '../../common/constants';
 
 export default function ZHeader(props) {
-  const {title, onPressBack, rightIcon, isHideBack, isLeftIcon, onTitlePress} = props;
+  const {
+    title, onPressBack, rightIcon, isHideBack, isLeftIcon, onTitlePress,
+    fallbackRoute, fallbackParams, backAccessibilityLabel = 'Go back',
+  } = props;
   const navigation = useNavigation();
   const colors = useSelector(state => state.theme.theme);
 
-  const goBack = () => navigation.goBack();
+  const goBack = () => {
+    if (navigation.canGoBack()) navigation.goBack();
+    else if (fallbackRoute) navigation.navigate(fallbackRoute, fallbackParams);
+  };
 
   const titleContent = (
     <ZText
@@ -32,7 +38,13 @@ export default function ZHeader(props) {
       <View style={[localStyles.container, !!isHideBack && styles.pr10]}>
         <View style={[styles.rowStart, styles.flex]}>
           {!isHideBack && (
-            <TouchableOpacity style={styles.pr10} onPress={onPressBack || goBack}>
+            <TouchableOpacity
+              style={[styles.pr10, localStyles.backButton]}
+              onPress={onPressBack || goBack}
+              accessibilityRole="button"
+              accessibilityLabel={backAccessibilityLabel}
+              testID="header-back-button"
+              hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
               <Ionicons
                 name="arrow-back-outline"
                 size={moderateScale(26)}
@@ -68,5 +80,10 @@ const localStyles = StyleSheet.create({
   },
   titleText: {
     width: moderateScale(300),
+  },
+  backButton: {
+    minWidth: moderateScale(44),
+    minHeight: moderateScale(44),
+    justifyContent: 'center',
   },
 });

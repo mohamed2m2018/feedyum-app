@@ -3,6 +3,7 @@
  */
 
 import React from 'react';
+import { StyleSheet } from 'react-native';
 import { render } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { Provider } from 'react-redux';
@@ -173,7 +174,7 @@ describe('ReelItem', () => {
         });
 
         const tree = toJSON();
-        expect(tree.props.style).toEqual(
+        expect(StyleSheet.flatten(tree.props.style)).toEqual(
             expect.objectContaining({ height: 600 })
         );
     });

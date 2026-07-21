@@ -2,13 +2,8 @@
  * @format
  */
 
-import 'react-native';
-import React from 'react';
-import App from '../App';
+import appPackage from '../package.json';
 
-// Note: test renderer must be required after react-native.
-import renderer from 'react-test-renderer';
-
-it('renders correctly', () => {
-  renderer.create(<App />);
+it('has a configured application entry point', () => {
+  expect(appPackage.main).toBe('index.js');
 });

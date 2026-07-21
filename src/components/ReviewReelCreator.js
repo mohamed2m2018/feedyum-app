@@ -6,6 +6,7 @@ import {
   Dimensions,
   Platform,
   TextInput,
+  Alert,
 } from 'react-native';
 import { showErrorToast, showWarningToast } from '../utils/toast';
 import { useSelector } from 'react-redux';
@@ -24,6 +25,7 @@ import { moderateScale } from '../common/constants';
 import { styles } from '../themes';
 import request from '../api/request';
 import strings from '../i18n/strings';
+import { StackNav } from '../navigation/NavigationKeys';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -41,20 +43,32 @@ const ReviewReelCreator = ({ route }) => {
   const [localUri, setLocalUri] = useState('');
   const [isModalVisible, setIsModalVisible] = useState(false);
 
-  // Handle both create and edit modes
+  // Handle create, edit, and mission modes
   const {
     dishData,
     menuData,
+    missionData,
+    missionId: missionParamId,
     reviewType = 'dish',
     editMode = false,
-    reviewData = null
+    reviewData = null,
+    scoutData = null,
   } = route.params;
+
+  const isMissionReview = reviewType === 'mission';
+  const displayName = isMissionReview
+    ? (missionData?.restaurantName || missionData?.title || 'Restaurant')
+    : (reviewType === 'dish' ? dishData?.name : menuData?.name);
 
   const [selectedMedia, setSelectedMedia] = useState(null);
   const [mediaType, setMediaType] = useState(null); // 'video' or 'image'
   const [caption, setCaption] = useState(editMode ? (reviewData?.caption || '') : '');
   const [rating, setRating] = useState(editMode ? (reviewData?.rating || 5) : 5);
   const [isLoading, setIsLoading] = useState(false);
+  const submissionKey = useRef(
+    `review-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+  );
+  const allowExitRef = useRef(false);
 
   // Pre-populate media for edit mode
   useEffect(() => {
@@ -68,6 +82,38 @@ const ReviewReelCreator = ({ route }) => {
       }
     }
   }, [editMode, reviewData]);
+
+  const hasUnsavedWork = Boolean(selectedMedia || caption.trim() || isMediaUploading);
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('beforeRemove', event => {
+      if (allowExitRef.current || !hasUnsavedWork) return;
+      event.preventDefault();
+      Alert.alert(
+        strings.discardChanges || 'Leave this review?',
+        isMediaUploading
+          ? (strings.uploadInProgressExitWarning || 'Your upload is still in progress. Leaving will cancel this submission.')
+          : (strings.unsavedChangesWarning || 'Your selected media and review text will be discarded.'),
+        [
+          {text: strings.stay || 'Stay', style: 'cancel'},
+          {
+            text: strings.leave || 'Leave',
+            style: 'destructive',
+            onPress: () => {
+              allowExitRef.current = true;
+              navigation.dispatch(event.data.action);
+            },
+          },
+        ],
+      );
+    });
+    return unsubscribe;
+  }, [navigation, hasUnsavedWork, isMediaUploading]);
+
+  const handleClose = () => {
+    if (navigation.canGoBack()) navigation.goBack();
+    else navigation.navigate(StackNav.MissionsHub);
+  };
 
 
   const handleSelectMedia = () => {
@@ -162,15 +208,17 @@ const ReviewReelCreator = ({ route }) => {
       return;
     }
 
-    // Additional validation
-    if (reviewType === 'dish' && !dishData?._id) {
-      showErrorToast(strings.error, strings.dishDataMissing);
-      return;
-    }
+    // Additional validation (skip for mission reviews)
+    if (!isMissionReview) {
+      if (reviewType === 'dish' && !dishData?._id) {
+        showErrorToast(strings.error, strings.dishDataMissing);
+        return;
+      }
 
-    if (reviewType === 'menu' && !menuData?._id) {
-      showErrorToast(strings.error, strings.menuDataMissing);
-      return;
+      if (reviewType === 'menu' && !menuData?._id) {
+        showErrorToast(strings.error, strings.menuDataMissing);
+        return;
+      }
     }
 
     // Find category ID if dish has a category, otherwise use default
@@ -178,7 +226,6 @@ const ReviewReelCreator = ({ route }) => {
     if (dishData?.category) {
       categoryIds = [dishData.category];
     } else {
-      // Use a default category for reviews
       categoryIds = ['Food'];
     }
 
@@ -186,15 +233,25 @@ const ReviewReelCreator = ({ route }) => {
     const postData = {
       caption: caption.trim(),
       reviewMode: true,
-      reviewType: reviewType,
+      reviewType: isMissionReview ? 'restaurant' : reviewType,
       rating: rating,
-      dishes: reviewType === 'dish' ? [dishData._id] : [],
-      reviewedDish: reviewType === 'dish' ? dishData._id : undefined,
+      dishes: reviewType === 'dish' ? [dishData?._id] : [],
+      reviewedDish: reviewType === 'dish' ? dishData?._id : undefined,
       reviewedMenu: reviewType === 'menu' ? menuData?._id : undefined,
-      title: `Review: ${reviewType === 'dish' ? dishData?.name : menuData?.name}`,
+      title: `Review: ${displayName}`,
       allowContact: true,
       category: categoryIds,
-      // Add edit-specific fields
+      ...(isMissionReview && {
+        missionId: missionParamId || missionData?._id,
+        idempotencyKey: submissionKey.current,
+        targetChefId: missionData?.restaurantId,
+        ...(scoutData && {
+          googlePlaceId: scoutData.googlePlaceId,
+          restaurantName: scoutData.restaurantName,
+          restaurantAddress: scoutData.restaurantAddress,
+          ...(scoutData.location && { location: scoutData.location }),
+        }),
+      }),
       ...(editMode && {
         _id: reviewData._id,
         isEdit: true
@@ -212,21 +269,28 @@ const ReviewReelCreator = ({ route }) => {
 
 
     // Navigate to For You screen - BackgroundUploadProvider now correctly navigates to TabNav.ForYou
-    navigation.goBack();
+    allowExitRef.current = true;
+    handleClose();
   };
 
   const renderHeader = () => (
     <View style={[localStyles.header, { backgroundColor: colors.backgroundColor }]}>
       <TouchableOpacity
         style={localStyles.headerButton}
-        onPress={() => navigation.goBack()}>
+        onPress={handleClose}
+        accessibilityRole="button"
+        accessibilityLabel={strings.close || 'Close'}
+        testID="review-creator-close"
+        hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
         <Ionicons name="close" size={moderateScale(24)} color={colors.textColor} />
       </TouchableOpacity>
 
       <ZText type="B18" color={colors.textColor}>
         {editMode
           ? strings.editReview
-          : `${strings.review} ${reviewType === 'dish' ? dishData?.name : menuData?.name}`
+          : isMissionReview
+            ? (missionData?.title || displayName)
+            : `${strings.review} ${displayName}`
         }
       </ZText>
 
@@ -249,7 +313,10 @@ const ReviewReelCreator = ({ route }) => {
         </ZText>
 
         <ZText type="M16" color={colors.grayScale5} style={localStyles.selectionSubtitle}>
-          {strings.shareExperienceWith} {reviewType === 'dish' ? dishData?.name : menuData?.name}
+          {isMissionReview
+            ? `Create content for ${displayName}`
+            : `${strings.shareExperienceWith} ${displayName}`
+          }
         </ZText>
 
         <View style={localStyles.videoButtons}>

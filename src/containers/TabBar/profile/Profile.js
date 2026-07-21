@@ -387,6 +387,38 @@ export default function Profile({ navigation }) {
         )}
       </View>
 
+      {/* Missions Quick Action */}
+      <TouchableOpacity
+        activeOpacity={0.7}
+        onPress={() => navigation.navigate(StackNav.MissionsHub)}
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          backgroundColor: colors.inputBg,
+          borderRadius: moderateScale(12),
+          padding: moderateScale(12),
+          marginHorizontal: moderateScale(16),
+          marginTop: moderateScale(8),
+        }}
+      >
+        <View style={{
+          width: moderateScale(36),
+          height: moderateScale(36),
+          borderRadius: moderateScale(18),
+          backgroundColor: 'rgba(255,77,103,0.12)',
+          justifyContent: 'center',
+          alignItems: 'center',
+          marginRight: moderateScale(10),
+        }}>
+          <Ionicons name="rocket" size={moderateScale(18)} color="#FF4D67" />
+        </View>
+        <View style={{flex: 1}}>
+          <ZText type="s14">{strings.missions || 'Missions'}</ZText>
+          <ZText type="r12" color={colors.grayScale7}>{strings.earnByCreating || 'Earn by creating content'}</ZText>
+        </View>
+        <Ionicons name="chevron-forward" size={moderateScale(16)} color={colors.grayScale7} />
+      </TouchableOpacity>
+
     </View>
   );
 

@@ -3,6 +3,8 @@ import { StyleSheet, TouchableOpacity, View, I18nManager, FlatList, Dimensions }
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { TabView } from 'react-native-tab-view';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import LinearGradient from 'react-native-linear-gradient';
 
 // Local import
 import ZSafeAreaView from '../../../components/common/ZSafeAreaView';
@@ -184,6 +186,45 @@ export default function Discover({ navigation }) {
           />
         </View>
       </View>
+
+      <TouchableOpacity
+        activeOpacity={0.85}
+        onPress={() => navigation.navigate(StackNav.MissionsHub)}
+        style={{
+          marginHorizontal: moderateScale(16),
+          marginBottom: moderateScale(20),
+          padding: moderateScale(14),
+          margin: moderateScale(10),
+          backgroundColor: colors.primary,
+          borderRadius: moderateScale(25),
+        }}
+      >
+        <View
+          style={{
+            borderRadius: moderateScale(14),
+            paddingHorizontal: moderateScale(14),
+            flexDirection: 'row',
+            backgroundColor: colors.primary
+          }}
+        >
+          <View style={{
+            width: 26,
+            aspectRatio: 1,
+            borderRadius: 10,
+            backgroundColor: 'rgba(255,255,255,0.2)',
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginRight: 10,
+          }}>
+            <Ionicons name="rocket" size={18} color="#fff" />
+          </View>
+          <View style={{flex: 1, justifyContent: 'center'}}>
+            <ZText type="b14" color="#fff">{'Earn Money Reviewing Food!'}</ZText>
+            <ZText type="r12" color="rgba(255,255,255,0.8)">{'Create content, earn commission'}</ZText>
+          </View>
+          <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.6)" style={{alignSelf: 'center'}} />
+        </View>
+      </TouchableOpacity>
 
       <TabView
         navigationState={isSelect}

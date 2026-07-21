@@ -1,5 +1,6 @@
 import { Linking } from 'react-native';
 import { CommonActions } from '@react-navigation/native';
+import { missionService } from '../api/missionService';
 
 class DeepLinkingService {
   static instance = null;
@@ -144,7 +145,7 @@ class DeepLinkingService {
       discoverCategory: /^\/discover\/([a-zA-Z0-9_-]+)$/i,
       trending: /^\/trending$/i,
       search: /^\/search$/i,
-      searchResults: /^\/search\/([^\/]+)$/i,
+      searchResults: /^\/search\/([^/]+)$/i,
 
       // Social deep links
       following: /^\/profile\/([a-f\d]{24})\/following$/i,
@@ -163,6 +164,8 @@ class DeepLinkingService {
 
       // Support deep links
       supportChat: /^\/support-chat$/i,
+      claimRestaurant: /^\/claim-restaurant\/([a-f\d]{24})$/i,
+      restaurantClaims: /^\/restaurant-claims$/i,
 
       // Auth deep links
       resetPassword: /^\/reset-password$/i,
@@ -198,6 +201,11 @@ class DeepLinkingService {
 
     const { type, id, secondaryId, username, params } = linkData;
     console.log('🐞 [DeepLinkingService] navigateToScreen type:', type, 'params:', params);
+
+    // Track referral attribution when a deep link contains ?ref=CODE
+    if (params?.ref) {
+      this._trackReferralAttribution(params.ref, type, id);
+    }
 
     try {
       switch (type) {
@@ -317,6 +325,12 @@ class DeepLinkingService {
         case 'supportChat':
           this.navigateToSupportChat(params);
           break;
+        case 'claimRestaurant':
+          this.navigateToClaimRestaurant(id);
+          break;
+        case 'restaurantClaims':
+          this.navigateToRestaurantClaims();
+          break;
 
         // Auth navigation
         case 'resetPassword':
@@ -329,7 +343,32 @@ class DeepLinkingService {
     }
   }
 
+  // Track referral attribution from deep link ?ref= query param
+  _trackReferralAttribution(referralCode, contentType, contentId) {
+    console.log('🐞 [DeepLinkingService] Tracking referral attribution:', referralCode, contentType, contentId);
+    missionService.trackAttribution({
+      referralCode,
+      storyId: contentId || null,
+      source: contentType === 'qr_code' ? 'qr_code' : 'deep_link',
+    }).catch(error => {
+      // Attribution tracking is non-blocking; log and move on
+      console.log('🐞 [DeepLinkingService] Attribution tracking failed:', error?.message || error);
+    });
+  }
+
   // Navigation methods for different screens
+
+  navigateToClaimRestaurant(restaurantId) {
+    DeepLinkingService.navigationRef?.dispatch(
+      CommonActions.navigate('ClaimRestaurant', { restaurantId }),
+    );
+  }
+
+  navigateToRestaurantClaims() {
+    DeepLinkingService.navigationRef?.dispatch(
+      CommonActions.navigate('RestaurantClaimStatus'),
+    );
+  }
 
   // Order navigation
   navigateToOrder(orderId, params) {
@@ -502,6 +541,11 @@ class DeepLinkingService {
 
     // Clear the pending deep link
     DeepLinkingService.pendingDeepLink = null;
+
+    // Track referral attribution for cold-start deep links with ?ref=CODE
+    if (parsed.params?.ref) {
+      this._trackReferralAttribution(parsed.params.ref, parsed.type, parsed.id);
+    }
 
     // Handle reel/video/story deep links - navigate to FollowingTab with storyId
     if (['reel', 'video', 'story', 'reels'].includes(parsed.type)) {
@@ -970,4 +1014,4 @@ class DeepLinkingService {
   }
 }
 
-export default DeepLinkingService; 
+export default DeepLinkingService;

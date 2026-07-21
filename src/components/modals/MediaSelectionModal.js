@@ -53,8 +53,12 @@ const MediaSelectionModal = ({
         if (isProcessing) return;
         setIsProcessing(true);
         onClose();
-        if (action) {
-            await action();
+        try {
+            if (action) {
+                await action();
+            }
+        } catch (e) {
+            console.warn('MediaSelectionModal action failed:', e?.message);
         }
         setIsProcessing(false);
     };

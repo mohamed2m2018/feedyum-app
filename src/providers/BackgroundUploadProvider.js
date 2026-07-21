@@ -48,6 +48,13 @@ export function BackgroundUploadProvider({ children }) {
         uri: data.uri,
         avatarUri: data.avatarUri,
         poster: data.poster,
+        // Pass through mission data for scouting/reviewing missions
+        ...(data.missionId && { missionId: data.missionId }),
+        ...(data.googlePlaceId && { googlePlaceId: data.googlePlaceId }),
+        ...(data.restaurantName && { restaurantName: data.restaurantName }),
+        ...(data.restaurantAddress && { restaurantAddress: data.restaurantAddress }),
+        ...(data.location && { location: data.location }),
+        ...(data.idempotencyKey && { idempotencyKey: data.idempotencyKey }),
       };
       return request.post('/story/create-review-reel', reviewReelData);
     }

@@ -357,6 +357,38 @@ export default function StackNavigation() {
         name={StackNav.SupportChat}
         component={StackRoute.SupportChat}
       />
+      <Stack.Screen
+        name={StackNav.MissionsHub}
+        component={StackRoute.MissionsHub}
+      />
+      <Stack.Screen
+        name={StackNav.MissionDetail}
+        component={StackRoute.MissionDetail}
+      />
+      <Stack.Screen
+        name={StackNav.MissionLeaderboard}
+        component={StackRoute.MissionLeaderboard}
+      />
+      <Stack.Screen
+        name={StackNav.AmbassadorDashboard}
+        component={StackRoute.AmbassadorDashboard}
+      />
+      <Stack.Screen
+        name={StackNav.AmbassadorWallet}
+        component={StackRoute.AmbassadorWallet}
+      />
+      <Stack.Screen
+        name={StackNav.ScoutRestaurant}
+        component={StackRoute.ScoutRestaurant}
+      />
+      <Stack.Screen
+        name={StackNav.ClaimRestaurant}
+        component={StackRoute.ClaimRestaurant}
+      />
+      <Stack.Screen
+        name={StackNav.RestaurantClaimStatus}
+        component={StackRoute.RestaurantClaimStatus}
+      />
     </Stack.Navigator>
   );
 }
