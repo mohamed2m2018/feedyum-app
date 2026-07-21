@@ -1,4 +1,4 @@
-import { useQuery, useInfiniteQuery, useQueryClient } from 'react-query';
+import { useQuery, useInfiniteQuery } from 'react-query';
 import { useMemo } from 'react';
 import request from '../api/request';
 
@@ -59,13 +59,24 @@ export const useDiscoverCategory = (categoryName, coordinates, userId, options =
 };
 
 // ─── Paginated Hook (NEW) ─────────────────────────────────────────────────────
-// Fetches page 2+ for a single category via GET /discover/category/:category
-// Uses batch data as page 1, then paginates from the new endpoint.
+// Fetches a single category via GET /discover/category/:category and merges it
+// with the batch response. The batch endpoint returns 8 users per category,
+// while this endpoint uses pages of 10, so it cannot safely stand in for page 1.
 const ITEMS_PER_PAGE = 10;
 
-export const useDiscoverCategoryPaginated = (categoryName, coordinates, userId) => {
-  const queryClient = useQueryClient();
+const mergeUniqueById = (initialItems, paginatedItems) => {
+  const itemsById = new Map();
 
+  [...initialItems, ...paginatedItems].forEach(item => {
+    if (item?._id != null) {
+      itemsById.set(item._id.toString(), item);
+    }
+  });
+
+  return Array.from(itemsById.values());
+};
+
+export const useDiscoverCategoryPaginated = (categoryName, coordinates, userId) => {
   // Get batch data (page 1) from the existing batch cache
   const {
     users: batchUsers,
@@ -79,17 +90,16 @@ export const useDiscoverCategoryPaginated = (categoryName, coordinates, userId) 
   const lat = coordinates?.latitude || coordinates?.lat;
   const long = coordinates?.longitude || coordinates?.long;
 
-  // Infinite query for page 2+
+  // Fetch page 1 as well. Starting at page 2 would skip items 9 and 10,
+  // because the batch endpoint only includes the first 8 users.
   const {
     data: paginatedData,
     fetchNextPage,
-    hasNextPage,
     isFetchingNextPage,
-    isLoading: isPaginatedLoading,
     error: paginatedError,
   } = useInfiniteQuery(
-    ['discover-category-pages', categoryName, lat, long, userId],
-    async ({ pageParam = 2 }) => {
+    ['discover-category-pages-v2', categoryName, lat, long, userId],
+    async ({ pageParam = 1 }) => {
       const params = new URLSearchParams();
       params.append('page', pageParam.toString());
       params.append('limit', ITEMS_PER_PAGE.toString());
@@ -112,9 +122,13 @@ export const useDiscoverCategoryPaginated = (categoryName, coordinates, userId) 
       return data;
     },
     {
-      // Start from page 2 (batch is page 1)
       getNextPageParam: (lastPage) => {
-        if (!lastPage?.pagination?.hasNextPage) return undefined;
+        const pagination = lastPage?.pagination;
+        const hasMoreRestaurants = categoryName === 'All'
+          ? pagination?.chefsHasMore
+          : pagination?.hasNextPage;
+
+        if (!hasMoreRestaurants) return undefined;
         return lastPage.pagination.currentPage + 1;
       },
       enabled: hasBatchData && !batchError, // Only start paginating after batch succeeds
@@ -125,15 +139,15 @@ export const useDiscoverCategoryPaginated = (categoryName, coordinates, userId) 
     }
   );
 
-  // Merge batch (page 1) + paginated (page 2+) into unified lists
+  // Merge the fast batch response with the complete paginated response.
   const allUsers = useMemo(() => {
     const paginated = paginatedData?.pages?.flatMap(p => p?.data?.users || []) || [];
-    return [...batchUsers, ...paginated];
+    return mergeUniqueById(batchUsers, paginated);
   }, [batchUsers, paginatedData]);
 
   const allDishes = useMemo(() => {
     const paginated = paginatedData?.pages?.flatMap(p => p?.data?.dishes || []) || [];
-    return [...batchDishes, ...paginated];
+    return mergeUniqueById(batchDishes, paginated);
   }, [batchDishes, paginatedData]);
 
   // Determine if there are more pages to load
@@ -142,11 +156,13 @@ export const useDiscoverCategoryPaginated = (categoryName, coordinates, userId) 
     if (paginatedData?.pages?.length > 0) {
       // We've made at least one paginated request — use the server's answer
       const lastPage = paginatedData.pages[paginatedData.pages.length - 1];
-      return lastPage?.pagination?.hasNextPage ?? false;
+      return categoryName === 'All'
+        ? lastPage?.pagination?.chefsHasMore ?? false
+        : lastPage?.pagination?.hasNextPage ?? false;
     }
     // No paginated requests yet — assume more if batch returned a full page
     return batchUsers.length >= ITEMS_PER_PAGE || batchDishes.length >= ITEMS_PER_PAGE;
-  }, [paginatedData, batchUsers.length, batchDishes.length]);
+  }, [categoryName, paginatedData, batchUsers.length, batchDishes.length]);
 
   return {
     users: allUsers,
