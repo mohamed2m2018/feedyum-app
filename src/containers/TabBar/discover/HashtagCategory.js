@@ -393,7 +393,7 @@ export default function HashtagCategory({ selectedTag, isLocationChanging }) {
                 {item?.bio || strings.defaultBio}
               </ZText>
               {/* Distance Display */}
-              {item?.kmAway !== undefined && item?.kmAway !== null && (
+              {item?.kmAway !== undefined && item?.kmAway !== null && item?.kmAway < 50000 && (
                 <View style={localStyles.distanceContainer}>
                   <Ionicons
                     name="location-outline"

@@ -164,7 +164,7 @@ const ReelItem = React.memo(({
                                 type="m14"
                                 containerStyle={kmAwayStyles.button}
                                 title={
-                                    item?.kmAway && item?.kmAway !== null
+                                    item?.kmAway && item?.kmAway !== null && item?.kmAway < 50000
                                         ? item.kmAway.toFixed(2) + strings.kmAway
                                         : strings.clickbranches
                                 }

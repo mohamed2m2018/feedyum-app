@@ -477,7 +477,7 @@ const ReelComponent = ({
                   type="m14"
                   containerStyle={localStyles.buttonTag}
                   title={
-                    item?.kmAway && item?.kmAway !== null
+                    item?.kmAway && item?.kmAway !== null && item?.kmAway < 50000
                       ? item?.kmAway?.toFixed(2) + strings.kmAway
                       : strings.clickbranches
                   }

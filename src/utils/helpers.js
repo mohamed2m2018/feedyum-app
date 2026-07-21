@@ -108,6 +108,7 @@ const formatSlotLabel = (label, language) => {
 const formatDistance = (distanceKm) => {
   if (distanceKm == null || isNaN(distanceKm)) return '';
   const num = Number(distanceKm);
+  if (num >= 50000) return '';
   if (num < 100) {
     return num.toFixed(1);
   }
