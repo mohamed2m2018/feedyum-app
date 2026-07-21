@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   View,
   RefreshControl,
+  I18nManager,
 } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -76,12 +77,15 @@ export default function Profile({ navigation }) {
 
   const [page, setpage] = useState(1);
   const [refreshing, setRefreshing] = useState(false);
+  const [showFullBio, setShowFullBio] = useState(false);
 
   const [isLoadingSomething, setisLoadingSomething] = useState();
 
   const { data, refetch } = useQuery('user', () => request.get('/user'), { retry: 1 });
 
   const user = data?.data?.user;
+  const profileBio = user?.bio || (user?.type === 'chef' ? (strings.addRestaurantBio || 'Tap to add your kitchen bio') : (strings.addBio || 'Tap to add your bio'));
+  const canExpandBio = !!user?.bio && user.bio.length > 160;
   const getUserViews = () => request.get(`/views/user/${user?._id}`);
 
   const getFollowStatistics = () =>
@@ -274,7 +278,13 @@ export default function Profile({ navigation }) {
       </View>
 
       {/* Bio Section with subtle accent */}
-      <View style={[localStyles.bioSection, { borderLeftColor: colors.primary, borderLeftWidth: 3 }]}>
+      <View
+        style={[
+          localStyles.bioSection,
+          I18nManager.isRTL ? localStyles.bioSectionRTL : localStyles.bioSectionLTR,
+          { borderColor: colors.primary },
+        ]}
+      >
         <ZText type="b18" color={colors.textColor}>
           {user?.fullName}
         </ZText>
@@ -293,11 +303,26 @@ export default function Profile({ navigation }) {
             type={'m14'}
             color={colors.dark ? colors.grayScale4 : colors.grayScale6}
             style={localStyles.bioText}
-            numberOfLines={4}
+            numberOfLines={showFullBio ? undefined : 4}
           >
-            {user?.bio || (user?.type === 'chef' ? (strings.addRestaurantBio || 'Tap to add your kitchen bio') : (strings.addBio || 'Tap to add your bio'))}
+            {profileBio}
           </ZText>
         </TouchableOpacity>
+
+        {canExpandBio && (
+          <TouchableOpacity
+            onPress={() => setShowFullBio(value => !value)}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel={showFullBio ? strings.showLess : strings.readMore}
+            style={localStyles.bioToggle}
+            testID="profile-bio-toggle"
+          >
+            <ZText type="b13" color={colors.primary}>
+              {showFullBio ? strings.showLess : strings.readMore}
+            </ZText>
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Premium Action Buttons Row */}
@@ -645,13 +670,26 @@ const localStyles = StyleSheet.create({
   // Bio Section
   bioSection: {
     paddingHorizontal: moderateScale(20),
-    paddingLeft: moderateScale(23),
     marginTop: moderateScale(16),
     borderRadius: moderateScale(4),
+  },
+  bioSectionLTR: {
+    borderLeftWidth: 3,
+    paddingLeft: moderateScale(23),
+  },
+  bioSectionRTL: {
+    borderRightWidth: 3,
+    paddingRight: moderateScale(23),
   },
   bioText: {
     lineHeight: moderateScale(20),
     marginTop: moderateScale(6),
+  },
+  bioToggle: {
+    alignSelf: 'flex-start',
+    marginTop: moderateScale(6),
+    minHeight: moderateScale(32),
+    justifyContent: 'center',
   },
 
   // Action Buttons

@@ -39,6 +39,7 @@ const ChefBranchesScreen = () => {
     );
 
     const branches = branchesData?.branches || [];
+    const isDarkTheme = colors.dark === 'dark';
 
     // Extract a meaningful branch name from the address
     const getBranchName = (branch) => {
@@ -268,13 +269,46 @@ const ChefBranchesScreen = () => {
         return `${formatTime12h(todaySchedule.openTime)} - ${formatTime12h(todaySchedule.closeTime)}`;
     };
 
+    const getOrderModeInfo = (branch) => {
+        const mode = branch.orderMode || (branch.allowScheduledOrders ? 'both' : 'asap');
+
+        if (mode === 'asap') {
+            return {
+                mode,
+                icon: 'flash',
+                label: strings.asapOnly || 'ASAP',
+            };
+        }
+
+        if (mode === 'scheduled') {
+            return {
+                mode,
+                icon: 'calendar',
+                label: strings.scheduledOnly || 'Scheduled',
+            };
+        }
+
+        return {
+            mode,
+            icon: 'time',
+            label: strings.bothModes || 'Both',
+        };
+    };
+
     const renderBranchCard = ({ item, index }) => {
         const statusInfo = getStatusInfo(item);
+        const orderModeInfo = getOrderModeInfo(item);
         return (
-            <View style={[localStyles.branchCard, { backgroundColor: colors.dark ? colors.inputBg : colors.white }]}>
-                {/* Top row: icon + info + actions */}
+            <View
+                style={[
+                    localStyles.branchCard,
+                    {
+                        backgroundColor: colors.inputBg,
+                        borderColor: isDarkTheme ? colors.bColor : colors.grayScale1,
+                    },
+                ]}
+            >
                 <View style={localStyles.branchTopRow}>
-                    {/* Location Icon with Gradient Background */}
                     <View style={localStyles.iconContainer}>
                         <LinearGradient
                             colors={[colors.primary, colors.lightRed || '#FF7B8E']}
@@ -286,9 +320,8 @@ const ChefBranchesScreen = () => {
                         </LinearGradient>
                     </View>
 
-                    {/* Branch Info */}
                     <View style={localStyles.branchInfo}>
-                        <ZText type="b16" color={colors.textColor} numberOfLines={1}>
+                        <ZText type="B18" color={colors.textColor} numberOfLines={1}>
                             {getBranchName(item)}
                         </ZText>
                         <ZText type="m14" color={colors.grayScale5} numberOfLines={2} style={localStyles.addressText}>
@@ -296,38 +329,49 @@ const ChefBranchesScreen = () => {
                         </ZText>
                     </View>
 
-                    {/* Action Buttons */}
                     <View style={localStyles.actionButtons}>
                         <TouchableOpacity
                             onPress={() => handleEditBranch(item, index)}
-                            style={[localStyles.actionBtn, { borderColor: colors.primary }]}
+                            style={[
+                                localStyles.actionBtn,
+                                {
+                                    backgroundColor: colors.primary + '14',
+                                    borderColor: colors.primary + '66',
+                                },
+                            ]}
+                            accessibilityRole="button"
+                            accessibilityLabel={strings.edit || 'Edit'}
+                            testID={`branch-edit-${index}`}
                         >
                             <MaterialIcon name="pencil" size={moderateScale(16)} color={colors.primary} />
                         </TouchableOpacity>
                         <TouchableOpacity
                             onPress={() => handleDeleteBranch(item)}
-                            style={[localStyles.actionBtn, localStyles.deleteBtn]}
+                            style={[localStyles.actionBtn, localStyles.deleteBtn, { borderColor: colors.redColor + '22' }]}
+                            accessibilityRole="button"
+                            accessibilityLabel={strings.delete || 'Delete'}
+                            testID={`branch-delete-${index}`}
                         >
                             <MaterialIcon name="delete-outline" size={moderateScale(16)} color={colors.redColor} />
                         </TouchableOpacity>
                     </View>
                 </View>
 
-                {/* Status & Working Hours & Scheduling section */}
-                <View style={[localStyles.statusSection, { borderTopColor: colors.grayScale3 }]}>
-                    {/* Status toggle */}
+                <View style={[localStyles.statusSection, { borderTopColor: colors.bColor }]}>
                     <TouchableOpacity
                         style={[localStyles.statusToggle, { backgroundColor: statusInfo.color + '15' }]}
                         onPress={() => handleToggleStatus(item)}
+                        accessibilityRole="button"
+                        accessibilityLabel={statusInfo.label}
+                        testID={`branch-status-${index}`}
                     >
                         <Ionicons name={statusInfo.icon} size={moderateScale(16)} color={statusInfo.color} />
-                        <ZText type="M12" color={statusInfo.color} style={{ marginLeft: moderateScale(6), flex: 1 }}>
+                        <ZText type="M12" color={statusInfo.color} style={localStyles.inlineLabel} numberOfLines={1}>
                             {statusInfo.label}
                         </ZText>
                         <Ionicons name="swap-horizontal-outline" size={moderateScale(14)} color={statusInfo.color} />
                     </TouchableOpacity>
 
-                    {/* Working hours button */}
                     <TouchableOpacity
                         style={[localStyles.hoursButton, { backgroundColor: colors.primary + '10' }]}
                         onPress={() => navigation.navigate(StackNav.WorkingHours, {
@@ -337,21 +381,22 @@ const ChefBranchesScreen = () => {
                                 refetch();
                             },
                         })}
+                        accessibilityRole="button"
+                        accessibilityLabel={getWorkingHoursSummary(item)}
+                        testID={`branch-hours-${index}`}
                     >
                         <Ionicons name="time-outline" size={moderateScale(14)} color={colors.primary} />
-                        <ZText type="M12" color={colors.primary} style={{ marginLeft: moderateScale(6), flex: 1 }} numberOfLines={1}>
+                        <ZText type="M12" color={colors.primary} style={localStyles.inlineLabel} numberOfLines={1}>
                             {getWorkingHoursSummary(item)}
                         </ZText>
                         <Ionicons name={I18nManager.isRTL ? 'chevron-back' : 'chevron-forward'} size={moderateScale(14)} color={colors.primary} />
                     </TouchableOpacity>
                 </View>
 
-                {/* Per-branch order mode display */}
                 <TouchableOpacity
-                    style={[localStyles.schedulingRow, { borderTopColor: colors.grayScale3 }]}
+                    style={[localStyles.schedulingRow, { borderTopColor: colors.bColor }]}
                     onPress={async () => {
-                        // Cycle: asap → both → scheduled → asap
-                        const currentMode = item.orderMode || (item.allowScheduledOrders ? 'both' : 'asap');
+                        const currentMode = orderModeInfo.mode;
                         const nextMode = currentMode === 'asap' ? 'both' : currentMode === 'both' ? 'scheduled' : 'asap';
                         try {
                             await branchService.editBranch(item._id, { orderMode: nextMode });
@@ -362,20 +407,19 @@ const ChefBranchesScreen = () => {
                         }
                     }}
                     activeOpacity={0.7}
+                    accessibilityRole="button"
+                    accessibilityLabel={strings.orderModeLabel || 'Order Mode'}
+                    testID={`branch-order-mode-${index}`}
                 >
-                    <Ionicons name={(() => {
-                        const m = item.orderMode || (item.allowScheduledOrders ? 'both' : 'asap');
-                        return m === 'asap' ? 'flash' : m === 'scheduled' ? 'calendar' : 'time';
-                    })()} size={moderateScale(14)} color={colors.primary} />
-                    <ZText type="M12" color={colors.primary} style={{ marginLeft: moderateScale(6), flex: 1 }}>
-                        {strings.orderModeLabel || 'Order Mode'}
-                    </ZText>
+                    <View style={localStyles.schedulingLabelWrap}>
+                        <Ionicons name={orderModeInfo.icon} size={moderateScale(16)} color={colors.primary} />
+                        <ZText type="M14" color={colors.textColor} style={localStyles.inlineLabel}>
+                            {strings.orderModeLabel || 'Order Mode'}
+                        </ZText>
+                    </View>
                     <View style={[localStyles.schedulingBadge, { backgroundColor: colors.primary + '15' }]}>
-                        <ZText type="B10" color={colors.primary}>
-                            {(() => {
-                                const m = item.orderMode || (item.allowScheduledOrders ? 'both' : 'asap');
-                                return m === 'asap' ? (strings.asapOnly || 'ASAP') : m === 'scheduled' ? (strings.scheduledOnly || 'Scheduled') : (strings.bothModes || 'Both');
-                            })()}
+                        <ZText type="B12" color={colors.primary} numberOfLines={1}>
+                            {orderModeInfo.label}
                         </ZText>
                     </View>
                 </TouchableOpacity>
@@ -383,7 +427,7 @@ const ChefBranchesScreen = () => {
         );
     };
 
-    const EmptyState = () => (
+    const emptyState = (
         <View style={localStyles.emptyContainer}>
             <View style={[localStyles.emptyIconContainer, { backgroundColor: colors.primary + '15' }]}>
                 <Ionicons name="storefront-outline" size={moderateScale(48)} color={colors.primary} />
@@ -406,7 +450,7 @@ const ChefBranchesScreen = () => {
         </View>
     );
 
-    const HeaderComponent = () => (
+    const headerComponent = (
         <View style={localStyles.headerSection}>
             <LinearGradient
                 colors={[colors.primary, colors.lightRed || '#FF7B8E']}
@@ -416,13 +460,13 @@ const ChefBranchesScreen = () => {
             >
                 <View style={localStyles.headerContent}>
                     <View style={localStyles.headerIconBg}>
-                        <Ionicons name="location" size={moderateScale(28)} color={colors.white} />
+                        <Ionicons name="location-outline" size={moderateScale(22)} color={colors.white} />
                     </View>
                     <View style={localStyles.headerTextContainer}>
-                        <ZText type="b20" color={colors.white}>
+                        <ZText type="B18" color={colors.white} numberOfLines={1}>
                             {strings.yourBranches}
                         </ZText>
-                        <ZText type="m14" color={colors.white} style={{ opacity: 0.9 }}>
+                        <ZText type="M12" color={colors.white} style={localStyles.headerSubtitle} numberOfLines={1}>
                             {branches.length} {branches.length === 1 ? (strings.branch || 'branch') : (strings.branches || 'branches')}
                         </ZText>
                     </View>
@@ -450,8 +494,8 @@ const ChefBranchesScreen = () => {
                 data={branches}
                 renderItem={renderBranchCard}
                 keyExtractor={(item, index) => `branch-${index}`}
-                ListHeaderComponent={branches.length > 0 ? HeaderComponent : null}
-                ListEmptyComponent={EmptyState}
+                ListHeaderComponent={branches.length > 0 ? headerComponent : null}
+                ListEmptyComponent={emptyState}
                 contentContainerStyle={localStyles.listContainer}
                 showsVerticalScrollIndicator={false}
                 refreshControl={
@@ -464,7 +508,7 @@ const ChefBranchesScreen = () => {
                 <TouchableOpacity onPress={handleAddBranch} activeOpacity={0.8}>
                     <LinearGradient
                         colors={[colors.primary, colors.lightRed || '#FF7B8E']}
-                        style={localStyles.fab}
+                        style={[localStyles.fab, I18nManager.isRTL ? localStyles.fabRTL : localStyles.fabLTR]}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 1 }}
                     >
@@ -479,7 +523,7 @@ const ChefBranchesScreen = () => {
 const localStyles = StyleSheet.create({
     listContainer: {
         flexGrow: 1,
-        paddingHorizontal: moderateScale(16),
+        paddingHorizontal: moderateScale(20),
         paddingBottom: moderateScale(100),
     },
     loadingContainer: {
@@ -489,51 +533,58 @@ const localStyles = StyleSheet.create({
     },
     // Header Section
     headerSection: {
-        marginBottom: moderateScale(20),
-        marginTop: moderateScale(10),
+        marginBottom: moderateScale(16),
+        marginTop: moderateScale(8),
     },
     headerGradient: {
-        borderRadius: moderateScale(16),
-        padding: moderateScale(20),
+        borderRadius: moderateScale(14),
+        paddingHorizontal: moderateScale(18),
+        paddingVertical: moderateScale(14),
+        overflow: 'hidden',
     },
     headerContent: {
         flexDirection: 'row',
         alignItems: 'center',
     },
     headerIconBg: {
-        width: moderateScale(50),
-        height: moderateScale(50),
-        borderRadius: moderateScale(25),
-        backgroundColor: 'rgba(255,255,255,0.2)',
+        width: moderateScale(42),
+        height: moderateScale(42),
+        borderRadius: moderateScale(21),
+        backgroundColor: 'rgba(255,255,255,0.18)',
         justifyContent: 'center',
         alignItems: 'center',
-        marginRight: moderateScale(15),
+        marginRight: moderateScale(12),
     },
     headerTextContainer: {
         flex: 1,
     },
+    headerSubtitle: {
+        opacity: 0.88,
+        marginTop: moderateScale(2),
+    },
     // Branch Card
     branchCard: {
-        padding: moderateScale(16),
-        borderRadius: moderateScale(16),
-        marginBottom: moderateScale(12),
+        padding: moderateScale(14),
+        borderRadius: moderateScale(18),
+        marginBottom: moderateScale(14),
+        borderWidth: StyleSheet.hairlineWidth,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.08,
-        shadowRadius: 8,
-        elevation: 3,
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.1,
+        shadowRadius: 10,
+        elevation: 2,
     },
     branchTopRow: {
         flexDirection: 'row',
-        alignItems: 'center',
+        alignItems: 'flex-start',
     },
     iconContainer: {
-        marginRight: moderateScale(14),
+        marginRight: moderateScale(12),
     },
     iconGradient: {
-        width: moderateScale(44),
-        height: moderateScale(44),
-        borderRadius: moderateScale(12),
+        width: moderateScale(46),
+        height: moderateScale(46),
+        borderRadius: moderateScale(14),
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -546,55 +597,69 @@ const localStyles = StyleSheet.create({
     },
     actionButtons: {
         flexDirection: 'row',
-        gap: moderateScale(8),
+        marginLeft: moderateScale(10),
     },
     actionBtn: {
-        width: moderateScale(36),
-        height: moderateScale(36),
-        borderRadius: moderateScale(10),
+        width: moderateScale(44),
+        height: moderateScale(44),
+        borderRadius: moderateScale(13),
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 1,
         borderColor: 'transparent',
+        marginLeft: moderateScale(8),
     },
     deleteBtn: {
         backgroundColor: 'rgba(247, 85, 85, 0.1)',
     },
     statusSection: {
-        marginTop: moderateScale(12),
-        paddingTop: moderateScale(12),
+        marginTop: moderateScale(14),
+        paddingTop: moderateScale(14),
         borderTopWidth: StyleSheet.hairlineWidth,
         flexDirection: 'row',
-        gap: moderateScale(8),
     },
     statusToggle: {
         flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: moderateScale(8),
-        paddingHorizontal: moderateScale(10),
-        borderRadius: moderateScale(10),
+        minHeight: moderateScale(44),
+        paddingHorizontal: moderateScale(12),
+        borderRadius: moderateScale(12),
+        marginRight: moderateScale(6),
     },
     hoursButton: {
         flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: moderateScale(8),
-        paddingHorizontal: moderateScale(10),
-        borderRadius: moderateScale(10),
+        minHeight: moderateScale(44),
+        paddingHorizontal: moderateScale(12),
+        borderRadius: moderateScale(12),
+        marginLeft: moderateScale(6),
+    },
+    inlineLabel: {
+        marginLeft: moderateScale(7),
+        flex: 1,
     },
     schedulingRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingTop: moderateScale(10),
-        marginTop: moderateScale(8),
+        justifyContent: 'space-between',
+        minHeight: moderateScale(48),
+        paddingTop: moderateScale(12),
+        marginTop: moderateScale(10),
         borderTopWidth: StyleSheet.hairlineWidth,
-        paddingHorizontal: moderateScale(4),
+    },
+    schedulingLabelWrap: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingRight: moderateScale(12),
     },
     schedulingBadge: {
-        paddingHorizontal: moderateScale(8),
-        paddingVertical: moderateScale(3),
-        borderRadius: moderateScale(6),
+        paddingHorizontal: moderateScale(10),
+        paddingVertical: moderateScale(5),
+        borderRadius: moderateScale(10),
+        maxWidth: moderateScale(150),
     },
     // Empty State
     emptyContainer: {
@@ -635,7 +700,6 @@ const localStyles = StyleSheet.create({
     fab: {
         position: 'absolute',
         bottom: moderateScale(30),
-        right: moderateScale(20),
         width: moderateScale(60),
         height: moderateScale(60),
         borderRadius: moderateScale(30),
@@ -646,6 +710,12 @@ const localStyles = StyleSheet.create({
         shadowOpacity: 0.3,
         shadowRadius: 8,
         elevation: 6,
+    },
+    fabLTR: {
+        right: moderateScale(20),
+    },
+    fabRTL: {
+        left: moderateScale(20),
     },
 });
 

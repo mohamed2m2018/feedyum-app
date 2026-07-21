@@ -35,6 +35,9 @@ import { moderateScale } from '../../../common/constants';
 import strings from '../../../i18n/strings';
 import { uploadImageToS3 } from '../../../utils/UploadUtils';
 import { getLocalizedText } from '../../../utils/helpers';
+import { useStorage } from '../../../utils/useStorage';
+
+const IMPERSONATION_SESSION_KEY = 'impersonation_session';
 
 // Components moved outside to avoid React warnings
 const SectionTab = ({ section, isSelected, onPress, colors }) => (
@@ -188,6 +191,8 @@ export default function MenuManagement() {
 
   // Menu upload modal state
   const [uploadModalVisible, setUploadModalVisible] = useState(false);
+  const [impersonationSession] = useStorage(IMPERSONATION_SESSION_KEY);
+  const impersonatedUserId = impersonationSession?.targetUserId?.toString?.() || impersonationSession?.targetUserId;
 
   // Helper function to ensure chef has a menu (no default sections)
   const ensureMenu = async () => {
@@ -422,7 +427,7 @@ export default function MenuManagement() {
 
   // Fetch current user first
   const { data: userData } = useQuery('user', () => request.get('/user'));
-  const userId = userData?.data?.user?._id;
+  const userId = impersonatedUserId || userData?.data?.user?._id;
 
   // Connect to socket for real-time updates
   useChefSocket(userId);
@@ -458,6 +463,27 @@ export default function MenuManagement() {
     },
   );
 
+  // Fetch dishes - using real API call
+  const {
+    data: dishesData,
+    isLoading: dishesLoading,
+    error: dishesError,
+  } = useQuery(
+    ['menuDishes', userId],
+    async () => {
+      try {
+        // Fetch dishes directly by chef ID
+        const dishesResponse = await request.get(`/dishes/chef/${userId}`);
+        return dishesResponse.data || [];
+      } catch (error) {
+        throw error;
+      }
+    },
+    {
+      enabled: !!userId,
+    },
+  );
+
   // Prefer sections from API. If empty, derive from dishes to ensure UI shows the new section immediately
   const derivedSections = (Array.isArray(dishesData)
     ? Array.from(
@@ -474,27 +500,6 @@ export default function MenuManagement() {
   const finalSections = (sectionsData && sectionsData.length > 0)
     ? sectionsData
     : derivedSections;
-
-  // Fetch dishes - using real API call
-  const {
-    data: dishesData,
-    isLoading: dishesLoading,
-    error: dishesError,
-  } = useQuery(
-    ['menuDishes', userId],
-    async () => {
-      try {
-        // Fetch dishes directly by chef ID
-        const dishesResponse = await request.get(`/dishes/chef/${userId}`);
-        return dishesResponse.data || [];
-      } catch (error) {
-        return [];
-      }
-    },
-    {
-      enabled: !!userId,
-    },
-  );
 
   // Filter dishes based on selected section and search query
   const filteredDishes =
